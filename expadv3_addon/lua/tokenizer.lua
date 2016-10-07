@@ -23,6 +23,7 @@ end
 function T.Initalize(this, script)
 	this.__pos = 0;
 	this.__offset = 0;
+	this.__depth = 0;
 
 	this.__char = "";
 	this.__data = "";
@@ -71,7 +72,7 @@ function T._Run(this)
 	local result = {};
 	result.tokens = this.tokens;
 	result.script = this.__buffer;
-	
+
 	return result;
 end
 
@@ -289,6 +290,7 @@ function T.CreateToken(this, type, name, data);
 	tkn.pos = this.__pos;
 	tkn.char = this.__readChar;
 	tkn.line = this.__readLine;
+	tkn.depth = this.__depth;
 
 	this.__tokens[#this.__tokens + 1] = tkn;
 end
@@ -322,7 +324,7 @@ function T.Replace(this, start, _end, str)
 	local len = _end - start;
 	local pre = string.sub(this.__buffer, 1, this.__offet + start);
 	local post = string.sub(this.__buffer, this.__offset + _end);
-	
+
 	this.__buffer = pre + str + post;
 
 	if (len > 0) then
@@ -502,9 +504,17 @@ function T.Loop(this)
 
 	for k = 1, #TOKENS, 1 do
 		local v = [k];
+		local op = v[1];
 
-		if (this:NextPattern(v[1], true)) then
+		if (this:NextPattern(op, true)) then
 			this:CreateToken(v[2], v[3]);
+
+			if (op == "{") then
+				this.__depth = this.__depth + 1;
+			elseif (op == "}") then
+				this.__depth = this.__depth - 1;
+			end
+
 			return true;
 		end
 	end
