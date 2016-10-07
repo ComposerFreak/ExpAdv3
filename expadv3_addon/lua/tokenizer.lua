@@ -1,6 +1,18 @@
 --[[
-	TODO: This
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+
+	::Tokenizer::
+	`````````````
+	A reveamp of my expression advanced 2 tokenizer,
+	Using code by Divran, Oskar94, and maybe a few others.
 ]]
+
 
 local T = {};
 
@@ -28,22 +40,133 @@ function T.Initalize(this, script)
 	this.__script = script;
 	this.__buffer = script;
 	this.__lengh = string.len(script);
+
 	this:NextChar();
 end
 
 function T.Run(this)
-	return Pcall(T._Run, this);
+	--TODO: PcallX for stack traces on internal errors?
+	local status, result = Pcall(T._Run, this);
+
+	if (status) then
+		return true, result;
+	end
+
+	if (type(result) == "table") then
+		return false, result;
+	end
+
+	local err = {};
+	err.state = "internal";
+	err.msg = result;
+
+	return false, err;
 end
 
 function T._Run(this)
 	while (this.__char ~= nil) do
-
+		this:Loop();
 	end
+
+	local result = {};
+	result.tokens = this.tokens;
+	result.script = this.__buffer;
+	
+	return result;
 end
 
-function T.Throw(...)
-	-- Todo: This
+function T.Throw(this, offset, msg, fst, ...)
+	local err = {};
+
+	if (fst) then
+		msg = string.format(msg, fst, ...);
+	end
+
+	err.state = "tokenizer";
+	err.char = this.__readChar + offset;
+	err.line = this.__readLine;
+	err.msg = msg;
+
+	error(err,0);
 end
+
+--[[
+]]
+
+local KEYWORDS = {
+	["if"] = {"if", "if"},
+	["elseif"] = {"eif", "elseif"},
+	["else"] = {"els", "else"},
+	["while"] = {"whl", "while"},
+	["for"] = {"for", "for"},
+	["foreach"] = {"each", "foreach"},
+	["function"] = {"func", "function"},
+	["default"] = {"dft", "default"},
+	["event"] = {"evt", "event"},
+	["try"] = {"try", "try"},
+	["catch"] = {"cth", "catch"},
+	["final"] = {"fnl", "final"},
+	["true"] = {"tre", "true"},
+	["false"] = {"fls", "false"}
+	["void"] = {"void", "void"}
+	["break"] = {"brk", "break"},
+	["continue"] = {"cnt", "continue"},
+	["return"] = {"ret", "return"},
+	["global"] = {"glo", "global"},
+	["input"] = {"in", "input"},
+	["output"] = {"out", "output"},
+	["static"] = {"stc", "static"},
+	["synced"] = {"syn", "synced"},
+	["server"] = {"sv", "server"},
+	["client"] = {"cl", "client"},
+}
+
+local TOKENS = {
+	{ "+", "add", "addition" },
+	{ "-", "sub", "subtract" },
+	{ "*", "mul", "multiplier" },
+	{ "/", "div", "division" },
+	{ "%", "mod", "modulus" },
+	{ "^", "exp", "power" },
+	{ "=", "ass", "assign" },
+	{ "+=", "aadd", "increase" },
+	{ "-=", "asub", "decrease" },
+	{ "*=", "amul", "multiplier" },
+	{ "/=", "adiv", "division" },
+	{ "++", "inc", "increment" },
+	{ "--", "dec", "decrement" },
+	{ "==", "eq", "equal" },
+	{ "!=", "neq", "unequal" },
+	{ "<", "lth", "less" },
+	{ "<=", "leq", "less or equal" },
+	{ ">", "gth", "greater" },
+	{ ">=", "geq", "greater or equal" },
+	{ "&", "band", "and" },
+	{ "|", "bor", "or" },
+	{ "^^", "bxor", "or" },
+	{ ">>", "bshr", ">>" },
+	{ "<<", "bshl", "<<" },
+	{ "!", "not", "not" },
+	{ "&&", "and", "and" },
+	{ "||", "or", "or" },
+	{ "?", "qsm", "?" },
+	{ ":", "col", "colon" },
+	{ ";", "sep", "semicolon" },
+	{ ",", "com", "comma" },
+	{ "$", "dlt", "delta" },
+	{ "#", "len", "length" },
+	{ "~", "cng", "changed" },
+	{ "->", "wc", "connect" },
+	{ ".", "prd", "period" },
+	{ "(", "lpa", "left parenthesis" },
+	{ ")", "rpa", "right parenthesis" },
+	{ "{", "lcb", "left curly bracket" },
+	{ "}", "rcb", "right curly bracket" },
+	{ "[", "lsb", "left square bracket" },
+	{ "]", "rsb", "right square bracket" },
+	{ '@', "dir", "directive operator" },
+	{ "...", "varg", "varargs" },
+}
 
 --[[
 ]]
@@ -154,6 +277,25 @@ end
 --[[
 ]]
 
+function T.CreateToken(this, type, name, data);
+	if (not data) then
+		data = this.__data;
+	end
+
+	local tkn = {};
+	tkn.data = data;
+	tkn.start = this.__dataStart + this.__offset;
+	tkn.stop = this.__dataEnd + this.__offset;
+	tkn.pos = this.__pos;
+	tkn.char = this.__readChar;
+	tkn.line = this.__readLine;
+
+	this.__tokens[#this.__tokens + 1] = tkn;
+end
+
+--[[
+]]
+
 function T.SkipSpaces(this)
 	this:NextPattern("^[%s\n]*");
 
@@ -180,7 +322,7 @@ function T.Replace(this, start, _end, str)
 	local len = _end - start;
 	local pre = string.sub(this.__buffer, 1, this.__offet + start);
 	local post = string.sub(this.__buffer, this.__offset + _end);
-
+	
 	this.__buffer = pre + str + post;
 
 	if (len > 0) then
@@ -260,5 +402,117 @@ function T.Loop(this)
 
 	-- Strings
 	
+	if (this.__char == '"' or this.__char == "'") then
+		local strChar = this.__char;
+
+		local escp = false;
+
+		this:SkipChar();
+
+		while this.__char do
+			local c = this.__char;
+
+			if (c == "\n") then
+				if (strChar == "'") then
+					this:NextChar();
+				else
+					break;
+				end
+			elseif (not escp) then
+				if (c == strChar) then
+					break;
+				elseif (c == "\\") then
+					escp = true;
+					this:SkipChar();
+					-- Escape sequence.
+				else
+					this:NextChar();
+				end
+			elseif (c = "\\") then
+				escp = false;
+				this:NextChar();
+			elseif (c == strChar) then
+				escp = false;
+				this.__char = "\n";
+				this:NextChar();
+			elseif (c == "t") then
+				escp = false;
+				this.__char = "\t";
+				this:NextChar();
+			elseif (c == "r") then
+				escp = false;
+				this.__char = "\r";
+				this:NextChar();
+			elseif (this:NextPattern("^([0-9]+)")) then
+				local n = tonumber(this.__match);
+
+				if (not n or n < 0 or n > 255) then
+					this:Throw(0, "Invalid char (%s)", n);
+				end
+
+				escp = false;
+				this.__pos = this.__pos - 1;
+				this.__data = this.__data .. string.char(n);
+				this:SkipChar();
+			else
+				this:Throw(0, "Unfinished escape sequence (\\%s)", this.__char);
+			end
+		end
+
+		if (this.__char and this.__char == strChar) then
+			this:SkipChar();
+
+			-- Multi line strings need to be converted to lua syntax.
+			if (strChar == "'") then
+				local str = "[[" .. string.sub(this.__data, 2, string.len(this.__data) - 1) .. "]]";
+				this:Replace(this.__dataStart, this.__dataend, str);
+			end
+
+			this:CreateToken("str", "string");
+			return true;
+		end
+
+		local str = this.__data;
+
+		if (string.len(str) > 10) then
+			str = string.sub(str, 0, 10) .. "...";
+		end
+
+		this:Throw(0, "Unterminated string (\"%s)", str);
+	end
+
+	-- Keywords.
+
+	if (this:NextPattern("^[a-zA-Z][a-zA-Z0-9_]*")) then
+		local w = this.__data;
+		local tkn = KEYWORDS[w];
+
+		if (tkn) then
+			this:CreateToken(tkn[1], tkn[2]);
+		else
+			this:CreateToken("var", "variable");
+		end
+		
+		return true;
+	end
+
+	-- TODO: Class names and casting :D
+
+	-- Ops
+
+	for k = 1, #TOKENS, 1 do
+		local v = [k];
+
+		if (this:NextPattern(v[1], true)) then
+			this:CreateToken(v[2], v[3]);
+			return true;
+		end
+	end
+
+	if (not this.__char or this.__char == "") then
+		this.__char = nil;
+	else
+		this:Throw(0, "Unknown syntax found (%s)", tostring(this.__char));
+	end
 end
 
