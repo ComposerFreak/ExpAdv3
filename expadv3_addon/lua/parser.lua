@@ -21,6 +21,9 @@
 			1 - if (expr1) blck1 [stmt2 or stmt3] or stmt4
 			2 - elseif (expr1) blck1 [stmt2]
 			3 - else blck1
+			4 - state blck1
+			6 - [global] type var[, var*][= exp1][, expr*]
+
 		:::Expressions(expr):::
 			1 - (exp1) or exp2
 			2 - exp3 op exp2
@@ -42,7 +45,6 @@ function PARSER.Initalize(this, instance)
 	this.__total = #instance.tokens;
 	this.__tokens = instance.tokens;
 	this.__script = instance.script;
-	this.__buffer = instance.script;
 end
 
 function PARSER.Run(this)
@@ -65,10 +67,8 @@ function PARSER.Run(this)
 end
 
 function PARSER._Run(this)
-	
-
 	local result = {};
-	result.instructions = this.__instructions;
+	result.instruction = this:Root();
 	result.script = this.__buffer;
 
 	return result;
@@ -170,13 +170,13 @@ function PASRSER.Require( this, type, msg, ... )
 	end
 end
 
-function PASRSER.Require( this, tpye, msg, ... )
+function PASRSER.Exclude( this, tpye, msg, ... )
 	if (this:AcceptToken(type)) then
 		this:Throw( this.__token, msg, ... )
 	end
 end
 
-function PASRSER.Require(this, msg, ...)
+function PASRSER.ExludeWhiteSpace(this, msg, ...)
 	if (this:HasTokens()) then 
 		this:Throw( this.__token, msg, ... )
 	end
@@ -185,12 +185,16 @@ end
 --[[
 ]]
 
-function PARSER.Replace(this, token, str)
+--[[function PARSER.Replace(this, token, str)
 	local offset = string.len(str) - string.len(token.data);
 	local pre = string.gsub(this.__buffer, 0, this.__offet + token.start);
 	local post = string.gsub(this.__buffer, this.__offet + token.stop);
 	this.__buffer = pre .. str .. post;
 	this.__offset = this.__offset + offset;
+end
+
+function PARSER.Remove(this, token)
+	this:Replace(this, token, "");
 end
 
 function PARSER.InjectBefore(this, token, str)
@@ -205,129 +209,233 @@ function PARSER.InjectAfter(this, token, str)
 	local post = string.gsub(this.__buffer, this.__offet + token.stop + 1);
 	this.__buffer = pre .. str .. post;
 	this.__offset = this.__offset + string.len(str);
+end]]
+
+--[[
+]]
+
+function PARSER.StartInstruction(this, type, token);
+	local inst = {};
+	inst.type = type;
+	inst.result = "void";
+	inst.rCount = 0;
+	inst.token = token;
+	inst.char = token.char;
+	inst.line = token.lin;
+	inst.offset = this.__offset;
+	inst.operations = {};
+	return inst;
+end
+
+function PARSER.QueueReplace(this, inst, token, str)
+	local op = {};
+	op.type = "rep";
+	op.token = token;
+	op.str = str;
+	inst.operations[#inst.operations + 1] = op;
+end
+
+function PARSER.QueueRemove(this, inst, token)
+	local op = {};
+	op.type = "rem";
+	op.token = token;
+	inst.operations[#inst.operations + 1] = op;
+end
+
+function PARSER.QueueInjectionBefore(this, inst, token, str)
+	local op = {};
+	op.type = "bef";
+	op.token = token;
+	op.str = str;
+	inst.operations[#inst.operations + 1] = op;
+end
+
+function PARSER.QueueInjectionAfter(this, inst, token, str)
+	local op = {};
+	op.type = "aft";
+	op.token = token;
+	op.str = str;
+	inst.operations[#inst.operations + 1] = op;
+end
+
+function PARSER.SetEndResults(this, inst, type, count)
+	inst.type = type;
+	inst.rCount = count or 1;
+end
+
+function PARSER.EndInstruction(this, inst, instructions)
+	inst.instructions = instructions;
+	inst.final = this.__token;
+	return inst;
 end
 
 --[[
 ]]
 
 function PARSER.Root(this)
-	if (not this:HasTokens())
-		return;
+	local seq = this:StartInstruction("seq", this.__token);
+
+	local stmts = this:Statments(this, false);
+
+	return this:EndInstruction(this, seq, stmts);
+end
+
+function PARSER.Block_1(this, _end, lcb)
+	this:ExcludeWhiteSpace( "Further input required at end of code, incomplete statment" )
+	
+	if (this:Accept("lcb")) then
+		this.__depth = this.__deph + 1;
+
+		local seq = this:StartInstruction("seq", this.__token);
+
+		this:QueueReplace(seq, this.__token, lcb;
+
+		local stmts = this:Statments(true);
+
+		this.__depth = this.__deph - 1;
+
+		this:Require("rcb", "Right curly bracket (}) missing, to close block");
+
+		if (_end) then
+			this:QueueReplace(seq, this.__token, "end");
+		end
+
+		return this:EndInstruction(this, seq, stmts);
 	end
 
-	local line = this.__token.line;
+	this.__depth = this.__deph + 1;
+
+	local seq = this:StartInstruction("seq", this.__token);
+
+	this:QueueInjectionAfter(seq, this.__token, lcb);
+
+	local stmt = this:Statment_1();
+
+	this.__depth = this.__deph - 1;
+
+	if (_end) then
+		this:QueueInjectionBefore(seq, this.__token, "end");
+	else
+		this:QueueRemove(seq, this.__token);
+	end
+
+	return this:EndInstruction(this, seq, {stmt})
+end
+
+function PARSER.Statments(this, block)
+	local pre;
+	local sep = false;
+	local stmts = {};
 
 	while true do
+
+		if (pre and this:Accept("sep") then
+			sep = true;
+		end
+
 		local stmt = this:Statment_1();
+
+		if (block and this:Check("rcb")) then
+			break;
+		end
 
 		if (not this:HasTokens()) then
 			break;
 		end
 
-		if (line == this.__token.line) then
-			this:Require("Statements must be separated by semicolon (;) or newline")
-		end
-
-		if (this.__statment == "return" or this.__statment == "continue" or this.__statment == "break") then
-			this:Throw(nil, "Unreachable code after %s statment.", this.__statment);
-		end
-	end
-end
-
-function PARSER.Block_1(this, lcb, _end)
-	this:ExcludeWhiteSpace("Further input required at end of code, incomplete statment")
-
-	this.__depth = this.__depth + 1;
-
-	if ( not this:Accept("lcb")) then
-		this:InjectBefore(this.__token, lcb);
-
-		this:Statment_1();
-
-		if (_end) then
-			this:InjectAfter(this.__token, "end");
-		end
-	else
-		this:Replace(this.__token, lcb)
-
-		local line = this.__token.line;
-
-		while true do
-			this:Statment_1();
-
-			if (not this:HasTokens()) then
-				break;
+		if (pre) then
+			if (pre.line == stmt.line and not sep) then
+				this:Throw(stmt.token, "Statements must be separated by semicolon (;) or newline")
 			end
 
-			if (line == this.__token.line) then
-				this:Require("sep", "Statements must be separated by semicolon (;) or newline")
-			end
-
-			if (this.__instruction.type == "return" or this.__instruction.type == "continue" or this.__instruction.type == "break") then
-				this:Throw(nil, "Unreachable code after %s statment.", this.__instruction);
-			end
-
-			this:RequireToken("rcb", "Right curly bracket (}) missing, to close block.")
-
-			if (_end) then
-				this:Replace(this.__token, "end");
+			if (pre.type == "return") then
+				this:Throw(stmt.token, "Statment can not appear after return.")
+			elseif (pre.type == "continue") then
+				this:Throw(stmt.token, "Statment can not appear after continue.")
+			elseif (pre.type == "break") then
+				this:Throw(stmt.token, "Statment can not appear after break.")
 			end
 		end
+
+		pre = stmt;
+
+		stmts[#stmts + 1] = stmt;
 	end
 
-	this.__depth = this.__depth - 1;
+	return stmts;
 end
 
 function PARSER.Statment_1(this)
 	if (this:Accept("if")) then
-		local tkn = this.__token;
+		local inst = this:StartInstruction(this, "if", this.__token);
 
-		this:Condition();
+		inst.condition = this:Condition();
 
-		this:block_1("then", false);
+		inst.block = this:block_1(false, "then");
 
-		this:AddInstruction(tkn, "if");
+		inst._else = this:Statment_2();
 
-		this:Statment_2()
+		this:QueueInjectionAfter(inst, this.__token, "end");
 
-		this:InjectAfter(this.__token, "end");
+		return this:EndInstruction(inst, {});
 	end
 
-	this:Statment_4()
+	return this:Statment_4();
 end
 
 function PARSER.Statment_2(this)
 	if (this:Accept("eif")) then
-		local tkn = this.__token;
+		local inst = this:StartInstruction(this, "elseif", this.__token);
 
-		this:Condition();
+		inst.condition = this:Condition();
 
-		this:block_1("then", false);
+		inst.block = this:block_1(false, "then");
 
-		this:AddInstruction(tkn, "elseif");
-		
-		if (this:Accept("eif")) then
-			this:Statment_2();
-		else
-			this:Statment_3();
-		end
+		inst._else = this:Statment_2();
+
+		return this:EndInstruction(inst, {});
 	end
 
-	this:Statment_4()
+	return this:Statment_3();
 end
 
-function PARSER.Statment_2(this)
-	if (this:Accept("eif")) then
-		local tkn = this.__token;
+function PARSER.Statment_3(this)
+	if (this:Accept("els")) then
+		local inst = this:StartInstruction(this, "else", this.__token);
 
-		this:block_1("then", false);
+		inst.block = this:block_1(false, "");
 
-		this:AddInstruction(tkn, "else");
+		return this:EndInstruction(inst, {});
+	end
+end
+
+function PARSER.Statment_4(this)
+	if (this:Accept("sv")) then
+		local inst = this:StartInstruction(this, "server", this.__token);
+
+		this:QueueInjectionBefore(inst, this.__token, "if");
+
+		this:QueueReplace(inst, this.__token, "(SERVER)");
+
+		inst.block = this:block_1(true, "then");
+
+		return this:EndInstruction(inst, {});
 	end
 
-	this:Statment_4()
+	if (this:Accept("cl")) then
+		local inst = this:StartInstruction(this, "client", this.__token);
+
+		this:QueueInjectionBefore(inst, this.__token, "if");
+
+		this:QueueReplace(inst, this.__token, "(CLIENT)");
+
+		inst.block = this:block_1(true, "then");
+
+		return this:EndInstruction(inst, {});
+	end
+
+	return this:Statment_5();
 end
 
 --[[
 ]]
-

@@ -299,7 +299,7 @@ function TOKENIZER.CreateToken(this, type, name, data);
 	tkn.type = type;
 	tkn.name = name;
 	tkn.data = data;
-	
+
 	tkn.start = this.__dataStart + this.__offset;
 	tkn.stop = this.__dataEnd + this.__offset;
 	tkn.pos = this.__pos;
@@ -335,16 +335,12 @@ function TOKENIZER.SkipComments(this)
 	end
 end
 
-function TOKENIZER.Replace(this, start, _end, str)
-	local len = _end - start;
-	local pre = string.sub(this.__buffer, 1, this.__offet + start);
-	local post = string.sub(this.__buffer, this.__offset + _end);
+function TOKENIZER.Replace(this, str)
+	local len = string.len(this.__data) - string.len(str);
+	
+	this.__data = str;
 
-	this.__buffer = pre + str + post;
-
-	if (len > 0) then
-		this.__offset = this.__offset + len)
-	end
+	this.__offset = this.__offset + len
 end
 
 --[[
@@ -365,13 +361,13 @@ function TOKENIZER.Loop(this)
 	if (this:NextPattern("^/%*.-%*/")) then
 		skip = true;
 		local cmnt = "--[[" .. string.sub(this.__data, 3, string.len(this.__data) - 2) .. "]]";
-		this:Replace(this.__dataStart, this.__dataend, cmnt);
+		this:Replace(cmnt);
 	elseif (this:NextPattern("/*", true)) then
 		this:Throw(0, "Un-terminated multi line comment (/*)", 0);
 	elseif (this:NextPattern("^//.-\n")) then
 		skip = true;
 		local cmnt = "--" .. string.sub(this.__data, 3);
-		this:Replace(this.__dataStart, this.__dataend, cmnt);
+		this:Replace(cmnt);
 	end
 
 	if (skip) then
@@ -482,7 +478,7 @@ function TOKENIZER.Loop(this)
 			-- Multi line strings need to be converted to lua syntax.
 			if (strChar == "'") then
 				local str = "[[" .. string.sub(this.__data, 2, string.len(this.__data) - 1) .. "]]";
-				this:Replace(this.__dataStart, this.__dataend, str);
+				this:Replace(str);
 			end
 
 			this:CreateToken("str", "string");
