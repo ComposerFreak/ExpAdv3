@@ -9,7 +9,6 @@
 
 	::Expression Advanced 3 Library::
 	`````````````````````````````````
-	
 ]]
 
 EXPR_LIB = {};
@@ -68,19 +67,19 @@ local loadConstructors = false;
 
 function EXPR_LIB.RegisterConstructor(class, parameters, constructor)
 	if (not loadConstructors) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor new %s(%s) outside of Hook::Expression3.LoadConstructors", class, parameters)
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor new %s(%s) outside of Hook::Expression3.LoadConstructors", class, parameters);
 	end
 
 	local cls = EXPR_LIB.GetClass(class);
 
 	if (not cls) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor new %s(%s) for none existing class", class, parameters)
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor new %s(%s) for none existing class", class, parameters);
 	end
 
-	local state, signature = EXPR_LIB.ProcessPeramaters();
+	local state, signature = EXPR_LIB.ProcessPeramaters(parameters);
 
 	if (not state) then
-		EXPR_LIB.ThrowInternal(0, "%s for Constructor new %s(%s)", signature, class, parameters)
+		EXPR_LIB.ThrowInternal(0, "%s for Constructor new %s(%s)", signature, class, parameters);
 	end
 
 	cls.constructors[signature] = constructor;
@@ -90,20 +89,100 @@ local methods;
 local loadMethods = false;
 
 function EXPR_LIB.RegisterMethod(class, name, parameters, type, count, method)
+	if (not loadMethods) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) outside of Hook::Expression3.LoadMethods", class, name, parameters);
+	end
 
+	local cls = EXPR_LIB.GetClass(class);
+
+	if (not cls) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) for none existing class %s", class, name, parameters, class);
+	end
+
+	local state, signature = EXPR_LIB.ProcessPeramaters(parameters);
+
+	if (not state) then
+		EXPR_LIB.ThrowInternal(0, "%s for method %s:%s(%s)", signature, class, name, parameters);
+	end
+
+	local res = EXPR_LIB.GetClass(type);
+
+	if (not res) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) with none existing return class %s", class, name, parameters, type);
+	end
+
+	local meth = {};
+	meth.name = name;
+	meth.class = cls.id;
+	meth.parameters = signature;
+	meth.signature = string.format("%s:%s(%s)", cls.id, name, signature);
+	meth.type = res.id;
+	meth.count = count;
+	meth.operation = method;
+
+	methods[meth.signature] = meth;
+	-- <Insert Heisenburg joke here>
 end
 
 local operators;
 local loadOperators = false;
 
 function EXPR_LIB.RegisterOperator(operation, parameters, type, count, operator)
+	if (not loadOperators) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register operator %s(%s) outside of Hook::Expression3.LoadOperators", operation, parameters);
+	end
 
+	local state, signature = EXPR_LIB.ProcessPeramaters(parameters);
+
+	if (not state) then
+		EXPR_LIB.ThrowInternal(0, "%s for operator %s(%s)", signature, operation, parameters);
+	end
+
+	local res = EXPR_LIB.GetClass(type);
+
+	if (not res) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register operator %s(%s) with none existing return class %s", name, parameters, type);
+	end
+
+	local op = {};
+	op.name = name;
+	op.class = cls.id;
+	op.parameters = signature;
+	op.signature = string.format("%s(%s)", name, signature);
+	op.type = res.id;
+	op.count = count;
+	op.operation = operator;
+
+	operators[op.signature] = op;
 end
 
 local castOperators;
 
-function EXPR_LIB.RegisterCastingOperator(type, parameters, operator)
+function EXPR_LIB.RegisterCastingOperator(type, parameter, operator)
+	if (not loadOperators) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register casting operator [(%s) %s] outside of Hook::Expression3.LoadOperators", type, parameter);
+	end
 
+	local state, signature = EXPR_LIB.ProcessPeramaters(parameters);
+
+	if (not state) then
+		EXPR_LIB.ThrowInternal(0, "%s for casting operator [(%s) %s]", signature, type, parameter);
+	end
+
+	local res = EXPR_LIB.GetClass(type);
+
+	if (not res) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register casting operator [(%s) %s] for none existing class %s", type, parameter, type);
+	end
+
+	local op = {};
+	op.parameters = signature;
+	op.signature = string.format("(%s)%s", type, signature);
+	op.type = res.id;
+	op.count = 1;
+	op.operation = operator;
+
+	castOperators[op.signature] = op;
 end
 
 local librarys;
@@ -130,14 +209,29 @@ end
 --[[
 ]]
 
-function EXPR_LIB.IsValidClass(class)
-end
 
 function EXPR_LIB.GetClass(class)
+	return classes[class] or classIDs[class];
+end
+
+function EXPR_LIB.IsValidClass(class)
+	return (classes[class] or classIDs[class]) ~= nil;
 end
 
 function EXPR_LIB.ProcessPeramaters(peramaters)
+	local signature = {};
 
+	for k, v in pairs(string.Explode(",", peramaters)) do
+		local cls = classes[v] or classIDs[v];
+
+		if (not cls) then
+			return false, string.format("Invalid class (%s) for parameter #%i", v, k);
+		end
+
+		signature[k] = cls.id;
+	end
+
+	return true, table.concat(signature, ",");
 end
 
 --[[
@@ -149,7 +243,7 @@ end
 local EXTENTION = {};
 EXTENTION.__index = EXTENTION;
 
-function EXPR_LIB.RegisterExtention(this, name)
+function EXPR_LIB.RegisterExtention(name)
 	local ext = {};
 
 	ext.name = name;
@@ -207,9 +301,13 @@ end
 
 function EXTENTION.CheckRegistration(this, _function, ...)
 	local state, err = Pcall(_function, ...);
+
+	if (not state) then
+		EXPR_LIB.ThrowInternal(0, "%s in component %s", err, this.name);
+	end
 end
 
-function EXTENTION.Registercomponent(this)
+function EXTENTION.EnableExtention(this)
 	hook.Add("Expression3.LoadClasses", "Expression3.Component." .. this.name, function()
 		for _, v in pairs(this.classes) do
 			this:CheckRegistration(EXPR_LIB.RegisterClass, v[1], v[2], v[3], v[4]);
@@ -263,11 +361,14 @@ end
 ]]
 
 function EXPR_LIB.Initalize()
+	hook.Run("Expression3.RegisterComponents");
+
 	classes = {};
 	classIDs = {};
 	loadClasses = true;
 	hook.Run("Expression3.LoadClasses");
 	loadClasses = false;
+	EXPR_CLASSES = classes;
 
 	loadConstructors = true;
 	hook.Run("Expression3.LoadConstructors");
@@ -277,17 +378,20 @@ function EXPR_LIB.Initalize()
 	loadMethods = true;
 	hook.Run("Expression3.LoadMethods");
 	loadMethods = false;
+	EXPR_METHODS = methods;
 
 	operators = {};
 	castOperators = {};
 	loadOperators = true;
 	hook.Run("Expression3.LoadOperators");
 	loadOperators = false;
+	EXPR_OPERATORS = operators;
 
 	librarys = {};
 	loadLibraries = true;
 	hook.Run("Expression3.LoadLibraries");
 	loadLibraries = false;
+	EXPADV_LIBRARIES = libraries;
 
 	functions = {};
 	loadFunctions = true;
@@ -298,4 +402,7 @@ function EXPR_LIB.Initalize()
 	loadEvents = true;
 	hook.Run("Expression3.LoadEvents");
 	loadEvents = false;
+	EXPADV_EVENTS = events;
+
+	hook.Run("Expression3.PostRegisterComponents");
 end

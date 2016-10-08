@@ -22,11 +22,7 @@ local KEYWORDS = {
 		["for"] = {"for", "for"},
 		["foreach"] = {"each", "foreach"},
 		["function"] = {"func", "function"},
-		["default"] = {"dft", "default"},
 		["event"] = {"evt", "event"},
-		["try"] = {"try", "try"},
-		["catch"] = {"cth", "catch"},
-		["final"] = {"fnl", "final"},
 		["true"] = {"tre", "true"},
 		["false"] = {"fls", "false"}
 		["void"] = {"void", "void"}
@@ -34,12 +30,9 @@ local KEYWORDS = {
 		["continue"] = {"cnt", "continue"},
 		["return"] = {"ret", "return"},
 		["global"] = {"glo", "global"},
-		["input"] = {"in", "input"},
-		["output"] = {"out", "output"},
-		["static"] = {"stc", "static"},
-		["synced"] = {"syn", "synced"},
 		["server"] = {"sv", "server"},
 		["client"] = {"cl", "client"},
+		["new"] = {"new", "constructor"},
 	}
 }
 
@@ -97,6 +90,7 @@ local TOKENS = {
 ]]
 
 local TOKENIZER = {};
+TOKENIZER.__index = TOKENIZER;
 
 function TOKENIZER.new(lang)
 	return setmetatable({}, TOKENIZER);
@@ -494,6 +488,20 @@ function TOKENIZER.Loop(this)
 		this:Throw(0, "Unterminated string (\"%s)", str);
 	end
 
+	-- Classes
+	
+	for k, v in pairs(EXPR_CLASSES) do
+		if (this:NextPattern("%( *" .. k .. " *%)") then
+			this:CreateToken("cst", "cast", k);
+			return true;
+		end
+
+		if (this:NextPattern(k, true) then
+			this:CreateToken("typ", "type", k);
+			return true;
+		end
+	end
+
 	-- Keywords.
 
 	if (this:NextPattern("^[a-zA-Z][a-zA-Z0-9_]*")) then
@@ -508,8 +516,6 @@ function TOKENIZER.Loop(this)
 		
 		return true;
 	end
-
-	-- TODO: Class names and casting :D
 
 	-- Ops
 
