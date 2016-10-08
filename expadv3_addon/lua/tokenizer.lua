@@ -13,39 +13,129 @@
 	Using code by Divran, Oskar94, and maybe a few others.
 ]]
 
+local KEYWORDS = {
+	EXPADV = {
+		["if"] = {"if", "if"},
+		["elseif"] = {"eif", "elseif"},
+		["else"] = {"els", "else"},
+		["while"] = {"whl", "while"},
+		["for"] = {"for", "for"},
+		["foreach"] = {"each", "foreach"},
+		["function"] = {"func", "function"},
+		["default"] = {"dft", "default"},
+		["event"] = {"evt", "event"},
+		["try"] = {"try", "try"},
+		["catch"] = {"cth", "catch"},
+		["final"] = {"fnl", "final"},
+		["true"] = {"tre", "true"},
+		["false"] = {"fls", "false"}
+		["void"] = {"void", "void"}
+		["break"] = {"brk", "break"},
+		["continue"] = {"cnt", "continue"},
+		["return"] = {"ret", "return"},
+		["global"] = {"glo", "global"},
+		["input"] = {"in", "input"},
+		["output"] = {"out", "output"},
+		["static"] = {"stc", "static"},
+		["synced"] = {"syn", "synced"},
+		["server"] = {"sv", "server"},
+		["client"] = {"cl", "client"},
+	}
+}
 
-local T = {};
+local TOKENS = {
+	EXPADV = {
+		{ "+", "add", "addition" },
+		{ "-", "sub", "subtract" },
+		{ "*", "mul", "multiplier" },
+		{ "/", "div", "division" },
+		{ "%", "mod", "modulus" },
+		{ "^", "exp", "power" },
+		{ "=", "ass", "assign" },
+		{ "+=", "aadd", "increase" },
+		{ "-=", "asub", "decrease" },
+		{ "*=", "amul", "multiplier" },
+		{ "/=", "adiv", "division" },
+		{ "++", "inc", "increment" },
+		{ "--", "dec", "decrement" },
+		{ "==", "eq", "equal" },
+		{ "!=", "neq", "unequal" },
+		{ "<", "lth", "less" },
+		{ "<=", "leq", "less or equal" },
+		{ ">", "gth", "greater" },
+		{ ">=", "geq", "greater or equal" },
+		{ "&", "band", "and" },
+		{ "|", "bor", "or" },
+		{ "^^", "bxor", "or" },
+		{ ">>", "bshr", ">>" },
+		{ "<<", "bshl", "<<" },
+		{ "!", "not", "not" },
+		{ "&&", "and", "and" },
+		{ "||", "or", "or" },
+		{ "?", "qsm", "?" },
+		{ ":", "col", "colon" },
+		{ ";", "sep", "semicolon" },
+		{ ",", "com", "comma" },
+		{ "$", "dlt", "delta" },
+		{ "#", "len", "length" },
+		{ "~", "cng", "changed" },
+		{ "->", "wc", "connect" },
+		{ ".", "prd", "period" },
+		{ "(", "lpa", "left parenthesis" },
+		{ ")", "rpa", "right parenthesis" },
+		{ "{", "lcb", "left curly bracket" },
+		{ "}", "rcb", "right curly bracket" },
+		{ "[", "lsb", "left square bracket" },
+		{ "]", "rsb", "right square bracket" },
+		{ '@', "dir", "directive operator" },
+		{ "...", "varg", "varargs" },
+	}
+}
 
-function T.new()
-	return setmetatable({}, T);
+--[[
+	Notes: 	I plan on posibly making this compiler multi language capable.
+]]
+
+local TOKENIZER = {};
+
+function TOKENIZER.new(lang)
+	return setmetatable({}, TOKENIZER);
 end
 
-function T.Initalize(this, script)
-	this.__pos = 0;
-	this.__offset = 0;
-	this.__depth = 0;
+function TOKENIZER.Initalize(this, lang, script)
+	if (KEYWORDS[lang] and TOKENS[lang]) then
+		this.__pos = 0;
+		this.__offset = 0;
+		this.__depth = 0;
 
-	this.__char = "";
-	this.__data = "";
-	this.__dataStart = 1;
-	this.__dataEnd = 1;
+		this.__char = "";
+		this.__data = "";
+		this.__dataStart = 1;
+		this.__dataEnd = 1;
 
-	this.__tokenPos = 0;
-	this.__tokenLine = 0;
-	this.__tokenChar = 0;
+		this.__tokenPos = 0;
+		this.__tokenLine = 0;
+		this.__tokenChar = 0;
 
-	this.__readChar = 1;
-	this.__readLine = 1;
+		this.__readChar = 1;
+		this.__readLine = 1;
 
-	this.__tokens = {};
-	this.__script = script;
-	this.__buffer = script;
-	this.__lengh = string.len(script);
+		this.__tokens = {};
+		this.__script = script;
+		this.__buffer = script;
+		this.__lengh = string.len(script);
 
-	this:NextChar();
+		this.language = lang;
+		this.tokens = TOKENS[lang];
+		this.keywords = KEYWORDS[lang];
+
+		this:NextChar();
+	else
+		return nil, "No such language.";
+	end
 end
 
-function T.Run(this)
+function TOKENIZER.Run(this)
 	--TODO: PcallX for stack traces on internal errors?
 	local status, result = Pcall(T._Run, this);
 
@@ -64,7 +154,7 @@ function T.Run(this)
 	return false, err;
 end
 
-function T._Run(this)
+function TOKENIZER._Run(this)
 	while (this.__char ~= nil) do
 		this:Loop();
 	end
@@ -76,7 +166,7 @@ function T._Run(this)
 	return result;
 end
 
-function T.Throw(this, offset, msg, fst, ...)
+function TOKENIZER.Throw(this, offset, msg, fst, ...)
 	local err = {};
 
 	if (fst) then
@@ -94,91 +184,13 @@ end
 --[[
 ]]
 
-local KEYWORDS = {
-	["if"] = {"if", "if"},
-	["elseif"] = {"eif", "elseif"},
-	["else"] = {"els", "else"},
-	["while"] = {"whl", "while"},
-	["for"] = {"for", "for"},
-	["foreach"] = {"each", "foreach"},
-	["function"] = {"func", "function"},
-	["default"] = {"dft", "default"},
-	["event"] = {"evt", "event"},
-	["try"] = {"try", "try"},
-	["catch"] = {"cth", "catch"},
-	["final"] = {"fnl", "final"},
-	["true"] = {"tre", "true"},
-	["false"] = {"fls", "false"}
-	["void"] = {"void", "void"}
-	["break"] = {"brk", "break"},
-	["continue"] = {"cnt", "continue"},
-	["return"] = {"ret", "return"},
-	["global"] = {"glo", "global"},
-	["input"] = {"in", "input"},
-	["output"] = {"out", "output"},
-	["static"] = {"stc", "static"},
-	["synced"] = {"syn", "synced"},
-	["server"] = {"sv", "server"},
-	["client"] = {"cl", "client"},
-}
-
-local TOKENS = {
-	{ "+", "add", "addition" },
-	{ "-", "sub", "subtract" },
-	{ "*", "mul", "multiplier" },
-	{ "/", "div", "division" },
-	{ "%", "mod", "modulus" },
-	{ "^", "exp", "power" },
-	{ "=", "ass", "assign" },
-	{ "+=", "aadd", "increase" },
-	{ "-=", "asub", "decrease" },
-	{ "*=", "amul", "multiplier" },
-	{ "/=", "adiv", "division" },
-	{ "++", "inc", "increment" },
-	{ "--", "dec", "decrement" },
-	{ "==", "eq", "equal" },
-	{ "!=", "neq", "unequal" },
-	{ "<", "lth", "less" },
-	{ "<=", "leq", "less or equal" },
-	{ ">", "gth", "greater" },
-	{ ">=", "geq", "greater or equal" },
-	{ "&", "band", "and" },
-	{ "|", "bor", "or" },
-	{ "^^", "bxor", "or" },
-	{ ">>", "bshr", ">>" },
-	{ "<<", "bshl", "<<" },
-	{ "!", "not", "not" },
-	{ "&&", "and", "and" },
-	{ "||", "or", "or" },
-	{ "?", "qsm", "?" },
-	{ ":", "col", "colon" },
-	{ ";", "sep", "semicolon" },
-	{ ",", "com", "comma" },
-	{ "$", "dlt", "delta" },
-	{ "#", "len", "length" },
-	{ "~", "cng", "changed" },
-	{ "->", "wc", "connect" },
-	{ ".", "prd", "period" },
-	{ "(", "lpa", "left parenthesis" },
-	{ ")", "rpa", "right parenthesis" },
-	{ "{", "lcb", "left curly bracket" },
-	{ "}", "rcb", "right curly bracket" },
-	{ "[", "lsb", "left square bracket" },
-	{ "]", "rsb", "right square bracket" },
-	{ '@', "dir", "directive operator" },
-	{ "...", "varg", "varargs" },
-}
-
---[[
-]]
-
-function T.NextChar(this)
+function TOKENIZER.NextChar(this)
 	this.__dataEnd = this.__dataEnd + 1;
 	this.__data = this.__data .. this.__char;
 	this:SkipChar();
 end
 
-function T.SkipChar(this)
+function TOKENIZER.SkipChar(this)
 	if (this.__lengh < this.__pos) then
 		this.__char = nil;
 	else if (this.__char == "\n") then
@@ -188,7 +200,7 @@ function T.SkipChar(this)
 	end
 end
 
-function T.PushLine(this)
+function TOKENIZER.PushLine(this)
 	this.__readLine = this.__readLine + 1;
 	this.__readChar = 1;
 
@@ -196,14 +208,14 @@ function T.PushLine(this)
 	this.__char = string.sub(this.__script, this.__pos, this.__pos);
 end
 
-function T.PushChar(this)
+function TOKENIZER.PushChar(this)
 	this.__readChar = this.__readChar + 1;
 
 	this.__pos = this.__pos + 1;
 	this.__char = string.sub(this.__script, this.__pos, this.__pos);
 end
 
-function T.Clear(this)
+function TOKENIZER.Clear(this)
 	this.__data = "";
 	this.__match = "";
 	this.__dataStart = this.__pos;
@@ -213,7 +225,7 @@ end
 --[[
 ]]
 
-function T.NextPattern(this, pattern, exact)
+function TOKENIZER.NextPattern(this, pattern, exact)
 	if (this.__char == nil) then
 		return false;
 	end
@@ -253,7 +265,7 @@ function T.NextPattern(this, pattern, exact)
 	return true;
 end
 
-function T.MatchPattern(this, pattern, exact)
+function TOKENIZER.MatchPattern(this, pattern, exact)
 	local s, e, r = string.find(this.__script, pattern, this.__pos, exact);
 
 	if (s ~= this.__pos) then
@@ -263,7 +275,7 @@ function T.MatchPattern(this, pattern, exact)
 	return true, string.sub(this.__script. this.__pos, this.__pos);
 end
 
-function T.NextPatterns(this, exact, pattern, pattern2, ...)
+function TOKENIZER.NextPatterns(this, exact, pattern, pattern2, ...)
 	if (this:NextPattern(pattern, exact)) then
 		return true;
 	end
@@ -278,13 +290,16 @@ end
 --[[
 ]]
 
-function T.CreateToken(this, type, name, data);
+function TOKENIZER.CreateToken(this, type, name, data);
 	if (not data) then
 		data = this.__data;
 	end
 
 	local tkn = {};
+	tkn.type = type;
+	tkn.name = name;
 	tkn.data = data;
+	
 	tkn.start = this.__dataStart + this.__offset;
 	tkn.stop = this.__dataEnd + this.__offset;
 	tkn.pos = this.__pos;
@@ -298,7 +313,7 @@ end
 --[[
 ]]
 
-function T.SkipSpaces(this)
+function TOKENIZER.SkipSpaces(this)
 	this:NextPattern("^[%s\n]*");
 
 	local r = this.__match;
@@ -308,7 +323,7 @@ function T.SkipSpaces(this)
 	return r;
 end
 
-function T.SkipComments(this)
+function TOKENIZER.SkipComments(this)
 	if (this:NextPattern("^/%*.-%*/") or this:NextPattern("^//.-\n")) then
 		this.__data = "";
 		this.__skip = true;
@@ -320,7 +335,7 @@ function T.SkipComments(this)
 	end
 end
 
-function T.Replace(this, start, _end, str)
+function TOKENIZER.Replace(this, start, _end, str)
 	local len = _end - start;
 	local pre = string.sub(this.__buffer, 1, this.__offet + start);
 	local post = string.sub(this.__buffer, this.__offset + _end);
@@ -335,7 +350,7 @@ end
 --[[
 ]]
 
-function T.Loop(this)
+function TOKENIZER.Loop(this)
 	if (this.__char == nil) then
 		return false;
 	end
@@ -487,7 +502,7 @@ function T.Loop(this)
 
 	if (this:NextPattern("^[a-zA-Z][a-zA-Z0-9_]*")) then
 		local w = this.__data;
-		local tkn = KEYWORDS[w];
+		local tkn = this.keywords[w];
 
 		if (tkn) then
 			this:CreateToken(tkn[1], tkn[2]);
@@ -502,8 +517,8 @@ function T.Loop(this)
 
 	-- Ops
 
-	for k = 1, #TOKENS, 1 do
-		local v = [k];
+	for k = 1, #this.tokens, 1 do
+		local v = this.tokens[k];
 		local op = v[1];
 
 		if (this:NextPattern(op, true)) then
@@ -526,3 +541,10 @@ function T.Loop(this)
 	end
 end
 
+
+--[[
+]]
+
+EXPR_TOKENS = TOKENS;
+EXPR_KEYWORDS = KEYWORDS;
+EXPR_TOKENIZER = TOKENIZER;
