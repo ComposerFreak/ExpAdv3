@@ -11,7 +11,7 @@
 	``````````````````
 ]]
 
-hook.Add("Expression3.RegisterComponents", "Expression3.Compoent.Core", function()
+hook.Add("Expression3.RegisterComponents", "Expression3.Extention.Core", function()
 	local ext = EXPR_LIB.RegisterExtention("math")
 
 	local function n_isType(v)
@@ -38,7 +38,7 @@ hook.Add("Expression3.RegisterComponents", "Expression3.Compoent.Core", function
 		else
 			return val;
 		end
-	end);
+	end); -- n = math.clam(n,n,n);
 
 	ext:RegisterFunction("math", "range", "n,n,n,n,n", "n", 2, function(ctx, fst, ...)
 		local min = fst;
@@ -55,6 +55,6 @@ hook.Add("Expression3.RegisterComponents", "Expression3.Compoent.Core", function
 		end
 
 		return min, max; -- A good example of a function that can return more then 1 value.
-	end);
+	end); -- n, n = math.range(n,n,n,n,n);
 
-end)
+end);

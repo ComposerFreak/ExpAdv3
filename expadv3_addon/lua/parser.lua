@@ -22,7 +22,8 @@
 			2 - elseif (expr1) blck1 [stmt2]
 			3 - else blck1
 			4 - state blck1
-			6 - [global] type var[, var*][= exp1][, expr*]
+			5 - [global] type var[, var*][= exp1][, expr*] or stmt7
+			6 - var[, var*][+-/*= exp1][, expr*]
 
 		:::Expressions(expr):::
 			1 - (exp1) or exp2
@@ -30,6 +31,7 @@
 ]]
 
 local PARSER = {};
+PARSER.__index = PARSER;
 
 function PARSER.New()
 	return setmetatable({}, PARSER);
@@ -365,6 +367,9 @@ function PARSER.Statments(this, block)
 	return stmts;
 end
 
+--[[
+]]
+
 function PARSER.Statment_1(this)
 	if (this:Accept("if")) then
 		local inst = this:StartInstruction(this, "if", this.__token);
@@ -409,6 +414,9 @@ function PARSER.Statment_3(this)
 	end
 end
 
+--[[
+]]
+
 function PARSER.Statment_4(this)
 	if (this:Accept("sv")) then
 		local inst = this:StartInstruction(this, "server", this.__token);
@@ -439,3 +447,198 @@ end
 
 --[[
 ]]
+
+function PARSER.Statment_5(this)
+	if (this:Accept("glo")) then
+		local inst = this:StartInstruction(this, "global", this.__token);
+
+		this:Require("typ", "Class expected after global.");
+		
+		local type = this.token.data;
+		this:QueueRemove(inst, this.__token);
+
+		local variables = {};
+
+		this:Require("var", "Variable('s) expected after class for global variable.");
+		variables[1] = this.__token.data;
+		this:QueueInjectBefore(inst, this.__token, "GLOBAL");
+		this:QueueInjectBefore(inst, this.__token, ".");
+
+		while (this:Accpet("com")) then
+			this:Require("var", "Variable expected after comma (,).");
+			variables[#variables + 1] = this.__token.data;
+			this:QueueInjectBefore(inst, this.__token, "GLOBAL");
+			this:QueueInjectBefore(inst, this.__token, ".");
+		end
+
+		local expressions = {};
+
+		if (this:Accept("ass")) then
+			this:ExcludeWhiteSpace( "Assigment operator (=), must not be preceeded by whitespace." );
+			
+			expressions[1] = this:expression_1();
+
+			while (this:Accpet("com")) then
+				this:ExcludeWhiteSpace( "comma (,) must not be preceeded by whitespace." );
+				expressions[#expressions + 1] = this:expression_1();
+			end
+		end
+
+		return this:EndInstruction(inst, variables, expressions);
+	end
+
+	if (this:Accept("typ")) then
+		local inst = this:StartInstruction(this, "local", this.__token);
+		
+		local type = this.token.data;
+		this:QueueReplace(inst, this.__token, "local");
+
+		local variables = {};
+
+		this:Require("var", "Variable('s) expected after class for global variable.");
+		variables[1] = this.__token.data;
+
+		while (this:Accpet("com")) then
+			this:Require("var", "Variable expected after comma (,).");
+			variables[#variables + 1] = this.__token.data;
+		end
+		
+		local expressions = {};
+
+		if (this:Accept("ass")) then
+			this:ExcludeWhiteSpace( "Assigment operator (=), must not be preceeded by whitespace." );
+			
+			expressions[1] = this:expression_1();
+
+			while (this:Accpet("com")) then
+				this:ExcludeWhiteSpace( "comma (,) must not be preceeded by whitespace." );
+				expressions[#expressions + 1] = this:expression_1();
+			end
+		end
+
+		return this:EndInstruction(inst, variables, expressions);
+	end
+
+	return this:Statment_6()
+end;
+
+function PARSER.Statment_7(this)
+	if (this:Accept("var")) then
+		if (not this:CheckToken("com", "ass", "aadd", "asub", "adiv", "amul")) then
+			this:StepBackward(1);
+		else
+			local inst = this:StartInstruction(this, "ass", this.__token);
+			
+			local variables = {};
+		
+			this:Require("var", "Variable('s) expected after class for global variable.");
+			variables[1] = this.__token.data;
+
+			while (this:Accpet("com")) then
+				this:Require("var", "Variable expected after comma (,).");
+				variables[#variables + 1] = this.__token.data;
+			end
+			
+			local expressions = {};
+
+			if (this:Accept("ass")) then
+				this:ExcludeWhiteSpace( "Assigment operator (=), must not be preceeded by whitespace." );
+				
+				expressions[1] = this:expression_1();
+
+				while (this:Accpet("com")) then
+					this:ExcludeWhiteSpace( "comma (,) must not be preceeded by whitespace." );
+					expressions[#expressions + 1] = this:expression_1();
+				end
+			elseif this:AcceptToken( "aadd" ) then
+				this:ExcludeWhiteSpace( "Assigment operator (+=), must not be preceeded by whitespace." );
+
+				for k, v in pairs(variables) do
+					local inst = this:StartInstruction(this.__token, "ass_add");
+					instVar.variable = v;
+					this:QueueInjectBefore(instVar, this.__token, v);
+					this:QueueInjectBefore(instVar, this.__token, "+");
+					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
+
+					if (k < #variables) then
+						this:ExcludeWhiteSpace("Invalid arithmatic assigment operation, #%i value or equation expected for %s", k, v);
+						
+						if ( not this:Accept("com")) then
+							this:Throw(inst.token, "Expression missing to complete arithmatic assigment operator (+=).");
+						end
+
+					end
+				end
+
+				return this:EndInstruction(inst, variables, expressions);
+			elseif this:AcceptToken( "asub" ) then
+				this:ExcludeWhiteSpace( "Assigment operator (-=), must not be preceeded by whitespace." );
+
+				for k, v in pairs(variables) do
+					local inst = this:StartInstruction(this.__token, "ass_sub");
+					instVar.variable = v;
+					this:QueueInjectBefore(instVar, this.__token, v);
+					this:QueueInjectBefore(instVar, this.__token, "-");
+					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
+
+					if (k < #variables) then
+						this:ExcludeWhiteSpace("Invalid arithmatic assigment operation, #%i value or equation expected for %s", k, v);
+						
+						if ( not this:Accept("com")) then
+							this:Throw(inst.token, "Expression missing to complete arithmatic assigment operator (-=).");
+						end
+
+					end
+				end
+
+				return this:EndInstruction(inst, variables, expressions);
+			elseif this:AcceptToken( "adiv" ) then
+				this:ExcludeWhiteSpace( "Assigment operator (/=), must not be preceeded by whitespace." );
+
+				for k, v in pairs(variables) do
+					local inst = this:StartInstruction(this.__token, "ass_div");
+					instVar.variable = v;
+					this:QueueInjectBefore(instVar, this.__token, v);
+					this:QueueInjectBefore(instVar, this.__token, "/");
+					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
+
+					if (k < #variables) then
+						this:ExcludeWhiteSpace("Invalid arithmatic assigment operation, #%i value or equation expected for %s", k, v);
+						
+						if ( not this:Accept("com")) then
+							this:Throw(inst.token, "Expression missing to complete arithmatic assigment operator (/=).");
+						end
+
+					end
+				end
+
+				return this:EndInstruction(inst, variables, expressions);
+			elseif this:AcceptToken( "amul" ) then
+				this:ExcludeWhiteSpace( "Assigment operator (*=), must not be preceeded by whitespace." );
+
+				for k, v in pairs(variables) do
+					local inst = this:StartInstruction(this.__token, "ass_mul");
+					instVar.variable = v;
+					this:QueueInjectBefore(instVar, this.__token, v);
+					this:QueueInjectBefore(instVar, this.__token, "-");
+					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
+
+					if (k < #variables) then
+						this:ExcludeWhiteSpace("Invalid arithmatic assigment operation, #%i value or equation expected for %s", k, v);
+						
+						if ( not this:Accept("com")) then
+							this:Throw(inst.token, "Expression missing to complete arithmatic assigment operator (*=).");
+						end
+
+					end
+				end
+
+				return this:EndInstruction(inst, variables, expressions);
+			end
+
+			this:Throw(inst.token "Variable can not be preceeded by whitespace.");
+		end
+	end
+
+	return this:Statment_7()
+end;

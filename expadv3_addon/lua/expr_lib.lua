@@ -141,14 +141,14 @@ function EXPR_LIB.RegisterOperator(operation, parameters, type, count, operator)
 	local res = EXPR_LIB.GetClass(type);
 
 	if (not res) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register operator %s(%s) with none existing return class %s", name, parameters, type);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register operator %s(%s) with none existing return class %s", operation, parameters, type);
 	end
 
 	local op = {};
-	op.name = name;
+	op.name = operation;
 	op.class = cls.id;
 	op.parameters = signature;
-	op.signature = string.format("%s(%s)", name, signature);
+	op.signature = string.format("%s(%s)", operation, signature);
 	op.type = res.id;
 	op.count = count;
 	op.operation = operator;
@@ -189,21 +189,83 @@ local librarys;
 local loadLibraries = false;
 
 function EXPR_LIB.RegisterLibrary(name)
+	if (not loadLibraries) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register library %s) outside of Hook::Expression3.LoadLibariess", name);
+	end
 
+	local lib = {};
+	lib.name = string.lower(name);
+	lib._functions = {};
+	lib.constants = {}; -- Future implimentation.
+
+	librarys[lib.name] = lib;
 end
 
 local functions;
 local loadFunctions = false;
 
 function EXPR_LIB.RegisterFunction(library, name, parameters, type, count, _function)
+	if (not loadFunctions) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) outside of Hook::Expression3.LoadFunctions", library, name, parameters);
+	end
 
+	local lib = libraries[string.lower(library)];
+
+	if (not lib) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) to none existing library %s", library, name, parameters, library);
+	end
+
+	local state, signature = EXPR_LIB.ProcessPeramaters(parameters);
+
+	if (not state) then
+		EXPR_LIB.ThrowInternal(0, "%s for function %s.%s(%s)", signature, library, name, parameters);
+	end
+
+	local res = EXPR_LIB.GetClass(type);
+
+	if (not res) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) with none existing return class %s", library, name, parameters, type);
+	end
+
+	local op = {};
+	op.name = name;
+	op.parameters = signature;
+	op.signature = string.format("%s(%s)", name, signature);
+	op.type = res.id;
+	op.count = count;
+	op.operation = operator;
+
+	operators[op.signature] = op;
 end
 
 local events;
 local loadEvents = false;
 
 function EXPR_LIB.RegisterEvent(name, parameters, type, count)
+	if (not loadEvents) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register event %s(%s) outside of Hook::Expression3.LoadEvents", name, parameters);
+	end
 
+	local state, signature = EXPR_LIB.ProcessPeramaters(parameters);
+
+	if (not state) then
+		EXPR_LIB.ThrowInternal(0, "%s for function %s.%s(%s)", signature, library, name, parameters);
+	end
+
+	local res = EXPR_LIB.GetClass(type);
+
+	if (not res) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) with none existing return class %s", library, name, parameters, type);
+	end
+
+	local evt = {};
+	evt.name = name;
+	evt.parameters = signature;
+	evt.signature = string.format("%s(%s)", name, signature);
+	evt.type = res.id;
+	evt.count = count;
+
+	events[evt.signature] = evt;
 end
 
 --[[
@@ -219,19 +281,36 @@ function EXPR_LIB.IsValidClass(class)
 end
 
 function EXPR_LIB.ProcessPeramaters(peramaters)
-	local signature = {};
+	if (peramaters == "") then
+		return true, "";
+	end
 
-	for k, v in pairs(string.Explode(",", peramaters)) do
+	local varg = false;
+	local signature = {};
+	local split = string.Explode(",", peramaters);
+
+	if (split[#split] == "...") then
+		split[#split] = nil;
+		varg = true;
+	end
+
+	for k, v in pairs(split) do
 		local cls = classes[v] or classIDs[v];
 
-		if (not cls) then
+		if (v == "...") then
+			return false, string.format("Vararg (...) must be last parameter", v, k);
+		elseif (not cls) then
 			return false, string.format("Invalid class (%s) for parameter #%i", v, k);
 		end
 
 		signature[k] = cls.id;
 	end
 
-	return true, table.concat(signature, ",");
+	if (varg) then
+		signature[#signature] = "...";
+	end
+
+	return true, table.concat(signature, ","), varg;
 end
 
 --[[
