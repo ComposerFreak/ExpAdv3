@@ -22,9 +22,12 @@
 			2 - elseif (expr1) blck1 [stmt2]
 			3 - else blck1
 			4 - state blck1
-			5 - [global] type var[, var*][= exp1][, expr*] or stmt7
-			6 - var[, var*][+-/*= exp1][, expr*]
-
+			5 - [global] type var[, var*][= exp1][, expr*] or stmt6
+			6 - var[, var*]+-/*= exp1[, expr*] or stmt 7
+			7 - event([type var][, type var]*) blck1
+			8 - 
+			9 - 
+			
 		:::Expressions(expr):::
 			1 - (exp1) or exp2
 			2 - exp3 op exp2
@@ -640,5 +643,5 @@ function PARSER.Statment_7(this)
 		end
 	end
 
-	return this:Statment_7()
-end;
+	return this:Statment_7();
+end

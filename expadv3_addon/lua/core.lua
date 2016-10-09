@@ -11,7 +11,7 @@
 	``````````````````
 ]]
 
-hook.Add("Expression3.RegisterComponents", "Expression3.Extention.Core", function()
+hook.Add("Expression3.RegisterComponents", "Expression3.Extension.Core", function()
 	local ext = EXPR_LIB.RegisterExtention("math")
 
 	local function n_isType(v)
