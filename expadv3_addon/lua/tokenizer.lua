@@ -301,6 +301,12 @@ function TOKENIZER.CreateToken(this, type, name, data);
 	tkn.line = this.__readLine;
 	tkn.depth = this.__depth;
 
+	local prev = this.__tokens[#this.__tokens];
+
+	if (prev and prev.line < tkn.line) then
+		tkn.newLine = true;
+	end
+
 	this.__tokens[#this.__tokens + 1] = tkn;
 end
 
