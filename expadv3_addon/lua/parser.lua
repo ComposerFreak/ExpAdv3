@@ -36,13 +36,21 @@
 			Stmt7 ← (type (Var("," Var)* ("=" / "+=" / "-=" / "/=" / "*=")? (Expr1? ("," Expr1)*)))
 		
 		:::Expressions:::
-			Expr1 ← (Expr1 ? Expr1 : Expr1)? Expr2
-			Expr2 ← (Expr3 || Expr3)? Expr3
-			Expr3 ← (Expr4 && Expr4)? Expr4
-			Expr4 ← (Expr5 ^^ Expr5)? Expr5
-			Expr5 ← (Expr6 | Expr6)? Expr6
-			Expr6 ← (Expr7 & Expr7)? Expr7
-			Expr7 ← (Expr8 ("==" / "!=") (Values / Expr1))? Expr8;
+			Expr1 ← (Expr1 "?" Expr1 ":" Expr1)? Expr2
+			Expr2 ← (Expr3 "||" Expr3)? Expr3
+			Expr3 ← (Expr4 "&&" Expr4)? Expr4
+			Expr4 ← (Expr5 "^^" Expr5)? Expr5
+			Expr5 ← (Expr6 "|" Expr6)? Expr6
+			Expr6 ← (Expr7 "&" Expr7)? Expr7
+			Expr7 ← (Expr8 ("==" / "!=") (Values / Expr1))? Expr8
+			Expr8 ← (Epxr9 (">" / "<" / " >=" / "<=") Expr1)? Expr9
+			Expr9 ← (Epxr10 "<<" Expr10)? Expr10
+			Expr10 ← (Epxr11 ">>" Expr11)? Expr11
+			Expr11 ← (Epxr12 "+" Expr12)? Expr12
+			Expr12 ← (Epxr13 "-" Expr13)? Expr13
+			Expr13 ← (Epxr14 "/" Expr14)? Expr14
+			Expr14 ← (Epxr15 "*" Expr15)? Expr15
+			Expr15 ← (Epxr16 "^" Expr16)? Expr16
 
 		:::Syntax:::
 			Cond ← "(" Expr1 ")"
@@ -184,6 +192,18 @@ function PARSER.StepBackward(steps)
 	this:Next();
 end
 
+function PASRSER.GetFirstTokenOnLine(this)
+	for i = this.__pos, 1, -1 do
+		local tkn = this.__tokens[i];
+
+		if (tkn.newLine) then
+			return tkn;
+		end
+	end
+
+	return this.__tokens[1];
+end
+
 --[[
 ]]
 
@@ -207,32 +227,6 @@ end
 
 --[[
 ]]
-
---[[function PARSER.Replace(this, token, str)
-	local offset = string.len(str) - string.len(token.data);
-	local pre = string.gsub(this.__buffer, 0, this.__offet + token.start);
-	local post = string.gsub(this.__buffer, this.__offet + token.stop);
-	this.__buffer = pre .. str .. post;
-	this.__offset = this.__offset + offset;
-end
-
-function PARSER.Remove(this, token)
-	this:Replace(this, token, "");
-end
-
-function PARSER.InjectBefore(this, token, str)
-	local pre = string.gsub(this.__buffer, 0, this.__offet + token.start - 1);
-	local post = string.gsub(this.__buffer, this.__offet + token.start);
-	this.__buffer = pre .. str .. post;
-	this.__offset = this.__offset + string.len(str);
-end
-
-function PARSER.InjectAfter(this, token, str)
-	local pre = string.gsub(this.__buffer, 0, this.__offet + token.stop);
-	local post = string.gsub(this.__buffer, this.__offet + token.stop + 1);
-	this.__buffer = pre .. str .. post;
-	this.__offset = this.__offset + string.len(str);
-end]]
 
 --[[
 ]]
@@ -727,7 +721,7 @@ function PARSER.Expression_4(this)
 	while this:Accept("bxor") then
 		local inst = this:StartInstruction(expr.token, "bxor");
 
-		this:QueueInjectBefore(expr.token, "bit.bxor");
+		inst.injectFunction = this:QueueInjectBefore(expr.token, "bit.bxor");
 
 		this:QueueInjectBefore(expr.token, "(");
 
@@ -747,7 +741,7 @@ function PARSER.Expression_5(this)
 	while this:Accept("bor") then
 		local inst = this:StartInstruction(expr.token, "bor");
 
-		this:QueueInjectBefore(expr.token, "bit.bor");
+		inst.injectFunction = this:QueueInjectBefore(expr.token, "bit.bor");
 
 		this:QueueInjectBefore(expr.token, "(");
 
@@ -767,7 +761,7 @@ function PARSER.Expression_6(this)
 	while this:Accept("band") then
 		local inst = this:StartInstruction(expr.token, "band");
 
-		this:QueueInjectBefore(expr.token, "bit.band");
+		inst.injectFunction = this:QueueInjectBefore(expr.token, "bit.band");
 
 		this:QueueInjectBefore(expr.token, "(");
 
@@ -793,6 +787,8 @@ function PARSER.Expression_7(this)
 
 				this:QueueInjectBefore(inst, eqTkn, "eqMult");
 				this:QueueInjectBefore(inst, eqTkn, "(");
+				this:QueueInjectBefore(inst, eqTkn, ",");
+				inst.injectNil = this:QueueInjectBefore(inst, eqTkn, "nil");
 				this:QueueReplace(inst, this.__token, ","); -- This is ([)
 
 				local expressions = {};
@@ -805,6 +801,8 @@ function PARSER.Expression_7(this)
 				this:QueueInjectAfter(inst, this.__token, ")");
 
 				expr = this:EndInstruction(ist, expressions);
+
+				-- TODO: When using a function operator to do comparisons this will inject the function as peram 1.
 			else
 				local inst = this:StartInstruction(this.__token, "eq");
 				expr = this:EndInstruction(ist, {expr, expr2});
@@ -817,6 +815,8 @@ function PARSER.Expression_7(this)
 
 				this:QueueInjectBefore(inst, eqTkn, "neqMult");
 				this:QueueInjectBefore(inst, eqTkn, "(");
+				this:QueueInjectBefore(inst, eqTkn, ",");
+				inst.injectNil = this:QueueInjectBefore(inst, eqTkn, "nil");
 				this:QueueReplace(inst, this.__token, ","); -- This is ([)
 
 				local expressions = {};
@@ -829,11 +829,157 @@ function PARSER.Expression_7(this)
 				this:QueueInjectAfter(inst, this.__token, ")");
 
 				expr = this:EndInstruction(ist, expressions);
+
+				-- TODO: When using a function operator to do comparisons this will inject the function as peram 1.
 			else
 				local inst = this:StartInstruction(this.__token, "neq");
 				expr = this:EndInstruction(ist, {expr, expr2});
 			end
 		end
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_8(this)
+	local expr = this:Expression_9();
+
+	while this:CheckToken("lth", "leq", "gth", "geq") do
+		if (this:Accept("lth")) then
+			local inst = this:StartInstruction(expr.token, "lth");
+
+			local expr2 = this:Expression_1();
+
+			expr = this:EndInstruction(inst, {expr, expr2});
+		elseif (this:Accept("leq")) then
+			local inst = this:StartInstruction(expr.token, "leq");
+
+			local expr2 = this:Expression_1();
+
+			expr = this:EndInstruction(inst, {expr, expr2});
+		elseif (this:Accept("gth")) then
+			local inst = this:StartInstruction(expr.token, "gth");
+
+			local expr2 = this:Expression_1();
+
+			expr = this:EndInstruction(inst, {expr, expr2});
+		elseif (this:Accept("geq")) then
+			local inst = this:StartInstruction(expr.token, "geq");
+
+			local expr2 = this:Expression_1();
+
+			expr = this:EndInstruction(inst, {expr, expr2});
+		end
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_9(this)
+	local expr = this:Expression_10();
+
+	while this:Accept("bshl") then
+		local inst = this:StartInstruction(expr.token, "bshl");
+
+		inst.injectFunction = this:QueueInjectBefore(expr.token, "bit.lshift");
+
+		this:QueueInjectBefore(expr.token, "(");
+
+		local expr2 = this:Expression_10();
+
+		this:QueueInjectAfter(expr2.token, ")");
+
+		expr = this:EndInstruction(inst, {expr, expr2});
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_10(this)
+	local expr = this:Expression_11();
+
+	while this:Accept("bshr") then
+		local inst = this:StartInstruction(expr.token, "bshr");
+
+		inst.injectFunction = this:QueueInjectBefore(expr.token, "bit.rshift");
+
+		this:QueueInjectBefore(expr.token, "(");
+
+		local expr2 = this:Expression_11();
+
+		this:QueueInjectAfter(expr2.token, ")");
+
+		expr = this:EndInstruction(inst, {expr, expr2});
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_11(this)
+	local expr = this:Expression_12();
+
+	while this:Accept("add") then
+		local inst = this:StartInstruction(inst, expr.token, "add");
+
+		local expr2 = this:Expression_12();
+
+		expr = this:EndInstruction(inst, {expr, expr2});
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_12(this)
+	local expr = this:Expression_13();
+
+	while this:Accept("sub") then
+		local inst = this:StartInstruction(inst, expr.token, "sub");
+
+		local expr2 = this:Expression_13();
+
+		expr = this:EndInstruction(inst, {expr, expr2});
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_13(this)
+	local expr = this:Expression_14();
+
+	while this:Accept("div") then
+		local inst = this:StartInstruction(inst, expr.token, "div");
+
+		local expr2 = this:Expression_14();
+
+		expr = this:EndInstruction(inst, {expr, expr2});
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_14(this)
+	local expr = this:Expression_15();
+
+	while this:Accept("mul") then
+		local inst = this:StartInstruction(inst, expr.token, "mul");
+
+		local expr2 = this:Expression_15();
+
+		expr = this:EndInstruction(inst, {expr, expr2});
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_14(this)
+	local expr = this:Expression_15();
+
+	while this:Accept("exp") then
+		local inst = this:StartInstruction(inst, expr.token, "exp");
+
+		local expr2 = this:Expression_15();
+
+		expr = this:EndInstruction(inst, {expr, expr2});
 	end
 
 	return expr;
