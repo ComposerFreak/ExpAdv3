@@ -75,7 +75,6 @@ end
 
 function PARSER.Initalize(this, instance)
 	this.__pos = 1;
-	this.__offsets = 0;
 	this.__depth = 0;
 	this.__instructions = {};
 	this.__token = instance.tokens[1];
@@ -83,7 +82,10 @@ function PARSER.Initalize(this, instance)
 	this.__total = #instance.tokens;
 	this.__tokens = instance.tokens;
 	this.__script = instance.script;
+
+	this.__tasks = {};
 end
+
 
 function PARSER.Run(this)
 	--TODO: PcallX for stack traces on internal errors?
@@ -235,9 +237,6 @@ end
 --[[
 ]]
 
---[[
-]]
-
 function PARSER.StartInstruction(this, type, token);
 	local inst = {};
 	inst.type = type;
@@ -246,40 +245,116 @@ function PARSER.StartInstruction(this, type, token);
 	inst.token = token;
 	inst.char = token.char;
 	inst.line = token.lin;
-	inst.offset = this.__offset;
-	inst.operations = {};
+	inst.depth = this.__depth;
+
+	this.__depth = this.__depth + 1;
+
 	return inst;
 end
 
 function PARSER.QueueReplace(this, inst, token, str)
 	local op = {};
-	op.type = "rep";
+
 	op.token = token;
 	op.str = str;
-	inst.operations[#inst.operations + 1] = op;
+	op.inst = inst;
+
+	local tasks = this.__tasks[token.pos];
+
+	if (not tasks) then
+		tasks = {};
+		this.__tasks[token.pos] = tasks;
+	end
+
+	tasks.replace = op;
+
+	return op;
 end
 
 function PARSER.QueueRemove(this, inst, token)
 	local op = {};
-	op.type = "rem";
+
 	op.token = token;
-	inst.operations[#inst.operations + 1] = op;
+	op.inst = inst;
+
+	local tasks = this.__tasks[token.pos];
+
+	if (not tasks) then
+		tasks = {};
+		this.__tasks[token.pos] = tasks;
+	end
+
+	tasks.remove = op;
+
+	return op;
 end
 
-function PARSER.QueueInjectionBefore(this, inst, token, str)
-	local op = {};
-	op.type = "bef";
-	op.token = token;
-	op.str = str;
-	inst.operations[#inst.operations + 1] = op;
+function PARSER.QueueInjectionBefore(this, inst, token, str, ...)
+	local tasks = this.__tasks[token.pos];
+
+	if (not tasks) then
+		tasks = {};
+		this.__tasks[token.pos] = tasks;
+	end
+
+	if (not tasks.prefix) then
+		tasks.prefix = {};
+	end
+
+	local r = {};
+	local t = {str, ...};
+
+	for i = 1, #t do
+		local op = {};
+	
+		op.token = token;
+		op.str = t[i];
+		op.inst = inst;
+
+		r[#r + 1] = op;
+	end
+
+	for i = #r, 1, -1 do
+		-- place these in reverse order so they come out in the corect order.
+		tasks.prefix[#tasks.prefix + 1] = r[i];
+	end
+
+	return r;
 end
 
-function PARSER.QueueInjectionAfter(this, inst, token, str)
+function PARSER.QueueInjectionAfter(this, inst, token, str, ...)
 	local op = {};
-	op.type = "aft";
+	
 	op.token = token;
 	op.str = str;
-	inst.operations[#inst.operations + 1] = op;
+	op.inst = inst;
+
+	local tasks = this.__tasks[token.pos];
+
+	if (not tasks) then
+		tasks = {};
+		this.__tasks[token.pos] = tasks;
+	end
+
+	if (not tasks.postfix) then
+		tasks.postfix = {};
+	end
+
+	local r = {};
+	local t = {str, ...};
+
+	for i = 1, #t do
+		local op = {};
+	
+		op.token = token;
+		op.str = t[i];
+		op.inst = inst;
+
+		r[#r + 1] = op;
+		tasks.prefix[#tasks.prefix + 1] = op;
+	end
+
+	return r;
 end
 
 function PARSER.SetEndResults(this, inst, type, count)
@@ -290,6 +365,9 @@ end
 function PARSER.EndInstruction(this, inst, instructions)
 	inst.instructions = instructions;
 	inst.final = this.__token;
+
+	this.__depth = this.__depth - 1;
+
 	return inst;
 end
 
@@ -308,15 +386,12 @@ function PARSER.Block_1(this, _end, lcb)
 	this:ExcludeWhiteSpace( "Further input required at end of code, incomplete statment" )
 	
 	if (this:Accept("lcb")) then
-		this.__depth = this.__deph + 1;
 
 		local seq = this:StartInstruction("seq", this.__token);
 
 		this:QueueReplace(seq, this.__token, lcb;
 
 		local stmts = this:Statments(true);
-
-		this.__depth = this.__deph - 1;
 
 		this:Require("rcb", "Right curly bracket (}) missing, to close block");
 
@@ -327,15 +402,11 @@ function PARSER.Block_1(this, _end, lcb)
 		return this:EndInstruction(this, seq, stmts);
 	end
 
-	this.__depth = this.__deph + 1;
-
 	local seq = this:StartInstruction("seq", this.__token);
 
 	this:QueueInjectionAfter(seq, this.__token, lcb);
 
 	local stmt = this:Statment_1();
-
-	this.__depth = this.__deph - 1;
 
 	if (_end) then
 		this:QueueInjectionBefore(seq, this.__token, "end");
@@ -483,14 +554,12 @@ function PARSER.Statment_5(this)
 
 		this:Require("var", "Variable('s) expected after class for global variable.");
 		variables[1] = this.__token.data;
-		this:QueueInjectBefore(inst, this.__token, "GLOBAL");
-		this:QueueInjectBefore(inst, this.__token, ".");
+		this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
 
 		while (this:Accpet("com")) then
 			this:Require("var", "Variable expected after comma (,).");
 			variables[#variables + 1] = this.__token.data;
-			this:QueueInjectBefore(inst, this.__token, "GLOBAL");
-			this:QueueInjectBefore(inst, this.__token, ".");
+			this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
 		end
 
 		local expressions = {};
@@ -578,8 +647,7 @@ function PARSER.Statment_6(this)
 				for k, v in pairs(variables) do
 					local inst = this:StartInstruction(this.__token, "ass_add");
 					instVar.variable = v;
-					this:QueueInjectBefore(instVar, this.__token, v);
-					this:QueueInjectBefore(instVar, this.__token, "+");
+					this:QueueInjectionBefore(instVar, this.__token, v, "+");
 					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
 
 					if (k < #variables) then
@@ -599,8 +667,7 @@ function PARSER.Statment_6(this)
 				for k, v in pairs(variables) do
 					local inst = this:StartInstruction(this.__token, "ass_sub");
 					instVar.variable = v;
-					this:QueueInjectBefore(instVar, this.__token, v);
-					this:QueueInjectBefore(instVar, this.__token, "-");
+					this:QueueInjectionBefore(instVar, this.__token, v, "-");
 					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
 
 					if (k < #variables) then
@@ -620,8 +687,7 @@ function PARSER.Statment_6(this)
 				for k, v in pairs(variables) do
 					local inst = this:StartInstruction(this.__token, "ass_div");
 					instVar.variable = v;
-					this:QueueInjectBefore(instVar, this.__token, v);
-					this:QueueInjectBefore(instVar, this.__token, "/");
+					this:QueueInjectionBefore(instVar, this.__token, v, "/");
 					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
 
 					if (k < #variables) then
@@ -641,8 +707,7 @@ function PARSER.Statment_6(this)
 				for k, v in pairs(variables) do
 					local inst = this:StartInstruction(this.__token, "ass_mul");
 					instVar.variable = v;
-					this:QueueInjectBefore(instVar, this.__token, v);
-					this:QueueInjectBefore(instVar, this.__token, "-");
+					this:QueueInjectionBefore(instVar, this.__token, v, "-");
 					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
 
 					if (k < #variables) then
@@ -728,13 +793,13 @@ function PARSER.Expression_4(this)
 	while this:Accept("bxor") then
 		local inst = this:StartInstruction(expr.token, "bxor");
 
-		inst.injectFunction = this:QueueInjectBefore(expr.token, "bit.bxor");
+		local r = this:QueueInjectionBefore(expr.token, "bit.bxor", "(");
 
-		this:QueueInjectBefore(expr.token, "(");
+		inst.injectFunction = r[1];
 
 		local expr2 = this:Expression_5();
 
-		this:QueueInjectAfter(expr2.token, ")");
+		this:QueueInjectionAfter(expr2.token, ")");
 
 		expr = this:EndInstruction(inst, {expr, expr2});
 	end
@@ -748,13 +813,13 @@ function PARSER.Expression_5(this)
 	while this:Accept("bor") then
 		local inst = this:StartInstruction(expr.token, "bor");
 
-		inst.injectFunction = this:QueueInjectBefore(expr.token, "bit.bor");
+		local r = this:QueueInjectionBefore(expr.token, "bit.bor", "(");
 
-		this:QueueInjectBefore(expr.token, "(");
+		inst.injectFunction = r[1];
 
 		local expr2 = this:Expression_6();
 
-		this:QueueInjectAfter(expr2.token, ")");
+		this:QueueInjectionAfter(expr2.token, ")");
 
 		expr = this:EndInstruction(inst, {expr, expr2});
 	end
@@ -768,13 +833,13 @@ function PARSER.Expression_6(this)
 	while this:Accept("band") then
 		local inst = this:StartInstruction(expr.token, "band");
 
-		inst.injectFunction = this:QueueInjectBefore(expr.token, "bit.band");
+		local r = this:QueueInjectionBefore(expr.token, "bit.band", "(");
 
-		this:QueueInjectBefore(expr.token, "(");
+		inst.injectFunction =  r[1];
 
 		local expr2 = this:Expression_7();
 
-		this:QueueInjectAfter(expr2.token, ")");
+		this:QueueInjectionAfter(expr2.token, ")");
 
 		expr = this:EndInstruction(inst, {expr, expr2});
 	end
@@ -792,10 +857,10 @@ function PARSER.Expression_7(this)
 			if (this:Accept("lsb")) then
 				local inst = this:StartInstruction(expr.token, "eq_mul");
 
-				this:QueueInjectBefore(inst, eqTkn, "eqMult");
-				this:QueueInjectBefore(inst, eqTkn, "(");
-				this:QueueInjectBefore(inst, eqTkn, ",");
-				inst.injectNil = this:QueueInjectBefore(inst, eqTkn, "nil");
+				this:QueueInjectionBefore(inst, eqTkn, "eqMult",  "(",  "nil", "," );
+
+				inst.injectNil = r[3]
+
 				this:QueueReplace(inst, this.__token, ","); -- This is ([)
 
 				local expressions = {};
@@ -805,7 +870,7 @@ function PARSER.Expression_7(this)
 					expressions[#expressions + 1] = this:Expression_1()
 				end
 
-				this:QueueInjectAfter(inst, this.__token, ")");
+				this:QueueInjectionAfter(inst, this.__token, ")");
 
 				expr = this:EndInstruction(ist, expressions);
 
@@ -820,10 +885,9 @@ function PARSER.Expression_7(this)
 			if (this:Accept("lsb")) then
 				local inst = this:StartInstruction(expr.token, "neq_mul");
 
-				this:QueueInjectBefore(inst, eqTkn, "neqMult");
-				this:QueueInjectBefore(inst, eqTkn, "(");
-				this:QueueInjectBefore(inst, eqTkn, ",");
-				inst.injectNil = this:QueueInjectBefore(inst, eqTkn, "nil");
+				this:QueueInjectionBefore(inst, eqTkn, "neqMult",  "(",  "nil", "," );
+
+				inst.injectNil = r[3]
 				this:QueueReplace(inst, this.__token, ","); -- This is ([)
 
 				local expressions = {};
@@ -833,7 +897,7 @@ function PARSER.Expression_7(this)
 					expressions[#expressions + 1] = this:Expression_1()
 				end
 
-				this:QueueInjectAfter(inst, this.__token, ")");
+				this:QueueInjectionAfter(inst, this.__token, ")");
 
 				expr = this:EndInstruction(ist, expressions);
 
@@ -888,13 +952,13 @@ function PARSER.Expression_9(this)
 	while this:Accept("bshl") then
 		local inst = this:StartInstruction(expr.token, "bshl");
 
-		inst.injectFunction = this:QueueInjectBefore(expr.token, "bit.lshift");
+		local r = this:QueueInjectionBefore(expr.token, "bit.lshift", "(");
 
-		this:QueueInjectBefore(expr.token, "(");
+		inst.injectFunction = r[1];
 
 		local expr2 = this:Expression_10();
 
-		this:QueueInjectAfter(expr2.token, ")");
+		this:QueueInjectionAfter(expr2.token, ")");
 
 		expr = this:EndInstruction(inst, {expr, expr2});
 	end
@@ -908,13 +972,13 @@ function PARSER.Expression_10(this)
 	while this:Accept("bshr") then
 		local inst = this:StartInstruction(expr.token, "bshr");
 
-		inst.injectFunction = this:QueueInjectBefore(expr.token, "bit.rshift");
+		local r = this:QueueInjectionBefore(expr.token, "bit.rshift", "(");
 
-		this:QueueInjectBefore(expr.token, "(");
+		inst.injectFunction = r[1];
 
 		local expr2 = this:Expression_11();
 
-		this:QueueInjectAfter(expr2.token, ")");
+		this:QueueInjectionAfter(expr2.token, ")");
 
 		expr = this:EndInstruction(inst, {expr, expr2});
 	end
@@ -1163,5 +1227,11 @@ function PARSER.Expression_RawVaue(this)
 end
 
 function PARSER.Expression_Trailing(this, inst)
+	while this:CheckToken("prd", "lsb", "lpa") do
+		-- Methods
 
+		-- Getters
+	end
+
+	return expr;
 end
