@@ -24,8 +24,8 @@ local KEYWORDS = {
 		["function"] = {"func", "function"},
 		["event"] = {"evt", "event"},
 		["true"] = {"tre", "true"},
-		["false"] = {"fls", "false"}
-		["void"] = {"void", "void"}
+		["false"] = {"fls", "false"},
+		["void"] = {"void", "void"},
 		["break"] = {"brk", "break"},
 		["continue"] = {"cnt", "continue"},
 		["return"] = {"ret", "return"},
@@ -187,7 +187,7 @@ end
 function TOKENIZER.SkipChar(this)
 	if (this.__lengh < this.__pos) then
 		this.__char = nil;
-	else if (this.__char == "\n") then
+	elseif (this.__char == "\n") then
 		this:PushLine();
 	else
 		this:PushChar();
@@ -284,7 +284,7 @@ end
 --[[
 ]]
 
-function TOKENIZER.CreateToken(this, type, name, data);
+function TOKENIZER.CreateToken(this, type, name, data)
 	if (not data) then
 		data = this.__data;
 	end
@@ -328,7 +328,7 @@ function TOKENIZER.SkipComments(this)
 		this.__data = "";
 		this.__skip = true;
 		return true;
-	else if (this:NextPattern("/*", true)) then
+	elseif (this:NextPattern("/*", true)) then
 		this:Error(0, "Un-terminated multi line comment (/*)", 0);
 	else
 		return false;
@@ -441,7 +441,7 @@ function TOKENIZER.Loop(this)
 				else
 					this:NextChar();
 				end
-			elseif (c = "\\") then
+			elseif (c == "\\") then
 				escp = false;
 				this:NextChar();
 			elseif (c == strChar) then
@@ -497,12 +497,12 @@ function TOKENIZER.Loop(this)
 	-- Classes
 	
 	for k, v in pairs(EXPR_CLASSES) do
-		if (this:NextPattern("%( *" .. k .. " *%)") then
+		if (this:NextPattern("%( *" .. k .. " *%)")) then
 			this:CreateToken("cst", "cast", k);
 			return true;
 		end
 
-		if (this:NextPattern(k, true) then
+		if (this:NextPattern(k, true)) then
 			this:CreateToken("typ", "type", k);
 			return true;
 		end
