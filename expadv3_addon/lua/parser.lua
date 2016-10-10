@@ -11,26 +11,44 @@
 	```````````````
 	A parser is the logical structure used to turn tokens into instructions that.
 	
-	:::Syntax Data:::
-	`````````````````
-		-- Todo?
+	:::Syntax Gramar:::
+	```````````````````
+		I have based this off the one from E2.
+
+		:::Key:::
+		* ε is the end-of-file
+		* E? matches zero or one occurrences of T (and will always match one if possible)
+		* E* matches zero or more occurrences of T (and will always match as many as possible)
+		* E F matches E (and then whitespace) and then F
+		* E / F tries matching E, if it fails it matches F (from the start location)
+		* &E matches E, but does not consume any input.
+		* !E matches everything except E, and does not consume any input.
 		
-		:::Block(blck):::
-			1 - {stmt*} or stmt
-		:::Statments(stmt):::
-			1 - if (expr1) blck1 [stmt2 or stmt3] or stmt4
-			2 - elseif (expr1) blck1 [stmt2]
-			3 - else blck1
-			4 - state blck1
-			5 - [global] type var[, var*][= exp1][, expr*] or stmt6
-			6 - var[, var*]+-/*= exp1[, expr*] or stmt 7
-			7 - event([type var][, type var]*) blck1
-			8 - 
-			9 - 
-			
-		:::Expressions(expr):::
-			1 - (exp1) or exp2
-			2 - exp3 op exp2
+		:::Root:::
+			Root ← Stmt1((";" / " ") Stmt1)* ε
+
+		:::Statments:::
+			Stmt1 ← ("if" Cond Block Stmt2)? Stmt4
+			Stmt2 ← ("elseif" Cond Block Stmt2)? Stmt3
+			Stmt3 ← ("else" Block)
+			Stmt4 ← (("server" / "client") Block)? Stmt5
+			Stmt6 ← "global"? (type (Var("," Var)* "="? (Expr1? ("," Expr1)*)))
+			Stmt7 ← (type (Var("," Var)* ("=" / "+=" / "-=" / "/=" / "*=")? (Expr1? ("," Expr1)*)))
+		
+		:::Expressions:::
+			Expr1 ← (Expr1 ? Expr1 : Expr1)? Expr2
+			Expr2 ← (Expr3 || Expr3)? Expr3
+			Expr3 ← (Expr4 && Expr4)? Expr4
+			Expr4 ← (Expr5 ^^ Expr5)? Expr5
+			Expr5 ← (Expr6 | Expr6)? Expr6
+			Expr6 ← (Expr7 & Expr7)? Expr7
+			Expr7 ← (Expr8 ("==" / "!=") (Values / Expr1))? Expr8;
+
+		:::Syntax:::
+			Cond ← "(" Expr1 ")"
+			Block ← "{" (Stmt1 ((";" / " ") Stmt1)*)? "}"
+			Values ← "[" Expr1 ("," Expr1)* "]"
+
 ]]
 
 local PARSER = {};
@@ -525,7 +543,7 @@ function PARSER.Statment_5(this)
 	return this:Statment_6()
 end;
 
-function PARSER.Statment_7(this)
+function PARSER.Statment_6(this)
 	if (this:Accept("var")) then
 		if (not this:CheckToken("com", "ass", "aadd", "asub", "adiv", "amul")) then
 			this:StepBackward(1);
@@ -644,4 +662,179 @@ function PARSER.Statment_7(this)
 	end
 
 	return this:Statment_7();
+end
+
+--[[
+]]
+
+function PARSER.Expression_1(this)
+	local expr = this:Expression_2();
+
+	while this:Accept("qsm") then
+		local inst = this:StartInstruction(this.__token, "ten");
+
+		this:QueueReplace(inst, this.__token, "and");
+
+		local expr2 = this:Expression_2();
+
+		this:Require("col", "colon (:) expected for ternary operator.");
+
+		this:QueueReplace(this, this.__token, "or");
+
+		local expr2 = this:Expression_3();
+
+		expr = this:EndInstruction(inst, expr, {expr2, expr3});
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_2(this)
+	local expr = this:Expression_3();
+
+	while this:Accept("or") then
+		local inst = this:StartInstruction(inst, expr.token, "or");
+
+		this:QueueReplace(this.__token, "or");
+
+		local expr2 = this:Expression_3();
+
+		expr = this:EndInstruction(inst, {expr, expr2});
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_3(this)
+	local expr = this:Expression_4();
+
+	while this:Accept("and") then
+		local inst = this:StartInstruction(expr.token, "and");
+
+		this:QueueReplace(inst, this.__token, "and");
+
+		local expr2 = this:Expression_4();
+
+		expr = this:EndInstruction(inst, {expr, expr2});
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_4(this)
+	local expr = this:Expression_5();
+
+	while this:Accept("bxor") then
+		local inst = this:StartInstruction(expr.token, "bxor");
+
+		this:QueueInjectBefore(expr.token, "bit.bxor");
+
+		this:QueueInjectBefore(expr.token, "(");
+
+		local expr2 = this:Expression_5();
+
+		this:QueueInjectAfter(expr2.token, ")");
+
+		expr = this:EndInstruction(inst, {expr, expr2});
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_5(this)
+	local expr = this:Expression_6();
+
+	while this:Accept("bor") then
+		local inst = this:StartInstruction(expr.token, "bor");
+
+		this:QueueInjectBefore(expr.token, "bit.bor");
+
+		this:QueueInjectBefore(expr.token, "(");
+
+		local expr2 = this:Expression_6();
+
+		this:QueueInjectAfter(expr2.token, ")");
+
+		expr = this:EndInstruction(inst, {expr, expr2});
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_6(this)
+	local expr = this:Expression_7();
+
+	while this:Accept("band") then
+		local inst = this:StartInstruction(expr.token, "band");
+
+		this:QueueInjectBefore(expr.token, "bit.band");
+
+		this:QueueInjectBefore(expr.token, "(");
+
+		local expr2 = this:Expression_7();
+
+		this:QueueInjectAfter(expr2.token, ")");
+
+		expr = this:EndInstruction(inst, {expr, expr2});
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_7(this)
+	local expr = this:Expression_8();
+
+	while this:CheckToken("eq", "neq") do
+		if (this:Accept("eq")) then
+			local eqTkn = this.__token;
+
+			if (this:Accept("lsb")) then
+				local inst = this:StartInstruction(expr.token, "eq_mul");
+
+				this:QueueInjectBefore(inst, eqTkn, "eqMult");
+				this:QueueInjectBefore(inst, eqTkn, "(");
+				this:QueueReplace(inst, this.__token, ","); -- This is ([)
+
+				local expressions = {};
+				expressions[1] = this:Expression_1();
+
+				while this:AcceptToken("com") do
+					expressions[#expressions + 1] = this:Expression_1()
+				end
+
+				this:QueueInjectAfter(inst, this.__token, ")");
+
+				expr = this:EndInstruction(ist, expressions);
+			else
+				local inst = this:StartInstruction(this.__token, "eq");
+				expr = this:EndInstruction(ist, {expr, expr2});
+			end
+		elseif (this:Accept("neq")) then
+			local eqTkn = this.__token;
+
+			if (this:Accept("lsb")) then
+				local inst = this:StartInstruction(expr.token, "neq_mul");
+
+				this:QueueInjectBefore(inst, eqTkn, "neqMult");
+				this:QueueInjectBefore(inst, eqTkn, "(");
+				this:QueueReplace(inst, this.__token, ","); -- This is ([)
+
+				local expressions = {};
+				expressions[1] = this:Expression_1();
+
+				while this:AcceptToken("com") do
+					expressions[#expressions + 1] = this:Expression_1()
+				end
+
+				this:QueueInjectAfter(inst, this.__token, ")");
+
+				expr = this:EndInstruction(ist, expressions);
+			else
+				local inst = this:StartInstruction(this.__token, "neq");
+				expr = this:EndInstruction(ist, {expr, expr2});
+			end
+		end
+	end
+
+	return expr;
 end
