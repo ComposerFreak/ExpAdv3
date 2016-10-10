@@ -76,6 +76,7 @@ end
 function PARSER.Initalize(this, instance)
 	this.__pos = 1;
 	this.__depth = 0;
+	this.__scope = 0;
 	this.__instructions = {};
 	this.__token = instance.tokens[1];
 	this.__next = instance.tokens[2];
@@ -109,8 +110,9 @@ end
 function PARSER._Run(this)
 	local result = {};
 	result.instruction = this:Root();
-	result.script = this.__buffer;
-
+	result.script = this.__script;
+	result.tasks = this.__tasks
+	result.tokens = this.__tokens;
 	return result;
 end
 
@@ -246,7 +248,7 @@ function PARSER.StartInstruction(this, type, token);
 	inst.char = token.char;
 	inst.line = token.lin;
 	inst.depth = this.__depth;
-
+	inst.scope = this.__scope;
 	this.__depth = this.__depth + 1;
 
 	return inst;
@@ -391,7 +393,11 @@ function PARSER.Block_1(this, _end, lcb)
 
 		this:QueueReplace(seq, this.__token, lcb;
 
+		this.__scope = this.__scope + 1;
+
 		local stmts = this:Statments(true);
+
+		this.__scope = this.__scope - 1;
 
 		this:Require("rcb", "Right curly bracket (}) missing, to close block");
 
@@ -406,7 +412,11 @@ function PARSER.Block_1(this, _end, lcb)
 
 	this:QueueInjectionAfter(seq, this.__token, lcb);
 
+	this.__scope = this.__scope + 1;
+
 	local stmt = this:Statment_1();
+
+	this.__scope = this.__scope - 1;
 
 	if (_end) then
 		this:QueueInjectionBefore(seq, this.__token, "end");

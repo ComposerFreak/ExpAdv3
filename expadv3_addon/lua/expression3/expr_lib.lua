@@ -484,4 +484,9 @@ function EXPR_LIB.Initalize()
 	EXPADV_EVENTS = events;
 
 	hook.Run("Expression3.PostRegisterExtensions");
+
+	include("tokenizer.lua");
+	include("parser.lua");
 end
+
+EXPR_LIB.Initalize();
