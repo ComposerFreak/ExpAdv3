@@ -51,6 +51,13 @@
 			Expr13 ← (Epxr14 "/" Expr14)? Expr14
 			Expr14 ← (Epxr15 "*" Expr15)? Expr15
 			Expr15 ← (Epxr16 "^" Expr16)? Expr16
+			Expr16 ← ("+" Expr21)? Exp17
+			Expr17 ← ("-" Expr21)? Exp18
+			Expr18 ← ("!" Expr21)? Expr19
+			Expr19 ← ("#" Expr21)? Expr20
+			Expr20 ← ("("type")" Expr1)? Expr21
+			Expr21 ← ("(" Expr1 ")")? Expr22
+			Expr22 ← (Var)? Expr23
 
 		:::Syntax:::
 			Cond ← "(" Expr1 ")"
@@ -219,7 +226,7 @@ function PASRSER.Exclude( this, tpye, msg, ... )
 	end
 end
 
-function PASRSER.ExludeWhiteSpace(this, msg, ...)
+function PASRSER.ExcludeWhiteSpace(this, msg, ...)
 	if (this:HasTokens()) then 
 		this:Throw( this.__token, msg, ... )
 	end
@@ -971,16 +978,190 @@ function PARSER.Expression_14(this)
 	return expr;
 end
 
-function PARSER.Expression_14(this)
-	local expr = this:Expression_15();
+function PARSER.Expression_15(this)
+	local expr = this:Expression_16();
 
 	while this:Accept("exp") then
 		local inst = this:StartInstruction(inst, expr.token, "exp");
 
-		local expr2 = this:Expression_15();
+		local expr2 = this:Expression_16();
 
 		expr = this:EndInstruction(inst, {expr, expr2});
 	end
 
 	return expr;
+end
+
+function PARSER.Expression_16(this)
+	if (this:Accept("add")) then
+		local tkn = this.__token;
+
+		this:ExcludeWhiteSpace("Identity operator (+) must not be succeeded by whitespace");
+
+		local expr = this:Expression_17();
+
+		this:QueueRemove(expr, tkn);
+
+		return expr;
+	end
+
+	return this:Expression_17();
+end
+
+function PARSER.Expression_17(this)
+	if (this:Accept("neg")) then
+		local inst = this:StartInstruction(inst, expr.token, "neg");
+
+		this:ExcludeWhiteSpace("Negation operator (-) must not be succeeded by whitespace");
+
+		local expr = this:Expression_22();
+
+		return this:EndInstruction(inst, {expr});
+	end
+
+	return this:Expression_18();
+end
+
+function PARSER.Expression_18(this)
+	if (this:Accept("neg")) then
+		local inst = this:StartInstruction(inst, expr.token, "not");
+
+		this:ExcludeWhiteSpace("Not operator (!) must not be succeeded by whitespace");
+
+		local expr = this:Expression_22();
+
+		return this:EndInstruction(inst, {expr});
+	end
+
+	return this:Expression_18();
+end
+
+function PARSER.Expression_19(this)
+	if (this:Accept("len")) then
+		local inst = this:StartInstruction(inst, expr.token, "len");
+
+		this:ExcludeWhiteSpace("Lengh operator (#) must not be succeeded by whitespace");
+
+		local expr = this:Expression_22();
+
+		return this:EndInstruction(inst, {expr});
+	end
+
+	return this:Expression_20();
+end
+
+function PARSER.Expression_20(this)
+	if (this:Accept("cst")) then
+		local inst = this:StartInstruction(inst, expr.token, "cast");
+		
+		inst.type = this.__token.data;
+
+		this:ExcludeWhiteSpace("Cast operator ( (%s) ) must not be succeeded by whitespace", inst.type);
+
+		local expr = this:Expression_1();
+
+		return this:EndInstruction(inst, {expr});
+	end
+
+	return this:Expression_20();
+end
+
+function PARSER.Expression_21(this)
+	if (this:Accept("lpa")) then
+		local expr = this:Expression_1();
+
+		this:Require("rpa", "Right parenthesis ( )) missing, to close grouped equation.");
+
+		return this:Expression_Trailing(expr);
+	end
+
+	return this:Expression_22();
+end
+
+function PARSER.Expression_22(this)
+	if (this:Accept("var")) then
+		local inst = this:StartInstruction(this.__token, "var");
+
+		inst.variable = this.__token.data;
+
+		this:EndInstruction(inst, {});
+
+		return this:Expression_Trailing(inst);
+	end
+
+	return this:Expression_23()
+end
+
+function PARSER.Expression_23(this)
+	local expr = this:Expression_RawVaue();
+
+	if (not expr) then
+		this:ExcludeWhiteSpace("Further input required at end of code, incomplete expression");
+		this:Exclude("void", "void must not appear inside an equation");
+		this:Exclude("add", "Arithmetic operator (+) must be preceded by equation or value");
+		this:Exclude("sub", "Arithmetic operator (-) must be preceded by equation or value");
+		this:Exclude("mul", "Arithmetic operator (*) must be preceded by equation or value");
+		this:Exclude("div", "Arithmetic operator (/) must be preceded by equation or value");
+		this:Exclude("mod", "Arithmetic operator (%) must be preceded by equation or value");
+		this:Exclude("exp", "Arithmetic operator (^) must be preceded by equation or value");
+		this:Exclude("ass", "Assignment operator (=) must be preceded by variable");
+		this:Exclude("aadd", "Assignment operator (+=) must be preceded by variable");
+		this:Exclude("asub", "Assignment operator (-=) must be preceded by variable");
+		this:Exclude("amul", "Assignment operator (*=) must be preceded by variable");
+		this:Exclude("adiv", "Assignment operator (/=) must be preceded by variable");
+		this:Exclude("and", "Logical operator (&&) must be preceded by equation or value");
+		this:Exclude("or", "Logical operator (||) must be preceded by equation or value");
+		this:Exclude("eq", "Comparason operator (==) must be preceded by equation or value");
+		this:Exclude("neq", "Comparason operator (!=) must be preceded by equation or value");
+		this:Exclude("gth", "Comparason operator (>=) must be preceded by equation or value");
+		this:Exclude("lth", "Comparason operator (<=) must be preceded by equation or value");
+		this:Exclude("geq", "Comparason operator (>) must be preceded by equation or value");
+		this:Exclude("leq", "Comparason operator (<) must be preceded by equation or value");
+		-- this:Exclude("inc", "Increment operator (++) must be preceded by variable");
+		-- this:Exclude("dec", "Decrement operator (--) must be preceded by variable");
+		this:Exclude("rpa", "Right parenthesis ( )) without matching left parenthesis");
+		this:Exclude("lcb", "Left curly bracket ({) must be part of an table/if/while/for-statement block");
+		this:Exclude("rcb", "Right curly bracket (}) without matching left curly bracket");
+		this:Exclude("lsb", "Left square bracket ([) must be preceded by variable");
+		this:Exclude("rsb", "Right square bracket (]) without matching left square bracket");
+		this:Exclude("com", "Comma (,) not expected here, missing an argument?");
+		this:Exclude("prd", "Method operator (.) must not be preceded by white space");
+		this:Exclude("col", "Tenarry operator (:) must be part of conditional expression (A ? B : C).");
+		this:Exclude("if", "If keyword (if) must not appear inside an equation");
+		this:Exclude("eif", "Else-if keyword (elseif) must be part of an if-statement");
+		this:Exclude("els", "Else keyword (else) must be part of an if-statement");
+		--this:Exclude("try", "Try keyword (try) must be part of a try-statement");
+		--this:Exclude("cth", "Catch keyword (catch) must be part of an try-statement");
+		--this:Exclude("fnl", "Final keyword (final) must be part of an try-statement");
+		--this:Exclude("dir", "directive operator (@) must not appear inside an equation");
+		this:Error(this.__token, "Unexpected symbol found (%s)", self.__token.name);
+	end
+end
+
+function PARSER.Expression_RawVaue(this)
+	if (this:Accept("tre", "fls")) then
+		local inst = this:StartInstruction(this.__token, "bool");
+		inst.value = this.__token.data;
+		return this:EndInstruction(inst, {});
+	elseif (this:Accept("void")) then
+		local inst = this:StartInstruction(this.__token, "void");
+		
+		this:QueueReplace(this.__token, "nil");
+		
+		return this:EndInstruction(inst, {});
+	elseif (this:Accept("num")) then
+		local inst = this:StartInstruction(this.__token, "num");
+		inst.value = this.__token.data;
+		return this:EndInstruction(inst, {});
+	elseif (this:Accept("str")) then
+		local inst = this:StartInstruction(this.__token, "str");
+		inst.value = this.__token.data;
+		return this:EndInstruction(inst, {});
+	end
+
+	-- TODO: Functions :D
+end
+
+function PARSER.Expression_Trailing(this, inst)
+
 end
