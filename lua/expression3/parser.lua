@@ -586,7 +586,9 @@ function PARSER.Statment_5(this)
 			end
 		end
 
-		return this:EndInstruction(inst, variables, expressions);
+		inst.variables = variables;
+
+		return this:EndInstruction(inst, expressions);
 	end
 
 	if (this:Accept("typ")) then
@@ -618,11 +620,13 @@ function PARSER.Statment_5(this)
 			end
 		end
 
-		return this:EndInstruction(inst, variables, expressions);
+		inst.variables = variables;
+
+		return this:EndInstruction(inst, expressions);
 	end
 
 	return this:Statment_6()
-end;
+end
 
 function PARSER.Statment_6(this)
 	if (this:Accept("var")) then
@@ -640,6 +644,8 @@ function PARSER.Statment_6(this)
 				this:Require("var", "Variable expected after comma (,).");
 				variables[#variables + 1] = this.__token.data;
 			end
+			
+			inst.variables = variables;
 			
 			local expressions = {};
 
@@ -731,7 +737,7 @@ function PARSER.Statment_6(this)
 					end
 				end
 
-				return this:EndInstruction(inst, variables, expressions);
+				return this:EndInstruction(inst, expressions);
 			end
 
 			this:Throw(inst.token "Variable can not be preceeded by whitespace.");
