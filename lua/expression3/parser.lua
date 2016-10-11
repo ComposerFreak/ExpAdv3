@@ -78,6 +78,7 @@ function PARSER.Initalize(this, instance)
 	this.__depth = 0;
 	this.__scope = 0;
 	this.__instructions = {};
+
 	this.__token = instance.tokens[1];
 	this.__next = instance.tokens[2];
 	this.__total = #instance.tokens;
@@ -246,7 +247,7 @@ function PARSER.StartInstruction(this, type, token);
 	inst.rCount = 0;
 	inst.token = token;
 	inst.char = token.char;
-	inst.line = token.lin;
+	inst.line = token.line;
 	inst.depth = this.__depth;
 	inst.scope = this.__scope;
 	this.__depth = this.__depth + 1;
