@@ -559,6 +559,9 @@ function PARSER.Statment_5(this)
 		this:Require("typ", "Class expected after global.");
 		
 		local type = this.token.data;
+
+		inst.class = type;
+
 		this:QueueRemove(inst, this.__token);
 
 		local variables = {};
@@ -595,8 +598,11 @@ function PARSER.Statment_5(this)
 		local inst = this:StartInstruction(this, "local", this.__token);
 		
 		local type = this.token.data;
+
 		this:QueueReplace(inst, this.__token, "local");
 
+		inst.class = type;
+		
 		local variables = {};
 
 		this:Require("var", "Variable('s) expected after class for global variable.");
@@ -646,7 +652,7 @@ function PARSER.Statment_6(this)
 			end
 			
 			inst.variables = variables;
-			
+
 			local expressions = {};
 
 			if (this:Accept("ass")) then
