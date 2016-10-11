@@ -92,7 +92,7 @@ local TOKENS = {
 local TOKENIZER = {};
 TOKENIZER.__index = TOKENIZER;
 
-function TOKENIZER.new(lang)
+function TOKENIZER.New(lang)
 	return setmetatable({}, TOKENIZER);
 end
 
@@ -131,7 +131,7 @@ end
 
 function TOKENIZER.Run(this)
 	--TODO: PcallX for stack traces on internal errors?
-	local status, result = Pcall(T._Run, this);
+	local status, result = pcall(this._Run, this);
 
 	if (status) then
 		return true, result;
@@ -154,7 +154,7 @@ function TOKENIZER._Run(this)
 	end
 
 	local result = {};
-	result.tokens = this.tokens;
+	result.tokens = this.__tokens;
 	result.script = this.__buffer;
 
 	return result;
@@ -477,7 +477,7 @@ function TOKENIZER.Loop(this)
 
 			-- Multi line strings need to be converted to lua syntax.
 			if (strChar == "'") then
-				local str = "[[" .. string.sub(this.__data, 2, string.len(this.__data) - 1) .. "]]";
+				local str = "[[" .. string.sub(this.__data, 1, string.len(this.__data) - 1) .. "]]";
 				this:Replace(str);
 			end
 
