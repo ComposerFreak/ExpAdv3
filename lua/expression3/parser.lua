@@ -1183,45 +1183,7 @@ function PARSER.Expression_23(this)
 	local expr = this:Expression_RawVaue();
 
 	if (not expr) then
-		this:ExcludeWhiteSpace("Further input required at end of code, incomplete expression");
-		this:Exclude("void", "void must not appear inside an equation");
-		this:Exclude("add", "Arithmetic operator (+) must be preceded by equation or value");
-		this:Exclude("sub", "Arithmetic operator (-) must be preceded by equation or value");
-		this:Exclude("mul", "Arithmetic operator (*) must be preceded by equation or value");
-		this:Exclude("div", "Arithmetic operator (/) must be preceded by equation or value");
-		this:Exclude("mod", "Arithmetic operator (%) must be preceded by equation or value");
-		this:Exclude("exp", "Arithmetic operator (^) must be preceded by equation or value");
-		this:Exclude("ass", "Assignment operator (=) must be preceded by variable");
-		this:Exclude("aadd", "Assignment operator (+=) must be preceded by variable");
-		this:Exclude("asub", "Assignment operator (-=) must be preceded by variable");
-		this:Exclude("amul", "Assignment operator (*=) must be preceded by variable");
-		this:Exclude("adiv", "Assignment operator (/=) must be preceded by variable");
-		this:Exclude("and", "Logical operator (&&) must be preceded by equation or value");
-		this:Exclude("or", "Logical operator (||) must be preceded by equation or value");
-		this:Exclude("eq", "Comparason operator (==) must be preceded by equation or value");
-		this:Exclude("neq", "Comparason operator (!=) must be preceded by equation or value");
-		this:Exclude("gth", "Comparason operator (>=) must be preceded by equation or value");
-		this:Exclude("lth", "Comparason operator (<=) must be preceded by equation or value");
-		this:Exclude("geq", "Comparason operator (>) must be preceded by equation or value");
-		this:Exclude("leq", "Comparason operator (<) must be preceded by equation or value");
-		-- this:Exclude("inc", "Increment operator (++) must be preceded by variable");
-		-- this:Exclude("dec", "Decrement operator (--) must be preceded by variable");
-		this:Exclude("rpa", "Right parenthesis ( )) without matching left parenthesis");
-		this:Exclude("lcb", "Left curly bracket ({) must be part of an table/if/while/for-statement block");
-		this:Exclude("rcb", "Right curly bracket (}) without matching left curly bracket");
-		this:Exclude("lsb", "Left square bracket ([) must be preceded by variable");
-		this:Exclude("rsb", "Right square bracket (]) without matching left square bracket");
-		this:Exclude("com", "Comma (,) not expected here, missing an argument?");
-		this:Exclude("prd", "Method operator (.) must not be preceded by white space");
-		this:Exclude("col", "Tenarry operator (:) must be part of conditional expression (A ? B : C).");
-		this:Exclude("if", "If keyword (if) must not appear inside an equation");
-		this:Exclude("eif", "Else-if keyword (elseif) must be part of an if-statement");
-		this:Exclude("els", "Else keyword (else) must be part of an if-statement");
-		--this:Exclude("try", "Try keyword (try) must be part of a try-statement");
-		--this:Exclude("cth", "Catch keyword (catch) must be part of an try-statement");
-		--this:Exclude("fnl", "Final keyword (final) must be part of an try-statement");
-		--this:Exclude("dir", "directive operator (@) must not appear inside an equation");
-		this:Error(this.__token, "Unexpected symbol found (%s)", self.__token.name);
+		this:ExpressionErr();
 	end
 end
 
@@ -1267,6 +1229,48 @@ function PARSER.GetCondition(this)
 	this:Require("rpr", "Right parenthesis (( )to close condition.");
 	
 	return inst;
+end
+
+function PARSER.ExpressionErr(this)
+	this:ExcludeWhiteSpace("Further input required at end of code, incomplete expression");
+	this:Exclude("void", "void must not appear inside an equation");
+	this:Exclude("add", "Arithmetic operator (+) must be preceded by equation or value");
+	this:Exclude("sub", "Arithmetic operator (-) must be preceded by equation or value");
+	this:Exclude("mul", "Arithmetic operator (*) must be preceded by equation or value");
+	this:Exclude("div", "Arithmetic operator (/) must be preceded by equation or value");
+	this:Exclude("mod", "Arithmetic operator (%) must be preceded by equation or value");
+	this:Exclude("exp", "Arithmetic operator (^) must be preceded by equation or value");
+	this:Exclude("ass", "Assignment operator (=) must be preceded by variable");
+	this:Exclude("aadd", "Assignment operator (+=) must be preceded by variable");
+	this:Exclude("asub", "Assignment operator (-=) must be preceded by variable");
+	this:Exclude("amul", "Assignment operator (*=) must be preceded by variable");
+	this:Exclude("adiv", "Assignment operator (/=) must be preceded by variable");
+	this:Exclude("and", "Logical operator (&&) must be preceded by equation or value");
+	this:Exclude("or", "Logical operator (||) must be preceded by equation or value");
+	this:Exclude("eq", "Comparason operator (==) must be preceded by equation or value");
+	this:Exclude("neq", "Comparason operator (!=) must be preceded by equation or value");
+	this:Exclude("gth", "Comparason operator (>=) must be preceded by equation or value");
+	this:Exclude("lth", "Comparason operator (<=) must be preceded by equation or value");
+	this:Exclude("geq", "Comparason operator (>) must be preceded by equation or value");
+	this:Exclude("leq", "Comparason operator (<) must be preceded by equation or value");
+	-- this:Exclude("inc", "Increment operator (++) must be preceded by variable");
+	-- this:Exclude("dec", "Decrement operator (--) must be preceded by variable");
+	this:Exclude("rpa", "Right parenthesis ( )) without matching left parenthesis");
+	this:Exclude("lcb", "Left curly bracket ({) must be part of an table/if/while/for-statement block");
+	this:Exclude("rcb", "Right curly bracket (}) without matching left curly bracket");
+	this:Exclude("lsb", "Left square bracket ([) must be preceded by variable");
+	this:Exclude("rsb", "Right square bracket (]) without matching left square bracket");
+	this:Exclude("com", "Comma (,) not expected here, missing an argument?");
+	this:Exclude("prd", "Method operator (.) must not be preceded by white space");
+	this:Exclude("col", "Tenarry operator (:) must be part of conditional expression (A ? B : C).");
+	this:Exclude("if", "If keyword (if) must not appear inside an equation");
+	this:Exclude("eif", "Else-if keyword (elseif) must be part of an if-statement");
+	this:Exclude("els", "Else keyword (else) must be part of an if-statement");
+	--this:Exclude("try", "Try keyword (try) must be part of a try-statement");
+	--this:Exclude("cth", "Catch keyword (catch) must be part of an try-statement");
+	--this:Exclude("fnl", "Final keyword (final) must be part of an try-statement");
+	--this:Exclude("dir", "directive operator (@) must not appear inside an equation");
+	this:Error(this.__token, "Unexpected symbol found (%s)", this.__token.name);
 end
 --[[
 ]]

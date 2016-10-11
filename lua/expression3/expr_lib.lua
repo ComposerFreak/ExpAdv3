@@ -89,6 +89,8 @@ local methods;
 local loadMethods = false;
 
 function EXPR_LIB.RegisterMethod(class, name, peramaters, type, count, method)
+	-- if method is nil lua, compiler will use native Object:(...);
+
 	if (not loadMethods) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) outside of Hook::Expression3.LoadMethods", class, name, peramaters);
 	end
@@ -128,6 +130,8 @@ local operators;
 local loadOperators = false;
 
 function EXPR_LIB.RegisterOperator(operation, peramaters, type, count, operator)
+	-- if operator is nil lua, compiler will use native if possible (+, -, /, *, ^, etc)
+
 	if (not loadOperators) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register operator %s(%s) outside of Hook::Expression3.LoadOperators", operation, peramaters);
 	end
@@ -161,6 +165,10 @@ local castOperators;
 function EXPR_LIB.RegisterCastingOperator(type, parameter, operator)
 	if (not loadOperators) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register casting operator [(%s) %s] outside of Hook::Expression3.LoadOperators", type, parameter);
+	end
+
+	if (not operator) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register native casting operator [(%s) %s] an operation function is required.", type, parameter);
 	end
 
 	local state, signature = EXPR_LIB.ProcessPeramaters(peramaters);
@@ -205,6 +213,7 @@ local functions;
 local loadFunctions = false;
 
 function EXPR_LIB.RegisterFunction(library, name, peramaters, type, count, _function)
+	-- If _function is a string then lua will use str(...) e.g; string.Replace
 	if (not loadFunctions) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) outside of Hook::Expression3.LoadFunctions", library, name, peramaters);
 	end

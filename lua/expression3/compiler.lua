@@ -31,6 +31,11 @@ function COMPILER.Initalize(this, instance)
 	this.__scope.memory = {};
 	this.__scope.server = true;
 	this.__scope.client = true;
+
+	this.__operators = {};
+	this.__functions = {};
+	this.__methods = {};
+	this.__enviroment = {};
 end
 
 function COMPILER.Run(this)
