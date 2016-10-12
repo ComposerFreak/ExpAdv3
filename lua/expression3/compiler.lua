@@ -170,6 +170,13 @@ end
 --[[
 ]]
 
+function COMPILER.GetOperator(this, operation, fst, ...)
+
+end
+
+--[[
+]]
+
 function COMPILER.QueueReplace(this, inst, token, str)
 	local op = {};
 
@@ -383,7 +390,7 @@ end
 
 function COMPILER.Compile_GLOBAL(inst, token, expressions)
 	for i, variable in pairs(inst.variables) do
-		local r, c = expressions[i];
+		local r, c = this:Compile(expressions[i]);
 
 		if (not r) then
 			break;
@@ -397,9 +404,9 @@ function COMPILER.Compile_GLOBAL(inst, token, expressions)
 	end
 end
 
-function COMPILER.Compile_ASS(inst, token, expressions)
+function COMPILER.Compile_LOCAL(inst, token, expressions)
 	for i, variable in pairs(inst.variables) do
-		local r, c = expressions[i];
+		local r, c = this:Compile(expressions[i]);
 
 		if (not r) then
 			break;
@@ -408,3 +415,49 @@ function COMPILER.Compile_ASS(inst, token, expressions)
 		this:AssignVariable(token, true, variable, r);
 	end
 end
+
+function COMPILER.Compile_ASS(inst, token, expressions)
+	local count = 0;
+	local total = #expressions;
+
+	for i = 1, total do
+		local expr = expressions[k];
+		local r, c = this:Compile(expr);
+
+		if (i == total) then
+			for j = 1, c do
+				count = count + 1;
+				local variable = inst.variables[count];
+				this:AssignVariable(token, false, variable, r);
+			end
+		else
+			count = count + 1;
+			local variable = inst.variables[count];
+			this:AssignVariable(token, false, variable, r);
+		end
+	end
+end
+
+function COMPILER.Compile_ASS_ADD(inst, token, expressions)
+	for i = 1, #expressions do
+		local expr = expressions[k];
+		local r, c = this:Compile(expr);
+
+		count = count + 1;
+		local variable = inst.variables[count];
+		local class, scope = this:GetVariable(variable, nil, false);
+
+		local op = this:GetOperator("add", class, r);
+
+		if (not op) then
+			this:Throw(expr.token, "Arithmatic operator (add) does not support '%s + %s'", class, r);
+		elseif (not op.operation) then
+			-- Use Native
+		else
+			-- Impliment Operator
+		end	
+
+		this:AssignVariable(token, false, variable, r);
+	end
+end
+
