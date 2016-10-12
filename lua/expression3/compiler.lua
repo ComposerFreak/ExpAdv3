@@ -79,9 +79,6 @@ function COMPILER.BuildScript(this)
 	local buffer = {};
 	local alltasks = this.__tasks;
 
-	print("all tasks")
-	PrintTable(alltasks)
-
 	for k, v in pairs(this.__tokens) do
 		if (v.newLine) then
 			buffer[#buffer + 1] = "\n";
@@ -362,11 +359,13 @@ function COMPILER.Compile(this, inst)
 	local instruction = string.upper(inst.type);
 	local fun = this["Compile_" .. instruction];
 
+	print("Compiler->" .. instruction .. "->#" .. #inst.instructions)
+
 	if (not fun) then
 		this:Throw(inst.token, "Failed to compile unkown instruction %s", instruction);
 	end
 
-	local type, count = fun(this, inst, token, inst.instructions);
+	local type, count = fun(this, inst, inst.token, inst.instructions);
 
 	if (type) then
 		inst.type = type;
@@ -381,7 +380,7 @@ end
 
 function COMPILER.Compile_SEQ(this, inst, token, stmts)
 	for k, v in pairs(stmts) do
-		this:Compile(n);
+		this:Compile(v);
 	end
 
 	return "", 0;

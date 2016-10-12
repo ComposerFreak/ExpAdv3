@@ -74,13 +74,13 @@ function PARSER.New()
 end
 
 function PARSER.Initalize(this, instance)
-	this.__pos = 1;
+	this.__pos = 0;
 	this.__depth = 0;
 	this.__scope = 0;
 	this.__instructions = {};
 
-	this.__token = instance.tokens[1];
-	this.__next = instance.tokens[2];
+	this.__token = instance.tokens[0];
+	this.__next = instance.tokens[1];
 	this.__total = #instance.tokens;
 	this.__tokens = instance.tokens;
 	this.__script = instance.script;
@@ -136,23 +136,26 @@ end
 ]]
 
 function PARSER.Next(this)
+	this.__pos = this.__pos + 1;
+	
 	if (this.__pos >= this.__total) then
 		return false;
 	end
 
-	this.__pos = this.__pos + 1;
-	this.__token = instance.tokens[this.__pos];
-	this.__next = instance.tokens[this.__pos + 1];
+	this.__token = this.__tokens[this.__pos];
+	this.__next = this.__tokens[this.__pos + 1];
 
 	return true;
 end
 
 function PARSER.HasTokens(this)
-	return this.__pos >= this.__total;
+	return this.__pos <= this.__total;
 end
 
 function PARSER.CheckToken(this, type, ...)
-	if (this.__pos >= this.__total) then
+	print("Checking " .. this.__next.type .. " for", type, ...)
+
+	if (this.__pos <= this.__total) then
 		local tkn = this.__next;
 
 		for _, t in pairs({type, ...}) do
@@ -220,13 +223,13 @@ end
 ]]
 
 function PARSER.Require( this, type, msg, ... )
-	if (not this:AcceptToken(type)) then
+	if (not this:Accept(type)) then
 		this:Throw( this.__token, msg, ... )
 	end
 end
 
 function PARSER.Exclude( this, tpye, msg, ... )
-	if (this:AcceptToken(type)) then
+	if (this:Accept(type)) then
 		this:Throw( this.__token, msg, ... )
 	end
 end
@@ -242,8 +245,10 @@ end
 
 function PARSER.StartInstruction(this, type, token)
 	if (not type) then
+		debug.Trace();
 		error("PARSER:StartInstruction got no instruction type.");
 	elseif (not token) then
+		debug.Trace();
 		error("PARSER:StartInstruction got no instruction token.");
 	end
 
@@ -264,6 +269,8 @@ function PARSER.StartInstruction(this, type, token)
 end
 
 function PARSER.QueueReplace(this, inst, token, str)
+	print("replace", token.pos, str)
+
 	local op = {};
 
 	op.token = token;
@@ -387,7 +394,7 @@ end
 ]]
 
 function PARSER.Root(this)
-	local seq = this:StartInstruction("seq", this.__token);
+	local seq = this:StartInstruction("seq", this.__tokens[1]);
 
 	local stmts = this:Statments(false);
 
@@ -450,6 +457,8 @@ function PARSER.Statments(this, block)
 
 		local stmt = this:Statment_1();
 
+		stmts[#stmts + 1] = stmt;
+
 		if (block and this:CheckToken("rcb")) then
 			break;
 		end
@@ -473,10 +482,8 @@ function PARSER.Statments(this, block)
 		end
 
 		pre = stmt;
-
-		stmts[#stmts + 1] = stmt;
 	end
-
+ 	print("Parsed statments ", #stmts)
 	return stmts;
 end
 
@@ -676,7 +683,7 @@ function PARSER.Statment_6(this)
 
 				return this:EndInstruction(inst, expressions);
 
-			elseif this:AcceptToken( "aadd" ) then
+			elseif this:Accept( "aadd" ) then
 				this:ExcludeWhiteSpace( "Assigment operator (+=), must not be preceeded by whitespace." );
 
 				for k, v in pairs(variables) do
@@ -696,7 +703,7 @@ function PARSER.Statment_6(this)
 				end
 
 				return this:EndInstruction(inst, expressions);
-			elseif this:AcceptToken( "asub" ) then
+			elseif this:Accept( "asub" ) then
 				this:ExcludeWhiteSpace( "Assigment operator (-=), must not be preceeded by whitespace." );
 
 				for k, v in pairs(variables) do
@@ -716,7 +723,7 @@ function PARSER.Statment_6(this)
 				end
 
 				return this:EndInstruction(inst, expressions);
-			elseif this:AcceptToken( "adiv" ) then
+			elseif this:Accept( "adiv" ) then
 				this:ExcludeWhiteSpace( "Assigment operator (/=), must not be preceeded by whitespace." );
 
 				for k, v in pairs(variables) do
@@ -736,7 +743,7 @@ function PARSER.Statment_6(this)
 				end
 
 				return this:EndInstruction(inst, expressions);
-			elseif this:AcceptToken( "amul" ) then
+			elseif this:Accept( "amul" ) then
 				this:ExcludeWhiteSpace( "Assigment operator (*=), must not be preceeded by whitespace." );
 
 				for k, v in pairs(variables) do
@@ -762,6 +769,7 @@ function PARSER.Statment_6(this)
 		end
 	end
 
+	this:Throw(this.__token, "END OF STATMENTS REACHED")
 	-- return this:Statment_7();
 end
 
@@ -890,7 +898,7 @@ function PARSER.Expression_7(this)
 				local expressions = {};
 				expressions[1] = this:Expression_1();
 
-				while this:AcceptToken("com") do
+				while this:Accept("com") do
 					expressions[#expressions + 1] = this:Expression_1()
 				end
 
@@ -921,7 +929,7 @@ function PARSER.Expression_7(this)
 				local expressions = {};
 				expressions[1] = this:Expression_1();
 
-				while this:AcceptToken("com") do
+				while this:Accept("com") do
 					expressions[#expressions + 1] = this:Expression_1()
 				end
 
@@ -1246,11 +1254,11 @@ function PARSER.Expression_Trailing(this, inst)
 end
 
 function PARSER.GetCondition(this)
-	this:Require("lpr", "Left parenthesis ( () to open condition.");
+	this:Require("lpa", "Left parenthesis ( () required, to open condition.");
 	
 	local inst = this:Expression_1();
 	
-	this:Require("rpr", "Right parenthesis (( )to close condition.");
+	this:Require("rpa", "Right parenthesis (( ) missing, to close condition.");
 	
 	return inst;
 end
