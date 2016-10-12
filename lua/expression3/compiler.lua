@@ -171,7 +171,19 @@ end
 ]]
 
 function COMPILER.GetOperator(this, operation, fst, ...)
+	if (not fst) then
+		return EXPR_OPERATORS[operation .. "()"];
+	end
 
+	local signature = string.format("%s(%s)", operation, table.concat({fst, ...},","));
+
+	local Op = EXPR_OPERATORS[signature];
+
+	if (Op) then
+		return Op;
+	end
+
+	-- TODO: Inheritance.
 end
 
 --[[
@@ -330,6 +342,8 @@ function COMPILER.Compile_IF(this, inst, token)
 	if (inst._else) then
 		this:Compile(inst._else);
 	end
+
+	return "", 0;
 end
 
 function COMPILER.Compile_ELSEIF(this, inst, token)
@@ -348,6 +362,8 @@ function COMPILER.Compile_ELSEIF(this, inst, token)
 	if (inst._else) then
 		this:Compile(inst._else);
 	end
+
+	return "", 0;
 end
 
 function COMPILER.Compile_ELSE(this, inst, token)
@@ -356,6 +372,8 @@ function COMPILER.Compile_ELSE(this, inst, token)
 	this:Compile(inst.block);
 	
 	this:PopScope();
+
+	return "", 0;
 end
 
 --[[
@@ -371,6 +389,8 @@ function COMPILER.Compile_SERVER(this, inst, token)
 	this:Compile(inst.block);
 	
 	this:PopScope();
+
+	return "", 0;
 end
 
 function COMPILER.Compile_CLIENT(this, inst, token)
@@ -383,6 +403,8 @@ function COMPILER.Compile_CLIENT(this, inst, token)
 	this:Compile(inst.block);
 	
 	this:PopScope();
+
+	return "", 0;
 end
 
 --[[
@@ -402,6 +424,8 @@ function COMPILER.Compile_GLOBAL(inst, token, expressions)
 
 		this:AssignVariable(token, true, variable, r, 0);
 	end
+
+	return "", 0;
 end
 
 function COMPILER.Compile_LOCAL(inst, token, expressions)
@@ -414,6 +438,8 @@ function COMPILER.Compile_LOCAL(inst, token, expressions)
 
 		this:AssignVariable(token, true, variable, r);
 	end
+
+	return "", 0;
 end
 
 function COMPILER.Compile_ASS(inst, token, expressions)
@@ -436,7 +462,12 @@ function COMPILER.Compile_ASS(inst, token, expressions)
 			this:AssignVariable(token, false, variable, r);
 		end
 	end
+
+	return "", 0;
 end
+
+--[[
+]]
 
 function COMPILER.Compile_ASS_ADD(inst, token, expressions)
 	for i = 1, #expressions do
@@ -450,14 +481,750 @@ function COMPILER.Compile_ASS_ADD(inst, token, expressions)
 		local op = this:GetOperator("add", class, r);
 
 		if (not op) then
-			this:Throw(expr.token, "Arithmatic operator (add) does not support '%s + %s'", class, r);
+			this:Throw(expr.token, "Arithmatic assignment operator (+=) does not support '%s += %s'", class, r);
 		elseif (not op.operation) then
 			-- Use Native
+			if (class == "s" or r == "s") then
+				this:QueueInjectionBefore(inst, expr.token, variable, "..");
+			else
+				this:QueueInjectionBefore(inst, expr.token, variable, "+");
+			end
 		else
 			-- Impliment Operator
+			this.__operators[op.signature] = op.operator;
+			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
+			this:QueueInjectionAfter(inst, expr.final, ")" );
+
 		end	
 
 		this:AssignVariable(token, false, variable, r);
 	end
+
+	return "", 0;
 end
+
+function COMPILER.Compile_ASS_SUB(inst, token, expressions)
+	for i = 1, #expressions do
+		local expr = expressions[k];
+		local r, c = this:Compile(expr);
+
+		count = count + 1;
+		local variable = inst.variables[count];
+		local class, scope = this:GetVariable(variable, nil, false);
+
+		local op = this:GetOperator("sub", class, r);
+
+		if (not op) then
+			this:Throw(expr.token, "Arithmatic assignment operator (-=) does not support '%s -= %s'", class, r);
+		elseif (not op.operation) then
+			-- Use Native
+			this:QueueInjectionBefore(inst, expr.token, variable, "-");
+		else
+			-- Impliment Operator
+			this.__operators[op.signature] = op.operator;
+			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
+			this:QueueInjectionAfter(inst, expr.final, ")" );
+
+		end	
+
+		this:AssignVariable(token, false, variable, r);
+	end
+
+	return "", 0;
+end
+
+function COMPILER.Compile_ASS_MUL(inst, token, expressions)
+	for i = 1, #expressions do
+		local expr = expressions[k];
+		local r, c = this:Compile(expr);
+
+		count = count + 1;
+		local variable = inst.variables[count];
+		local class, scope = this:GetVariable(variable, nil, false);
+
+		local op = this:GetOperator("mul", class, r);
+
+		if (not op) then
+			this:Throw(expr.token, "Arithmatic assignment operator (*=) does not support '%s *= %s'", class, r);
+		elseif (not op.operation) then
+			-- Use Native
+			this:QueueInjectionBefore(inst, expr.token, variable, "-");
+		else
+			-- Impliment Operator
+			this.__operators[op.signature] = op.operator;
+			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
+			this:QueueInjectionAfter(inst, expr.final, ")" );
+
+		end	
+
+		this:AssignVariable(token, false, variable, r);
+	end
+
+	return "", 0;
+end
+
+function COMPILER.Compile_ASS_DIV(inst, token, expressions)
+	for i = 1, #expressions do
+		local expr = expressions[k];
+		local r, c = this:Compile(expr);
+
+		count = count + 1;
+		local variable = inst.variables[count];
+		local class, scope = this:GetVariable(variable, nil, false);
+
+		local op = this:GetOperator("div", class, r);
+
+		if (not op) then
+			this:Throw(expr.token, "Arithmatic assignment operator (/=) does not support '%s /= %s'", class, r);
+		elseif (not op.operation) then
+			-- Use Native
+			this:QueueInjectionBefore(inst, expr.token, variable, "-");
+		else
+			-- Impliment Operator
+			this.__operators[op.signature] = op.operator;
+			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
+			this:QueueInjectionAfter(inst, expr.final, ")" );
+
+		end	
+
+		this:AssignVariable(token, false, variable, r);
+	end
+
+	return "", 0;
+end
+
+--[[
+]]
+
+function COMPILER.Compile_TEN(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local expr3 = expressions[3];
+	local r3, c3 = this:Compile(expr1);
+
+	local op = this:GetOperator("ten", r1, r2, r3);
+
+	if (not op) then
+		this:Throw(expr.token, "Tenary operator (A ? b : C) does not support '%s ? %s : %s'", r1, r2, r3);
+	elseif (not op.operation) then
+		this:QueueReplace(inst, inst.__and, "and");
+		this:QueueReplace(inst, inst.__or, "or");
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__and, ",");
+		this:QueueReplace(inst, inst.__or, ",");
+		
+		this:QueueInjectionAfter(inst, expr3.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end	
+
+	return op.type, op.count;
+end
+
+
+function COMPILER.Compile_OR(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("or", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Logical or operator (||) does not support '%s || %s'", r1, r2);
+	elseif (not op.operation) then
+		this:QueueReplace(inst, inst.__operator, "or");
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_AND(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("and", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Logical or operator (&&) does not support '%s && %s'", r1, r2);
+	elseif (not op.operation) then
+		this:QueueReplace(inst, inst.__operator, "and");
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_BXOR(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("bxor", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Binary xor operator (^^) does not support '%s ^^ %s'", r1, r2);
+	elseif (not op.operation) then
+		this:QueueInjectionBefore(inst, expr1.token, "bit.bxor(");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__enviroment.bit = bit;
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_BOR(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("bxor", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Binary or operator (|) does not support '%s | %s'", r1, r2);
+	elseif (not op.operation) then
+		this:QueueInjectionBefore(inst, expr1.token, "bit.bor(");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__enviroment.bit = bit;
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_BAND(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("band", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Binary or operator (&) does not support '%s & %s'", r1, r2);
+	elseif (not op.operation) then
+		this:QueueInjectionBefore(inst, expr1.token, "bit.band(");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__enviroment.bit = bit;
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+--[[function COMPILER.Compile_EQ_MUL(inst, token, expressions)
+end]]
+
+function COMPILER.Compile_EQ(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("eq", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Comparison operator (==) does not support '%s == %s'", r1, r2);
+	elseif (not op.operation) then
+		-- Leave the code alone.
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+--[[function COMPILER.Compile_NEQ_MUL(inst, token, expressions)
+end]]
+
+function COMPILER.Compile_NEQ(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("eq", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Comparison operator (!=) does not support '%s != %s'", r1, r2);
+	elseif (not op.operation) then
+		this:QueueReplace(inst, inst.__operator, "~=");
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_LTH(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("lth", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Comparison operator (<) does not support '%s < %s'", r1, r2);
+	elseif (not op.operation) then
+		-- Leave the code alone.
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_LEQ(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("leg", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Comparison operator (<=) does not support '%s <= %s'", r1, r2);
+	elseif (not op.operation) then
+		-- Leave the code alone.
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_GTH(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("gth", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Comparison operator (>) does not support '%s > %s'", r1, r2);
+	elseif (not op.operation) then
+		-- Leave the code alone.
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_GEQ(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("geq", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Comparison operator (>=) does not support '%s >= %s'", r1, r2);
+	elseif (not op.operation) then
+		-- Leave the code alone.
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_BSHL(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("bshl", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Binary shift operator (<<) does not support '%s << %s'", r1, r2);
+	elseif (not op.operation) then
+		this:QueueInjectionBefore(inst, expr1.token, "bit.lshift(");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__enviroment.bit = bit;
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_BSHR(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("bshr", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Binary shift operator (>>) does not support '%s >> %s'", r1, r2);
+	elseif (not op.operation) then
+		this:QueueInjectionBefore(inst, expr1.token, "bit.rshift(");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__enviroment.bit = bit;
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+--[[
+]]
+
+function COMPILER.Compile_ADD(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("add", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Addition operator (+) does not support '%s + %s'", r1, r2);
+	elseif (not op.operation) then
+		if (r1 == "s" or r2 == "s") then
+			this:QueueReplace(inst, inst.__operator, ".."); -- Replace + with .. for string addition;
+		end
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_SUB(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("sub", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Subtraction operator (-) does not support '%s - %s'", r1, r2);
+	elseif (not op.operation) then
+		-- Do not change the code.
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_DIV(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("div", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Division operator (/) does not support '%s / %s'", r1, r2);
+	elseif (not op.operation) then
+		-- Do not change the code.
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_MUL(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("mul", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Multiplication operator (*) does not support '%s * %s'", r1, r2);
+	elseif (not op.operation) then
+		-- Do not change the code.
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_EXP(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("exp", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Exponent operator (^) does not support '%s ^ %s'", r1, r2);
+	elseif (not op.operation) then
+		-- Do not change the code.
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_NEG(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local op = this:GetOperator("neg", r1);
+
+	if (not op) then
+		this:Throw(expr.token, "Negation operator (-A) does not support '-%s'", r1, r2);
+	elseif (not op.operation) then
+		-- Do not change the code.
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+		
+		this:QueueInjectionAfter(inst, expr1.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_NOT(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local op = this:GetOperator("not", r1);
+
+	if (not op) then
+		this:Throw(expr.token, "Not operator (!A) does not support '!%s'", r1, r2);
+	elseif (not op.operation) then
+		this:QueueReplace(inst, inst.__operator, "not");
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+		
+		this:QueueInjectionAfter(inst, expr1.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_LEN(inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local op = this:GetOperator("len", r1);
+
+	if (not op) then
+		this:Throw(expr.token, "Lengh operator (#A) does not support '#%s'", r1, r2);
+	elseif (not op.operation) then
+		-- Once again we change nothing.
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "OPERATORS[\"", op.signature, "\"](CONTEXT,");
+		
+		this:QueueInjectionAfter(inst, expr1.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
+function COMPILER.Compile_CAST(inst, token, expressions)
+end
+
+function COMPILER.Compile_VAR(inst, token, expressions)
+end
+
+function COMPILER.Compile_BOOL(inst, token, expressions)
+	return "b", 1
+end
+
+function COMPILER.Compile_VOID(inst, token, expressions)
+	return "", 1
+end
+
+function COMPILER.Compile_NUM(inst, token, expressions)
+	return "n", 1
+end
+
+function COMPILER.Compile_STR(inst, token, expressions)
+	return "s", 1
+end
+
+
+
+
+
+
 

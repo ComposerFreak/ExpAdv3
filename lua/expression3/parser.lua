@@ -765,17 +765,17 @@ function PARSER.Expression_1(this)
 	while this:Accept("qsm") do
 		local inst = this:StartInstruction(this.__token, "ten");
 
-		this:QueueReplace(inst, this.__token, "and");
+		inst.__and = this.__token;
 
 		local expr2 = this:Expression_2();
 
 		this:Require("col", "colon (:) expected for ternary operator.");
 
-		this:QueueReplace(this, this.__token, "or");
+		inst.__or = this.__token;
 
-		local expr2 = this:Expression_3();
+		local expr3 = this:Expression_2();
 
-		expr = this:EndInstruction(inst, expr, {expr2, expr3});
+		expr = this:EndInstruction(inst, {expr, expr2, expr3});
 	end
 
 	return expr;
@@ -787,7 +787,7 @@ function PARSER.Expression_2(this)
 	while this:Accept("or") do
 		local inst = this:StartInstruction(inst, expr.token, "or");
 
-		this:QueueReplace(this.__token, "or");
+		inst.__operator = this.__token;
 
 		local expr2 = this:Expression_3();
 
@@ -803,7 +803,7 @@ function PARSER.Expression_3(this)
 	while this:Accept("and") do
 		local inst = this:StartInstruction(expr.token, "and");
 
-		this:QueueReplace(inst, this.__token, "and");
+		inst.__operator = this.__token;
 
 		local expr2 = this:Expression_4();
 
@@ -819,13 +819,9 @@ function PARSER.Expression_4(this)
 	while this:Accept("bxor") do
 		local inst = this:StartInstruction(expr.token, "bxor");
 
-		local r = this:QueueInjectionBefore(expr.token, "bit.bxor", "(");
-
-		inst.injectFunction = r[1];
+		inst.__operator = this.__token;
 
 		local expr2 = this:Expression_5();
-
-		this:QueueInjectionAfter(expr2.token, ")");
 
 		expr = this:EndInstruction(inst, {expr, expr2});
 	end
@@ -839,13 +835,9 @@ function PARSER.Expression_5(this)
 	while this:Accept("bor") do
 		local inst = this:StartInstruction(expr.token, "bor");
 
-		local r = this:QueueInjectionBefore(expr.token, "bit.bor", "(");
-
-		inst.injectFunction = r[1];
+		inst.__operator = this.__token;
 
 		local expr2 = this:Expression_6();
-
-		this:QueueInjectionAfter(expr2.token, ")");
 
 		expr = this:EndInstruction(inst, {expr, expr2});
 	end
@@ -859,13 +851,9 @@ function PARSER.Expression_6(this)
 	while this:Accept("band") do
 		local inst = this:StartInstruction(expr.token, "band");
 
-		local r = this:QueueInjectionBefore(expr.token, "bit.band", "(");
-
-		inst.injectFunction =  r[1];
+		inst.__operator = this.__token;
 
 		local expr2 = this:Expression_7();
-
-		this:QueueInjectionAfter(expr2.token, ")");
 
 		expr = this:EndInstruction(inst, {expr, expr2});
 	end
@@ -880,7 +868,8 @@ function PARSER.Expression_7(this)
 		if (this:Accept("eq")) then
 			local eqTkn = this.__token;
 
-			if (this:Accept("lsb")) then
+			-- NOT SUPPORTIN THIS YET
+			--[[if (this:Accept("lsb")) then
 				local inst = this:StartInstruction(expr.token, "eq_mul");
 
 				this:QueueInjectionBefore(inst, eqTkn, "eqMult",  "(",  "nil", "," );
@@ -901,14 +890,18 @@ function PARSER.Expression_7(this)
 				expr = this:EndInstruction(ist, expressions);
 
 				-- TODO: When using a function operator to do comparisons this will inject the function as peram 1.
-			else
+			else]]
 				local inst = this:StartInstruction(this.__token, "eq");
+
+				inst.__operator = this.__token;
+
 				expr = this:EndInstruction(ist, {expr, expr2});
-			end
+			--end
 		elseif (this:Accept("neq")) then
 			local eqTkn = this.__token;
 
-			if (this:Accept("lsb")) then
+			-- NOT SUPPORTING THIS YET
+			--[[if (this:Accept("lsb")) then
 				local inst = this:StartInstruction(expr.token, "neq_mul");
 
 				this:QueueInjectionBefore(inst, eqTkn, "neqMult",  "(",  "nil", "," );
@@ -928,10 +921,13 @@ function PARSER.Expression_7(this)
 				expr = this:EndInstruction(ist, expressions);
 
 				-- TODO: When using a function operator to do comparisons this will inject the function as peram 1.
-			else
+			else]]
 				local inst = this:StartInstruction(this.__token, "neq");
+
+				inst.__operator = this.__token;
+
 				expr = this:EndInstruction(ist, {expr, expr2});
-			end
+			--end
 		end
 	end
 
@@ -945,11 +941,15 @@ function PARSER.Expression_8(this)
 		if (this:Accept("lth")) then
 			local inst = this:StartInstruction(expr.token, "lth");
 
+			inst.__operator = this.__token;
+
 			local expr2 = this:Expression_1();
 
 			expr = this:EndInstruction(inst, {expr, expr2});
 		elseif (this:Accept("leq")) then
 			local inst = this:StartInstruction(expr.token, "leq");
+
+			inst.__operator = this.__token;
 
 			local expr2 = this:Expression_1();
 
@@ -957,11 +957,15 @@ function PARSER.Expression_8(this)
 		elseif (this:Accept("gth")) then
 			local inst = this:StartInstruction(expr.token, "gth");
 
+			inst.__operator = this.__token;
+
 			local expr2 = this:Expression_1();
 
 			expr = this:EndInstruction(inst, {expr, expr2});
 		elseif (this:Accept("geq")) then
 			local inst = this:StartInstruction(expr.token, "geq");
+
+			inst.__operator = this.__token;
 
 			local expr2 = this:Expression_1();
 
@@ -978,13 +982,9 @@ function PARSER.Expression_9(this)
 	while this:Accept("bshl") do
 		local inst = this:StartInstruction(expr.token, "bshl");
 
-		local r = this:QueueInjectionBefore(expr.token, "bit.lshift", "(");
-
-		inst.injectFunction = r[1];
+		inst.__operator = this.__token;
 
 		local expr2 = this:Expression_10();
-
-		this:QueueInjectionAfter(expr2.token, ")");
 
 		expr = this:EndInstruction(inst, {expr, expr2});
 	end
@@ -998,13 +998,9 @@ function PARSER.Expression_10(this)
 	while this:Accept("bshr") do
 		local inst = this:StartInstruction(expr.token, "bshr");
 
-		local r = this:QueueInjectionBefore(expr.token, "bit.rshift", "(");
-
-		inst.injectFunction = r[1];
+		inst.__operator = this.__token;
 
 		local expr2 = this:Expression_11();
-
-		this:QueueInjectionAfter(expr2.token, ")");
 
 		expr = this:EndInstruction(inst, {expr, expr2});
 	end
@@ -1017,6 +1013,8 @@ function PARSER.Expression_11(this)
 
 	while this:Accept("add") do
 		local inst = this:StartInstruction(inst, expr.token, "add");
+
+		inst.__operator = this.__token;
 
 		local expr2 = this:Expression_12();
 
@@ -1032,6 +1030,8 @@ function PARSER.Expression_12(this)
 	while this:Accept("sub") do
 		local inst = this:StartInstruction(inst, expr.token, "sub");
 
+		inst.__operator = this.__token;
+
 		local expr2 = this:Expression_13();
 
 		expr = this:EndInstruction(inst, {expr, expr2});
@@ -1045,6 +1045,8 @@ function PARSER.Expression_13(this)
 
 	while this:Accept("div") do
 		local inst = this:StartInstruction(inst, expr.token, "div");
+
+		inst.__operator = this.__token;
 
 		local expr2 = this:Expression_14();
 
@@ -1060,6 +1062,8 @@ function PARSER.Expression_14(this)
 	while this:Accept("mul") do
 		local inst = this:StartInstruction(inst, expr.token, "mul");
 
+		inst.__operator = this.__token;
+
 		local expr2 = this:Expression_15();
 
 		expr = this:EndInstruction(inst, {expr, expr2});
@@ -1073,6 +1077,8 @@ function PARSER.Expression_15(this)
 
 	while this:Accept("exp") do
 		local inst = this:StartInstruction(inst, expr.token, "exp");
+
+		inst.__operator = this.__token;
 
 		local expr2 = this:Expression_16();
 
@@ -1102,6 +1108,8 @@ function PARSER.Expression_17(this)
 	if (this:Accept("neg")) then
 		local inst = this:StartInstruction(inst, expr.token, "neg");
 
+		inst.__operator = this.__token;
+
 		this:ExcludeWhiteSpace("Negation operator (-) must not be succeeded by whitespace");
 
 		local expr = this:Expression_22();
@@ -1115,6 +1123,8 @@ end
 function PARSER.Expression_18(this)
 	if (this:Accept("neg")) then
 		local inst = this:StartInstruction(inst, expr.token, "not");
+
+		inst.__operator = this.__token;
 
 		this:ExcludeWhiteSpace("Not operator (!) must not be succeeded by whitespace");
 
@@ -1130,6 +1140,8 @@ function PARSER.Expression_19(this)
 	if (this:Accept("len")) then
 		local inst = this:StartInstruction(inst, expr.token, "len");
 
+		inst.__operator = this.__token;
+
 		this:ExcludeWhiteSpace("Lengh operator (#) must not be succeeded by whitespace");
 
 		local expr = this:Expression_22();
@@ -1144,7 +1156,7 @@ function PARSER.Expression_20(this)
 	if (this:Accept("cst")) then
 		local inst = this:StartInstruction(inst, expr.token, "cast");
 		
-		inst.type = this.__token.data;
+		inst.class = this.__token.data;
 
 		this:ExcludeWhiteSpace("Cast operator ( (%s) ) must not be succeeded by whitespace", inst.type);
 

@@ -474,6 +474,7 @@ function EXPR_LIB.Initalize()
 	hook.Run("Expression3.LoadOperators");
 	loadOperators = false;
 	EXPR_OPERATORS = operators;
+	EXPR_CAST_OPERATORS = castOperators;
 
 	librarys = {};
 	loadLibraries = true;
