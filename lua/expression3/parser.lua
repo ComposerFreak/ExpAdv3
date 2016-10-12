@@ -664,6 +664,9 @@ function PARSER.Statment_6(this)
 					this:ExcludeWhiteSpace( "comma (,) must not be preceeded by whitespace." );
 					expressions[#expressions + 1] = this:expression_1();
 				end
+
+				return this:EndInstruction(inst, expressions);
+
 			elseif this:AcceptToken( "aadd" ) then
 				this:ExcludeWhiteSpace( "Assigment operator (+=), must not be preceeded by whitespace." );
 
@@ -683,7 +686,7 @@ function PARSER.Statment_6(this)
 					end
 				end
 
-				return this:EndInstruction(inst, variables, expressions);
+				return this:EndInstruction(inst, expressions);
 			elseif this:AcceptToken( "asub" ) then
 				this:ExcludeWhiteSpace( "Assigment operator (-=), must not be preceeded by whitespace." );
 
@@ -703,7 +706,7 @@ function PARSER.Statment_6(this)
 					end
 				end
 
-				return this:EndInstruction(inst, variables, expressions);
+				return this:EndInstruction(inst, expressions);
 			elseif this:AcceptToken( "adiv" ) then
 				this:ExcludeWhiteSpace( "Assigment operator (/=), must not be preceeded by whitespace." );
 
@@ -723,7 +726,7 @@ function PARSER.Statment_6(this)
 					end
 				end
 
-				return this:EndInstruction(inst, variables, expressions);
+				return this:EndInstruction(inst, expressions);
 			elseif this:AcceptToken( "amul" ) then
 				this:ExcludeWhiteSpace( "Assigment operator (*=), must not be preceeded by whitespace." );
 
