@@ -20,7 +20,7 @@ end
 function COMPILER.Initalize(this, instance)
 	this.__tokens = instance.tokens;
 	this.__tasks = instance.tasks;
-	this.__root = instance.instruction
+	this.__root = instance.instruction;
 	this.__script = instance.script;
 
 	this.__scope = {};
@@ -40,7 +40,7 @@ end
 
 function COMPILER.Run(this)
 	--TODO: PcallX for stack traces on internal errors?
-	local status, result = Pcall(T._Run, this);
+	local status, result = pcall(this._Run, this);
 
 	if (status) then
 		return true, result;
@@ -58,6 +58,67 @@ function COMPILER.Run(this)
 end
 
 function COMPILER._Run(this)
+	this:Compile(this.__root);
+
+	local script = this:BuildScript();
+
+	local result = {}
+	result.script = this.__script;
+	result.compiled = script;
+	result.operators = this.__operators;
+	result.functions = this.__functions;
+	result.methods = this.__methods;
+	result.enviroment = this.__enviroment;
+
+	return result;
+end
+
+function COMPILER.BuildScript(this)
+	-- This wil probably become a seperate stage (post compiler?).
+
+	local buffer = {};
+	local alltasks = this.__tasks;
+
+	print("all tasks")
+	PrintTable(alltasks)
+
+	for k, v in pairs(this.__tokens) do
+		if (v.newLine) then
+			buffer[#buffer + 1] = "\n";
+		end
+
+		local tasks = alltasks[k];
+
+		if (tasks) then
+			local prefixs = tasks.prefix;
+
+			if (prefixs) then
+				for _, prefix in pairs(prefixs) do
+					buffer[#buffer + 1] = prefix.str;
+				end
+			end
+
+			if (not tasks.remove) then
+				if (tasks.replace) then
+					buffer[#buffer + 1] = task.replace.str;
+				else
+					buffer[#buffer + 1] = v.data;
+				end
+			end
+
+			local postfixs = tasks.postfix;
+
+			if (postfixs) then
+				for _, postfix in pairs(prefixs) do
+					buffer[#buffer + 1] = postfix.str;
+				end
+			end
+		else
+			buffer[#buffer + 1] = v.data;
+		end
+	end
+
+	return table.concat(buffer, " ");
 end
 
 function COMPILER.Throw(this, token, msg, fst, ...)
@@ -145,7 +206,7 @@ function COMPILER.GetVariable(this, name, scope, nonDeep)
 	end
 end
 
-function Compiler.AssignVariable(this, token, declaired, name, class, scope)
+function COMPILER.AssignVariable(this, token, declaired, name, class, scope)
 	if (not scope) then
 		scope = this.__scopeID;
 	end
@@ -1228,3 +1289,7 @@ end
 
 
 
+--[[
+]]
+
+EXPR_COMPILER = COMPILER;

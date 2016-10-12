@@ -241,6 +241,14 @@ end
 ]]
 
 function PARSER.StartInstruction(this, type, token)
+	if (not type) then
+		error("PARSER:StartInstruction got no instruction type.");
+	elseif (not token) then
+		error("PARSER:StartInstruction got no instruction token.");
+	end
+
+	MsgN("Instruction ", type, " - ", token);
+
 	local inst = {};
 	inst.type = type;
 	inst.result = "void";
@@ -367,6 +375,7 @@ end
 
 function PARSER.EndInstruction(this, inst, instructions)
 	inst.instructions = instructions;
+
 	inst.final = this.__token;
 
 	this.__depth = this.__depth - 1;
@@ -380,9 +389,9 @@ end
 function PARSER.Root(this)
 	local seq = this:StartInstruction("seq", this.__token);
 
-	local stmts = this:Statments(this, false);
+	local stmts = this:Statments(false);
 
-	return this:EndInstruction(this, seq, stmts);
+	return this:EndInstruction(seq, stmts);
 end
 
 function PARSER.Block_1(this, _end, lcb)
@@ -406,7 +415,7 @@ function PARSER.Block_1(this, _end, lcb)
 			this:QueueReplace(seq, this.__token, "end");
 		end
 
-		return this:EndInstruction(this, seq, stmts);
+		return this:EndInstruction(seq, stmts);
 	end
 
 	local seq = this:StartInstruction("seq", this.__token);
@@ -425,7 +434,7 @@ function PARSER.Block_1(this, _end, lcb)
 		this:QueueRemove(seq, this.__token);
 	end
 
-	return this:EndInstruction(this, seq, {stmt})
+	return this:EndInstruction(seq, {stmt})
 end
 
 function PARSER.Statments(this, block)
@@ -476,7 +485,7 @@ end
 
 function PARSER.Statment_1(this)
 	if (this:Accept("if")) then
-		local inst = this:StartInstruction(this, "if", this.__token);
+		local inst = this:StartInstruction("if", this.__token);
 
 		inst.condition = this:GetCondition();
 
@@ -494,7 +503,7 @@ end
 
 function PARSER.Statment_2(this)
 	if (this:Accept("eif")) then
-		local inst = this:StartInstruction(this, "elseif", this.__token);
+		local inst = this:StartInstruction("elseif", this.__token);
 
 		inst.condition = this:GetCondition();
 
@@ -510,7 +519,7 @@ end
 
 function PARSER.Statment_3(this)
 	if (this:Accept("els")) then
-		local inst = this:StartInstruction(this, "else", this.__token);
+		local inst = this:StartInstruction("else", this.__token);
 
 		inst.block = this:block_1(false, "");
 
@@ -523,7 +532,7 @@ end
 
 function PARSER.Statment_4(this)
 	if (this:Accept("sv")) then
-		local inst = this:StartInstruction(this, "server", this.__token);
+		local inst = this:StartInstruction("server", this.__token);
 
 		this:QueueInjectionBefore(inst, this.__token, "if");
 
@@ -535,7 +544,7 @@ function PARSER.Statment_4(this)
 	end
 
 	if (this:Accept("cl")) then
-		local inst = this:StartInstruction(this, "client", this.__token);
+		local inst = this:StartInstruction("client", this.__token);
 
 		this:QueueInjectionBefore(inst, this.__token, "if");
 
@@ -554,7 +563,7 @@ end
 
 function PARSER.Statment_5(this)
 	if (this:Accept("glo")) then
-		local inst = this:StartInstruction(this, "global", this.__token);
+		local inst = this:StartInstruction("global", this.__token);
 
 		this:Require("typ", "Class expected after global.");
 		
@@ -595,7 +604,7 @@ function PARSER.Statment_5(this)
 	end
 
 	if (this:Accept("typ")) then
-		local inst = this:StartInstruction(this, "local", this.__token);
+		local inst = this:StartInstruction("local", this.__token);
 		
 		local type = this.token.data;
 
@@ -639,7 +648,7 @@ function PARSER.Statment_6(this)
 		if (not this:CheckToken("com", "ass", "aadd", "asub", "adiv", "amul")) then
 			this:StepBackward(1);
 		else
-			local inst = this:StartInstruction(this, "ass", this.__token);
+			local inst = this:StartInstruction("ass", this.__token);
 			
 			local variables = {};
 		

@@ -497,6 +497,7 @@ function EXPR_LIB.Initalize()
 
 	include("tokenizer.lua");
 	include("parser.lua");
+	include("compiler.lua");
 end
 
 EXPR_LIB.Initalize();

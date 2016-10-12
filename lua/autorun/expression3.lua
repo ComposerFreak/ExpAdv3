@@ -19,4 +19,6 @@ AddCSLuaFile("expression3/tokenizer.lua");
 
 AddCSLuaFile("expression3/parser.lua");
 
+AddCSLuaFile("expression3/compiler.lua");
+
 include("expression3/expr_lib.lua");
