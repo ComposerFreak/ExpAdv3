@@ -455,6 +455,10 @@ function EXPR_LIB.Initalize()
 	classIDs = {};
 	loadClasses = true;
 	hook.Run("Expression3.LoadClasses");
+
+	EXPR_LIB.RegisterClass("n", "int", isType, isValid) -- Temp: Remove when used.
+	EXPR_LIB.RegisterClass("s", "string", isType, isValid) -- Temp: Remove when used.
+
 	loadClasses = false;
 	EXPR_CLASSES = classes;
 

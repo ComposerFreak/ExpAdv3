@@ -346,7 +346,7 @@ function COMPILER.QueueInjectionAfter(this, inst, token, str, ...)
 		op.inst = inst;
 
 		r[#r + 1] = op;
-		tasks.prefix[#tasks.prefix + 1] = op;
+		tasks.postfix[#tasks.postfix + 1] = op;
 	end
 
 	return r;
@@ -356,6 +356,11 @@ end
 ]]
 
 function COMPILER.Compile(this, inst)
+	if (not inst) then
+		debug.Trace();
+		error("Compiler was asked to compile a nil instruction.")
+	end
+
 	local instruction = string.upper(inst.type);
 	local fun = this["Compile_" .. instruction];
 
@@ -387,6 +392,7 @@ function COMPILER.Compile_SEQ(this, inst, token, stmts)
 end
 
 function COMPILER.Compile_IF(this, inst, token)
+	PrintTable(inst)
 	local class, count = this:Compile(inst.condition);
 	
 	if (class ~= "b") then
