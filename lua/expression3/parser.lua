@@ -58,11 +58,15 @@
 			Expr20 ← ("("type")" Expr1)? Expr21
 			Expr21 ← ("(" Expr1 ")")? Expr22
 			Expr22 ← (Var)? Expr23
+			Expr23 ← (new Type "(" (Expr1 ((","")?)*)?) ")")? Raw
+
+
 
 		:::Syntax:::
 			Cond ← "(" Expr1 ")"
 			Block ← "{" (Stmt1 ((";" / " ") Stmt1)*)? "}"
 			Values ← "[" Expr1 ("," Expr1)* "]"
+			Raw ← (Str / Num / Bool)
 
 ]]
 
@@ -399,10 +403,12 @@ function PARSER.Block_1(this, _end, lcb)
 	this:ExcludeWhiteSpace( "Further input required at end of code, incomplete statment" )
 	
 	if (this:Accept("lcb")) then
-
+		
 		local seq = this:StartInstruction("seq", this.__token);
 
-		this:QueueReplace(seq, this.__token, lcb);
+		if (lcb) then
+			this:QueueReplace(seq, this.__token, lcb);
+		end
 
 		this.__scope = this.__scope + 1;
 
@@ -414,28 +420,32 @@ function PARSER.Block_1(this, _end, lcb)
 
 		if (_end) then
 			this:QueueReplace(seq, this.__token, "end");
+		else
+			this:QueueRemove(seq, this.__next);
 		end
 
 		return this:EndInstruction(seq, stmts);
 	end
 
-	local seq = this:StartInstruction("seq", this.__token);
+	do
+		local seq = this:StartInstruction("seq", this.__next);
 
-	this:QueueInjectionAfter(seq, this.__token, lcb);
+		if (lcb) then
+			this:QueueInjectionAfter(seq, this.__token, lcb);
+		end
 
-	this.__scope = this.__scope + 1;
+		this.__scope = this.__scope + 1;
 
-	local stmt = this:Statment_1();
+		local stmt = this:Statment_1();
 
-	this.__scope = this.__scope - 1;
+		this.__scope = this.__scope - 1;
 
-	if (_end) then
-		this:QueueInjectionBefore(seq, this.__token, "end");
-	else
-		this:QueueRemove(seq, this.__token);
+		if (_end) then
+			this:QueueInjectionAfter(seq, stmt.final, "end");
+		end
+
+		return this:EndInstruction(seq, { stmt });
 	end
-
-	return this:EndInstruction(seq, {stmt})
 end
 
 function PARSER.Statments(this, block)
@@ -492,7 +502,7 @@ function PARSER.Statment_1(this)
 		local inst = this:StartInstruction("if", this.__token);
 
 		inst.condition = this:GetCondition();
-
+		
 		inst.block = this:Block_1(false, "then");
 
 		inst._else = this:Statment_2();
@@ -640,7 +650,7 @@ function PARSER.Statment_5(this)
 		end
 
 		inst.variables = variables;
-
+		PrintTable(inst)
 		return this:EndInstruction(inst, expressions);
 	end
 
@@ -1214,11 +1224,49 @@ function PARSER.Expression_22(this)
 end
 
 function PARSER.Expression_23(this)
+
+	if (this:Accept("new")) then
+		local inst = this:StartInstruction("new", this.__token);
+
+		this:QueueRemove(inst, this.__token);
+
+		this:Require("typ", "Type expected after new for contructor.");
+
+		inst.class = this.__token.data;
+
+		this:QueueRemove(inst, this.__token);
+		
+		this:Require("lpa", "Left parenthesis (( ) expected to open constructor parameters.")
+
+		local expressions = {};
+
+		if (not this:CheckToken("lpa")) then
+			expressions[1] = this:Expression_1();
+
+			while(this:Accept("com")) do
+				this:Exclude("lpa", "Expression or value expected after comma (,).");
+
+				expressions[#expressions + 1] = this:Expression_1();
+			end
+
+		end
+
+		this:Require("rpa", "Right parenthesis ( )) expected to close constructor parameters.")
+
+		return this:EndInstruction(inst, expressions);
+	end
+
+	return this:Expression_RawVaue();
+end
+
+function PARSER.Expression_24(this)
 	local expr = this:Expression_RawVaue();
 
 	if (not expr) then
 		this:ExpressionErr();
 	end
+
+	return expr;
 end
 
 function PARSER.Expression_RawVaue(this)
@@ -1246,11 +1294,11 @@ function PARSER.Expression_RawVaue(this)
 end
 
 function PARSER.Expression_Trailing(this, inst)
-	--while this:CheckToken("prd", "lsb", "lpa") do
+	while this:CheckToken("prd", "lsb") do --, "lpa") do
 		-- Methods
-
+		
 		-- Getters
-	--end
+	end
 
 	return expr;
 end
