@@ -395,10 +395,26 @@ function COMPILER.Compile_SEQ(this, inst, token, stmts)
 end
 
 function COMPILER.Compile_IF(this, inst, token)
-	local class, count = this:Compile(inst.condition);
+	local r, c = this:Compile(inst.condition);
 	
 	if (class ~= "b") then
-		-- TODO: Cast this to a boolean.
+		local op = this:GetOperator("is", r);
+
+		if (op) then
+			if (op.operation) then
+				this.__EXPR_OPERATORS[op.signature] = op.operator;
+				this:QueueInjectionBefore(inst, inst.condition.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
+				this:QueueInjectionAfter(inst, inst.condition.final, ")" );
+			end
+		end
+
+		if (not op) then
+			local t = this:CastExpression("b", inst.condition);
+
+			if (not t) then
+				this:Throw(token, "Type of %s can not be used as a condition.", r);
+			end
+		end
 	end
 
 	this:PushScope();
@@ -807,7 +823,7 @@ function COMPILER.Compile_BOR(this, inst, token, expressions)
 	local expr2 = expressions[2];
 	local r2, c2 = this:Compile(expr1);
 
-	local op = this:GetOperator("bxor", r1, r2);
+	local op = this:GetOperator("bor", r1, r2);
 
 	if (not op) then
 		this:Throw(expr.token, "Binary or operator (|) does not support '%s | %s'", r1, r2);
@@ -897,7 +913,7 @@ function COMPILER.Compile_NEQ(this, inst, token, expressions)
 	local expr2 = expressions[2];
 	local r2, c2 = this:Compile(expr1);
 
-	local op = this:GetOperator("eq", r1, r2);
+	local op = this:GetOperator("neq", r1, r2);
 
 	if (not op) then
 		this:Throw(expr.token, "Comparison operator (!=) does not support '%s != %s'", r1, r2);
@@ -1272,7 +1288,8 @@ function COMPILER.CastExpression(this, type, expr)
 end
 
 function COMPILER.Compile_CAST(this, inst, token, expressions)
-	local t, expr = this:CastExpression(inst.class, expressions[1]);
+	local expr = this:Compile(expressions[1]);
+	local t = this:CastExpression(inst.class, expr);
 
 	if (not t) then
 		this:Throw(token, "Type of %s can not be cast to type of %s.", expr.result, inst.class)
@@ -1283,6 +1300,10 @@ end
 
 function COMPILER.Compile_VAR(this, inst, token, expressions)
 	local c, s = this:GetVariable(int.variable)
+
+	if (s == 0) then
+		this:QueueInjectionBefore(inst, token, "GLOBAL.");
+	end
 
 	if (not c) then
 		this:Throw(token, "Variable %s does not exist.", inst.variable);
@@ -1307,7 +1328,7 @@ function COMPILER.Compile_STR(this, inst, token, expressions)
 	return "s", 1
 end
 
-function COMPILER.Compile_STR(this, inst, token, expressions)
+function COMPILER.Compile_NEW(this, inst, token, expressions)
 	local Pp;
 	local ids = {};
 	local total = #expressions;
