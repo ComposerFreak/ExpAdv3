@@ -38,13 +38,13 @@
 
 
 		EXPR_LIB.RegisterOperator(str operation, str parameters, str type, number count, obj = function(ctx, ...) operator*)
-			Registers an operator with expression 3 on class;
+			Registers an operator with expression 3;
 			if operator is nil then it will use the native operator on object.
 
 				add		(type1, type2)			type1 + type2
 				sub		(type1, type2)			type1 - type2
 				div		(type1, type2)			type1 / type2
-				mul		(type1, type2)			type1 mul type2
+				mul		(type1, type2)			type1 * type2
 				exp		(type1, type2)			type1 ^ type2
 				ten		(type1, type2, type3)	type1 ? type2 : type3
 				or		(type1, type2)			type1 || type2
@@ -168,21 +168,21 @@ end
 
 local loadConstructors = false;
 
-function EXPR_LIB.RegisterConstructor(class, peramaters, constructor)
+function EXPR_LIB.RegisterConstructor(class, parameter, constructor)
 	if (not loadConstructors) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor new %s(%s) outside of Hook::Expression3.LoadConstructors", class, peramaters);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor new %s(%s) outside of Hook::Expression3.LoadConstructors", class, parameter);
 	end
 
 	local cls = EXPR_LIB.GetClass(class);
 
 	if (not cls) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor new %s(%s) for none existing class", class, peramaters);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor new %s(%s) for none existing class", class, parameter);
 	end
 
-	local state, signature = EXPR_LIB.ProcessPeramaters(peramaters);
+	local state, signature = EXPR_LIB.ProcessParameter(parameter);
 
 	if (not state) then
-		EXPR_LIB.ThrowInternal(0, "%s for Constructor new %s(%s)", signature, class, peramaters);
+		EXPR_LIB.ThrowInternal(0, "%s for Constructor new %s(%s)", signature, class, parameter);
 	end
 
 	cls.constructors[signature] = constructor;
@@ -191,35 +191,35 @@ end
 local methods;
 local loadMethods = false;
 
-function EXPR_LIB.RegisterMethod(class, name, peramaters, type, count, method)
+function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method)
 	-- if method is nil lua, compiler will use native Object:(...);
 
 	if (not loadMethods) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) outside of Hook::Expression3.LoadMethods", class, name, peramaters);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) outside of Hook::Expression3.LoadMethods", class, name, parameter);
 	end
 
 	local cls = EXPR_LIB.GetClass(class);
 
 	if (not cls) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) for none existing class %s", class, name, peramaters, class);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) for none existing class %s", class, name, parameter, class);
 	end
 
-	local state, signature = EXPR_LIB.ProcessPeramaters(peramaters);
+	local state, signature = EXPR_LIB.ProcessParameter(parameter);
 
 	if (not state) then
-		EXPR_LIB.ThrowInternal(0, "%s for method %s:%s(%s)", signature, class, name, peramaters);
+		EXPR_LIB.ThrowInternal(0, "%s for method %s:%s(%s)", signature, class, name, parameter);
 	end
 
 	local res = EXPR_LIB.GetClass(type);
 
 	if (not res) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) with none existing return class %s", class, name, peramaters, type);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) with none existing return class %s", class, name, parameter, type);
 	end
 
 	local meth = {};
 	meth.name = name;
 	meth.class = cls.id;
-	meth.peramaters = signature;
+	meth.parameter = signature;
 	meth.signature = string.format("%s:%s(%s)", cls.id, name, signature);
 	meth.type = res.id;
 	meth.count = count;
@@ -232,29 +232,29 @@ end
 local operators;
 local loadOperators = false;
 
-function EXPR_LIB.RegisterOperator(operation, peramaters, type, count, operator)
+function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator)
 	-- if operator is nil lua, compiler will use native if possible (+, -, /, *, ^, etc)
 
 	if (not loadOperators) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register operator %s(%s) outside of Hook::Expression3.LoadOperators", operation, peramaters);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register operator %s(%s) outside of Hook::Expression3.LoadOperators", operation, parameter);
 	end
 
-	local state, signature = EXPR_LIB.ProcessPeramaters(peramaters);
+	local state, signature = EXPR_LIB.ProcessParameter(parameter);
 
 	if (not state) then
-		EXPR_LIB.ThrowInternal(0, "%s for operator %s(%s)", signature, operation, peramaters);
+		EXPR_LIB.ThrowInternal(0, "%s for operator %s(%s)", signature, operation, parameter);
 	end
 
 	local res = EXPR_LIB.GetClass(type);
 
 	if (not res) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register operator %s(%s) with none existing return class %s", operation, peramaters, type);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register operator %s(%s) with none existing return class %s", operation, parameter, type);
 	end
 
 	local op = {};
 	op.name = operation;
 	op.class = cls.id;
-	op.peramaters = signature;
+	op.parameter = signature;
 	op.signature = string.format("%s(%s)", operation, signature);
 	op.type = res.id;
 	op.count = count;
@@ -274,7 +274,7 @@ function EXPR_LIB.RegisterCastingOperator(type, parameter, operator)
 		EXPR_LIB.ThrowInternal(0, "Attempt to register native casting operator [(%s) %s] an operation function is required.", type, parameter);
 	end
 
-	local state, signature = EXPR_LIB.ProcessPeramaters(peramaters);
+	local state, signature = EXPR_LIB.ProcessParameter(parameter);
 
 	if (not state) then
 		EXPR_LIB.ThrowInternal(0, "%s for casting operator [(%s) %s]", signature, type, parameter);
@@ -287,7 +287,7 @@ function EXPR_LIB.RegisterCastingOperator(type, parameter, operator)
 	end
 
 	local op = {};
-	op.peramaters = signature;
+	op.parameter = signature;
 	op.signature = string.format("(%s)%s", type, signature);
 	op.type = res.id;
 	op.count = 1;
@@ -315,33 +315,33 @@ end
 local functions;
 local loadFunctions = false;
 
-function EXPR_LIB.RegisterFunction(library, name, peramaters, type, count, _function)
+function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _function)
 	-- If _function is a string then lua will use str(...) e.g; string.Replace
 	if (not loadFunctions) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) outside of Hook::Expression3.LoadFunctions", library, name, peramaters);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) outside of Hook::Expression3.LoadFunctions", library, name, parameter);
 	end
 
 	local lib = libraries[string.lower(library)];
 
 	if (not lib) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) to none existing library %s", library, name, peramaters, library);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) to none existing library %s", library, name, parameter, library);
 	end
 
-	local state, signature = EXPR_LIB.ProcessPeramaters(peramaters);
+	local state, signature = EXPR_LIB.ProcessParameter(parameter);
 
 	if (not state) then
-		EXPR_LIB.ThrowInternal(0, "%s for function %s.%s(%s)", signature, library, name, peramaters);
+		EXPR_LIB.ThrowInternal(0, "%s for function %s.%s(%s)", signature, library, name, parameter);
 	end
 
 	local res = EXPR_LIB.GetClass(type);
 
 	if (not res) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) with none existing return class %s", library, name, peramaters, type);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) with none existing return class %s", library, name, parameter, type);
 	end
 
 	local op = {};
 	op.name = name;
-	op.peramaters = signature;
+	op.parameter = signature;
 	op.signature = string.format("%s(%s)", name, signature);
 	op.type = res.id;
 	op.count = count;
@@ -353,26 +353,26 @@ end
 local events;
 local loadEvents = false;
 
-function EXPR_LIB.RegisterEvent(name, peramaters, type, count)
+function EXPR_LIB.RegisterEvent(name, parameter, type, count)
 	if (not loadEvents) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register event %s(%s) outside of Hook::Expression3.LoadEvents", name, peramaters);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register event %s(%s) outside of Hook::Expression3.LoadEvents", name, parameter);
 	end
 
-	local state, signature = EXPR_LIB.ProcessPeramaters(peramaters);
+	local state, signature = EXPR_LIB.ProcessParameter(parameter);
 
 	if (not state) then
-		EXPR_LIB.ThrowInternal(0, "%s for function %s.%s(%s)", signature, library, name, peramaters);
+		EXPR_LIB.ThrowInternal(0, "%s for function %s.%s(%s)", signature, library, name, parameter);
 	end
 
 	local res = EXPR_LIB.GetClass(type);
 
 	if (not res) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) with none existing return class %s", library, name, peramaters, type);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) with none existing return class %s", library, name, parameter, type);
 	end
 
 	local evt = {};
 	evt.name = name;
-	evt.peramaters = signature;
+	evt.parameter = signature;
 	evt.signature = string.format("%s(%s)", name, signature);
 	evt.type = res.id;
 	evt.count = count;
@@ -392,14 +392,14 @@ function EXPR_LIB.IsValidClass(class)
 	return (classes[class] or classIDs[class]) ~= nil;
 end
 
-function EXPR_LIB.ProcessPeramaters(peramaters)
-	if (peramaters == "") then
+function EXPR_LIB.Processparameter(parameter)
+	if (parameter == "") then
 		return true, "";
 	end
 
 	local varg = false;
 	local signature = {};
-	local split = string.Explode(",", peramaters);
+	local split = string.Explode(",", parameter);
 
 	if (split[#split] == "...") then
 		split[#split] = nil;
@@ -455,23 +455,23 @@ function EXTENTION.RegisterClass(this, id, name, isType, isValid)
 	this.classes[#this.classes + 1] = entry;
 end
 
-function EXTENTION.RegisterConstructor(this, class, peramaters, constructor)
-	local entry = {class, peramaters, constructor};
+function EXTENTION.RegisterConstructor(this, class, parameter, constructor)
+	local entry = {class, parameter, constructor};
 	this.constructors[#this.constructors + 1] = entry;
 end
 
-function EXTENTION.RegisterMethod(this, class, name, peramaters, type, count, method)
-	local entry = {class, name, peramaters, type, count, method};
+function EXTENTION.RegisterMethod(this, class, name, parameter, type, count, method)
+	local entry = {class, name, parameter, type, count, method};
 	this.methods[#this.methods + 1] = entry;
 end
 
-function EXTENTION.RegisterOperator(this, operation, peramaters, type, count, operator)
-	local entry = {operation, peramaters, type, count, operator};
+function EXTENTION.RegisterOperator(this, operation, parameter, type, count, operator)
+	local entry = {operation, parameter, type, count, operator};
 	this.operators[#this.operators + 1] = entry;
 end
 
-function EXTENTION.RegisterCastingOperator(this, type, peramaters, operator)
-	local entry = {type, peramaters, operator};
+function EXTENTION.RegisterCastingOperator(this, type, parameter, operator)
+	local entry = {type, parameter, operator};
 	this.castOperators[#this.castOperators + 1] = entry;
 end
 
@@ -480,13 +480,13 @@ function EXTENTION.RegisterLibrary(this, name)
 	this.libraries[#this.libraries + 1] = entry;
 end
 
-function EXTENTION.RegisterFunction(this, library, name, peramaters, type, count, _function)
-	local entry = {library, name, peramaters, type, count, _function};
+function EXTENTION.RegisterFunction(this, library, name, parameter, type, count, _function)
+	local entry = {library, name, parameter, type, count, _function};
 	this.functions[#this.functions + 1] = entry;
 end
 
-function EXTENTION.RegisterEvent(this, name, peramaters, type, count)
-	local entry = {name, peramaters, type, count};
+function EXTENTION.RegisterEvent(this, name, parameter, type, count)
+	local entry = {name, parameter, type, count};
 	this.events[#this.events + 1] = entry;
 end
 

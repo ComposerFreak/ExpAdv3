@@ -74,7 +74,7 @@ function COMPILER._Run(this)
 end
 
 function COMPILER.BuildScript(this)
-	-- This wil probably become a seperate stage (post compiler?).
+	-- This will probably become a separate stage (post compiler?).
 
 	local buffer = {};
 	local alltasks = this.__tasks;
@@ -215,7 +215,7 @@ function COMPILER.AssignVariable(this, token, declaired, name, class, scope)
 
 	if (declaired) then
 		if (c) then
-			this:Throw(token, "Unable to assign declaire variable %s, Variable already exists.", name);
+			this:Throw(token, "Unable to assign declare variable %s, Variable already exists.", name);
 		else
 			this:SetVariable(name, class, scope);
 		end
@@ -313,7 +313,7 @@ function COMPILER.QueueInjectionBefore(this, inst, token, str, ...)
 	end
 
 	for i = #r, 1, -1 do
-		-- place these in reverse order so they come out in the corect order.
+		-- place these in reverse order so they come out in the correct order.
 		tasks.prefix[#tasks.prefix + 1] = r[i];
 	end
 
@@ -370,7 +370,7 @@ function COMPILER.Compile(this, inst)
 	print("Compiler->" .. instruction .. "->#" .. #inst.instructions)
 
 	if (not fun) then
-		this:Throw(inst.token, "Failed to compile unkown instruction %s", instruction);
+		this:Throw(inst.token, "Failed to compile unknown instruction %s", instruction);
 	end
 
 	local type, count = fun(this, inst, inst.token, inst.instructions);
@@ -577,7 +577,7 @@ function COMPILER.Compile_ASS_ADD(this, inst, token, expressions)
 		local op = this:GetOperator("add", class, r);
 
 		if (not op) then
-			this:Throw(expr.token, "Arithmatic assignment operator (+=) does not support '%s += %s'", class, r);
+			this:Throw(expr.token, "Arithmetic assignment operator (+=) does not support '%s += %s'", class, r);
 		elseif (not op.operation) then
 			-- Use Native
 			if (class == "s" or r == "s") then
@@ -586,7 +586,7 @@ function COMPILER.Compile_ASS_ADD(this, inst, token, expressions)
 				this:QueueInjectionBefore(inst, expr.token, variable, "+");
 			end
 		else
-			-- Impliment Operator
+			-- Implement Operator
 			this.__EXPR_OPERATORS[op.signature] = op.operator;
 			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
 			this:QueueInjectionAfter(inst, expr.final, ")" );
@@ -611,12 +611,12 @@ function COMPILER.Compile_ASS_SUB(this, inst, token, expressions)
 		local op = this:GetOperator("sub", class, r);
 
 		if (not op) then
-			this:Throw(expr.token, "Arithmatic assignment operator (-=) does not support '%s -= %s'", class, r);
+			this:Throw(expr.token, "Arithmetic assignment operator (-=) does not support '%s -= %s'", class, r);
 		elseif (not op.operation) then
 			-- Use Native
 			this:QueueInjectionBefore(inst, expr.token, variable, "-");
 		else
-			-- Impliment Operator
+			-- Implement Operator
 			this.__EXPR_OPERATORS[op.signature] = op.operator;
 			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
 			this:QueueInjectionAfter(inst, expr.final, ")" );
@@ -641,12 +641,12 @@ function COMPILER.Compile_ASS_MUL(this, inst, token, expressions)
 		local op = this:GetOperator("mul", class, r);
 
 		if (not op) then
-			this:Throw(expr.token, "Arithmatic assignment operator (*=) does not support '%s *= %s'", class, r);
+			this:Throw(expr.token, "Arithmetic assignment operator (*=) does not support '%s *= %s'", class, r);
 		elseif (not op.operation) then
 			-- Use Native
 			this:QueueInjectionBefore(inst, expr.token, variable, "-");
 		else
-			-- Impliment Operator
+			-- Implement Operator
 			this.__EXPR_OPERATORS[op.signature] = op.operator;
 			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
 			this:QueueInjectionAfter(inst, expr.final, ")" );
@@ -671,12 +671,12 @@ function COMPILER.Compile_ASS_DIV(this, inst, token, expressions)
 		local op = this:GetOperator("div", class, r);
 
 		if (not op) then
-			this:Throw(expr.token, "Arithmatic assignment operator (/=) does not support '%s /= %s'", class, r);
+			this:Throw(expr.token, "Arithmetic assignment operator (/=) does not support '%s /= %s'", class, r);
 		elseif (not op.operation) then
 			-- Use Native
 			this:QueueInjectionBefore(inst, expr.token, variable, "-");
 		else
-			-- Impliment Operator
+			-- Implement Operator
 			this.__EXPR_OPERATORS[op.signature] = op.operator;
 			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
 			this:QueueInjectionAfter(inst, expr.final, ")" );
@@ -705,7 +705,7 @@ function COMPILER.Compile_TEN(this, inst, token, expressions)
 	local op = this:GetOperator("ten", r1, r2, r3);
 
 	if (not op) then
-		this:Throw(expr.token, "Tenary operator (A ? b : C) does not support '%s ? %s : %s'", r1, r2, r3);
+		this:Throw(expr.token, "Te nary operator (A ? b : C) does not support '%s ? %s : %s'", r1, r2, r3);
 	elseif (not op.operation) then
 		this:QueueReplace(inst, inst.__and, "and");
 		this:QueueReplace(inst, inst.__or, "or");
@@ -1240,7 +1240,7 @@ function COMPILER.Compile_LEN(this, inst, token, expressions)
 	local op = this:GetOperator("len", r1);
 
 	if (not op) then
-		this:Throw(expr.token, "Lengh operator (#A) does not support '#%s'", r1, r2);
+		this:Throw(expr.token, "Length operator (#A) does not support '#%s'", r1, r2);
 	elseif (not op.operation) then
 		-- Once again we change nothing.
 	else
@@ -1357,7 +1357,7 @@ function COMPILER.Compile_STR(this, inst, token, expressions)
 	if (not Op) then
 		local signature = string.format("%s(%s)", inst.class, args);
 
-		this:Throw(token, "No sutch constructor, %s", signature);
+		this:Throw(token, "No such constructor, %s", signature);
 	end
 
 	this:QueueInjectionBefore(inst, token, "EXPR_CONSTRUCTORS[\"", op.signature, "\"](CONTEXT");

@@ -9,7 +9,7 @@
 
 	::Tokenizer::
 	`````````````
-	A reveamp of my expression advanced 2 tokenizer,
+	A revamp of my expression advanced 2 tokenizer,
 	Using code by Divran, Oskar94, and maybe a few others.
 ]]
 
@@ -86,7 +86,7 @@ local TOKENS = {
 }
 
 --[[
-	Notes: 	I plan on posibly making this compiler multi language capable.
+	Notes: 	I plan on possibly making this compiler multi language capable.
 ]]
 
 local TOKENIZER = {};

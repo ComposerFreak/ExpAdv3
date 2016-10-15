@@ -11,7 +11,7 @@
 	```````````````
 	A parser is the logical structure used to turn tokens into instructions that.
 	
-	:::Syntax Gramar:::
+	:::Syntax Grammar:::
 	```````````````````
 		I have based this off the one from E2.
 
@@ -331,7 +331,7 @@ function PARSER.QueueInjectionBefore(this, inst, token, str, ...)
 	end
 
 	for i = #r, 1, -1 do
-		-- place these in reverse order so they come out in the corect order.
+		-- place these in reverse order so they come out in the correct order.
 		tasks.prefix[#tasks.prefix + 1] = r[i];
 	end
 
@@ -400,7 +400,7 @@ function PARSER.Root(this)
 end
 
 function PARSER.Block_1(this, _end, lcb)
-	this:ExcludeWhiteSpace( "Further input required at end of code, incomplete statment" )
+	this:ExcludeWhiteSpace( "Further input required at end of code, incomplete statement" )
 	
 	if (this:Accept("lcb")) then
 		
@@ -480,11 +480,11 @@ function PARSER.Statments(this, block)
 			end
 
 			if (pre.type == "return") then
-				this:Throw(stmt.token, "Statment can not appear after return.")
+				this:Throw(stmt.token, "Statement can not appear after return.")
 			elseif (pre.type == "continue") then
-				this:Throw(stmt.token, "Statment can not appear after continue.")
+				this:Throw(stmt.token, "Statement can not appear after continue.")
 			elseif (pre.type == "break") then
-				this:Throw(stmt.token, "Statment can not appear after break.")
+				this:Throw(stmt.token, "Statement can not appear after break.")
 			end
 		end
 
@@ -602,12 +602,12 @@ function PARSER.Statment_5(this)
 		local expressions = {};
 
 		if (this:Accept("ass")) then
-			this:ExcludeWhiteSpace( "Assigment operator (=), must not be preceeded by whitespace." );
+			this:ExcludeWhiteSpace( "Assignment operator (=), must not be preceded by whitespace." );
 			
 			expressions[1] = this:Expression_1();
 
 			while (this:Accept("com")) do
-				this:ExcludeWhiteSpace( "comma (,) must not be preceeded by whitespace." );
+				this:ExcludeWhiteSpace( "comma (,) must not be preceded by whitespace." );
 				expressions[#expressions + 1] = this:Expression_1();
 			end
 		end
@@ -639,12 +639,12 @@ function PARSER.Statment_5(this)
 		local expressions = {};
 
 		if (this:Accept("ass")) then
-			this:ExcludeWhiteSpace( "Assigment operator (=), must not be preceeded by whitespace." );
+			this:ExcludeWhiteSpace( "Assignment operator (=), must not be preceded by whitespace." );
 			
 			expressions[1] = this:Expression_1();
 
 			while (this:Accept("com")) do
-				this:ExcludeWhiteSpace( "comma (,) must not be preceeded by whitespace." );
+				this:ExcludeWhiteSpace( "comma (,) must not be preceded by whitespace." );
 				expressions[#expressions + 1] = this:Expression_1();
 			end
 		end
@@ -679,7 +679,7 @@ function PARSER.Statment_6(this)
 			local expressions = {};
 
 			if (this:Accept("ass")) then
-				this:ExcludeWhiteSpace( "Assigment operator (=), must not be preceeded by whitespace." );
+				this:ExcludeWhiteSpace( "Assignment operator (=), must not be preceded by whitespace." );
 				
 				expressions[1] = this:Expression_1();
 
@@ -691,7 +691,7 @@ function PARSER.Statment_6(this)
 				return this:EndInstruction(inst, expressions);
 
 			elseif this:Accept( "aadd" ) then
-				this:ExcludeWhiteSpace( "Assigment operator (+=), must not be preceeded by whitespace." );
+				this:ExcludeWhiteSpace( "Assignment operator (+=), must not be preceded by whitespace." );
 
 				for k, v in pairs(variables) do
 					local inst = this:StartInstruction("ass_add", this.__token);
@@ -700,10 +700,10 @@ function PARSER.Statment_6(this)
 					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
 
 					if (k < #variables) then
-						this:ExcludeWhiteSpace("Invalid arithmatic assigment operation, #%i value or equation expected for %s", k, v);
+						this:ExcludeWhiteSpace("Invalid arithmetic assignment operation, #%i value or equation expected for %s", k, v);
 						
 						if ( not this:Accept("com")) then
-							this:Throw(inst.token, "Expression missing to complete arithmatic assigment operator (+=).");
+							this:Throw(inst.token, "Expression missing to complete arithmetic assignment operator (+=).");
 						end
 
 					end
@@ -711,7 +711,7 @@ function PARSER.Statment_6(this)
 
 				return this:EndInstruction(inst, expressions);
 			elseif this:Accept( "asub" ) then
-				this:ExcludeWhiteSpace( "Assigment operator (-=), must not be preceeded by whitespace." );
+				this:ExcludeWhiteSpace( "Assignment operator (-=), must not be preceded by whitespace." );
 
 				for k, v in pairs(variables) do
 					local inst = this:StartInstruction("ass_sub", this.__token);
@@ -720,10 +720,10 @@ function PARSER.Statment_6(this)
 					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
 
 					if (k < #variables) then
-						this:ExcludeWhiteSpace("Invalid arithmatic assigment operation, #%i value or equation expected for %s", k, v);
+						this:ExcludeWhiteSpace("Invalid arithmetic assignment operation, #%i value or equation expected for %s", k, v);
 						
 						if ( not this:Accept("com")) then
-							this:Throw(inst.token, "Expression missing to complete arithmatic assigment operator (-=).");
+							this:Throw(inst.token, "Expression missing to complete arithmetic assignment operator (-=).");
 						end
 
 					end
@@ -731,7 +731,7 @@ function PARSER.Statment_6(this)
 
 				return this:EndInstruction(inst, expressions);
 			elseif this:Accept( "adiv" ) then
-				this:ExcludeWhiteSpace( "Assigment operator (/=), must not be preceeded by whitespace." );
+				this:ExcludeWhiteSpace( "Assignment operator (/=), must not be preceded by whitespace." );
 
 				for k, v in pairs(variables) do
 					local inst = this:StartInstruction("ass_div", this.__token);
@@ -740,10 +740,10 @@ function PARSER.Statment_6(this)
 					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
 
 					if (k < #variables) then
-						this:ExcludeWhiteSpace("Invalid arithmatic assigment operation, #%i value or equation expected for %s", k, v);
+						this:ExcludeWhiteSpace("Invalid arithmetic assignment operation, #%i value or equation expected for %s", k, v);
 						
 						if ( not this:Accept("com")) then
-							this:Throw(inst.token, "Expression missing to complete arithmatic assigment operator (/=).");
+							this:Throw(inst.token, "Expression missing to complete arithmetic assignment operator (/=).");
 						end
 
 					end
@@ -751,7 +751,7 @@ function PARSER.Statment_6(this)
 
 				return this:EndInstruction(inst, expressions);
 			elseif this:Accept( "amul" ) then
-				this:ExcludeWhiteSpace( "Assigment operator (*=), must not be preceeded by whitespace." );
+				this:ExcludeWhiteSpace( "Assignment operator (*=), must not be preceded by whitespace." );
 
 				for k, v in pairs(variables) do
 					local inst = this:StartInstruction("ass_mul", this.__token);
@@ -760,10 +760,10 @@ function PARSER.Statment_6(this)
 					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
 
 					if (k < #variables) then
-						this:ExcludeWhiteSpace("Invalid arithmatic assigment operation, #%i value or equation expected for %s", k, v);
+						this:ExcludeWhiteSpace("Invalid arithmetic assignment operation, #%i value or equation expected for %s", k, v);
 						
 						if ( not this:Accept("com")) then
-							this:Throw(inst.token, "Expression missing to complete arithmatic assigment operator (*=).");
+							this:Throw(inst.token, "Expression missing to complete arithmetic assignment operator (*=).");
 						end
 
 					end
@@ -772,7 +772,7 @@ function PARSER.Statment_6(this)
 				return this:EndInstruction(inst, expressions);
 			end
 
-			this:Throw(inst.token "Variable can not be preceeded by whitespace.");
+			this:Throw(inst.token "Variable can not be preceded by whitespace.");
 		end
 	end
 
@@ -1171,7 +1171,7 @@ function PARSER.Expression_19(this)
 
 		inst.__operator = this.__token;
 
-		this:ExcludeWhiteSpace("Lengh operator (#) must not be succeeded by whitespace");
+		this:ExcludeWhiteSpace("Length operator (#) must not be succeeded by whitespace");
 
 		local expr = this:Expression_22();
 
@@ -1230,7 +1230,7 @@ function PARSER.Expression_23(this)
 
 		this:QueueRemove(inst, this.__token);
 
-		this:Require("typ", "Type expected after new for contructor.");
+		this:Require("typ", "Type expected after new for constructor.");
 
 		inst.class = this.__token.data;
 
@@ -1329,12 +1329,12 @@ function PARSER.ExpressionErr(this)
 	this:Exclude("adiv", "Assignment operator (/=) must be preceded by variable");
 	this:Exclude("and", "Logical operator (&&) must be preceded by equation or value");
 	this:Exclude("or", "Logical operator (||) must be preceded by equation or value");
-	this:Exclude("eq", "Comparason operator (==) must be preceded by equation or value");
-	this:Exclude("neq", "Comparason operator (!=) must be preceded by equation or value");
-	this:Exclude("gth", "Comparason operator (>=) must be preceded by equation or value");
-	this:Exclude("lth", "Comparason operator (<=) must be preceded by equation or value");
-	this:Exclude("geq", "Comparason operator (>) must be preceded by equation or value");
-	this:Exclude("leq", "Comparason operator (<) must be preceded by equation or value");
+	this:Exclude("eq", "Comparison operator (==) must be preceded by equation or value");
+	this:Exclude("neq", "Comparison operator (!=) must be preceded by equation or value");
+	this:Exclude("gth", "Comparison operator (>=) must be preceded by equation or value");
+	this:Exclude("lth", "Comparison operator (<=) must be preceded by equation or value");
+	this:Exclude("geq", "Comparison operator (>) must be preceded by equation or value");
+	this:Exclude("leq", "Comparison operator (<) must be preceded by equation or value");
 	-- this:Exclude("inc", "Increment operator (++) must be preceded by variable");
 	-- this:Exclude("dec", "Decrement operator (--) must be preceded by variable");
 	this:Exclude("rpa", "Right parenthesis ( )) without matching left parenthesis");
@@ -1344,7 +1344,7 @@ function PARSER.ExpressionErr(this)
 	this:Exclude("rsb", "Right square bracket (]) without matching left square bracket");
 	this:Exclude("com", "Comma (,) not expected here, missing an argument?");
 	this:Exclude("prd", "Method operator (.) must not be preceded by white space");
-	this:Exclude("col", "Tenarry operator (:) must be part of conditional expression (A ? B : C).");
+	this:Exclude("col", "Ternary operator (:) must be part of conditional expression (A ? B : C).");
 	this:Exclude("if", "If keyword (if) must not appear inside an equation");
 	this:Exclude("eif", "Else-if keyword (elseif) must be part of an if-statement");
 	this:Exclude("els", "Else keyword (else) must be part of an if-statement");
