@@ -12,10 +12,10 @@
 		Some operators, methods and functions can return more then one value of the same type at once.
 		You need to tell the compiler how many results it returns even if that is 0.
 
-		All documentation below is to be considered work in progress and this api will more then likly change.
+		All documentation below is to be considered work in progress and this api will more then likely change.
 		
 	::HOOKS::
-		Expression3.RegisterExtensions			-> Called when extentions should be registered.
+		Expression3.RegisterExtensions			-> Called when extensions should be registered.
 		Expression3.LoadClasses					-> Classes must be registered inside this hook.
 		Expression3.LoadConstructors			-> Constructors must be registered inside this hook.
 		Expression3.LoadMethods					-> Methods must be registered inside this hook.
@@ -23,46 +23,46 @@
 		Expression3.LoadLibraries				-> Libraries must be registered inside this hook.
 		Expression3.LoadFunctions				-> Functions must be registered inside this hook.
 		Expression3.LoadEvents					-> Events must be registered inside this hook.
-		Expression3.PostRegisterExtensions		-> This is called once expadv2 has loaded its extentions.
+		Expression3.PostRegisterExtensions		-> This is called once expadv3 has loaded its extensions.
 
 	::EXPR_LIB::
 		EXPR_LIB.RegisterClass(string short name, string class name, boolean = function(object) isType, boolean = function(object) isValid)
 			Registers a new class with expression 3.
 
-		EXPR_LIB.RegisterConstructor(str class, str peramaters, obj = function(ctx, ...) constructor)
+		EXPR_LIB.RegisterConstructor(str class, str parameters, obj = function(ctx, ...) constructor)
 			Registers a constructor for class with expression 3; new vector(1, 2, 3)
 
-		EXPR_LIB.RegisterMethod(class, str name, str peramaters, str type, number count, (obj = function(ctx, ...) method / string)*)
+		EXPR_LIB.RegisterMethod(class, str name, str parameters, str type, number count, (obj = function(ctx, ...) method / string)*)
 			Registers a method with expression 3 on class;
-			if operator is a string then it will use the method str on object with out context as a peramater.
+			if operator is a string then it will use the method str on object with out context as a parameter.
 
 
-		EXPR_LIB.RegisterOperator(str operation, str peramaters, str type, number count, obj = function(ctx, ...) operator*)
+		EXPR_LIB.RegisterOperator(str operation, str parameters, str type, number count, obj = function(ctx, ...) operator*)
 			Registers an operator with expression 3 on class;
 			if operator is nil then it will use the native operator on object.
 
-				add(type1, type2)			type1 + type2
-				sub(type1, type2)			type1 - type2
-				div(type1, type2)			type1 / type2
-				mul(type1, type2)			type1 mul type2
-				exp(type1, type2)			type1 ^ type2
-				ten(type1, type2, type3)	type1 ? type2 : type3
-				or(type1, type2)			type1 || type2
-				and(type1, type2)			type1 && type2
-				bxor(type1, type2)			type1 ^^ type2
-				bor(type1, type2)			type1 | type2
-				band(type1, type2) 			type1 & type2
-				eq(type1, type2)			type1 == type2
-				neq(type1, type2)			type1 != type2
-				lth(type1, type2)			type1 < type2
-				leg(type1, type2)			type1 <= type2
-				gth(type1, type2)			type1 > type2
-				geq(type1, type2)			type1 >= type2
-				bshl(type1, type2)			type1 << type2
-				bshr(type1, type2)			type1 >> type2
-				neg(type1)					-type1
-				not(type1)					!type1
-				len(type1)					#type1
+				add		(type1, type2)			type1 + type2
+				sub		(type1, type2)			type1 - type2
+				div		(type1, type2)			type1 / type2
+				mul		(type1, type2)			type1 mul type2
+				exp		(type1, type2)			type1 ^ type2
+				ten		(type1, type2, type3)	type1 ? type2 : type3
+				or		(type1, type2)			type1 || type2
+				and		(type1, type2)			type1 && type2
+				bxor	(type1, type2)			type1 ^^ type2
+				bor		(type1, type2)			type1 | type2
+				band	(type1, type2) 			type1 & type2
+				eq		(type1, type2)			type1 == type2
+				neq		(type1, type2)			type1 != type2
+				lth		(type1, type2)			type1 < type2
+				leg		(type1, type2)			type1 <= type2
+				gth		(type1, type2)			type1 > type2
+				geq		(type1, type2)			type1 >= type2
+				bshl	(type1, type2)			type1 << type2
+				bshr	(type1, type2)			type1 >> type2
+				neg		(type1)					-type1
+				not		(type1)					!type1
+				len		(type1)					#type1
 
 		EXPR_LIB.RegisterCastingOperator(str type, str parameter, obj = function(ctx, ...) operator)
 			Registers a casting operator with expression 3 for casting from one class to another;
@@ -72,40 +72,40 @@
 			Registers a new library with expression 3.
 			Every function must part of a library.
 
-		EXPR_LIB.RegisterFunction(str library, str name, str peramaters, str type, number count, (obj = function(ctx, ...) / str) function)
+		EXPR_LIB.RegisterFunction(str library, str name, str parameters, str type, number count, (obj = function(ctx, ...) / str) function)
 			Registers a function with library, these functions are overloaded.
-			If function is a string then expression 3 will use _G[str function]() with out context as a peramater.
+			If function is a string then expression 3 will use _G[str function]() with out context as a parameter.
 
-		EXPR_LIB.RegisterEvent(str name, str peramaters, str type, number count)
+		EXPR_LIB.RegisterEvent(str name, str parameters, str type, number count)
 			Registers an event with expression 3.
 
 		EXPR_LIB.GetClass(str class)
 
 		EXPR_LIB.RegisterExtension(str name)
-			Returns and registers a new extention with expression 3;
-			This will alow you to add to the api with out manualy using the required events.
+			Returns and registers a new extension with expression 3;
+			This will allow you to add to the api with out manually using the required events.
 	
 	::Extention::
 		Extention:RegisterClass(string short name, string class name, boolean = function(object) isType, boolean = function(object) isValid)
-			Calls EXPR_LIB.RegisterClass(...) at the correct time with all given valid peramaters.
+			Calls EXPR_LIB.RegisterClass(...) at the correct time with all given valid parameter.
 
-		Extention:RegisterMethod(class, str name, str peramaters, str type, number count, (obj = function(ctx, ...) method / string)*)
-			Calls EXPR_LIB.RegisterMethod(...) at the correct time with all given valid peramaters.
+		Extention:RegisterMethod(class, str name, str parameters, str type, number count, (obj = function(ctx, ...) method / string)*)
+			Calls EXPR_LIB.RegisterMethod(...) at the correct time with all given valid parameters.
 
-		Extention:RegisterOperator(str operation, str peramaters, str type, number count, obj = function(ctx, ...) operator*)
-			Calls EXPR_LIB.RegisterOperator(...) at the correct time with all given valid peramaters.
+		Extention:RegisterOperator(str operation, str parameters, str type, number count, obj = function(ctx, ...) operator*)
+			Calls EXPR_LIB.RegisterOperator(...) at the correct time with all given valid parameters.
 
 		Extention:RegisterCastingOperator(str type, str parameter, obj = function(ctx, ...) operator)
-			Calls EXPR_LIB.RegisterCastingOperator(...) at the correct time with all given valid peramaters.
+			Calls EXPR_LIB.RegisterCastingOperator(...) at the correct time with all given valid parameters.
 
 		Extention:RegisterLibrary(name)
-			Calls EXPR_LIB.RegisterLibrary(...) at the correct time with all given valid peramaters.
+			Calls EXPR_LIB.RegisterLibrary(...) at the correct time with all given valid parameters.
 
-		Extention:RegisterFunction(str library, str name, str peramaters, str type, number count, (obj = function(ctx, ...) / str) function)
-			Calls EXPR_LIB.RegisterFunction(...) at the correct time with all given valid peramaters.
+		Extention:RegisterFunction(str library, str name, str parameters, str type, number count, (obj = function(ctx, ...) / str) function)
+			Calls EXPR_LIB.RegisterFunction(...) at the correct time with all given valid parameters.
 
-		Extention:RegisterEvent(str name, str peramaters, str type, number count)
-			Calls EXPR_LIB.RegisterEvent(...) at the correct time with all given valid peramaters.
+		Extention:RegisterEvent(str name, str parameters, str type, number count)
+			Calls EXPR_LIB.RegisterEvent(...) at the correct time with all given valid parameters.
 
 
 ]]
@@ -307,7 +307,7 @@ function EXPR_LIB.RegisterLibrary(name)
 	local lib = {};
 	lib.name = string.lower(name);
 	lib._functions = {};
-	lib.constants = {}; -- Future implimentation.
+	lib.constants = {}; -- Future implementation.
 
 	librarys[lib.name] = lib;
 end
@@ -428,7 +428,7 @@ end
 --[[
 	:::Extension Base For Loading Sainly:::
 	'''''''''''''''''''''''''''''''''''''''
-	Since we need to add everything in a specific order, this is a extention base that can do this for you.
+	Since we need to add everything in a specific order, this is a extension base that can do this for you.
 ]]
 
 local EXTENTION = {};
@@ -547,7 +547,7 @@ function EXTENTION.EnableExtension(this)
 end
 
 --[[
-	:::Hooks For Loading extentions:::
+	:::Hooks For Loading extensions:::
 	''''''''''''''''''''''''''''''''''
 ]]
 
