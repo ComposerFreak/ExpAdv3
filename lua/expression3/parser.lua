@@ -51,19 +51,18 @@
 			Expr13 ← (Epxr14 "/" Expr14)? Expr14
 			Expr14 ← (Epxr15 "*" Expr15)? Expr15
 			Expr15 ← (Epxr16 "^" Expr16)? Expr16
-			Expr16 ← ("+" Expr21)? Exp17
-			Expr17 ← ("-" Expr21)? Exp18
-			Expr18 ← ("!" Expr21)? Expr19
-			Expr19 ← ("#" Expr21)? Expr20
-			Expr20 ← ("("type")" Expr1)? Expr21
-			Expr21 ← ("(" Expr1 ")")? Expr22
-			Expr22 ← (Var)? Expr23
-			Expr23 ← ("new" Type "(" (Expr1 ((","")?)*)?) ")")? Expr24
-			Expr24 ← Expr25? Expr26
-			Expr25 ← (library "." function "(" (Expr1 ((","")?)*)?) ")")?
-			Expr26 ← (String / Number / "true" / "false", "void")?
-
-
+			Expr16 ← (Epxr17 "%" Expr17)? Expr17
+			Expr17 ← ("+" Expr22)? Exp18
+			Expr18 ← ("-" Expr22)? Exp19
+			Expr19 ← ("!" Expr22)? Expr20
+			Expr20 ← ("#" Expr22)? Expr21
+			Expr21 ← ("("type")" Expr1)? Expr22
+			Expr22 ← ("(" Expr1 ")")? Expr23
+			Expr23 ← (Var)? Expr24
+			Expr24 ← ("new" Type "(" (Expr1 ((","")?)*)?) ")")? Expr25
+			Expr25 ← Expr26? Expr27
+			Expr26 ← (library "." function "(" (Expr1 ((","")?)*)?) ")")?
+			Expr27 ← (String / Number / "true" / "false", "void")?
 
 		:::Syntax:::
 			Cond ← "(" Expr1 ")"
@@ -1114,32 +1113,32 @@ function PARSER.Expression_15(this)
 end
 
 function PARSER.Expression_16(this)
+	local expr = this:Expression_17();
+
+	while this:Accept("mod") do
+		local inst = this:StartInstruction("mod", expr.token);
+
+		inst.__operator = this.__token;
+
+		local expr2 = this:Expression_17();
+
+		expr = this:EndInstruction(inst, {expr, expr2});
+	end
+
+	return expr;
+end
+
+function PARSER.Expression_17(this)
 	if (this:Accept("add")) then
 		local tkn = this.__token;
 
 		this:ExcludeWhiteSpace("Identity operator (+) must not be succeeded by whitespace");
 
-		local expr = this:Expression_17();
+		local expr = this:Expression_18();
 
 		this:QueueRemove(expr, tkn);
 
 		return expr;
-	end
-
-	return this:Expression_17();
-end
-
-function PARSER.Expression_17(this)
-	if (this:Accept("neg")) then
-		local inst = this:StartInstruction("neg", expr.token);
-
-		inst.__operator = this.__token;
-
-		this:ExcludeWhiteSpace("Negation operator (-) must not be succeeded by whitespace");
-
-		local expr = this:Expression_22();
-
-		return this:EndInstruction(inst, {expr});
 	end
 
 	return this:Expression_18();
@@ -1147,13 +1146,13 @@ end
 
 function PARSER.Expression_18(this)
 	if (this:Accept("neg")) then
-		local inst = this:StartInstruction("not", expr.token);
+		local inst = this:StartInstruction("neg", expr.token);
 
 		inst.__operator = this.__token;
 
-		this:ExcludeWhiteSpace("Not operator (!) must not be succeeded by whitespace");
+		this:ExcludeWhiteSpace("Negation operator (-) must not be succeeded by whitespace");
 
-		local expr = this:Expression_22();
+		local expr = this:Expression_23();
 
 		return this:EndInstruction(inst, {expr});
 	end
@@ -1162,14 +1161,14 @@ function PARSER.Expression_18(this)
 end
 
 function PARSER.Expression_19(this)
-	if (this:Accept("len")) then
-		local inst = this:StartInstruction("len", expr.token);
+	if (this:Accept("neg")) then
+		local inst = this:StartInstruction("not", expr.token);
 
 		inst.__operator = this.__token;
 
-		this:ExcludeWhiteSpace("Length operator (#) must not be succeeded by whitespace");
+		this:ExcludeWhiteSpace("Not operator (!) must not be succeeded by whitespace");
 
-		local expr = this:Expression_22();
+		local expr = this:Expression_23();
 
 		return this:EndInstruction(inst, {expr});
 	end
@@ -1178,6 +1177,22 @@ function PARSER.Expression_19(this)
 end
 
 function PARSER.Expression_20(this)
+	if (this:Accept("len")) then
+		local inst = this:StartInstruction("len", expr.token);
+
+		inst.__operator = this.__token;
+
+		this:ExcludeWhiteSpace("Length operator (#) must not be succeeded by whitespace");
+
+		local expr = this:Expression_23();
+
+		return this:EndInstruction(inst, {expr});
+	end
+
+	return this:Expression_21();
+end
+
+function PARSER.Expression_21(this)
 	if (this:Accept("cst")) then
 		local inst = this:StartInstruction("cast", expr.token);
 		
@@ -1190,10 +1205,10 @@ function PARSER.Expression_20(this)
 		return this:EndInstruction(inst, {expr});
 	end
 
-	return this:Expression_21();
+	return this:Expression_22();
 end
 
-function PARSER.Expression_21(this)
+function PARSER.Expression_22(this)
 	if (this:Accept("lpa")) then
 		local expr = this:Expression_1();
 
@@ -1202,10 +1217,10 @@ function PARSER.Expression_21(this)
 		return this:Expression_Trailing(expr);
 	end
 
-	return this:Expression_22();
+	return this:Expression_23();
 end
 
-function PARSER.Expression_22(this)
+function PARSER.Expression_23(this)
 	if (this:Accept("var")) then
 		local inst = this:StartInstruction("var", this.__token);
 
@@ -1216,10 +1231,10 @@ function PARSER.Expression_22(this)
 		return this:Expression_Trailing(inst);
 	end
 
-	return this:Expression_23()
+	return this:Expression_24()
 end
 
-function PARSER.Expression_23(this)
+function PARSER.Expression_24(this)
 
 	if (this:Accept("new")) then
 		local inst = this:StartInstruction("new", this.__token);
@@ -1252,17 +1267,17 @@ function PARSER.Expression_23(this)
 		return this:EndInstruction(inst, expressions);
 	end
 
-	return this:Expression_RawVaue();
+	return this:Expression_25();
 end
 
-function PARSER.Expression_24(this)
-	local expr = this:Expression_25();
+function PARSER.Expression_25(this)
+	local expr = this:Expression_26();
 
 	if (expr) then
 		return expr;
 	end
 
-	expr = this:Expression_26();
+	expr = this:Expression_27();
 
 	if (expr) then
 		return expr;
@@ -1271,7 +1286,7 @@ function PARSER.Expression_24(this)
 	this:ExpressionErr();
 end
 
-function PARSER.Expression_25(this)
+function PARSER.Expression_26(this)
 	if (this:CheckToken("var")) then
 		local lib = EXPADV_LIBRARIES[this.__next.data];
 
@@ -1301,6 +1316,8 @@ function PARSER.Expression_25(this)
 
 		this:Require("lpa", "Left parenthesis (( ) expected to open function parameters.")
 
+		this.__lpa = this.__token;
+		
 		local expressions = {};
 
 		expressions[1] = expr;
@@ -1322,7 +1339,7 @@ function PARSER.Expression_25(this)
 	end
 end
 
-function PARSER.Expression_26(this)
+function PARSER.Expression_27(this)
 	if (this:Accept("tre", "fls")) then
 		local inst = this:StartInstruction("bool", this.__token);
 		inst.value = this.__token.data;
@@ -1361,6 +1378,7 @@ function PARSER.Expression_Trailing(this, expr)
 
 			this:Require("lpa", "Left parenthesis (( ) expected to open method parameters.")
 
+			this.__lpa = this.__token;
 			local expressions = {};
  
 			expressions[1] = expr;

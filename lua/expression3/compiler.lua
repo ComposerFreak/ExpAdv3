@@ -1249,6 +1249,32 @@ function COMPILER.Compile_EXP(this, inst, token, expressions)
 	return op.type, op.count;
 end
 
+function COMPILER.Compile_MOD(this, inst, token, expressions)
+	local expr1 = expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local expr2 = expressions[2];
+	local r2, c2 = this:Compile(expr1);
+
+	local op = this:GetOperator("mod", r1, r2);
+
+	if (not op) then
+		this:Throw(expr.token, "Modulus operator (%) does not support '%s % %s'", r1, r2);
+	elseif (not op.operation) then
+		-- Do not change the code.
+	else
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+
+		this:QueueReplace(inst, inst.__operator, ",");
+		
+		this:QueueInjectionAfter(inst, expr2.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
+end
+
 function COMPILER.Compile_NEG(this, inst, token, expressions)
 	local expr1 = expressions[1];
 	local r1, c1 = this:Compile(expr1);
@@ -1375,14 +1401,14 @@ function COMPILER.Compile_STR(this, inst, token, expressions)
 end
 
 function COMPILER.Compile_NEW(this, inst, token, expressions)
-	local Pp;
+	local op;
 	local ids = {};
 	local total = #expressions;
 
 	if (total == 0) then
-		Op = EXPR_CONSTRUCTORS[inst.class .. "()"];
+		op = EXPR_CONSTRUCTORS[inst.class .. "()"];
 
-		if (not Op) then
+		if (not op) then
 			op = EXPR_CONSTRUCTORS[inst.class .. "(...)"];
 		end
 	else
@@ -1407,22 +1433,23 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 			if (i >= total) then
 				local signature = string.format("%s(%s)", inst.class, args);
 
-				Op = EXPR_CONSTRUCTORS[signature];
+				op = EXPR_CONSTRUCTORS[signature];
 			end
 
 			if (not Op) then
 				local signature = string.format("%s(%s,...)", inst.class, args);
 
-				Op = EXPR_CONSTRUCTORS[signature];
+				op = EXPR_CONSTRUCTORS[signature];
 			end
 
 			if (op) then
 				break;
 			end
 		end
+	end
 
 	if (not Op) then
-		local signature = string.format("%s(%s)", inst.class, args);
+		local signature = string.format("%s(%s)", inst.class, table.concat(ids, ","));
 
 		this:Throw(token, "No such constructor, %s", signature);
 	end
@@ -1443,7 +1470,171 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 	return true, expr;
 end
 
+function COMPILER.Compile_METH(this, inst, token, expressions)
+	local mClass, mCount = this:Compile(expressions[1]);
 
+	local op;
+	local ids = {};
+	local total = #expressions;
+
+	if (total == 1) then
+		op = EXPR_METHODS[string.format("%s:%s()", mClass, this.method)];
+
+		if (not op) then
+			op = EXPR_METHODS[string.format("%s:%s(...)", mClass, this.method)];
+		end
+	else
+		for k, v in pairs(expressions) do
+			local expr = expression[i];
+			local r, c = this:Compile(expr);
+
+			ids[#ids + 1] = r;
+
+			if (k == total) then
+				if (c > 1) then
+					for i = 2; c do
+						ids[#ids + 1] = r;
+					end
+				end
+			end
+		end
+
+		for i = #r; 2; -1 do
+			local args = table.concat({fst, ...},",", 1, i);
+
+			if (i >= total) then
+				local signature = string.format("%s:%s(%s)", mClass, inst.class, args);
+
+				op = EXPR_METHODS[signature];
+			end
+
+			if (not Op) then
+				local signature = string.format("%s:%s(%s,...)", mClass, inst.class, args);
+
+				op = EXPR_METHODS[signature];
+			end
+
+			if (op) then
+				break;
+			end
+		end
+	end
+
+	if (not op) then
+		this:Throw(token, "No such method %s.%s(%s).", mClass, inst.method, table.concat(ids, ","));
+	end
+
+	if (type(op.operator) == "table") then
+		this:QueueRemove(inst, inst.__operator);
+		this:QueueRemove(inst, inst.__method);
+
+		if (total == 1) then
+			this:QueueRemove(inst, inst.__lpa);
+		else
+			this:QueueReplace(inst, inst.__lpa, ",");
+		end
+
+		this:QueueInjectionBefore(inst, inst.__func, "_METH[", expressions[1].token, "](CONTEXT,");
+
+		this.__methods[op.signature] = op.operator;
+	elseif (type(op.operator) == "string") then
+		this:QueueReplace(inst, inst.__operator, ":");
+		this:QueueReplace(inst, this.__method, op.operator);
+	else
+		local signature = string.format("%s.", inst.library, op.signature);
+		error("Attempot to inject " .. signature .. " but operator was incorrect.")
+	end
+
+	return op.result, op.rCount;
+end
+
+
+function COMPILER.Compile_FUNC(this, inst, token, expressions)
+	local lib = EXPADV_LIBRARIES[inst.library];
+
+	if (not lib) then
+		-- Please note this should be impossible.
+		this:Throw(token, "Library %s does not exist.", inst.library);
+	end
+
+	local op;
+	local ids = {};
+	local total = #expressions;
+
+	if (total == 0) then
+		op = lib._functions[inst.name .. "()"];
+
+		if (not op) then
+			op = lib._functions[inst.name .. "(...)"];
+		end
+	else
+		for k, v in pairs(expressions) do
+			local expr = expression[i];
+			local r, c = this:Compile(expr);
+
+			ids[#ids + 1] = r;
+
+			if (k == total) then
+				if (c > 1) then
+					for i = 2; c do
+						ids[#ids + 1] = r;
+					end
+				end
+			end
+		end
+
+		for i = #r; 1; -1 do
+			local args = table.concat({fst, ...},",", 1, i);
+
+			if (i >= total) then
+				local signature = string.format("%s(%s)", inst.name, args);
+
+				op = lib._functions[signature];
+			end
+
+			if (not Op) then
+				local signature = string.format("%s(%s,...)", inst.name, args);
+
+				op = lib._functions[signature];
+			end
+
+			if (op) then
+				break;
+			end
+		end
+	end
+
+	if (not op) then
+		this:Throw(token, "No such function %s.%s(%s).", inst.library, inst.name, table.concat(ids, ","));
+	end
+
+	if (type(op.operator) == "table") then
+		local signature = string.format("%s.", inst.library, op.signature);
+
+		this:QueueRemove(inst, token);
+		this:QueueRemove(inst, inst.__operator);
+		this:QueueRemove(inst, inst.__func);
+
+		this:QueueInjectionAfter(inst, inst.__func, "_FUN[", signature, "]");
+		
+		this:QueueInjectionAfter(inst, inst.__lpa, "CONTEXT");
+
+		if (total > 0) then
+			this:QueueInjectionAfter(inst, inst.__lpa, ",");
+		end
+
+		this.__functions[signature] = op.operator;
+	elseif (type(op.operator) == "string") then
+		this:QueueRemove(inst, token);
+		this:QueueRemove(inst, inst.__operator);
+		this:QueueReplace(inst, op.operator);
+	else
+		local signature = string.format("%s.", inst.library, op.signature);
+		error("Attempot to inject " .. signature .. " but operator was incorrect.")
+	end
+
+	return op.result, op.rCount;
+end
 
 
 
