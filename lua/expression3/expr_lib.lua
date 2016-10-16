@@ -52,8 +52,10 @@
 				bxor	(type1, type2)			type1 ^^ type2
 				bor		(type1, type2)			type1 | type2
 				band	(type1, type2) 			type1 & type2
-				eq		(type1, type2)			type1 == type2
+				eq*		(type1, ...)			type1 == [...]
 				neq		(type1, type2)			type1 != type2
+				eq		(type1, type2)			type1 == type2
+				neq*	(type1, ...)			type1 != [...]
 				lth		(type1, type2)			type1 < type2
 				leg		(type1, type2)			type1 <= type2
 				gth		(type1, type2)			type1 > type2
@@ -63,6 +65,7 @@
 				neg		(type1)					-type1
 				not		(type1)					!type1
 				len		(type1)					#type1
+
 
 		EXPR_LIB.RegisterCastingOperator(str type, str parameter, obj = function(ctx, ...) operator)
 			Registers a casting operator with expression 3 for casting from one class to another;
@@ -347,7 +350,7 @@ function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _funct
 	op.count = count;
 	op.operation = operator;
 
-	operators[op.signature] = op;
+	lib._functions[op.signature] = op;
 end
 
 local events;

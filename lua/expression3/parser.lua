@@ -58,7 +58,10 @@
 			Expr20 ← ("("type")" Expr1)? Expr21
 			Expr21 ← ("(" Expr1 ")")? Expr22
 			Expr22 ← (Var)? Expr23
-			Expr23 ← (new Type "(" (Expr1 ((","")?)*)?) ")")? Raw
+			Expr23 ← ("new" Type "(" (Expr1 ((","")?)*)?) ")")? Expr24
+			Expr24 ← Expr25? Expr26
+			Expr25 ← (library "." function "(" (Expr1 ((","")?)*)?) ")")?
+			Expr26 ← (String / Number / "true" / "false", "void")?
 
 
 
@@ -893,29 +896,25 @@ function PARSER.Expression_7(this)
 		if (this:Accept("eq")) then
 			local eqTkn = this.__token;
 
-			-- NOT SUPPORTIN THIS YET
-			--[[if (this:Accept("lsb")) then
+			if (this:Accept("lsb")) then
 				local inst = this:StartInstruction("eq_mul", expr.token);
+				
+				inst.__operator = eqTkn;
 
-				this:QueueInjectionBefore(inst, eqTkn, "eqMult",  "(",  "nil", "," );
-
-				inst.injectNil = r[3]
-
-				this:QueueReplace(inst, this.__token, ","); -- This is ([)
+				inst.__listStart = this.__token;
 
 				local expressions = {};
-				expressions[1] = this:Expression_1();
+
+				expressions[1] = expr;
+
+				expressions[2] = this:Expression_1();
 
 				while this:Accept("com") do
 					expressions[#expressions + 1] = this:Expression_1()
 				end
 
-				this:QueueInjectionAfter(inst, this.__token, ")");
-
 				expr = this:EndInstruction(ist, expressions);
-
-				-- TODO: When using a function operator to do comparisons this will inject the function as peram 1.
-			else]]
+			else
 				local inst = this:StartInstruction("eq", this.__token);
 
 				inst.__operator = this.__token;
@@ -923,32 +922,29 @@ function PARSER.Expression_7(this)
 				local expr2 = this:Expression_8();
 
 				expr = this:EndInstruction(ist, {expr, expr2});
-			--end
+			end
 		elseif (this:Accept("neq")) then
 			local eqTkn = this.__token;
 
-			-- NOT SUPPORTING THIS YET
-			--[[if (this:Accept("lsb")) then
+			if (this:Accept("lsb")) then
 				local inst = this:StartInstruction("neq_mul", expr.token);
+				
+				inst.__operator = eqTkn;
 
-				this:QueueInjectionBefore(inst, eqTkn, "neqMult",  "(",  "nil", "," );
-
-				inst.injectNil = r[3]
-				this:QueueReplace(inst, this.__token, ","); -- This is ([)
+				inst.__listStart = this.__token;
 
 				local expressions = {};
-				expressions[1] = this:Expression_1();
+
+				expressions[1] = expr;
+
+				expressions[2] = this:Expression_1();
 
 				while this:Accept("com") do
 					expressions[#expressions + 1] = this:Expression_1()
 				end
 
-				this:QueueInjectionAfter(inst, this.__token, ")");
-
 				expr = this:EndInstruction(ist, expressions);
-
-				-- TODO: When using a function operator to do comparisons this will inject the function as peram 1.
-			else]]
+			else
 				local inst = this:StartInstruction("neq", this.__token);
 
 				inst.__operator = this.__token;
@@ -956,7 +952,7 @@ function PARSER.Expression_7(this)
 				local expr2 = this:Expression_8();
 
 				expr = this:EndInstruction(ist, {expr, expr2});
-			--end
+			end
 		end
 	end
 
@@ -1260,16 +1256,73 @@ function PARSER.Expression_23(this)
 end
 
 function PARSER.Expression_24(this)
-	local expr = this:Expression_RawVaue();
+	local expr = this:Expression_25();
 
-	if (not expr) then
-		this:ExpressionErr();
+	if (expr) then
+		return expr;
 	end
 
-	return expr;
+	expr = this:Expression_26();
+
+	if (expr) then
+		return expr;
+	end
+
+	this:ExpressionErr();
 end
 
-function PARSER.Expression_RawVaue(this)
+function PARSER.Expression_25(this)
+	if (this:CheckToken("var")) then
+		local lib = EXPADV_LIBRARIES[this.__next.data];
+
+		if (not library) then
+			this:StepBackward(1);
+			return;
+		end
+
+		this:Next();
+
+		local inst = this:StartInstruction("func", this.__token);
+
+		inst.library = this.__token.data;
+
+		if (not this:Accept("prd")) then
+			this:StepBackward(1);
+			return;
+		end
+
+		inst.__operator = this.__token;
+
+		this:Require("var", "function expected after library name");
+		
+		inst.__func = this.__token;
+
+		inst.name = this.__token.data;
+
+		this:Require("lpa", "Left parenthesis (( ) expected to open function parameters.")
+
+		local expressions = {};
+
+		expressions[1] = expr;
+
+		if (not this:CheckToken("lpa")) then0
+			expressions[2] = this:Expression_1();
+
+			while(this:Accept("com")) do
+				this:Exclude("lpa", "Expression or value expected after comma (,).");
+
+				expressions[#expressions + 1] = this:Expression_1();
+			end
+
+		end  
+
+		this:Require("rpa", "Right parenthesis ( )) expected to close function parameters.")
+
+		return this:EndInstruction(inst, expressions);
+	end
+end
+
+function PARSER.Expression_26(this)
 	if (this:Accept("tre", "fls")) then
 		local inst = this:StartInstruction("bool", this.__token);
 		inst.value = this.__token.data;
@@ -1289,14 +1342,45 @@ function PARSER.Expression_RawVaue(this)
 		inst.value = this.__token.data;
 		return this:EndInstruction(inst, {});
 	end
-
-	-- TODO: Functions :D
 end
 
-function PARSER.Expression_Trailing(this, inst)
+function PARSER.Expression_Trailing(this, expr)
 	while this:CheckToken("prd", "lsb") do --, "lpa") do
-		-- Methods
 		
+		-- Methods
+		if (this:Accept("prd")) then
+			local inst = this:StartInstruction("meth", this.__token);
+
+			inst.__operator = this.__token;
+
+			this:Require("var", "method name expected after method operator (.)");
+
+			this.__method = this.__token;
+
+			this.method = this.__token.data;
+
+			this:Require("lpa", "Left parenthesis (( ) expected to open method parameters.")
+
+			local expressions = {};
+ 
+			expressions[1] = expr;
+
+			if (not this:CheckToken("lpa")) then0
+				expressions[2] = this:Expression_1();
+
+				while(this:Accept("com")) do
+					this:Exclude("lpa", "Expression or value expected after comma (,).");
+
+					expressions[#expressions + 1] = this:Expression_1();
+				end
+
+			end  
+
+			this:Require("rpa", "Right parenthesis ( )) expected to close method parameters.")
+
+			expr = this:EndInstruction(inst, expressions);
+		end
+
 		-- Getters
 	end
 
