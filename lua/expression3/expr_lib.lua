@@ -46,6 +46,7 @@
 				div		(type1, type2)			type1 / type2
 				mul		(type1, type2)			type1 * type2
 				exp		(type1, type2)			type1 ^ type2
+				mod		(type1, type2)			type1 % type2
 				ten		(type1, type2, type3)	type1 ? type2 : type3
 				or		(type1, type2)			type1 || type2
 				and		(type1, type2)			type1 && type2
