@@ -8,96 +8,148 @@
 	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
 
 	::Core Features::
-	``````````````````
+	`````````````````
+
+	This file will impliment the primary types.
+		*VOID
+		*BOOLEAN
+		*NUMBER
+		*STRING
+		*VARIANT
 ]]
 
-hook.add("Expression3.LoadClasses", "Expression3.Core", function()
-	EXPR_LIB.RegisterClass("n", {"number", "int"},
-		function(n)
-			return type(n) == "number"
-		end, function(n)
-			return n ~= nil
-		end);
+local function isNil(o)
+	return o == nil;
+end
 
-	EXPR_LIB.RegisterClass("b", {"boolean", "bool"},
-		function(n)
-			return type(n) == "boolean"
-		end, function(n)
-			return n ~= nil
-		end);
+local function isNotNil(o)
+	return o ~= nil;
+end
 
-	EXPR_LIB.RegisterClass("s", "string",
-		function(n)
-			return type(n) == "string"
-		end, function(n)
-			return n ~= nil
+local function eqM(a, b, ...)
+	for k, v in pairs({b, ...}) do
+		if (a ~= v) then
+			continue;
+		end
+
+		return true;
+	end
+
+	return false;
+end
+
+local function neqM(a, b, ...)
+	for k, v in pairs({b, ...}) do
+		if (a ~= v) then
+			continue;
+		end
+
+		return false;
+	end
+
+	return true;
+end
+
+local function RegisterVoidClass()
+	EXPR_LIB.RegisterClass("nil", {"void"}, isnumber, isNil);
+end
+
+local function RegisterBooleanClass()
+	EXPR_LIB.RegisterClass("b", {"boolean", "bool"}, isbool, isNotNil);
+
+	hook.Add("Expression3.LoadOperators", "Expression3.Core.Boolean",
+		function()
+			EXPR_LIB.RegisterOperator("neq", "b,b", "b", 1);
+			EXPR_LIB.RegisterOperator( "eq", "b,b", "b", 1);
+
+			EXPR_LIB.RegisterOperator("and", "b,b", "b", 1);
+			EXPR_LIB.RegisterOperator( "or", "b,b", "b", 1);
+
+			EXPR_LIB.RegisterOperator( "is", "b", "b", 1);
+			EXPR_LIB.RegisterOperator("not", "b", "b", 1); 
 		end);
+end
+
+local function RegisterNumberClass()
+	EXPR_LIB.RegisterClass("n", {"number", "normal", "int"}, isnumber, isNotNil);
+
+	hook.Add("Expression3.LoadOperators", "Expression3.Core.Number",
+		function()
+			EXPR_LIB.RegisterOperator("add", "n,n", "n", 1);
+			EXPR_LIB.RegisterOperator("sub", "n,n", "n", 1);
+			EXPR_LIB.RegisterOperator("div", "n,n", "n", 1);
+			EXPR_LIB.RegisterOperator("mul", "n,n", "n", 1);
+			EXPR_LIB.RegisterOperator("exp", "n,n", "n", 1);
+			EXPR_LIB.RegisterOperator("mod", "n,n", "n", 1);
+
+			EXPR_LIB.RegisterOperator("bxor", "n,n", "n", 1); -- Uses bit.bxor
+			EXPR_LIB.RegisterOperator("bor", "n,n", "n", 1);  -- Uses bit.bor
+			EXPR_LIB.RegisterOperator("band", "n,n", "n", 1); -- Uses bit.band
+			EXPR_LIB.RegisterOperator("bshl", "n,n", "n", 1); -- Uses bit.lshift
+			EXPR_LIB.RegisterOperator("bshr", "n,n", "n", 1); -- Uses bit.rshift
+
+			EXPR_LIB.RegisterOperator("neq", "n,n", "b", 1);
+			EXPR_LIB.RegisterOperator( "eq", "n,n", "b", 1); 
+			EXPR_LIB.RegisterOperator("lth", "n,n", "b", 1);
+			EXPR_LIB.RegisterOperator("leg", "n,n", "b", 1);
+			EXPR_LIB.RegisterOperator("gth", "n,n", "b", 1);
+			EXPR_LIB.RegisterOperator("geq", "n,n", "b", 1);
+
+			EXPR_LIB.RegisterOperator("eq*", "n,n", "b", 1, eqM, true);
+			EXPR_LIB.RegisterOperator("neq*", "n,n", "b", 1, neqM, true);
+
+			local function notN(context, number)
+				return number == 0;
+			end
+
+			EXPR_LIB.RegisterOperator( "is", "n", "b", 1, tobool, true);
+			EXPR_LIB.RegisterOperator("neg", "n", "n", 1);
+			EXPR_LIB.RegisterOperator("not", "n", "b", 1, notN, true);
+
+	end);
+end
+
+local function RegisterStringClass()
+	EXPR_LIB.RegisterClass("s", {"string"}, isstring, isNotNil);
+
+	hook.Add("Expression3.LoadOperators", "Expression3.Core.String",
+		function()
+			EXPR_LIB.RegisterOperator("add", "s,n", "n", 1);
+			EXPR_LIB.RegisterOperator("add", "n,s", "n", 1);
+			EXPR_LIB.RegisterOperator("add", "s,s", "n", 1);
+
+			EXPR_LIB.RegisterOperator("neq", "s,s", "b", 1);
+			EXPR_LIB.RegisterOperator( "eq", "s,s", "b", 1); 
+			EXPR_LIB.RegisterOperator("lth", "s,s", "b", 1);
+			EXPR_LIB.RegisterOperator("leg", "s,s", "b", 1);
+			EXPR_LIB.RegisterOperator("gth", "s,s", "b", 1);
+			EXPR_LIB.RegisterOperator("geq", "s,s", "b", 1);
+
+			EXPR_LIB.RegisterOperator("eq*", "s,s", "b", 1, eqM, true);
+			EXPR_LIB.RegisterOperator("neq*", "s,s", "b", 1, neqM, true); 
+
+			local function isS(context, string)
+				return string and string ~= "";
+			end
+
+			local function notS(context, string)
+				return string and string ~= "";
+			end
+
+			EXPR_LIB.RegisterOperator( "is", "s", "b", 1, isS, true);
+			EXPR_LIB.RegisterOperator("not", "s", "b", 1, notS, true);
+			EXPR_LIB.RegisterOperator("len", "s", "n", 1, string.len, true);
+		end);
+end
+
+hook.Add("Expression3.LoadClasses", "Expression3.Core.Classes", function()
+	RegisterVoidClass();
+	RegisterBooleanClass();
+	RegisterNumberClass();
+	RegisterStringClass();
 end);
 
-hook.add("Expression3.LoadOperators", "Expression3.Core", function()
-	EXPR_LIB.RegisterOperator("add", "n,n", "n", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("add", "s,s", "s", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("sub", "n,n", "n", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("div", "n,n", "n", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("mul", "n,n", "n", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("exp", "n,n", "n", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("mod", "n,n", "n", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("bxor", "n,n", "n", 1); -- Uses bit.bxor
-
-	EXPR_LIB.RegisterOperator("bor", "n,n", "n", 1);  -- Uses bit.bor
-
-	EXPR_LIB.RegisterOperator("band", "n,n", "n", 1); -- Uses bit.band
-
-	EXPR_LIB.RegisterOperator("bshl", "n,n", "n", 1); -- Uses bit.lshift
-
-	EXPR_LIB.RegisterOperator("bshr", "n,n", "n", 1); -- Uses bit.rshift
-
-	EXPR_LIB.RegisterOperator("neq", "n,n", "b", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("neq", "s,s", "b", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("eq", "n,n", "b", 1);  -- Native
-
-	EXPR_LIB.RegisterOperator("eq", "s,s", "b", 1);  -- Native
-
-	EXPR_LIB.RegisterOperator("lth", "n,n", "b", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("leg", "n,n", "b", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("gth", "n,n", "b", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("geq", "n,n", "b", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("neg", "n", "n", 1); -- Native
-
-	EXPR_LIB.RegisterOperator("not", "n", "b", 1,
-		function(context, number)
-			return number == 0;
-		end); -- None Native
-
-	EXPR_LIB.RegisterOperator("is", "n", "b", 1,
-		function(context, number)
-			return number ~= 0;
-		end); -- None Native
-
-
-	EXPR_LIB.RegisterOperator("ten", "b,b,b", "b", 1) -- Native;
-
-	EXPR_LIB.RegisterOperator("ten", "b,n,n", "n", 1) -- Native;
-
-	EXPR_LIB.RegisterOperator("ten", "b,s,s", "s", 1) -- Native;
-
+hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", function()
+	-- TODO: Load extensions here.
 end);
-
-hook.add("Expression3.RegisterExtensions", "Expression3.Core", function()
-	-- TODO: Load extentions here.
-end);
-
 

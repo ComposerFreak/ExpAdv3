@@ -11,7 +11,7 @@
 	`````````````````````````````````
 		Some operators, methods and functions can return more then one value of the same type at once.
 		You need to tell the compiler how many results it returns even if that is 0.
-
+		Peramaters should always be class id's seperated by a comma (,); e.g "n,n,s".
 		All documentation below is to be considered work in progress and this api will more then likely change.
 		
 	::HOOKS::
@@ -24,51 +24,71 @@
 		Expression3.LoadFunctions				-> Functions must be registered inside this hook.
 		Expression3.LoadEvents					-> Events must be registered inside this hook.
 		Expression3.PostRegisterExtensions		-> This is called once expadv3 has loaded its extensions.
-
+	
+	::IMPORTANT::
+		You should use 'Extension = EXPR_LIB.RegisterExtension(string)' to create a new Extension object.
+		You should then use the api methods on the new Extension to register everything.
+		Doing it this way means you do not need to add the hooks yourself as the extention will load the contents at the correct time.
+		Do not forget to call Extension:EnableExtension() once your done otherwise the extention will not load itself.
+		It is possible to register an extention outside the extention folder by creating it inisde Expression3.RegisterExtensions hook.
+		
+	::RULES::
+		A constructor must always be a function, the first peramater will always be context unless exclude contex is true;
+		Some operator's and casting operator's function is optional, if not given the compiler will attempt to use lua's native method.
+		The first peramater to an operator / casting operator function will always be context unless exclude contex is true;
+		A method's function can be a string, if so the compiler will attempt to use a native lua method on that object.
+		The first peramater to a method's function will always be context unless exclude contex is true;
+		A function's function can be a string, if so the compiler will attempt to use a native lua function at the given string; e.g string.replace.
+		The first peramater to a function's function will always be context unless exclude contex is true;
+		
 	::EXPR_LIB::
 		EXPR_LIB.RegisterClass(string short name, string class name, boolean = function(object) isType, boolean = function(object) isValid)
 			Registers a new class with expression 3.
 
-		EXPR_LIB.RegisterConstructor(str class, str parameters, obj = function(ctx, ...) constructor)
+		EXPR_LIB.RegisterConstructor(str class, str parameters, obj = function(ctx, ...) constructor, boolean exclude contex)
 			Registers a constructor for class with expression 3; new vector(1, 2, 3)
 
-		EXPR_LIB.RegisterMethod(class, str name, str parameters, str type, number count, (obj = function(ctx, ...) method / string)*)
+		EXPR_LIB.RegisterMethod(class, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) method / string)*, boolean exclude contex)
 			Registers a method with expression 3 on class;
 			if operator is a string then it will use the method str on object with out context as a parameter.
 
 
-		EXPR_LIB.RegisterOperator(str operation, str parameters, str type, number count, obj = function(ctx, ...) operator*)
+		EXPR_LIB.RegisterOperator(str operation, str parameters, str type, number amount of values returned, obj = function(ctx*, ...) operator*, boolean exclude contex)
 			Registers an operator with expression 3;
 			if operator is nil then it will use the native operator on object.
+		
+		::OPERATORS::
+			This list will expand as time goes on and more are added.
+			
+			and		(type1, type2)			type1 && type2
+			or		(type1, type2)			type1 || type2
+			add		(type1, type2)			type1 + type2
+			sub		(type1, type2)			type1 - type2
+			div		(type1, type2)			type1 / type2
+			mul		(type1, type2)			type1 * type2
+			exp		(type1, type2)			type1 ^ type2
+			mod		(type1, type2)			type1 % type2
+			ten		(type1, type2, type3)	type1 ? type2 : type3
+			or		(type1, type2)			type1 || type2
+			and		(type1, type2)			type1 && type2
+			bxor	(type1, type2)			type1 ^^ type2
+			bor		(type1, type2)			type1 | type2
+			band	(type1, type2) 			type1 & type2
+			eq*		(type1, ...)			type1 == [...]
+			neq		(type1, type2)			type1 != type2
+			eq		(type1, type2)			type1 == type2
+			neq*	(type1, ...)			type1 != [...]
+			lth		(type1, type2)			type1 < type2
+			leg		(type1, type2)			type1 <= type2
+			gth		(type1, type2)			type1 > type2
+			geq		(type1, type2)			type1 >= type2
+			bshl	(type1, type2)			type1 << type2
+			bshr	(type1, type2)			type1 >> type2
+			neg		(type1)					-type1
+			not		(type1)					!type1
+			len		(type1)					#type1
 
-				add		(type1, type2)			type1 + type2
-				sub		(type1, type2)			type1 - type2
-				div		(type1, type2)			type1 / type2
-				mul		(type1, type2)			type1 * type2
-				exp		(type1, type2)			type1 ^ type2
-				mod		(type1, type2)			type1 % type2
-				ten		(type1, type2, type3)	type1 ? type2 : type3
-				or		(type1, type2)			type1 || type2
-				and		(type1, type2)			type1 && type2
-				bxor	(type1, type2)			type1 ^^ type2
-				bor		(type1, type2)			type1 | type2
-				band	(type1, type2) 			type1 & type2
-				eq*		(type1, ...)			type1 == [...]
-				neq		(type1, type2)			type1 != type2
-				eq		(type1, type2)			type1 == type2
-				neq*	(type1, ...)			type1 != [...]
-				lth		(type1, type2)			type1 < type2
-				leg		(type1, type2)			type1 <= type2
-				gth		(type1, type2)			type1 > type2
-				geq		(type1, type2)			type1 >= type2
-				bshl	(type1, type2)			type1 << type2
-				bshr	(type1, type2)			type1 >> type2
-				neg		(type1)					-type1
-				not		(type1)					!type1
-				len		(type1)					#type1
-
-
-		EXPR_LIB.RegisterCastingOperator(str type, str parameter, obj = function(ctx, ...) operator)
+		EXPR_LIB.RegisterCastingOperator(str type, str parameter, obj = function(ctx*, ...) operator, boolean exclude contex)
 			Registers a casting operator with expression 3 for casting from one class to another;
 			type1(type2)					type1 = (type1) type2
 
@@ -76,11 +96,11 @@
 			Registers a new library with expression 3.
 			Every function must part of a library.
 
-		EXPR_LIB.RegisterFunction(str library, str name, str parameters, str type, number count, (obj = function(ctx, ...) / str) function)
+		EXPR_LIB.RegisterFunction(str library, str name, str parameters, str type, number amount of values returned, (obj = function(ctx, ...) / str) function, boolean exclude contex)
 			Registers a function with library, these functions are overloaded.
 			If function is a string then expression 3 will use _G[str function]() with out context as a parameter.
 
-		EXPR_LIB.RegisterEvent(str name, str parameters, str type, number count)
+		EXPR_LIB.RegisterEvent(str name, str parameters, str type, number amount of values returned)
 			Registers an event with expression 3.
 
 		EXPR_LIB.GetClass(str class)
@@ -89,29 +109,33 @@
 			Returns and registers a new extension with expression 3;
 			This will allow you to add to the api with out manually using the required events.
 	
-	::Extention::
-		Extention:RegisterClass(string short name, string class name, boolean = function(object) isType, boolean = function(object) isValid)
+	::Extension::
+		Extension:RegisterClass(string short name, string class name, boolean = function(object) isType, boolean = function(object) isValid)
 			Calls EXPR_LIB.RegisterClass(...) at the correct time with all given valid parameter.
+		
+		Extension.RegisterConstructorRegisterConstructor(str class, str parameters, obj = function(ctx*, ...) constructor, boolean exclude contex)
+			Calls EXPR_LIB.RegisterConstructorRegisterConstructor(...) at the correct time with all given valid parameters.
 
-		Extention:RegisterMethod(class, str name, str parameters, str type, number count, (obj = function(ctx, ...) method / string)*)
+		Extension:RegisterMethod(class, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) method / string)*, boolean exclude contex)
 			Calls EXPR_LIB.RegisterMethod(...) at the correct time with all given valid parameters.
 
-		Extention:RegisterOperator(str operation, str parameters, str type, number count, obj = function(ctx, ...) operator*)
+		Extension:RegisterOperator(str operation, str parameters, str type, number amount of values returned, obj = function(ctx*, ...) operator*, boolean exclude contex)
 			Calls EXPR_LIB.RegisterOperator(...) at the correct time with all given valid parameters.
 
-		Extention:RegisterCastingOperator(str type, str parameter, obj = function(ctx, ...) operator)
+		Extension:RegisterCastingOperator(str type, str parameter, obj = function(ctx, ...) operator, boolean exclude contex)
 			Calls EXPR_LIB.RegisterCastingOperator(...) at the correct time with all given valid parameters.
 
-		Extention:RegisterLibrary(name)
+		Extension:RegisterLibrary(name)
 			Calls EXPR_LIB.RegisterLibrary(...) at the correct time with all given valid parameters.
 
-		Extention:RegisterFunction(str library, str name, str parameters, str type, number count, (obj = function(ctx, ...) / str) function)
+		Extension:RegisterFunction(str library, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) / str) function, boolean exclude contex)
 			Calls EXPR_LIB.RegisterFunction(...) at the correct time with all given valid parameters.
 
-		Extention:RegisterEvent(str name, str parameters, str type, number count)
+		Extension:RegisterEvent(str name, str parameters, str type, number amount of values returned)
 			Calls EXPR_LIB.RegisterEvent(...) at the correct time with all given valid parameters.
 
-
+		Extension:EnableExtension()
+			Must be called to allow the extention to register its contents.
 ]]
 
 EXPR_LIB = {};
@@ -172,7 +196,7 @@ end
 
 local loadConstructors = false;
 
-function EXPR_LIB.RegisterConstructor(class, parameter, constructor)
+function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeContext)
 	if (not loadConstructors) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor new %s(%s) outside of Hook::Expression3.LoadConstructors", class, parameter);
 	end
@@ -189,13 +213,23 @@ function EXPR_LIB.RegisterConstructor(class, parameter, constructor)
 		EXPR_LIB.ThrowInternal(0, "%s for Constructor new %s(%s)", signature, class, parameter);
 	end
 
-	cls.constructors[signature] = constructor;
+	local op = {};
+	op.name = name;
+	op.class = cls.id;
+	op.parameter = signature;
+	op.signature = string.format("%s(%s)", cls.id, signature);
+	op.type = res.id;
+	op.count = count;
+	op.operation = constructor;
+	op.context = not excludeContext;
+
+	cls.constructors[op.signature] = op;
 end
 
 local methods;
 local loadMethods = false;
 
-function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method)
+function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method, excludeContext)
 	-- if method is nil lua, compiler will use native Object:(...);
 
 	if (not loadMethods) then
@@ -228,6 +262,7 @@ function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method)
 	meth.type = res.id;
 	meth.count = count;
 	meth.operation = method;
+	meth.context = not excludeContext;
 
 	methods[meth.signature] = meth;
 	-- <Insert Heisenburg joke here>
@@ -236,7 +271,7 @@ end
 local operators;
 local loadOperators = false;
 
-function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator)
+function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator, excludeContext)
 	-- if operator is nil lua, compiler will use native if possible (+, -, /, *, ^, etc)
 
 	if (not loadOperators) then
@@ -269,7 +304,7 @@ end
 
 local castOperators;
 
-function EXPR_LIB.RegisterCastingOperator(type, parameter, operator)
+function EXPR_LIB.RegisterCastingOperator(type, parameter, operator, excludeContext)
 	if (not loadOperators) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register casting operator [(%s) %s] outside of Hook::Expression3.LoadOperators", type, parameter);
 	end
@@ -296,6 +331,7 @@ function EXPR_LIB.RegisterCastingOperator(type, parameter, operator)
 	op.type = res.id;
 	op.count = 1;
 	op.operation = operator;
+	op.context = not excludeContext;
 
 	castOperators[op.signature] = op;
 end
@@ -319,7 +355,7 @@ end
 local functions;
 local loadFunctions = false;
 
-function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _function)
+function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _function, excludeContext)
 	-- If _function is a string then lua will use str(...) e.g; string.Replace
 	if (not loadFunctions) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) outside of Hook::Expression3.LoadFunctions", library, name, parameter);
@@ -350,6 +386,7 @@ function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _funct
 	op.type = res.id;
 	op.count = count;
 	op.operation = operator;
+	op.context = not excludeContext;
 
 	lib._functions[op.signature] = op;
 end
@@ -435,8 +472,8 @@ end
 	Since we need to add everything in a specific order, this is a extension base that can do this for you.
 ]]
 
-local EXTENTION = {};
-EXTENTION.__index = EXTENTION;
+local Extension = {};
+Extension.__index = Extension;
 
 function EXPR_LIB.RegisterExtension(name)
 	local ext = {};
@@ -451,50 +488,50 @@ function EXPR_LIB.RegisterExtension(name)
 	ext.functions = {};
 	ext.events = {};
 
-	return setmetatable(ext, EXTENTION);
+	return setmetatable(ext, Extension);
 end
 
-function EXTENTION.RegisterClass(this, id, name, isType, isValid)
+function Extension.RegisterClass(this, id, name, isType, isValid)
 	local entry = {id, name, isType, isValid};
 	this.classes[#this.classes + 1] = entry;
 end
 
-function EXTENTION.RegisterConstructor(this, class, parameter, constructor)
-	local entry = {class, parameter, constructor};
+function Extension.RegisterConstructor(this, class, parameter, constructor, excludeContext)
+	local entry = {class, parameter, constructor, excludeContext};
 	this.constructors[#this.constructors + 1] = entry;
 end
 
-function EXTENTION.RegisterMethod(this, class, name, parameter, type, count, method)
-	local entry = {class, name, parameter, type, count, method};
+function Extension.RegisterMethod(this, class, name, parameter, type, count, method, excludeContext)
+	local entry = {class, name, parameter, type, count, method, excludeContext};
 	this.methods[#this.methods + 1] = entry;
 end
 
-function EXTENTION.RegisterOperator(this, operation, parameter, type, count, operator)
-	local entry = {operation, parameter, type, count, operator};
+function Extension.RegisterOperator(this, operation, parameter, type, count, operator, excludeContext)
+	local entry = {operation, parameter, type, count, operator, excludeContext};
 	this.operators[#this.operators + 1] = entry;
 end
 
-function EXTENTION.RegisterCastingOperator(this, type, parameter, operator)
-	local entry = {type, parameter, operator};
+function Extension.RegisterCastingOperator(this, type, parameter, operator, excludeContext)
+	local entry = {type, parameter, operator, excludeContext};
 	this.castOperators[#this.castOperators + 1] = entry;
 end
 
-function EXTENTION.RegisterLibrary(this, name)
+function Extension.RegisterLibrary(this, name)
 	local entry = {name, name};
 	this.libraries[#this.libraries + 1] = entry;
 end
 
-function EXTENTION.RegisterFunction(this, library, name, parameter, type, count, _function)
-	local entry = {library, name, parameter, type, count, _function};
+function Extension.RegisterFunction(this, library, name, parameter, type, count, _function, excludeContext)
+	local entry = {library, name, parameter, type, count, _function, excludeContext};
 	this.functions[#this.functions + 1] = entry;
 end
 
-function EXTENTION.RegisterEvent(this, name, parameter, type, count)
+function Extension.RegisterEvent(this, name, parameter, type, count)
 	local entry = {name, parameter, type, count};
 	this.events[#this.events + 1] = entry;
 end
 
-function EXTENTION.CheckRegistration(this, _function, ...)
+function Extension.CheckRegistration(this, _function, ...)
 	local state, err = Pcall(_function, ...);
 
 	if (not state) then
@@ -502,7 +539,7 @@ function EXTENTION.CheckRegistration(this, _function, ...)
 	end
 end
 
-function EXTENTION.EnableExtension(this)
+function Extension.EnableExtension(this)
 	hook.Add("Expression3.LoadClasses", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.classes) do
 			this:CheckRegistration(EXPR_LIB.RegisterClass, v[1], v[2], v[3], v[4]);
@@ -511,23 +548,23 @@ function EXTENTION.EnableExtension(this)
 
 	hook.Add("Expression3.LoadConstructors", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.constructors) do
-			this:CheckRegistration(EXPR_LIB.RegisterConstructor, v[1], v[2], v[3]);
+			this:CheckRegistration(EXPR_LIB.RegisterConstructor, v[1], v[2], v[3], v[4]);
 		end
 	end);
 
 	hook.Add("Expression3.LoadMethods", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.methods) do
-			this:CheckRegistration(EXPR_LIB.RegisterMethod, v[1], v[2], v[3], v[4], v[5], v[6]);
+			this:CheckRegistration(EXPR_LIB.RegisterMethod, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
 		end
 	end);
 
 	hook.Add("Expression3.LoadOperators", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.operators) do
-			this:CheckRegistration(EXPR_LIB.RegisterOperator, v[1], v[2], v[3], v[4], v[5]);
+			this:CheckRegistration(EXPR_LIB.RegisterOperator, v[1], v[2], v[3], v[4], v[5], v[6]);
 		end
 
 		for _, v in pairs(this.castOperators) do
-			this:CheckRegistration(EXPR_LIB.RegisterCastingOperator, v[1], v[2], v[3]);
+			this:CheckRegistration(EXPR_LIB.RegisterCastingOperator, v[1], v[2], v[3], v[4]);
 		end
 	end);
 
@@ -539,7 +576,7 @@ function EXTENTION.EnableExtension(this)
 
 	hook.Add("Expression3.LoadFunctions", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.functions) do
-			this:CheckRegistration(EXPR_LIB.RegisterFunction, v[1], v[2], v[3], v[4], v[5], v[6]);
+			this:CheckRegistration(EXPR_LIB.RegisterFunction, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
 		end
 	end);
 
@@ -556,6 +593,10 @@ end
 ]]
 
 function EXPR_LIB.Initalize()
+	MsgN("Loading Expression 3");
+
+	include("expression3\extentions\core.lua");
+
 	hook.Run("Expression3.RegisterExtensions");
 
 	classes = {};
@@ -606,6 +647,8 @@ function EXPR_LIB.Initalize()
 	include("tokenizer.lua");
 	include("parser.lua");
 	include("compiler.lua");
+
+	MsgN("Expression 3 has loaded.");
 end
 
 EXPR_LIB.Initalize();

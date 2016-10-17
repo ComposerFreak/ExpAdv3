@@ -386,6 +386,13 @@ end
 --[[
 ]]
 
+function COMPILER.InjectOperator(operator, expressions, start)
+	if 
+end
+
+--[[
+]]
+
 function COMPILER.Compile_SEQ(this, inst, token, stmts)
 	for k, v in pairs(stmts) do
 		this:Compile(v);
@@ -403,7 +410,13 @@ function COMPILER.Compile_IF(this, inst, token)
 		if (op) then
 			if (op.operation) then
 				this.__operators[op.signature] = op.operator;
-				this:QueueInjectionBefore(inst, inst.condition.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
+				this:QueueInjectionBefore(inst, inst.condition.token, "_OPS", "[", "\"", op.signature, "\"", "]", "(");
+
+				if (op.context) then
+				    this:QueueInjectionBefore(inst, inst.condition.token, "CONTEXT", ",");
+				end
+
+
 				this:QueueInjectionAfter(inst, inst.condition.final, ")" );
 			end
 		end
@@ -604,7 +617,13 @@ function COMPILER.Compile_ASS_ADD(this, inst, token, expressions)
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
-			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
+			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(");
+
+			if (op.context) then
+			    this:QueueInjectionBefore(inst, expr.token "CONTEXT", ",");
+			end
+
+
 			this:QueueInjectionAfter(inst, expr.final, ")" );
 
 		end	
@@ -634,7 +653,13 @@ function COMPILER.Compile_ASS_SUB(this, inst, token, expressions)
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
-			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
+			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"", op.signature, "\"", "]", "(");
+
+			if (op.context) then
+			    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
+			end
+
+
 			this:QueueInjectionAfter(inst, expr.final, ")" );
 
 		end	
@@ -664,7 +689,13 @@ function COMPILER.Compile_ASS_MUL(this, inst, token, expressions)
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
-			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
+			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"", op.signature, "\"", "]", "(");
+
+			if (op.context) then
+			    this:QueueInjectionBefore(inst, expr.token "CONTEXT", ",");
+			end
+
+
 			this:QueueInjectionAfter(inst, expr.final, ")" );
 
 		end	
@@ -694,7 +725,13 @@ function COMPILER.Compile_ASS_DIV(this, inst, token, expressions)
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
-			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(", "CONTEXT", ",");
+			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"", op.signature, "\"", "]", "(");
+
+			if (op.context) then
+			    this:QueueInjectionBefore(inst, expr.token "CONTEXT", ",");
+			end
+
+
 			this:QueueInjectionAfter(inst, expr.final, ")" );
 
 		end	
@@ -726,7 +763,11 @@ function COMPILER.Compile_TEN(this, inst, token, expressions)
 		this:QueueReplace(inst, inst.__and, "and");
 		this:QueueReplace(inst, inst.__or, "or");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__and, ",");
 		this:QueueReplace(inst, inst.__or, ",");
@@ -754,7 +795,11 @@ function COMPILER.Compile_OR(this, inst, token, expressions)
 	elseif (not op.operation) then
 		this:QueueReplace(inst, inst.__operator, "or");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -780,7 +825,11 @@ function COMPILER.Compile_AND(this, inst, token, expressions)
 	elseif (not op.operation) then
 		this:QueueReplace(inst, inst.__operator, "and");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -812,7 +861,11 @@ function COMPILER.Compile_BXOR(this, inst, token, expressions)
 
 		this.__enviroment.bit = bit;
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -844,7 +897,11 @@ function COMPILER.Compile_BOR(this, inst, token, expressions)
 
 		this.__enviroment.bit = bit;
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -876,7 +933,11 @@ function COMPILER.Compile_BAND(this, inst, token, expressions)
 
 		this.__enviroment.bit = bit;
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -905,7 +966,11 @@ function COMPILER.Compile_EQ(this, inst, token, expressions)
 	elseif (not op.operation) then
 		-- Leave the code alone.
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -934,7 +999,11 @@ function COMPILER.Compile_NEQ(this, inst, token, expressions)
 	elseif (not op.operation) then
 		this:QueueReplace(inst, inst.__operator, "~=");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -960,7 +1029,11 @@ function COMPILER.Compile_LTH(this, inst, token, expressions)
 	elseif (not op.operation) then
 		-- Leave the code alone.
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -986,7 +1059,11 @@ function COMPILER.Compile_LEQ(this, inst, token, expressions)
 	elseif (not op.operation) then
 		-- Leave the code alone.
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -1012,7 +1089,11 @@ function COMPILER.Compile_GTH(this, inst, token, expressions)
 	elseif (not op.operation) then
 		-- Leave the code alone.
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -1038,7 +1119,11 @@ function COMPILER.Compile_GEQ(this, inst, token, expressions)
 	elseif (not op.operation) then
 		-- Leave the code alone.
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -1070,8 +1155,12 @@ function COMPILER.Compile_BSHL(this, inst, token, expressions)
 
 		this.__enviroment.bit = bit;
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
 
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
+		
 		this:QueueReplace(inst, inst.__operator, ",");
 		
 		this:QueueInjectionAfter(inst, expr2.final, ")" );
@@ -1102,7 +1191,11 @@ function COMPILER.Compile_BSHR(this, inst, token, expressions)
 
 		this.__enviroment.bit = bit;
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -1133,7 +1226,11 @@ function COMPILER.Compile_ADD(this, inst, token, expressions)
 			this:QueueReplace(inst, inst.__operator, ".."); -- Replace + with .. for string addition;
 		end
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -1159,7 +1256,11 @@ function COMPILER.Compile_SUB(this, inst, token, expressions)
 	elseif (not op.operation) then
 		-- Do not change the code.
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -1185,7 +1286,11 @@ function COMPILER.Compile_DIV(this, inst, token, expressions)
 	elseif (not op.operation) then
 		-- Do not change the code.
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -1211,7 +1316,11 @@ function COMPILER.Compile_MUL(this, inst, token, expressions)
 	elseif (not op.operation) then
 		-- Do not change the code.
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -1237,7 +1346,11 @@ function COMPILER.Compile_EXP(this, inst, token, expressions)
 	elseif (not op.operation) then
 		-- Do not change the code.
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -1263,7 +1376,11 @@ function COMPILER.Compile_MOD(this, inst, token, expressions)
 	elseif (not op.operation) then
 		-- Do not change the code.
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 
 		this:QueueReplace(inst, inst.__operator, ",");
 		
@@ -1286,7 +1403,11 @@ function COMPILER.Compile_NEG(this, inst, token, expressions)
 	elseif (not op.operation) then
 		-- Do not change the code.
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 		
 		this:QueueInjectionAfter(inst, expr1.final, ")" );
 
@@ -1307,7 +1428,11 @@ function COMPILER.Compile_NOT(this, inst, token, expressions)
 	elseif (not op.operation) then
 		this:QueueReplace(inst, inst.__operator, "not");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 		
 		this:QueueInjectionAfter(inst, expr1.final, ")" );
 
@@ -1328,7 +1453,11 @@ function COMPILER.Compile_LEN(this, inst, token, expressions)
 	elseif (not op.operation) then
 		-- Once again we change nothing.
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
+		end
 		
 		this:QueueInjectionAfter(inst, expr1.final, ")" );
 
@@ -1347,9 +1476,13 @@ function COMPILER.CastExpression(this, type, expr)
 		return false, expr;
 	end
 
-	this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"", op.signature, "\"](CONTEXT,");
+	this:QueueInjectionBefore(inst, expr.token, "_OPS[\"", op.signature, "\"](");
+
+	if (op.context) then
+	    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
+	end
 		
-	this:QueueInjectionAfter(inst, expr1.final, ")" );
+	this:QueueInjectionAfter(inst, expr.final, ")" );
 
 	this.__operators[op.signature] = op.operator;
 
@@ -1454,10 +1587,14 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 		this:Throw(token, "No such constructor, %s", signature);
 	end
 
-	this:QueueInjectionBefore(inst, token, "_CONST[\"", op.signature, "\"](CONTEXT");
+	this:QueueInjectionBefore(inst, token, "_CONST[\"", op.signature, "\"](");
 	
-	if (total > 0) then
-		this:QueueInjectionBefore(inst, token, ",");
+	if (op.context) then
+	    this:QueueInjectionBefore(inst, token "CONTEXT");
+
+	    if (total > 0) then
+			this:QueueInjectionBefore(inst, token, ",");
+		end
 	end
 
 	this:QueueInjectionAfter(inst, inst.final, ")" );
@@ -1534,7 +1671,15 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 			this:QueueReplace(inst, inst.__lpa, ",");
 		end
 
-		this:QueueInjectionBefore(inst, inst.__func, "_METH[", expressions[1].token, "](CONTEXT,");
+		this:QueueInjectionBefore(inst, inst.__func, "_METH[", expressions[1].token, "](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, inst.__func, "CONTEXT,");
+
+		    --if (total > 0) then
+			--	this:QueueInjectionBefore(inst, inst.__func, ",");
+			--end
+		end
 
 		this.__methods[op.signature] = op.operator;
 	elseif (type(op.operator) == "string") then
@@ -1616,11 +1761,13 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		this:QueueRemove(inst, inst.__func);
 
 		this:QueueInjectionAfter(inst, inst.__func, "_FUN[", signature, "]");
-		
-		this:QueueInjectionAfter(inst, inst.__lpa, "CONTEXT");
 
-		if (total > 0) then
-			this:QueueInjectionAfter(inst, inst.__lpa, ",");
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, inst.__lpa, "CONTEXT");
+
+		    if (total > 0) then
+				this:QueueInjectionBefore(inst, inst.__lpa, ",");
+			end
 		end
 
 		this.__functions[signature] = op.operator;
