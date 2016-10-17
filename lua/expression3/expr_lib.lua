@@ -11,7 +11,7 @@
 	`````````````````````````````````
 		Some operators, methods and functions can return more then one value of the same type at once.
 		You need to tell the compiler how many results it returns even if that is 0.
-		Peramaters should always be class id's seperated by a comma (,); e.g "n,n,s".
+		Parameters should always be class id's separated by a comma (,); e.g "n,n,s".
 		All documentation below is to be considered work in progress and this api will more then likely change.
 		
 	::HOOKS::
@@ -28,32 +28,32 @@
 	::IMPORTANT::
 		You should use 'Extension = EXPR_LIB.RegisterExtension(string)' to create a new Extension object.
 		You should then use the api methods on the new Extension to register everything.
-		Doing it this way means you do not need to add the hooks yourself as the extention will load the contents at the correct time.
-		Do not forget to call Extension:EnableExtension() once your done otherwise the extention will not load itself.
-		It is possible to register an extention outside the extention folder by creating it inisde Expression3.RegisterExtensions hook.
+		Doing it this way means you do not need to add the hooks yourself as the extension will load the contents at the correct time.
+		Do not forget to call Extension:EnableExtension() once your done otherwise the extension will not load itself.
+		It is possible to register an extension outside the extension folder by creating it inside Expression3.RegisterExtensions hook.
 		
 	::RULES::
-		A constructor must always be a function, the first peramater will always be context unless exclude contex is true;
+		A constructor must always be a function, the first parameter will always be context unless exclude context is true;
 		Some operator's and casting operator's function is optional, if not given the compiler will attempt to use lua's native method.
-		The first peramater to an operator / casting operator function will always be context unless exclude contex is true;
+		The first parameter to an operator / casting operator function will always be context unless exclude context is true;
 		A method's function can be a string, if so the compiler will attempt to use a native lua method on that object.
-		The first peramater to a method's function will always be context unless exclude contex is true;
+		The first parameter to a method's function will always be context unless exclude context is true;
 		A function's function can be a string, if so the compiler will attempt to use a native lua function at the given string; e.g string.replace.
-		The first peramater to a function's function will always be context unless exclude contex is true;
+		The first parameter to a function's function will always be context unless exclude context is true;
 		
 	::EXPR_LIB::
 		EXPR_LIB.RegisterClass(string short name, string class name, boolean = function(object) isType, boolean = function(object) isValid)
 			Registers a new class with expression 3.
 
-		EXPR_LIB.RegisterConstructor(str class, str parameters, obj = function(ctx, ...) constructor, boolean exclude contex)
+		EXPR_LIB.RegisterConstructor(str class, str parameters, obj = function(ctx, ...) constructor, boolean exclude context)
 			Registers a constructor for class with expression 3; new vector(1, 2, 3)
 
-		EXPR_LIB.RegisterMethod(class, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) method / string)*, boolean exclude contex)
+		EXPR_LIB.RegisterMethod(class, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) method / string)*, boolean exclude context)
 			Registers a method with expression 3 on class;
 			if operator is a string then it will use the method str on object with out context as a parameter.
 
 
-		EXPR_LIB.RegisterOperator(str operation, str parameters, str type, number amount of values returned, obj = function(ctx*, ...) operator*, boolean exclude contex)
+		EXPR_LIB.RegisterOperator(str operation, str parameters, str type, number amount of values returned, obj = function(ctx*, ...) operator*, boolean exclude context)
 			Registers an operator with expression 3;
 			if operator is nil then it will use the native operator on object.
 		
@@ -88,7 +88,7 @@
 			not		(type1)					!type1
 			len		(type1)					#type1
 
-		EXPR_LIB.RegisterCastingOperator(str type, str parameter, obj = function(ctx*, ...) operator, boolean exclude contex)
+		EXPR_LIB.RegisterCastingOperator(str type, str parameter, obj = function(ctx*, ...) operator, boolean exclude context)
 			Registers a casting operator with expression 3 for casting from one class to another;
 			type1(type2)					type1 = (type1) type2
 
@@ -96,7 +96,7 @@
 			Registers a new library with expression 3.
 			Every function must part of a library.
 
-		EXPR_LIB.RegisterFunction(str library, str name, str parameters, str type, number amount of values returned, (obj = function(ctx, ...) / str) function, boolean exclude contex)
+		EXPR_LIB.RegisterFunction(str library, str name, str parameters, str type, number amount of values returned, (obj = function(ctx, ...) / str) function, boolean exclude context)
 			Registers a function with library, these functions are overloaded.
 			If function is a string then expression 3 will use _G[str function]() with out context as a parameter.
 
@@ -113,29 +113,29 @@
 		Extension:RegisterClass(string short name, string class name, boolean = function(object) isType, boolean = function(object) isValid)
 			Calls EXPR_LIB.RegisterClass(...) at the correct time with all given valid parameter.
 		
-		Extension.RegisterConstructorRegisterConstructor(str class, str parameters, obj = function(ctx*, ...) constructor, boolean exclude contex)
+		Extension.RegisterConstructorRegisterConstructor(str class, str parameters, obj = function(ctx*, ...) constructor, boolean exclude context)
 			Calls EXPR_LIB.RegisterConstructorRegisterConstructor(...) at the correct time with all given valid parameters.
 
-		Extension:RegisterMethod(class, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) method / string)*, boolean exclude contex)
+		Extension:RegisterMethod(class, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) method / string)*, boolean exclude context)
 			Calls EXPR_LIB.RegisterMethod(...) at the correct time with all given valid parameters.
 
-		Extension:RegisterOperator(str operation, str parameters, str type, number amount of values returned, obj = function(ctx*, ...) operator*, boolean exclude contex)
+		Extension:RegisterOperator(str operation, str parameters, str type, number amount of values returned, obj = function(ctx*, ...) operator*, boolean exclude context)
 			Calls EXPR_LIB.RegisterOperator(...) at the correct time with all given valid parameters.
 
-		Extension:RegisterCastingOperator(str type, str parameter, obj = function(ctx, ...) operator, boolean exclude contex)
+		Extension:RegisterCastingOperator(str type, str parameter, obj = function(ctx, ...) operator, boolean exclude context)
 			Calls EXPR_LIB.RegisterCastingOperator(...) at the correct time with all given valid parameters.
 
 		Extension:RegisterLibrary(name)
 			Calls EXPR_LIB.RegisterLibrary(...) at the correct time with all given valid parameters.
 
-		Extension:RegisterFunction(str library, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) / str) function, boolean exclude contex)
+		Extension:RegisterFunction(str library, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) / str) function, boolean exclude context)
 			Calls EXPR_LIB.RegisterFunction(...) at the correct time with all given valid parameters.
 
 		Extension:RegisterEvent(str name, str parameters, str type, number amount of values returned)
 			Calls EXPR_LIB.RegisterEvent(...) at the correct time with all given valid parameters.
 
 		Extension:EnableExtension()
-			Must be called to allow the extention to register its contents.
+			Must be called to allow the extension to register its contents.
 ]]
 
 EXPR_LIB = {};
