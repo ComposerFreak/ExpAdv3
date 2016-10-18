@@ -144,7 +144,7 @@ end
 function PARSER.Next(this)
 	this.__pos = this.__pos + 1;
 	
-	if (this.__pos >= this.__total) then
+	if (this.__pos > this.__total) then
 		return false;
 	end
 
@@ -155,11 +155,11 @@ function PARSER.Next(this)
 end
 
 function PARSER.HasTokens(this)
-	return this.__pos <= this.__total;
+	return this.__next ~= nil;
 end
 
 function PARSER.CheckToken(this, type, ...)
-	if (this.__pos <= this.__total) then
+	if (this.__pos < this.__total) then
 		local tkn = this.__next;
 
 		for _, t in pairs({type, ...}) do
@@ -247,17 +247,17 @@ end
 --[[
 ]]
 
-function PARSER.StartInstruction(this, type, token)
-	if (not type) then
+function PARSER.StartInstruction(this, _type, token)
+	if (not type(_type) == "string") then
 		debug.Trace();
-		error("PARSER:StartInstruction got no instruction type.");
-	elseif (not token) then
+		error("PARSER:StartInstruction got bad instruction type.", _type);
+	elseif (not type(token) == "table") then
 		debug.Trace();
-		error("PARSER:StartInstruction got no instruction token.");
+		error("PARSER:StartInstruction got bad instruction token.", token);
 	end
 
 	local inst = {};
-	inst.type = type;
+	inst.type = _type;
 	inst.result = "void";
 	inst.rCount = 0;
 	inst.token = token;
@@ -319,7 +319,6 @@ function PARSER.QueueInjectionBefore(this, inst, token, str, ...)
 		tasks.prefix = {};
 	end
 
-	local r = {};
 	local t = {str, ...};
 
 	for i = 1, #t do
@@ -329,12 +328,7 @@ function PARSER.QueueInjectionBefore(this, inst, token, str, ...)
 		op.str = t[i];
 		op.inst = inst;
 
-		r[#r + 1] = op;
-	end
-
-	for i = #r, 1, -1 do
-		-- place these in reverse order so they come out in the correct order.
-		tasks.prefix[#tasks.prefix + 1] = r[i];
+		tasks.prefix[#tasks.prefix + 1] = op;
 	end
 
 	return r;
@@ -418,13 +412,11 @@ function PARSER.Block_1(this, _end, lcb)
 
 		this.__scope = this.__scope - 1;
 
-		this:Require("rcb", "Right curly bracket (}) missing, to close block");
-
-		if (_end) then
-			this:QueueReplace(seq, this.__token, "end");
-		else
-			this:QueueRemove(seq, this.__next);
+		if (not this:Accept("rcb")) then
+			this:Throw(this.__token, "Right curly bracket (}) missing, to close block");
 		end
+
+		this:QueueReplace(seq, this.__token, _end and "end" or "");
 
 		return this:EndInstruction(seq, stmts);
 	end
@@ -509,7 +501,7 @@ function PARSER.Statment_1(this)
 
 		inst._else = this:Statment_2();
 
-		this:QueueInjectionAfter(inst, this.__token, "end");
+		this:QueueInjectionAfter(inst, this.__token, "\nend");
 
 		return this:EndInstruction(inst, {});
 	end
@@ -523,7 +515,7 @@ function PARSER.Statment_2(this)
 
 		inst.condition = this:GetCondition();
 
-		inst.block = this:block_1(false, "then");
+		inst.block = this:Block_1(false, "then");
 
 		inst._else = this:Statment_2();
 
@@ -537,7 +529,7 @@ function PARSER.Statment_3(this)
 	if (this:Accept("els")) then
 		local inst = this:StartInstruction("else", this.__token);
 
-		inst.block = this:block_1(false, "");
+		inst.block = this:Block_1(false, "");
 
 		return this:EndInstruction(inst, {});
 	end
@@ -554,7 +546,7 @@ function PARSER.Statment_4(this)
 
 		this:QueueReplace(inst, this.__token, "(SERVER)");
 
-		inst.block = this:block_1(true, "then");
+		inst.block = this:Block_1(true, "then");
 
 		return this:EndInstruction(inst, {});
 	end
@@ -566,7 +558,7 @@ function PARSER.Statment_4(this)
 
 		this:QueueReplace(inst, this.__token, "(CLIENT)");
 
-		inst.block = this:block_1(true, "then");
+		inst.block = this:Block_1(true, "then");
 
 		return this:EndInstruction(inst, {});
 	end
@@ -581,9 +573,11 @@ function PARSER.Statment_5(this)
 	if (this:Accept("glo")) then
 		local inst = this:StartInstruction("global", this.__token);
 
+		this:QueueRemove(inst, this.__token);
+
 		this:Require("typ", "Class expected after global.");
 		
-		local type = this.token.data;
+		local type = this.__token.data;
 
 		inst.class = type;
 
@@ -652,7 +646,7 @@ function PARSER.Statment_5(this)
 		end
 
 		inst.variables = variables;
-		PrintTable(inst)
+
 		return this:EndInstruction(inst, expressions);
 	end
 
@@ -668,7 +662,6 @@ function PARSER.Statment_6(this)
 			
 			local variables = {};
 		
-			this:Require("var", "Variable('s) expected after class for global variable.");
 			variables[1] = this.__token.data;
 
 			while (this:Accept("com")) do
@@ -1322,7 +1315,7 @@ function PARSER.Expression_26(this)
 
 		expressions[1] = expr;
 
-		if (not this:CheckToken("lpa")) then0
+		if (not this:CheckToken("lpa")) then
 			expressions[2] = this:Expression_1();
 
 			while(this:Accept("com")) do
@@ -1383,7 +1376,7 @@ function PARSER.Expression_Trailing(this, expr)
  
 			expressions[1] = expr;
 
-			if (not this:CheckToken("lpa")) then0
+			if (not this:CheckToken("lpa")) then
 				expressions[2] = this:Expression_1();
 
 				while(this:Accept("com")) do

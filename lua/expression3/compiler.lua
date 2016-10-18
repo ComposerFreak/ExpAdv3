@@ -78,9 +78,8 @@ function COMPILER.BuildScript(this)
 
 	local buffer = {};
 	local alltasks = this.__tasks;
-
 	for k, v in pairs(this.__tokens) do
-		
+
 		if (v.newLine) then
 			buffer[#buffer + 1] = "\n";
 		end
@@ -88,8 +87,7 @@ function COMPILER.BuildScript(this)
 		local tasks = alltasks[v.pos];
 
 		if (tasks) then
-			print("tasks", k, v, v.data);
-
+			
 			local prefixs = tasks.prefix;
 
 			if (prefixs) then
@@ -233,12 +231,12 @@ end
 
 function COMPILER.GetOperator(this, operation, fst, ...)
 	if (not fst) then
-		return EXPR__OPS[operation .. "()"];
+		return EXPR_OPERATORS[operation .. "()"];
 	end
 
 	local signature = string.format("%s(%s)", operation, table.concat({fst, ...},","));
 
-	local Op = EXPR__OPS[signature];
+	local Op = EXPR_OPERATORS[signature];
 
 	if (Op) then
 		return Op;
@@ -387,7 +385,7 @@ end
 ]]
 
 function COMPILER.InjectOperator(operator, expressions, start)
-	if 
+	
 end
 
 --[[
@@ -518,7 +516,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 		end
 
 		if (r ~= inst.class) then
-			local t, expr = this:CastExpression(inst.class, r);
+			local t, expr = this:CastExpression(inst.class, expr);
 
 			if (not t) then
 				this:Throw(token, "Unable to assign variable %s, %s expected got %s.", variable, inst.class, r);
@@ -542,7 +540,7 @@ function COMPILER.Compile_LOCAL(this, inst, token, expressions)
 		end
 
 		if (r ~= inst.class) then
-			local t, expr = this:CastExpression(inst.class, r);
+			local t, expr = this:CastExpression(inst.class, expr);
 
 			if (not t) then
 				this:Throw(token, "Unable to assign variable %s, %s expected got %s.", variable, inst.class, r);
@@ -565,7 +563,7 @@ function COMPILER.Compile_ASS(this, inst, token, expressions)
 
 		if (r ~= inst.class) then
 			if (c == 1) then
-				local t, expr = this:CastExpression(inst.class, r);
+				local t, expr = this:CastExpression(inst.class, expr);
 
 				if (not t) then
 					this:Throw(token, "Unable to assign variable %s, %s expected got %s.", variable, inst.class, r);
@@ -1468,7 +1466,8 @@ function COMPILER.Compile_LEN(this, inst, token, expressions)
 end
 
 function COMPILER.CastExpression(this, type, expr)
-	local signature = string.format("(%s)%s", type, exrp.result);
+
+	local signature = string.format("(%s)%s", type, expr.result);
 	
 	local op = EXPR_CAST__OPS[signature];
 
@@ -1493,7 +1492,10 @@ function COMPILER.CastExpression(this, type, expr)
 end
 
 function COMPILER.Compile_CAST(this, inst, token, expressions)
-	local expr = this:Compile(expressions[1]);
+	local expr = expressions[1];
+
+	this:Compile(expr);
+
 	local t = this:CastExpression(inst.class, expr);
 
 	if (not t) then
@@ -1553,15 +1555,15 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 
 			if (k == total) then
 				if (c > 1) then
-					for i = 2; c do
+					for i = 2, c do
 						ids[#ids + 1] = r;
 					end
 				end
 			end
 		end
 
-		for i = #r; 1; -1 do
-			local args = table.concat({fst, ...},",", 1, i);
+		for i = #r, 1, -1 do
+			local args = table.concat({fst, "..."},",", 1, i);
 
 			if (i >= total) then
 				local signature = string.format("%s(%s)", inst.class, args);
@@ -1629,15 +1631,15 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 
 			if (k == total) then
 				if (c > 1) then
-					for i = 2; c do
+					for i = 2, c do
 						ids[#ids + 1] = r;
 					end
 				end
 			end
 		end
 
-		for i = #r; 2; -1 do
-			local args = table.concat({fst, ...},",", 1, i);
+		for i = #r, 2, -1 do
+			local args = table.concat({fst, "..."},",", 1, i);
 
 			if (i >= total) then
 				local signature = string.format("%s:%s(%s)", mClass, inst.class, args);
@@ -1721,15 +1723,15 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 
 			if (k == total) then
 				if (c > 1) then
-					for i = 2; c do
+					for i = 2, c do
 						ids[#ids + 1] = r;
 					end
 				end
 			end
 		end
 
-		for i = #r; 1; -1 do
-			local args = table.concat({fst, ...},",", 1, i);
+		for i = #r, 1, -1 do
+			local args = table.concat({fst, "..."},",", 1, i);
 
 			if (i >= total) then
 				local signature = string.format("%s(%s)", inst.name, args);

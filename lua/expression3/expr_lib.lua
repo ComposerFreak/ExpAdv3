@@ -207,7 +207,7 @@ function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeCont
 		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor new %s(%s) for none existing class", class, parameter);
 	end
 
-	local state, signature = EXPR_LIB.ProcessParameter(parameter);
+	local state, signature = EXPR_LIB.SortArgs(parameter);
 
 	if (not state) then
 		EXPR_LIB.ThrowInternal(0, "%s for Constructor new %s(%s)", signature, class, parameter);
@@ -242,7 +242,7 @@ function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method, ex
 		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) for none existing class %s", class, name, parameter, class);
 	end
 
-	local state, signature = EXPR_LIB.ProcessParameter(parameter);
+	local state, signature = EXPR_LIB.SortArgs(parameter);
 
 	if (not state) then
 		EXPR_LIB.ThrowInternal(0, "%s for method %s:%s(%s)", signature, class, name, parameter);
@@ -278,7 +278,7 @@ function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator, 
 		EXPR_LIB.ThrowInternal(0, "Attempt to register operator %s(%s) outside of Hook::Expression3.LoadOperators", operation, parameter);
 	end
 
-	local state, signature = EXPR_LIB.ProcessParameter(parameter);
+	local state, signature = EXPR_LIB.SortArgs(parameter);
 
 	if (not state) then
 		EXPR_LIB.ThrowInternal(0, "%s for operator %s(%s)", signature, operation, parameter);
@@ -292,7 +292,6 @@ function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator, 
 
 	local op = {};
 	op.name = operation;
-	op.class = cls.id;
 	op.parameter = signature;
 	op.signature = string.format("%s(%s)", operation, signature);
 	op.type = res.id;
@@ -313,7 +312,7 @@ function EXPR_LIB.RegisterCastingOperator(type, parameter, operator, excludeCont
 		EXPR_LIB.ThrowInternal(0, "Attempt to register native casting operator [(%s) %s] an operation function is required.", type, parameter);
 	end
 
-	local state, signature = EXPR_LIB.ProcessParameter(parameter);
+	local state, signature = EXPR_LIB.SortArgs(parameter);
 
 	if (not state) then
 		EXPR_LIB.ThrowInternal(0, "%s for casting operator [(%s) %s]", signature, type, parameter);
@@ -367,7 +366,7 @@ function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _funct
 		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) to none existing library %s", library, name, parameter, library);
 	end
 
-	local state, signature = EXPR_LIB.ProcessParameter(parameter);
+	local state, signature = EXPR_LIB.SortArgs(parameter);
 
 	if (not state) then
 		EXPR_LIB.ThrowInternal(0, "%s for function %s.%s(%s)", signature, library, name, parameter);
@@ -399,7 +398,7 @@ function EXPR_LIB.RegisterEvent(name, parameter, type, count)
 		EXPR_LIB.ThrowInternal(0, "Attempt to register event %s(%s) outside of Hook::Expression3.LoadEvents", name, parameter);
 	end
 
-	local state, signature = EXPR_LIB.ProcessParameter(parameter);
+	local state, signature = EXPR_LIB.SortArgs(parameter);
 
 	if (not state) then
 		EXPR_LIB.ThrowInternal(0, "%s for function %s.%s(%s)", signature, library, name, parameter);
@@ -433,7 +432,7 @@ function EXPR_LIB.IsValidClass(class)
 	return (classes[class] or classIDs[class]) ~= nil;
 end
 
-function EXPR_LIB.Processparameter(parameter)
+function EXPR_LIB.SortArgs(parameter)
 	if (parameter == "") then
 		return true, "";
 	end
@@ -595,7 +594,7 @@ end
 function EXPR_LIB.Initalize()
 	MsgN("Loading Expression 3");
 
-	include("expression3\extentions\core.lua");
+	include("expression3/extentions/core.lua");
 
 	hook.Run("Expression3.RegisterExtensions");
 

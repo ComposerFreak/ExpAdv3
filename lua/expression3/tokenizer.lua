@@ -498,12 +498,12 @@ function TOKENIZER.Loop(this)
 	
 	for k, v in pairs(EXPR_CLASSES) do
 		if (this:NextPattern("%( *" .. k .. " *%)")) then
-			this:CreateToken("cst", "cast", k);
+			this:CreateToken("cst", "cast", v.id);
 			return true;
 		end
 
 		if (this:NextPattern(k, true)) then
-			this:CreateToken("typ", "type", k);
+			this:CreateToken("typ", "type", v.id);
 			return true;
 		end
 	end
