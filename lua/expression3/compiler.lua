@@ -160,7 +160,7 @@ function COMPILER.GetOption(this, option, nonDeep)
 	end
 
 	if (not nonDeep) then
-		for i = this.__scopeID, 1, -1 do
+		for i = this.__scopeID, 0, -1 do
 			local v = this.__scopeData[i][option];
 
 			if (v) then
@@ -179,7 +179,6 @@ function COMPILER.SetVariable(this, name, class, scope)
 	var.name = name;
 	var.class = class;
 	var.scope = scope;
-
 	this.__scopeData[scope].memory[name] = var;
 
 	return class, scope, var;
@@ -197,7 +196,7 @@ function COMPILER.GetVariable(this, name, scope, nonDeep)
 	end
 
 	if (not nonDeep) then
-		for i = scope, 1, -1 do
+		for i = scope, 0, -1 do
 			local v = this.__scopeData[i].memory[name];
 
 			if (v) then
@@ -212,7 +211,7 @@ function COMPILER.AssignVariable(this, token, declaired, name, class, scope)
 		scope = this.__scopeID;
 	end
 
-	local c, s, var = this:GetVariable(name, scope, true);
+	local c, s, var = this:GetVariable(name, scope, declaired);
 
 	if (declaired) then
 		if (c) then
@@ -222,7 +221,7 @@ function COMPILER.AssignVariable(this, token, declaired, name, class, scope)
 		end
 	else
 		if (not c) then
-			this:Throw(token, "Unable to assign variable %s, Variable doesn't exist.", name);
+			this:Throw(token, "Unable to assign variable %s, Variable doesn't exist", name);
 		elseif (c ~= class) then
 			this:Throw(token, "Unable to assign variable %s, %s expected got %s.", name, c, class);
 		end
@@ -367,23 +366,27 @@ function COMPILER.Compile(this, inst)
 		error("Compiler was asked to compile a nil instruction.")
 	end
 
-	local instruction = string.upper(inst.type);
-	local fun = this["Compile_" .. instruction];
+	if (not inst.compiled) then
+		local instruction = string.upper(inst.type);
+		local fun = this["Compile_" .. instruction];
 
-	print("Compiler->" .. instruction .. "->#" .. #inst.instructions)
+		--print("Compiler->" .. instruction .. "->#" .. #inst.instructions)
 
-	if (not fun) then
-		this:Throw(inst.token, "Failed to compile unknown instruction %s", instruction);
+		if (not fun) then
+			this:Throw(inst.token, "Failed to compile unknown instruction %s", instruction);
+		end
+
+		local type, count = fun(this, inst, inst.token, inst.instructions);
+
+		if (type) then
+			inst.result = type;
+			inst.rCount = count or 1;
+		end
+
+		inst.compiled = true;
 	end
 
-	local type, count = fun(this, inst, inst.token, inst.instructions);
-
-	if (type) then
-		inst.type = type;
-		inst.rCount = count or 1;
-	end
-
-	return type, count;
+	return inst.result, inst.rCount;
 end
 
 --[[
@@ -512,26 +515,39 @@ end
 
 function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 
-	for i, variable in pairs(inst.variables) do
-		local expr = expressions[i];
-		local r, c = this:Compile(expr);
+	local tVars = #inst.variables;
+	local tExprs = #expressions;
 
-		if (not r) then
-			break;
+	local pos = 1;
+	while pos <= tVars && pos <= tExprs do
+		local t = inst.variables[pos];
+		local expr = expressions[pos];
+
+		if (not t) then
+			this:Throw(expr.token, "Unable to assign here, value #%i has no matching variable.", pos);
+		elseif (not expr) then
+			this:Throw(t, "Unable to assign variable %s, no matching value.")
 		end
 
-		if (r ~= inst.class) then
-			local t, expr = this:CastExpression(inst.class, expr);
+		local res, cnt = this:Compile(expr);
 
-			if (not t) then
-				this:Throw(token, "Unable to assign variable %s, %s expected got %s.", variable, inst.class, r);
+		for i = 1, cnt do
+			local snd = i < cnt or cnt == 1;
+			local tkn = inst.variables[pos];
+			local var = tkn.data;
+			
+			local class, scope, info = this:AssignVariable(tkn, true, var, res, 0);
+			
+			if (info and info.prefix) then
+				print(">>>>>>>", pos, tkn.data)
+				this:QueueInjectionBefore(inst, tkn, info.prefix .. ".");
 			end
-		end
 
-		local class, scope, info = this:AssignVariable(token, true, variable, r, 0);
+			pos = pos + 1;
 
-		if (info) then
-			info.prefix = "GLOBAL";
+			if (snd) then
+				break;
+			end
 		end
 	end
 
@@ -563,22 +579,78 @@ function COMPILER.Compile_LOCAL(this, inst, token, expressions)
 end
 
 function COMPILER.Compile_ASS(this, inst, token, expressions)
-	local count = 0;
+	local tVars = #inst.variables;
+	local tExprs = #expressions;
+
+	local pos = 1;
+	while pos <= tVars && pos <= tExprs do
+		local t = inst.variables[pos];
+		local expr = expressions[pos];
+
+		if (not t) then
+			this:Throw(expr.token, "Unable to assign here, value #%i has no matching variable.", pos);
+		elseif (not expr) then
+			this:Throw(t, "Unable to assign variable %s, no matching value.")
+		end
+
+		local res, cnt = this:Compile(expr);
+
+		for i = 1, cnt do
+			local snd = i < cnt or cnt == 1;
+			local tkn = inst.variables[pos];
+			local var = tkn.data;
+			local class, scope, info = this:GetVariable(var, nil, false);
+
+			if (not class) then
+				this:Throw(var, "Unable to assign variable %s, Variable does not exist.", var);
+			elseif (snd and (class ~= res)) then
+				local noErr = this:CastExpression(class, expr);
+
+				if (not noErr) then
+					this:Throw(token, "Unable to assign variable %s, %s expected got %s.", var, class, res);
+				end
+			elseif (class ~= res) then
+				this:Throw(token, "Unable to assign variable %s, %s expected got %s.", var, class, res);
+			end
+
+			local class, scope, info = this:AssignVariable(tkn, false, var, res);
+			
+			if (info and info.prefix) then
+				print(">>>>>>>", pos, tkn.data)
+				this:QueueInjectionBefore(inst, tkn, info.prefix .. ".");
+			end
+
+			pos = pos + 1;
+
+			if (snd) then
+				break;
+			end
+		end
+	end
+end
+	--[[local count = 0;
 	local total = #expressions;
 
 	for i = 1, total do
-		local expr = expressions[k];
+		local expr = expressions[i];
+		local var = inst.variables[i];
+		local class = this:GetVariable(var.data, nil, false);
+
+		if (not class) then
+			this:Throw(var, "Unable to assign variable %s, Variable does not exist.", var.data);
+		end
+
 		local r, c = this:Compile(expr);
 
-		if (r ~= inst.class) then
+		if (r ~= class) then
 			if (c == 1) then
-				local t, expr = this:CastExpression(inst.class, expr);
+				local t, expr = this:CastExpression(class, expr);
 
 				if (not t) then
-					this:Throw(token, "Unable to assign variable %s, %s expected got %s.", variable, inst.class, r);
+					this:Throw(token, "Unable to assign variable %s, %s expected got %s.", var.data, class, r);
 				end
 			else
-				this:Throw(token, "Unable to assign variable %s, %s expected got %s.", variable, inst.class, r);
+				this:Throw(token, "Unable to assign variable %s, %s expected got %s.", var.data, class, r);
 			end
 		end
 
@@ -588,7 +660,7 @@ function COMPILER.Compile_ASS(this, inst, token, expressions)
 				local token = inst.variables[count];
 				local class, scope, info = this:AssignVariable(token, false, token.data, r);
 				if (info and info.prefix) then
-					This:QueueInjectionBefore(ist, token, info.prefix .. ".");
+					this:QueueInjectionBefore(inst, token, info.prefix .. ".");
 				end
 			end
 		else
@@ -602,7 +674,7 @@ function COMPILER.Compile_ASS(this, inst, token, expressions)
 	end
 
 	return "", 0;
-end
+end]]
 
 --[[
 ]]
@@ -636,7 +708,7 @@ function COMPILER.Compile_AADD(this, inst, token, expressions)
 		end
 
 		if (not op.operation) then
-			if (r == "s" or class = "s") then
+			if (r == "s" or class == "s") then
 				char = "..";
 			end
 
@@ -672,8 +744,6 @@ function COMPILER.Compile_ASUB(this, inst, token, expressions)
 			this:QueueInjectionBefore(inst, token, info.prefix .. ".");
 		end
 
-		local char = "+";
-
 		local op = this:GetOperator("sub", class, r);
 
 		if (not op and r ~= class) then
@@ -687,11 +757,8 @@ function COMPILER.Compile_ASUB(this, inst, token, expressions)
 		end
 
 		if (not op.operation) then
-			if (r == "s" or class = "s") then
-				char = "..";
-			end
 
-			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, char);
+			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "-");
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
@@ -725,8 +792,6 @@ function COMPILER.Compile_ADIV(this, inst, token, expressions)
 			this:QueueInjectionBefore(inst, token, info.prefix .. ".");
 		end
 
-		local char = "+";
-
 		local op = this:GetOperator("div", class, r);
 
 		if (not op and r ~= class) then
@@ -740,11 +805,8 @@ function COMPILER.Compile_ADIV(this, inst, token, expressions)
 		end
 
 		if (not op.operation) then
-			if (r == "s" or class = "s") then
-				char = "..";
-			end
 
-			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, char);
+			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data,"/");
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
@@ -776,8 +838,6 @@ function COMPILER.Compile_AMUL(this, inst, token, expressions)
 			this:QueueInjectionBefore(inst, token, info.prefix .. ".");
 		end
 
-		local char = "+";
-
 		local op = this:GetOperator("mul", class, r);
 
 		if (not op and r ~= class) then
@@ -791,11 +851,8 @@ function COMPILER.Compile_AMUL(this, inst, token, expressions)
 		end
 
 		if (not op.operation) then
-			if (r == "s" or class = "s") then
-				char = "..";
-			end
 
-			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, char);
+			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "*");
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
@@ -1541,7 +1598,7 @@ function COMPILER.CastExpression(this, type, expr)
 
 	local signature = string.format("(%s)%s", type, expr.result);
 	
-	local op = EXPR_CAST__OPS[signature];
+	local op = EXPR_CAST_OPERATORS[signature];
 
 	if (not op) then
 		return false, expr;
@@ -1578,10 +1635,10 @@ function COMPILER.Compile_CAST(this, inst, token, expressions)
 end
 
 function COMPILER.Compile_VAR(this, inst, token, expressions)
-	local c, s = this:GetVariable(int.variable)
+	local c, s, var = this:GetVariable(inst.variable)
 
-	if (s == 0) then
-		this:QueueInjectionBefore(inst, token, "GLOBAL.");
+	if (var and var.prefix) then
+		this:QueueInjectionBefore(inst, token, var.prefix .. ".");
 	end
 
 	if (not c) then

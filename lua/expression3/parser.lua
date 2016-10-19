@@ -381,6 +381,8 @@ function PARSER.EndInstruction(this, inst, instructions)
 
 	this.__depth = this.__depth - 1;
 
+	--print("PARSER->" .. inst.type .. "->#" .. #inst.instructions)
+
 	return inst;
 end
 
@@ -586,12 +588,12 @@ function PARSER.Statment_5(this)
 		local variables = {};
 
 		this:Require("var", "Variable('s) expected after class for global variable.");
-		variables[1] = this.__token.data;
+		variables[1] = this.__token;
 		this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
 
 		while (this:Accept("com")) do
 			this:Require("var", "Variable expected after comma (,).");
-			variables[#variables + 1] = this.__token.data;
+			variables[#variables + 1] = this.__token;
 			this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
 		end
 
@@ -658,6 +660,7 @@ function PARSER.Statment_6(this)
 		if (not this:CheckToken("com", "ass", "aadd", "asub", "adiv", "amul")) then
 			this:StepBackward(1);
 		else
+		print("-----DEBUG")
 			local inst = this:StartInstruction("ass", this.__token);
 			
 			local variables = {};
@@ -687,7 +690,7 @@ function PARSER.Statment_6(this)
 
 			end
 
-			if (this:Accept("aadd". "asub", "amul", "advi")) then
+			if (this:Accept("aadd", "asub", "amul", "advi")) then
 				inst.__operator = this.__token;
 
 				this:ExcludeWhiteSpace("Assignment operator (%s), must not be preceded by whitespace.", this.__token.data);
@@ -853,7 +856,7 @@ function PARSER.Expression_7(this)
 
 				local expr2 = this:Expression_8();
 
-				expr = this:EndInstruction(ist, {expr, expr2});
+				expr = this:EndInstruction(inst, {expr, expr2});
 			end
 		elseif (this:Accept("neq")) then
 			local eqTkn = this.__token;
@@ -875,7 +878,7 @@ function PARSER.Expression_7(this)
 					expressions[#expressions + 1] = this:Expression_1()
 				end
 
-				expr = this:EndInstruction(ist, expressions);
+				expr = this:EndInstruction(inst, expressions);
 			else
 				local inst = this:StartInstruction("neq", this.__token);
 
@@ -1014,10 +1017,12 @@ function PARSER.Expression_13(this)
 end
 
 function PARSER.Expression_14(this)
+	local tkn = this.__token;
+
 	local expr = this:Expression_15();
 
 	while this:Accept("mul") do
-		local inst = this:StartInstruction("mul", expr.token);
+		local inst = this:StartInstruction("mul", tkn);
 
 		inst.__operator = this.__token;
 
@@ -1344,8 +1349,8 @@ function PARSER.GetCondition(this)
 	local inst = this:StartInstruction("cond", this.__token);
 	
 	local expr = this:Expression_1();
-	
-	this:Require("rpa", "Right parenthesis (( ) missing, to close condition.");
+	print("->>>", this.__next.data)
+	this:Require("rpa", "Right parenthesis ( )) missing, to close condition.");
 	
 	return this:EndInstruction(inst, {expr});
 end

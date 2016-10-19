@@ -85,6 +85,11 @@ local TOKENS = {
 	}
 }
 
+
+table.sort( TOKENS.EXPADV, function( token, token2 )
+	return #token[1] > #token2[1];
+end )
+
 --[[
 	Notes: 	I plan on possibly making this compiler multi language capable.
 ]]
