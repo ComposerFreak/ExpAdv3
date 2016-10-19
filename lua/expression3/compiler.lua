@@ -179,7 +179,10 @@ function COMPILER.SetVariable(this, name, class, scope)
 	var.name = name;
 	var.class = class;
 	var.scope = scope;
+
 	this.__scopeData[scope].memory[name] = var;
+
+	return class, scope, var;
 end
 
 function COMPILER.GetVariable(this, name, scope, nonDeep)
@@ -190,7 +193,7 @@ function COMPILER.GetVariable(this, name, scope, nonDeep)
 	local v = this.__scopeData[scope].memory[name];
 
 	if (v) then
-		return v.class, v.scope;
+		return v.class, v.scope, v;
 	end
 
 	if (not nonDeep) then
@@ -198,7 +201,7 @@ function COMPILER.GetVariable(this, name, scope, nonDeep)
 			local v = this.__scopeData[i].memory[name];
 
 			if (v) then
-				return v.class, v.scope;
+				return v.class, v.scope, v;
 			end
 		end
 	end
@@ -209,13 +212,13 @@ function COMPILER.AssignVariable(this, token, declaired, name, class, scope)
 		scope = this.__scopeID;
 	end
 
-	local c, s = this:GetVariable(name, scope, true);
+	local c, s, var = this:GetVariable(name, scope, true);
 
 	if (declaired) then
 		if (c) then
 			this:Throw(token, "Unable to assign declare variable %s, Variable already exists.", name);
 		else
-			this:SetVariable(name, class, scope);
+			return this:SetVariable(name, class, scope);
 		end
 	else
 		if (not c) then
@@ -224,6 +227,8 @@ function COMPILER.AssignVariable(this, token, declaired, name, class, scope)
 			this:Throw(token, "Unable to assign variable %s, %s expected got %s.", name, c, class);
 		end
 	end
+
+	return c, s, var;
 end
 
 --[[
@@ -523,7 +528,11 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 			end
 		end
 
-		this:AssignVariable(token, true, variable, r, 0);
+		local class, scope, info = this:AssignVariable(token, true, variable, r, 0);
+
+		if (info) then
+			info.prefix = "GLOBAL";
+		end
 	end
 
 	return "", 0;
@@ -576,13 +585,19 @@ function COMPILER.Compile_ASS(this, inst, token, expressions)
 		if (i == total) then
 			for j = 1, c do
 				count = count + 1;
-				local variable = inst.variables[count];
-				this:AssignVariable(token, false, variable, r);
+				local token = inst.variables[count];
+				local class, scope, info = this:AssignVariable(token, false, token.data, r);
+				if (info and info.prefix) then
+					This:QueueInjectionBefore(ist, token, info.prefix .. ".");
+				end
 			end
 		else
 			count = count + 1;
-			local variable = inst.variables[count];
-			this:AssignVariable(token, false, variable, r);
+			local token = inst.variables[count];
+			local class, scope, info = this:AssignVariable(token, false, token.data, r);
+			if (info and info.prefix) then
+				This:QueueInjectionBefore(ist, token, info.prefix .. ".");
+			end
 		end
 	end
 
@@ -592,154 +607,211 @@ end
 --[[
 ]]
 
-function COMPILER.Compile_ASS_ADD(this, inst, token, expressions)
-	for i = 1, #expressions do
+function COMPILER.Compile_AADD(this, inst, token, expressions)
+	this:QueueReplace(inst, inst.__operator, "=");
+
+	for k = 1, inst.variables do
+		local token = inst.variables[k];
 		local expr = expressions[k];
 		local r, c = this:Compile(expr);
 
-		count = count + 1;
-		local variable = inst.variables[count];
-		local class, scope = this:GetVariable(variable, nil, false);
+		local class, scope, info = this:GetVariable(token.data, nil, false);
+
+		if (info and info.prefix) then
+			this:QueueInjectionBefore(inst, token, info.prefix .. ".");
+		end
+
+		local char = "+";
 
 		local op = this:GetOperator("add", class, r);
 
-		if (not op) then
-			this:Throw(expr.token, "Arithmetic assignment operator (+=) does not support '%s += %s'", class, r);
-		elseif (not op.operation) then
-			-- Use Native
-			if (class == "s" or r == "s") then
-				this:QueueInjectionBefore(inst, expr.token, variable, "..");
-			else
-				this:QueueInjectionBefore(inst, expr.token, variable, "+");
+		if (not op and r ~= class) then
+			if (this:CastExpression(class, expr)) then
+				op = this:GetOperator("add", class, class);
 			end
+		end
+
+		if (not op) then
+			this:Throw(expr.token, "Assignment operator (+=) does not support '%s += %s'", class, r);
+		end
+
+		if (not op.operation) then
+			if (r == "s" or class = "s") then
+				char = "..";
+			end
+
+			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, char);
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
-			this:QueueInjectionBefore(inst, expr.token, "OPERATORS", "[", "\"", op.signature, "\"", "]", "(");
+
+			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"", op.signature, "\"", "]", "(");
 
 			if (op.context) then
 			    this:QueueInjectionBefore(inst, expr.token "CONTEXT", ",");
 			end
 
-
 			this:QueueInjectionAfter(inst, expr.final, ")" );
-
 		end	
 
 		this:AssignVariable(token, false, variable, r);
 	end
-
-	return "", 0;
 end
 
-function COMPILER.Compile_ASS_SUB(this, inst, token, expressions)
-	for i = 1, #expressions do
+function COMPILER.Compile_ASUB(this, inst, token, expressions)
+	this:QueueReplace(inst, inst.__operator, "=");
+
+	for k = 1, inst.variables do
+		local token = inst.variables[k];
 		local expr = expressions[k];
 		local r, c = this:Compile(expr);
 
-		count = count + 1;
-		local variable = inst.variables[count];
-		local class, scope = this:GetVariable(variable, nil, false);
+		local class, scope, info = this:GetVariable(token.data, nil, false);
+
+		if (info and info.prefix) then
+			this:QueueInjectionBefore(inst, token, info.prefix .. ".");
+		end
+
+		local char = "+";
 
 		local op = this:GetOperator("sub", class, r);
 
-		if (not op) then
-			this:Throw(expr.token, "Arithmetic assignment operator (-=) does not support '%s -= %s'", class, r);
-		elseif (not op.operation) then
-			-- Use Native
-			this:QueueInjectionBefore(inst, expr.token, variable, "-");
-		else
-			-- Implement Operator
-			this.__operators[op.signature] = op.operator;
-			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"", op.signature, "\"", "]", "(");
+		if (not op and r ~= class) then
+			if (this:CastExpression(class, expr)) then
+				op = this:GetOperator("sub", class, class);
+			end
+		end
 
-			if (op.context) then
-			    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
+		if (not op) then
+			this:Throw(expr.token, "Assignment operator (-=) does not support '%s -= %s'", class, r);
+		end
+
+		if (not op.operation) then
+			if (r == "s" or class = "s") then
+				char = "..";
 			end
 
-
-			this:QueueInjectionAfter(inst, expr.final, ")" );
-
-		end	
-
-		this:AssignVariable(token, false, variable, r);
-	end
-
-	return "", 0;
-end
-
-function COMPILER.Compile_ASS_MUL(this, inst, token, expressions)
-	for i = 1, #expressions do
-		local expr = expressions[k];
-		local r, c = this:Compile(expr);
-
-		count = count + 1;
-		local variable = inst.variables[count];
-		local class, scope = this:GetVariable(variable, nil, false);
-
-		local op = this:GetOperator("mul", class, r);
-
-		if (not op) then
-			this:Throw(expr.token, "Arithmetic assignment operator (*=) does not support '%s *= %s'", class, r);
-		elseif (not op.operation) then
-			-- Use Native
-			this:QueueInjectionBefore(inst, expr.token, variable, "-");
+			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, char);
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
+
 			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"", op.signature, "\"", "]", "(");
 
 			if (op.context) then
 			    this:QueueInjectionBefore(inst, expr.token "CONTEXT", ",");
 			end
 
-
 			this:QueueInjectionAfter(inst, expr.final, ")" );
-
 		end	
 
 		this:AssignVariable(token, false, variable, r);
 	end
-
-	return "", 0;
 end
 
-function COMPILER.Compile_ASS_DIV(this, inst, token, expressions)
-	for i = 1, #expressions do
+
+
+function COMPILER.Compile_ADIV(this, inst, token, expressions)
+	this:QueueReplace(inst, inst.__operator, "=");
+
+	for k = 1, inst.variables do
+		local token = inst.variables[k];
 		local expr = expressions[k];
 		local r, c = this:Compile(expr);
 
-		count = count + 1;
-		local variable = inst.variables[count];
-		local class, scope = this:GetVariable(variable, nil, false);
+		local class, scope, info = this:GetVariable(token.data, nil, false);
+
+		if (info and info.prefix) then
+			this:QueueInjectionBefore(inst, token, info.prefix .. ".");
+		end
+
+		local char = "+";
 
 		local op = this:GetOperator("div", class, r);
 
+		if (not op and r ~= class) then
+			if (this:CastExpression(class, expr)) then
+				op = this:GetOperator("div", class, class);
+			end
+		end
+
 		if (not op) then
-			this:Throw(expr.token, "Arithmetic assignment operator (/=) does not support '%s /= %s'", class, r);
-		elseif (not op.operation) then
-			-- Use Native
-			this:QueueInjectionBefore(inst, expr.token, variable, "-");
+			this:Throw(expr.token, "Assignment operator (/=) does not support '%s /= %s'", class, r);
+		end
+
+		if (not op.operation) then
+			if (r == "s" or class = "s") then
+				char = "..";
+			end
+
+			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, char);
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
+
 			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"", op.signature, "\"", "]", "(");
 
 			if (op.context) then
 			    this:QueueInjectionBefore(inst, expr.token "CONTEXT", ",");
 			end
 
-
 			this:QueueInjectionAfter(inst, expr.final, ")" );
-
 		end	
 
 		this:AssignVariable(token, false, variable, r);
 	end
-
-	return "", 0;
 end
 
+function COMPILER.Compile_AMUL(this, inst, token, expressions)
+	this:QueueReplace(inst, inst.__operator, "=");
+
+	for k = 1, inst.variables do
+		local token = inst.variables[k];
+		local expr = expressions[k];
+		local r, c = this:Compile(expr);
+
+		local class, scope, info = this:GetVariable(token.data, nil, false);
+
+		if (info and info.prefix) then
+			this:QueueInjectionBefore(inst, token, info.prefix .. ".");
+		end
+
+		local char = "+";
+
+		local op = this:GetOperator("mul", class, r);
+
+		if (not op and r ~= class) then
+			if (this:CastExpression(class, expr)) then
+				op = this:GetOperator("mul", class, class);
+			end
+		end
+
+		if (not op) then
+			this:Throw(expr.token, "Assignment operator (*=) does not support '%s *= %s'", class, r);
+		end
+
+		if (not op.operation) then
+			if (r == "s" or class = "s") then
+				char = "..";
+			end
+
+			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, char);
+		else
+			-- Implement Operator
+			this.__operators[op.signature] = op.operator;
+
+			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"", op.signature, "\"", "]", "(");
+
+			if (op.context) then
+			    this:QueueInjectionBefore(inst, expr.token "CONTEXT", ",");
+			end
+
+			this:QueueInjectionAfter(inst, expr.final, ")" );
+		end	
+
+		this:AssignVariable(token, false, variable, r);
+	end
+end
 --[[
 ]]
 
@@ -1533,6 +1605,39 @@ end
 
 function COMPILER.Compile_STR(this, inst, token, expressions)
 	return "s", 1
+end
+
+function COMPILER.Compile_COND(this, inst, token, expressions)
+	local expr = expressions[1];
+	local r, c = this:Compile(expr);
+
+	if (r == "b") then
+		return r, c;
+	end
+
+	local op = this:GetOperator("is", r);
+
+	if (not op and this:CastExpression("b", expr)) then
+		return r, "b";
+	end
+
+	if (not op) then
+		this:Throw(expr.token, "No such condition (%s).", r);
+	elseif (not op.operation) then
+		-- Once again we change nothing.
+	else
+		this:QueueInjectionBefore(inst, expr.token, "_OPS[\"", op.signature, "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
+		end
+		
+		this:QueueInjectionAfter(inst, expr.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	return op.type, op.count;
 end
 
 function COMPILER.Compile_NEW(this, inst, token, expressions)
