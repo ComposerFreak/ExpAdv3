@@ -662,11 +662,11 @@ function PARSER.Statment_6(this)
 			
 			local variables = {};
 		
-			variables[1] = this.__token.data;
+			variables[1] = this.__token;
 
 			while (this:Accept("com")) do
 				this:Require("var", "Variable expected after comma (,).");
-				variables[#variables + 1] = this.__token.data;
+				variables[#variables + 1] = this.__token;
 			end
 			
 			inst.variables = variables;
@@ -685,83 +685,23 @@ function PARSER.Statment_6(this)
 
 				return this:EndInstruction(inst, expressions);
 
-			elseif this:Accept( "aadd" ) then
-				this:ExcludeWhiteSpace( "Assignment operator (+=), must not be preceded by whitespace." );
+			end
 
-				for k, v in pairs(variables) do
-					local inst = this:StartInstruction("ass_add", this.__token);
-					instVar.variable = v;
-					this:QueueInjectionBefore(instVar, this.__token, v, "+");
-					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
+			if (this:Accept("aadd". "asub", "amul", "advi")) then
+				inst.__operator = this.__token;
 
-					if (k < #variables) then
-						this:ExcludeWhiteSpace("Invalid arithmetic assignment operation, #%i value or equation expected for %s", k, v);
-						
-						if ( not this:Accept("com")) then
-							this:Throw(inst.token, "Expression missing to complete arithmetic assignment operator (+=).");
-						end
+				this:ExcludeWhiteSpace("Assignment operator (%s), must not be preceded by whitespace.", this.__token.data);
+				
+				expressions[1] = this:Expression_1();
 
-					end
+				while (this:Accept("com")) do
+					this:ExcludeWhiteSpace( "comma (,) must not be preceeded by whitespace." );
+					expressions[#expressions + 1] = this:Expression_1();
 				end
 
-				return this:EndInstruction(inst, expressions);
-			elseif this:Accept( "asub" ) then
-				this:ExcludeWhiteSpace( "Assignment operator (-=), must not be preceded by whitespace." );
-
-				for k, v in pairs(variables) do
-					local inst = this:StartInstruction("ass_sub", this.__token);
-					instVar.variable = v;
-					this:QueueInjectionBefore(instVar, this.__token, v, "-");
-					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
-
-					if (k < #variables) then
-						this:ExcludeWhiteSpace("Invalid arithmetic assignment operation, #%i value or equation expected for %s", k, v);
-						
-						if ( not this:Accept("com")) then
-							this:Throw(inst.token, "Expression missing to complete arithmetic assignment operator (-=).");
-						end
-
-					end
-				end
-
-				return this:EndInstruction(inst, expressions);
-			elseif this:Accept( "adiv" ) then
-				this:ExcludeWhiteSpace( "Assignment operator (/=), must not be preceded by whitespace." );
-
-				for k, v in pairs(variables) do
-					local inst = this:StartInstruction("ass_div", this.__token);
-					instVar.variable = v;
-					this:QueueInjectionBefore(instVar, this.__token, v, "/");
-					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
-
-					if (k < #variables) then
-						this:ExcludeWhiteSpace("Invalid arithmetic assignment operation, #%i value or equation expected for %s", k, v);
-						
-						if ( not this:Accept("com")) then
-							this:Throw(inst.token, "Expression missing to complete arithmetic assignment operator (/=).");
-						end
-
-					end
-				end
-
-				return this:EndInstruction(inst, expressions);
-			elseif this:Accept( "amul" ) then
-				this:ExcludeWhiteSpace( "Assignment operator (*=), must not be preceded by whitespace." );
-
-				for k, v in pairs(variables) do
-					local inst = this:StartInstruction("ass_mul", this.__token);
-					instVar.variable = v;
-					this:QueueInjectionBefore(instVar, this.__token, v, "-");
-					expressions[#expressions + 1] = this:EndInstruction(instVar, {this:Expression_1()});
-
-					if (k < #variables) then
-						this:ExcludeWhiteSpace("Invalid arithmetic assignment operation, #%i value or equation expected for %s", k, v);
-						
-						if ( not this:Accept("com")) then
-							this:Throw(inst.token, "Expression missing to complete arithmetic assignment operator (*=).");
-						end
-
-					end
+				if (#expressions ~= #variables) then
+					-- TODO: Better error message.
+					this:ExcludeWhiteSpace("Invalid arithmetic assignment, not all variables are given values.");
 				end
 
 				return this:EndInstruction(inst, expressions);
