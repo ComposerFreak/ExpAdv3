@@ -1341,11 +1341,13 @@ end
 function PARSER.GetCondition(this)
 	this:Require("lpa", "Left parenthesis ( () required, to open condition.");
 	
-	local inst = this:Expression_1();
+	local inst = this:StartInstruction("cond", this.__token);
+	
+	local expr = this:Expression_1();
 	
 	this:Require("rpa", "Right parenthesis (( ) missing, to close condition.");
 	
-	return inst;
+	return this:EndInstruction(inst, {expr});
 end
 
 function PARSER.ExpressionErr(this)
