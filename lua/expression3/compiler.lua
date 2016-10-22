@@ -525,7 +525,6 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 			local class, scope, info = this:AssignVariable(tkn, true, var, res, 0);
 			
 			if (info and info.prefix) then
-				print(">>>>>>>", pos, tkn.data)
 				this:QueueInjectionBefore(inst, tkn, info.prefix .. ".");
 			end
 
@@ -807,6 +806,7 @@ function COMPILER.Compile_AMUL(this, inst, token, expressions)
 		this:AssignVariable(token, false, variable, r);
 	end
 end
+
 --[[
 ]]
 
@@ -1827,10 +1827,6 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 
 		if (op.context) then
 		    this:QueueInjectionBefore(inst, inst.__func, "CONTEXT,");
-
-		    --if (total > 0) then
-			--	this:QueueInjectionBefore(inst, inst.__func, ",");
-			--end
 		end
 
 		this.__methods[op.signature] = op.operator;
@@ -1929,7 +1925,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		this:QueueReplace(inst, op.operator);
 	else
 		local signature = string.format("%s.", inst.library, op.signature);
-		error("Attempot to inject " .. signature .. " but operator was incorrect.")
+		error("Attempt to inject " .. signature .. " but operator was incorrect.");
 	end
 
 	return op.result, op.rCount;
