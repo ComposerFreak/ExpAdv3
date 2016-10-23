@@ -589,12 +589,12 @@ function PARSER.Statment_5(this)
 
 		this:Require("var", "Variable('s) expected after class for global variable.");
 		variables[1] = this.__token;
-		this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
+		--this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
 
 		while (this:Accept("com")) do
 			this:Require("var", "Variable expected after comma (,).");
 			variables[#variables + 1] = this.__token;
-			this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
+			--this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
 		end
 
 		local expressions = {};
@@ -657,7 +657,7 @@ end
 
 function PARSER.Statment_6(this)
 	if (this:Accept("var")) then
-		--print("Test:", this.__next.type)
+		
 		if (not this:CheckToken("com", "ass", "aadd", "asub", "adiv", "amul")) then
 			this:StepBackward(1);
 		else
@@ -1337,7 +1337,7 @@ function PARSER.GetCondition(this)
 	local inst = this:StartInstruction("cond", this.__token);
 	
 	local expr = this:Expression_1();
-	print("->>>", this.__next.data)
+
 	this:Require("rpa", "Right parenthesis ( )) missing, to close condition.");
 	
 	return this:EndInstruction(inst, {expr});

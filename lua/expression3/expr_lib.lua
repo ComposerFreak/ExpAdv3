@@ -162,6 +162,27 @@ local loadClasses = false;
 
 ]]
 
+local STATE = 1;
+
+EXPR_SERVER = 0;
+EXPR_SHARED = 1;
+EXPR_CLIENT = 2;
+
+function EXPR_LIB.SetServerState()
+	STATE = EXPR_SERVER;
+end
+
+function EXPR_LIB.SetSharedState()
+	STATE = EXPR_SHARED;
+end
+
+function EXPR_LIB.SetClientState()
+	STATE = EXPR_CLIENT;
+end
+
+--[[
+]]
+
 function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 	if (not loadClasses) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register class %s outside of Hook::Expression3.LoadClasses", name);
@@ -188,6 +209,7 @@ function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 
 	class.id = string.lower(id);
 	class.name = string.lower(name);
+	class.state = STATE;
 
 	class.isType = isType;
 	class.isValid = isValid;
@@ -198,6 +220,8 @@ function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 	classes[class.name] = class;
 
 	MsgN("Registered Class: ", class.id, " - ", class.name);
+
+	return class;
 end
 
 local loadConstructors = false;
@@ -222,14 +246,17 @@ function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeCont
 	local op = {};
 	op.name = name;
 	op.class = cls.id;
+	op.state = STATE;
 	op.parameter = signature;
 	op.signature = string.format("%s(%s)", cls.id, signature);
-	op.type = res.id;
-	op.count = count;
+	op.result = res.id;
+	op.rCount = count;
 	op.operator = constructor;
 	op.context = not excludeContext;
 
 	cls.constructors[op.signature] = op;
+
+	return op;
 end
 
 local methods;
@@ -263,15 +290,18 @@ function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method, ex
 	local meth = {};
 	meth.name = name;
 	meth.class = cls.id;
+	meth.state = STATE;
 	meth.parameter = signature;
 	meth.signature = string.format("%s:%s(%s)", cls.id, name, signature);
-	meth.type = res.id;
-	meth.count = count;
+	meth.result = res.id;
+	meth.rCount = count;
 	meth.operator = method;
 	meth.context = not excludeContext;
 
 	methods[meth.signature] = meth;
 	-- <Insert Heisenburg joke here>
+
+	return meth;
 end
 
 local operators;
@@ -298,13 +328,16 @@ function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator, 
 
 	local op = {};
 	op.name = operation;
+	op.state = STATE;
 	op.parameter = signature;
 	op.signature = string.format("%s(%s)", operation, signature);
-	op.type = res.id;
-	op.count = count;
+	op.result = res.id;
+	op.rCount = count;
 	op.operator = operator;
 
 	operators[op.signature] = op;
+
+	return op;
 end
 
 local castOperators;
@@ -332,13 +365,16 @@ function EXPR_LIB.RegisterCastingOperator(type, parameter, operator, excludeCont
 
 	local op = {};
 	op.parameter = signature;
+	op.state = STATE;
 	op.signature = string.format("(%s)%s", type, signature);
-	op.type = res.id;
-	op.count = 1;
+	op.result = res.id;
+	op.rCount = 1;
 	op.operator = operator;
 	op.context = not excludeContext;
 
 	castOperators[op.signature] = op;
+
+	return op;
 end
 
 local libraries;
@@ -388,16 +424,19 @@ function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _funct
 
 	local op = {};
 	op.name = name;
+	op.state = STATE;
 	op.parameter = signature;
 	op.signature = string.format("%s(%s)", name, signature);
-	op.type = res.id;
-	op.count = count;
+	op.result = res.id;
+	op.rCount = count;
 	op.operator = _function;
 	op.context = not excludeContext;
 
 	lib._functions[op.signature] = op;
 
 	MsgN("Registered function ", library, ".", op.signature);
+
+	return op;
 end
 
 local events;
@@ -422,12 +461,15 @@ function EXPR_LIB.RegisterEvent(name, parameter, type, count)
 
 	local evt = {};
 	evt.name = name;
+	op.state = STATE;
 	evt.parameter = signature;
 	evt.signature = string.format("%s(%s)", name, signature);
-	evt.type = res.id;
-	evt.count = count;
+	evt.result = res.id;
+	evt.rCount = count;
 
 	events[evt.signature] = evt;
+
+	return evt;
 end
 
 --[[
@@ -497,6 +539,7 @@ function EXPR_LIB.RegisterExtension(name)
 
 	ext.name = name;
 	ext.classes = {};
+	ext.state = EXPR_SHARED;
 	ext.constructors = {};
 	ext.methods = {};
 	ext.operators = {};
@@ -508,28 +551,40 @@ function EXPR_LIB.RegisterExtension(name)
 	return setmetatable(ext, Extension);
 end
 
+function Extension.SetServerState(this)
+	this.state = EXPR_SERVER;
+end
+
+function Extension.SetSharedState(this)
+	this.state = EXPR_SHARED;
+end
+
+function Extension.SetClientState(this)
+	this.state = EXPR_CLIENT;
+end
+
 function Extension.RegisterClass(this, id, name, isType, isValid)
-	local entry = {id, name, isType, isValid};
+	local entry = {id, name, isType, isValid, this.state};
 	this.classes[#this.classes + 1] = entry;
 end
 
 function Extension.RegisterConstructor(this, class, parameter, constructor, excludeContext)
-	local entry = {class, parameter, constructor, excludeContext};
+	local entry = {class, parameter, constructor, excludeContext, this.state};
 	this.constructors[#this.constructors + 1] = entry;
 end
 
 function Extension.RegisterMethod(this, class, name, parameter, type, count, method, excludeContext)
-	local entry = {class, name, parameter, type, count, method, excludeContext};
+	local entry = {class, name, parameter, type, count, method, excludeContext, this.state};
 	this.methods[#this.methods + 1] = entry;
 end
 
 function Extension.RegisterOperator(this, operation, parameter, type, count, operator, excludeContext)
-	local entry = {operation, parameter, type, count, operator, excludeContext};
+	local entry = {operation, parameter, type, count, operator, excludeContext, this.state};
 	this.operators[#this.operators + 1] = entry;
 end
 
 function Extension.RegisterCastingOperator(this, type, parameter, operator, excludeContext)
-	local entry = {type, parameter, operator, excludeContext};
+	local entry = {type, parameter, operator, excludeContext, this.state};
 	this.castOperators[#this.castOperators + 1] = entry;
 end
 
@@ -539,12 +594,12 @@ function Extension.RegisterLibrary(this, name)
 end
 
 function Extension.RegisterFunction(this, library, name, parameter, type, count, _function, excludeContext)
-	local entry = {library, name, parameter, type, count, _function, excludeContext};
+	local entry = {library, name, parameter, type, count, _function, excludeContext, this.state};
 	this.functions[#this.functions + 1] = entry;
 end
 
 function Extension.RegisterEvent(this, name, parameter, type, count)
-	local entry = {name, parameter, type, count};
+	local entry = {name, parameter, type, count, this.state};
 	this.events[#this.events + 1] = entry;
 end
 
@@ -554,33 +609,40 @@ function Extension.CheckRegistration(this, _function, ...)
 	if (not state) then
 		EXPR_LIB.ThrowInternal(0, "%s in component %s", err, this.name);
 	end
+
+	return err;
 end
 
 function Extension.EnableExtension(this)
 	hook.Add("Expression3.LoadClasses", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.classes) do
+			STATE = v[5];
 			this:CheckRegistration(EXPR_LIB.RegisterClass, v[1], v[2], v[3], v[4]);
 		end
 	end);
 
 	hook.Add("Expression3.LoadConstructors", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.constructors) do
+			STATE = v[5];
 			this:CheckRegistration(EXPR_LIB.RegisterConstructor, v[1], v[2], v[3], v[4]);
 		end
 	end);
 
 	hook.Add("Expression3.LoadMethods", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.methods) do
+			STATE = v[8];
 			this:CheckRegistration(EXPR_LIB.RegisterMethod, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
 		end
 	end);
 
 	hook.Add("Expression3.LoadOperators", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.operators) do
+			STATE = v[7];
 			this:CheckRegistration(EXPR_LIB.RegisterOperator, v[1], v[2], v[3], v[4], v[5], v[6]);
 		end
 
 		for _, v in pairs(this.castOperators) do
+			STATE = v[5];
 			this:CheckRegistration(EXPR_LIB.RegisterCastingOperator, v[1], v[2], v[3], v[4]);
 		end
 	end);
@@ -593,12 +655,14 @@ function Extension.EnableExtension(this)
 
 	hook.Add("Expression3.LoadFunctions", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.functions) do
+			STATE = v[8];
 			this:CheckRegistration(EXPR_LIB.RegisterFunction, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
 		end
 	end);
 
 	hook.Add("Expression3.LoadEvents", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.events) do
+			STATE = v[5];
 			this:CheckRegistration(EXPR_LIB.RegisterEvent, v[1], v[2], v[3], v[4]);
 		end
 	end);

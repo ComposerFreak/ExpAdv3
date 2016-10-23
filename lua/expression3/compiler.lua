@@ -58,6 +58,8 @@ function COMPILER.Run(this)
 end
 
 function COMPILER._Run(this)
+	this:SetOption("state", EXPR_SHARED);
+
 	this:Compile(this.__root);
 
 	local script = this:BuildScript();
@@ -467,13 +469,35 @@ end
 --[[
 ]]
 
+function COMPILER.CheckState(state, token, msg, frst, ...)
+	local s = this:GetOption("state");
+	
+	if (state == EXPR_SHARED or s == state) then
+		return true;
+	end
+
+	if (token and msg) then
+		if (frst) then
+			msg = string.format(msg, frst, ...);
+		end
+
+		if (state == EXPR_SERVER) then
+			this:Throw(token, "%s is server-side only.", msg);
+		elseif (state == EXPR_SERVER) then
+			this:Throw(token, "%s is client-side only.", msg);
+		end 
+	end
+
+	return false;
+end
+
 function COMPILER.Compile_SERVER(this, inst, token)
 	if (not this:GetOption("server")) then
 		this:Throw(token, "Server block must not appear inside a Client block.")
 	end
 
 	this:PushScope();
-	this:SetOption("client", false);
+	this:SetOption("state", EXPR_SERVER);
 	this:Compile(inst.block);
 	
 	this:PopScope();
@@ -487,7 +511,7 @@ function COMPILER.Compile_CLIENT(this, inst, token)
 	end
 
 	this:PushScope();
-	this:SetOption("client", false);
+	this:SetOption("state", EXPR_CLIENT);
 	this:Compile(inst.block);
 	
 	this:PopScope();
@@ -644,6 +668,8 @@ function COMPILER.Compile_AADD(this, inst, token, expressions)
 			this:Throw(expr.token, "Assignment operator (+=) does not support '%s += %s'", class, r);
 		end
 
+		this:CheckState(op.state, token, "Assignment operator (+=)");
+
 		if (not op.operation) then
 			if (r == "s" or class == "s") then
 				char = "..";
@@ -693,6 +719,8 @@ function COMPILER.Compile_ASUB(this, inst, token, expressions)
 			this:Throw(expr.token, "Assignment operator (-=) does not support '%s -= %s'", class, r);
 		end
 
+		this:CheckState(op.state, token, "Assignment operator (-=)");
+
 		if (not op.operation) then
 
 			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "-");
@@ -741,6 +769,8 @@ function COMPILER.Compile_ADIV(this, inst, token, expressions)
 			this:Throw(expr.token, "Assignment operator (/=) does not support '%s /= %s'", class, r);
 		end
 
+		this:CheckState(op.state, token, "Assignment operator (/=)");
+
 		if (not op.operation) then
 
 			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data,"/");
@@ -787,6 +817,8 @@ function COMPILER.Compile_AMUL(this, inst, token, expressions)
 			this:Throw(expr.token, "Assignment operator (*=) does not support '%s *= %s'", class, r);
 		end
 
+		this:CheckState(op.state, token, "Assignment operator (*=)");
+
 		if (not op.operation) then
 
 			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "*");
@@ -823,7 +855,7 @@ function COMPILER.Compile_TEN(this, inst, token, expressions)
 	local op = this:GetOperator("ten", r1, r2, r3);
 
 	if (not op) then
-		this:Throw(expr.token, "Te nary operator (A ? b : C) does not support '%s ? %s : %s'", r1, r2, r3);
+		this:Throw(expr.token, "Tenary operator (A ? b : C) does not support '%s ? %s : %s'", r1, r2, r3);
 	elseif (not op.operation) then
 		this:QueueReplace(inst, inst.__and, "and");
 		this:QueueReplace(inst, inst.__or, "or");
@@ -842,7 +874,9 @@ function COMPILER.Compile_TEN(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end	
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Tenary operator (A ? b : C)");
+
+	return op.result, op.rCount;
 end
 
 
@@ -882,7 +916,9 @@ function COMPILER.Compile_OR(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Logical or operator (||) '%s || %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_AND(this, inst, token, expressions)
@@ -921,7 +957,9 @@ function COMPILER.Compile_AND(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Logical and operator (&&) '%s && %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_BXOR(this, inst, token, expressions)
@@ -957,7 +995,9 @@ function COMPILER.Compile_BXOR(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Binary xor operator (^^) '%s ^^ %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_BOR(this, inst, token, expressions)
@@ -993,7 +1033,9 @@ function COMPILER.Compile_BOR(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Binary xor operator (|) '%s | %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_BAND(this, inst, token, expressions)
@@ -1029,7 +1071,9 @@ function COMPILER.Compile_BAND(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Binary xor operator (&) '%s & %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 --[[function COMPILER.Compile_EQ_MUL(inst, token, expressions)
@@ -1062,7 +1106,9 @@ function COMPILER.Compile_EQ(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Comparison operator (==) '%s == %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 --[[function COMPILER.Compile_NEQ_MUL(inst, token, expressions)
@@ -1095,7 +1141,9 @@ function COMPILER.Compile_NEQ(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Comparison operator (!=) '%s != %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_LTH(this, inst, token, expressions)
@@ -1125,7 +1173,9 @@ function COMPILER.Compile_LTH(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Comparison operator (<) '%s < %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_LEQ(this, inst, token, expressions)
@@ -1155,7 +1205,9 @@ function COMPILER.Compile_LEQ(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Comparison operator (<=) '%s <= %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_GTH(this, inst, token, expressions)
@@ -1185,7 +1237,9 @@ function COMPILER.Compile_GTH(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Comparison operator (>) '%s > %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_GEQ(this, inst, token, expressions)
@@ -1215,7 +1269,9 @@ function COMPILER.Compile_GEQ(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Comparison operator (>=) '%s >= %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_BSHL(this, inst, token, expressions)
@@ -1251,7 +1307,9 @@ function COMPILER.Compile_BSHL(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Binary shift operator (<<) '%s << %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_BSHR(this, inst, token, expressions)
@@ -1287,7 +1345,9 @@ function COMPILER.Compile_BSHR(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Binary shift operator (>>) '%s >> %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 --[[
@@ -1322,7 +1382,9 @@ function COMPILER.Compile_ADD(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Addition operator (+) '%s + %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_SUB(this, inst, token, expressions)
@@ -1352,7 +1414,9 @@ function COMPILER.Compile_SUB(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Subtraction operator (-) '%s - %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_DIV(this, inst, token, expressions)
@@ -1382,7 +1446,9 @@ function COMPILER.Compile_DIV(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Division operator (/) '%s / %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_MUL(this, inst, token, expressions)
@@ -1412,7 +1478,9 @@ function COMPILER.Compile_MUL(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Multiplication operator (*) '%s * %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_EXP(this, inst, token, expressions)
@@ -1442,7 +1510,9 @@ function COMPILER.Compile_EXP(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Exponent operator (^) '%s ^ %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_MOD(this, inst, token, expressions)
@@ -1472,7 +1542,9 @@ function COMPILER.Compile_MOD(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Modulus operator (%) '%s % %s'", r1, r2);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_NEG(this, inst, token, expressions)
@@ -1482,7 +1554,7 @@ function COMPILER.Compile_NEG(this, inst, token, expressions)
 	local op = this:GetOperator("neg", r1);
 
 	if (not op) then
-		this:Throw(token, "Negation operator (-A) does not support '-%s'", r1, r2);
+		this:Throw(token, "Negation operator (-A) does not support '-%s'", r1);
 	elseif (not op.operation) then
 		-- Do not change the code.
 	else
@@ -1497,7 +1569,9 @@ function COMPILER.Compile_NEG(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Negation operator (-A) '-%s'", r1);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_NOT(this, inst, token, expressions)
@@ -1522,7 +1596,9 @@ function COMPILER.Compile_NOT(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Not operator (!A) '!%s'", r1);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_LEN(this, inst, token, expressions)
@@ -1547,14 +1623,18 @@ function COMPILER.Compile_LEN(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	this:CheckState(op.state, token, "Length operator (#A) '#%s'", r1);
+
+	return op.result, op.rCount;
 end
 
 function COMPILER.Expression_IS(this, expr)
 	local op = this:GetOperator("is", expr.result);
 
 	if (op) then
-		if (not op.operation) then
+		if (not this:CheckState(op.state)) then
+			return false, expr;
+		elseif (not op.operation) then
 			expr.result = op.type;
 			expr.rCount = op.count;
 
@@ -1589,6 +1669,10 @@ function COMPILER.CastExpression(this, type, expr)
 	local op = EXPR_CAST_OPERATORS[signature];
 
 	if (not op) then
+		return false, expr;
+	end
+
+	if (not this:CheckState(op.state)) then
 		return false, expr;
 	end
 
@@ -1682,7 +1766,7 @@ function COMPILER.Compile_COND(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	return op.type, op.count;
+	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_NEW(this, inst, token, expressions)
@@ -1733,11 +1817,13 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 		end
 	end
 
-	if (not op) then
-		local signature = string.format("%s(%s)", inst.class, table.concat(ids, ","));
+	local signature = string.format("%s(%s)", inst.class, table.concat(ids, ","));
 
-		this:Throw(token, "No such constructor, %s", signature);
+	if (not op) then
+		this:Throw(token, "No such constructor, new %s", signature);
 	end
+
+	this:CheckState(op.state, token, "Constructor 'new %s", signature);
 
 	this:QueueInjectionBefore(inst, token, "_CONST[\"" .. op.signature .. "\"](");
 	
@@ -1813,6 +1899,8 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 		this:Throw(token, "No such method %s.%s(%s).", mClass, inst.method, table.concat(ids, ","));
 	end
 
+	this:CheckState(op.state, token, "Method %s.%s(%s)", mClass, inst.method, table.concat(ids, ","));
+
 	if (type(op.operator) == "table") then
 		this:QueueRemove(inst, inst.__operator);
 		this:QueueRemove(inst, inst.__method);
@@ -1823,7 +1911,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 			this:QueueReplace(inst, inst.__lpa, ",");
 		end
 
-		this:QueueInjectionBefore(inst, inst.__func, "_METH[", expressions[1].token, "](");
+		this:QueueInjectionBefore(inst, inst.__func, "_METH[\"" .. op.signature .. "\"](");
 
 		if (op.context) then
 		    this:QueueInjectionBefore(inst, inst.__func, "CONTEXT,");
@@ -1901,6 +1989,8 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		this:Throw(token, "No such function %s.%s(%s).", inst.library, inst.name, table.concat(ids, ","));
 	end
 
+	this:CheckState(op.state, token, "Function %s.%s(%s).", inst.library, inst.name, table.concat(ids, ","));
+
 	if (type(op.operator) == "function") then
 		local signature = string.format("%s.%s", inst.library, op.signature);
 
@@ -1908,7 +1998,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		this:QueueRemove(inst, inst.__operator);
 		this:QueueRemove(inst, inst.__func);
 
-		this:QueueInjectionAfter(inst, inst.__func, "_FUN[", signature, "]");
+		this:QueueInjectionAfter(inst, inst.__func, "_FUN[\"" .. signature .. "\"]");
 
 		if (op.context) then
 		    this:QueueInjectionBefore(inst, inst.__lpa, "CONTEXT");
