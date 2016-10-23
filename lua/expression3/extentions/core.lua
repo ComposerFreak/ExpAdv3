@@ -71,7 +71,7 @@ local function RegisterBooleanClass()
 end
 
 local function RegisterNumberClass()
-	EXPR_LIB.RegisterClass("n", {"number", "normal", "int"}, isnumber, isNotNil);
+	EXPR_LIB.RegisterClass("n", {"number", "normal", "int", "math.number"}, isnumber, isNotNil);
 
 	hook.Add("Expression3.LoadOperators", "Expression3.Core.Number",
 		function()
@@ -151,5 +151,6 @@ end);
 
 hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", function()
 	-- TODO: Load extensions here.
+	include("expression3/extentions/math.lua");
 end);
 

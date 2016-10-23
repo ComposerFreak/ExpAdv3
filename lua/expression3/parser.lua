@@ -657,10 +657,10 @@ end
 
 function PARSER.Statment_6(this)
 	if (this:Accept("var")) then
+		--print("Test:", this.__next.type)
 		if (not this:CheckToken("com", "ass", "aadd", "asub", "adiv", "amul")) then
 			this:StepBackward(1);
 		else
-		print("-----DEBUG")
 			local inst = this:StartInstruction("ass", this.__token);
 			
 			local variables = {};
@@ -687,7 +687,6 @@ function PARSER.Statment_6(this)
 				end
 
 				return this:EndInstruction(inst, expressions);
-
 			end
 
 			if (this:Accept("aadd", "asub", "amul", "advi")) then
@@ -714,8 +713,6 @@ function PARSER.Statment_6(this)
 		end
 	end
 
-	return
-	--this:Throw(this.__token, "END OF STATMENTS REACHED")
 	-- return this:Statment_7();
 end
 
@@ -1159,6 +1156,56 @@ function PARSER.Expression_22(this)
 end
 
 function PARSER.Expression_23(this)
+	if (this:CheckToken("var")) then
+		local lib = EXPR_LIBRARIES[this.__next.data];
+
+		if (lib) then
+			this:Next();
+
+			local inst = this:StartInstruction("func", this.__token);
+
+			inst.library = this.__token.data;
+
+			if (not this:Accept("prd")) then
+				this:StepBackward(1);
+				return this:Expression_24();
+			end
+
+			inst.__operator = this.__token;
+
+			this:Require("var", "function expected after library name");
+			
+			inst.__func = this.__token;
+
+			inst.name = this.__token.data;
+
+			this:Require("lpa", "Left parenthesis (( ) expected to open function parameters.")
+
+			this.__lpa = this.__token;
+			
+			local expressions = {};
+
+			if (not this:CheckToken("lpa")) then
+				expressions[1] = this:Expression_1();
+
+				while(this:Accept("com")) do
+					this:Exclude("lpa", "Expression or value expected after comma (,).");
+
+					expressions[#expressions + 1] = this:Expression_1();
+				end
+
+			end  
+
+			this:Require("rpa", "Right parenthesis ( )) expected to close function parameters.")
+
+			return this:EndInstruction(inst, expressions);
+		end
+	end
+
+	return this:Expression_24();
+end
+
+function PARSER.Expression_24(this)
 	if (this:Accept("var")) then
 		local inst = this:StartInstruction("var", this.__token);
 
@@ -1169,10 +1216,10 @@ function PARSER.Expression_23(this)
 		return this:Expression_Trailing(inst);
 	end
 
-	return this:Expression_24()
+	return this:Expression_25()
 end
 
-function PARSER.Expression_24(this)
+function PARSER.Expression_25(this)
 
 	if (this:Accept("new")) then
 		local inst = this:StartInstruction("new", this.__token);
@@ -1205,16 +1252,10 @@ function PARSER.Expression_24(this)
 		return this:EndInstruction(inst, expressions);
 	end
 
-	return this:Expression_25();
+	return this:Expression_26();
 end
 
-function PARSER.Expression_25(this)
-	local expr = this:Expression_26();
-
-	if (expr) then
-		return expr;
-	end
-
+function PARSER.Expression_26(this)
 	expr = this:Expression_27();
 
 	if (expr) then
@@ -1222,59 +1263,6 @@ function PARSER.Expression_25(this)
 	end
 
 	this:ExpressionErr();
-end
-
-function PARSER.Expression_26(this)
-	if (this:CheckToken("var")) then
-		local lib = EXPADV_LIBRARIES[this.__next.data];
-
-		if (not library) then
-			this:StepBackward(1);
-			return;
-		end
-
-		this:Next();
-
-		local inst = this:StartInstruction("func", this.__token);
-
-		inst.library = this.__token.data;
-
-		if (not this:Accept("prd")) then
-			this:StepBackward(1);
-			return;
-		end
-
-		inst.__operator = this.__token;
-
-		this:Require("var", "function expected after library name");
-		
-		inst.__func = this.__token;
-
-		inst.name = this.__token.data;
-
-		this:Require("lpa", "Left parenthesis (( ) expected to open function parameters.")
-
-		this.__lpa = this.__token;
-		
-		local expressions = {};
-
-		expressions[1] = expr;
-
-		if (not this:CheckToken("lpa")) then
-			expressions[2] = this:Expression_1();
-
-			while(this:Accept("com")) do
-				this:Exclude("lpa", "Expression or value expected after comma (,).");
-
-				expressions[#expressions + 1] = this:Expression_1();
-			end
-
-		end  
-
-		this:Require("rpa", "Right parenthesis ( )) expected to close function parameters.")
-
-		return this:EndInstruction(inst, expressions);
-	end
 end
 
 function PARSER.Expression_27(this)

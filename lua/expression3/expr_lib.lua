@@ -148,7 +148,7 @@ function EXPR_LIB.ThrowInternal(level, msg, fst, ...)
 		msg = string.format(msg, fst, ...);
 	end
 
-	error(level, msg);
+	error(msg, level);
 end
 
 --[[
@@ -165,6 +165,10 @@ local loadClasses = false;
 function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 	if (not loadClasses) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register class %s outside of Hook::Expression3.LoadClasses", name);
+	end
+
+	if (string.len(id) > 1) then
+		id = "_" .. id;
 	end
 
 	if (classIDs[id]) then
@@ -192,6 +196,8 @@ function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 
 	classIDs[class.id] = class;
 	classes[class.name] = class;
+
+	MsgN("Registered Class: ", class.id, " - ", class.name);
 end
 
 local loadConstructors = false;
@@ -220,7 +226,7 @@ function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeCont
 	op.signature = string.format("%s(%s)", cls.id, signature);
 	op.type = res.id;
 	op.count = count;
-	op.operation = constructor;
+	op.operator = constructor;
 	op.context = not excludeContext;
 
 	cls.constructors[op.signature] = op;
@@ -261,7 +267,7 @@ function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method, ex
 	meth.signature = string.format("%s:%s(%s)", cls.id, name, signature);
 	meth.type = res.id;
 	meth.count = count;
-	meth.operation = method;
+	meth.operator = method;
 	meth.context = not excludeContext;
 
 	methods[meth.signature] = meth;
@@ -296,7 +302,7 @@ function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator, 
 	op.signature = string.format("%s(%s)", operation, signature);
 	op.type = res.id;
 	op.count = count;
-	op.operation = operator;
+	op.operator = operator;
 
 	operators[op.signature] = op;
 end
@@ -329,13 +335,13 @@ function EXPR_LIB.RegisterCastingOperator(type, parameter, operator, excludeCont
 	op.signature = string.format("(%s)%s", type, signature);
 	op.type = res.id;
 	op.count = 1;
-	op.operation = operator;
+	op.operator = operator;
 	op.context = not excludeContext;
 
 	castOperators[op.signature] = op;
 end
 
-local librarys;
+local libraries;
 local loadLibraries = false;
 
 function EXPR_LIB.RegisterLibrary(name)
@@ -348,7 +354,9 @@ function EXPR_LIB.RegisterLibrary(name)
 	lib._functions = {};
 	lib.constants = {}; -- Future implementation.
 
-	librarys[lib.name] = lib;
+	libraries[lib.name] = lib;
+
+	MsgN("Registered library: ", lib.name);
 end
 
 local functions;
@@ -384,10 +392,12 @@ function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _funct
 	op.signature = string.format("%s(%s)", name, signature);
 	op.type = res.id;
 	op.count = count;
-	op.operation = operator;
+	op.operator = _function;
 	op.context = not excludeContext;
 
 	lib._functions[op.signature] = op;
+
+	MsgN("Registered function ", library, ".", op.signature);
 end
 
 local events;
@@ -425,11 +435,19 @@ end
 
 
 function EXPR_LIB.GetClass(class)
-	return classes[class] or classIDs[class];
+	if (classes[class]) then
+		return classes[class];
+	end
+
+	if (string.len(class) > 1) then
+		class = "_" .. class;
+	end
+
+	return classIDs[class];
 end
 
 function EXPR_LIB.IsValidClass(class)
-	return (classes[class] or classIDs[class]) ~= nil;
+	return EXPR_LIB.GetClass(class) ~= nil;
 end
 
 function EXPR_LIB.SortArgs(parameter)
@@ -447,7 +465,7 @@ function EXPR_LIB.SortArgs(parameter)
 	end
 
 	for k, v in pairs(split) do
-		local cls = classes[v] or classIDs[v];
+		local cls = EXPR_LIB.GetClass(v);
 
 		if (v == "...") then
 			return false, string.format("Vararg (...) must be last parameter", v, k);
@@ -531,7 +549,7 @@ function Extension.RegisterEvent(this, name, parameter, type, count)
 end
 
 function Extension.CheckRegistration(this, _function, ...)
-	local state, err = Pcall(_function, ...);
+	local state, err = pcall(_function, ...);
 
 	if (not state) then
 		EXPR_LIB.ThrowInternal(0, "%s in component %s", err, this.name);
@@ -624,11 +642,11 @@ function EXPR_LIB.Initalize()
 	EXPR_OPERATORS = operators;
 	EXPR_CAST_OPERATORS = castOperators;
 
-	librarys = {};
+	libraries = {};
 	loadLibraries = true;
 	hook.Run("Expression3.LoadLibraries");
 	loadLibraries = false;
-	EXPADV_LIBRARIES = libraries;
+	EXPR_LIBRARIES = libraries;
 
 	functions = {};
 	loadFunctions = true;

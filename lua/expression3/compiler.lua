@@ -254,7 +254,6 @@ end
 
 function COMPILER.QueueReplace(this, inst, token, str)
 	local op = {};
-
 	op.token = token;
 	op.str = str;
 	op.inst = inst;
@@ -524,7 +523,8 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 			
 			local class, scope, info = this:AssignVariable(tkn, true, var, res, 0);
 			
-			if (info and info.prefix) then
+			if (info) then
+				info.prefix = "GLOBAL";
 				this:QueueInjectionBefore(inst, tkn, info.prefix .. ".");
 			end
 
@@ -1698,7 +1698,7 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 		end
 	else
 		for k, v in pairs(expressions) do
-			local expr = expression[i];
+			local expr = expressions[k];
 			local r, c = this:Compile(expr);
 
 			ids[#ids + 1] = r;
@@ -1712,8 +1712,8 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 			end
 		end
 
-		for i = #r, 1, -1 do
-			local args = table.concat({fst, "..."},",", 1, i);
+		for i = #ids, 1, -1 do
+			local args = table.concat(ids,",", 1, i);
 
 			if (i >= total) then
 				local signature = string.format("%s(%s)", inst.class, args);
@@ -1721,7 +1721,7 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 				op = EXPR_CONSTRUCTORS[signature];
 			end
 
-			if (not Op) then
+			if (not op) then
 				local signature = string.format("%s(%s,...)", inst.class, args);
 
 				op = EXPR_CONSTRUCTORS[signature];
@@ -1733,7 +1733,7 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 		end
 	end
 
-	if (not Op) then
+	if (not op) then
 		local signature = string.format("%s(%s)", inst.class, table.concat(ids, ","));
 
 		this:Throw(token, "No such constructor, %s", signature);
@@ -1774,7 +1774,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 		end
 	else
 		for k, v in pairs(expressions) do
-			local expr = expression[i];
+			local expr = expressions[k];
 			local r, c = this:Compile(expr);
 
 			ids[#ids + 1] = r;
@@ -1788,8 +1788,8 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 			end
 		end
 
-		for i = #r, 2, -1 do
-			local args = table.concat({fst, "..."},",", 1, i);
+		for i = #ids, 2, -1 do
+			local args = table.concat(ids,",", 1, i);
 
 			if (i >= total) then
 				local signature = string.format("%s:%s(%s)", mClass, inst.class, args);
@@ -1797,7 +1797,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 				op = EXPR_METHODS[signature];
 			end
 
-			if (not Op) then
+			if (not op) then
 				local signature = string.format("%s:%s(%s,...)", mClass, inst.class, args);
 
 				op = EXPR_METHODS[signature];
@@ -1843,7 +1843,7 @@ end
 
 
 function COMPILER.Compile_FUNC(this, inst, token, expressions)
-	local lib = EXPADV_LIBRARIES[inst.library];
+	local lib = EXPR_LIBRARIES[inst.library];
 
 	if (not lib) then
 		-- Please note this should be impossible.
@@ -1862,7 +1862,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		end
 	else
 		for k, v in pairs(expressions) do
-			local expr = expression[i];
+			local expr = expressions[k];
 			local r, c = this:Compile(expr);
 
 			ids[#ids + 1] = r;
@@ -1876,8 +1876,8 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 			end
 		end
 
-		for i = #r, 1, -1 do
-			local args = table.concat({fst, "..."},",", 1, i);
+		for i = #ids, 1, -1 do
+			local args = table.concat(ids,",", 1, i);
 
 			if (i >= total) then
 				local signature = string.format("%s(%s)", inst.name, args);
@@ -1885,7 +1885,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 				op = lib._functions[signature];
 			end
 
-			if (not Op) then
+			if (not op) then
 				local signature = string.format("%s(%s,...)", inst.name, args);
 
 				op = lib._functions[signature];
@@ -1901,8 +1901,8 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		this:Throw(token, "No such function %s.%s(%s).", inst.library, inst.name, table.concat(ids, ","));
 	end
 
-	if (type(op.operator) == "table") then
-		local signature = string.format("%s.", inst.library, op.signature);
+	if (type(op.operator) == "function") then
+		local signature = string.format("%s.%s", inst.library, op.signature);
 
 		this:QueueRemove(inst, token);
 		this:QueueRemove(inst, inst.__operator);
@@ -1922,10 +1922,10 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 	elseif (type(op.operator) == "string") then
 		this:QueueRemove(inst, token);
 		this:QueueRemove(inst, inst.__operator);
-		this:QueueReplace(inst, op.operator);
+		this:QueueReplace(inst, inst.__func, op.operator); -- This is error.
 	else
 		local signature = string.format("%s.", inst.library, op.signature);
-		error("Attempt to inject " .. signature .. " but operator was incorrect.");
+		error("Attempt to inject " .. signature .. " but operator was incorrect " .. type(op.operator) .. ".");
 	end
 
 	return op.result, op.rCount;

@@ -7,20 +7,17 @@
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
 	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
 
-	::AutoRun::
-	```````````
+	::Math Extention::
 ]]
 
-AddCSLuaFile();
+local extention = EXPR_LIB.RegisterExtension("math");
 
-AddCSLuaFile("expression3/expr_lib.lua");
+extention:RegisterLibrary("math");
 
-AddCSLuaFile("expression3/tokenizer.lua");
+extention:RegisterFunction("math", "clamp", "n,n,n", "n", 1, "math.Clamp", true);
 
-AddCSLuaFile("expression3/parser.lua");
+extention:RegisterFunction("math", "floor", "n", "n", 1, math.floor, true);
 
-AddCSLuaFile("expression3/compiler.lua");
+extention:RegisterFunction("math", "test", "n", "n", 1, function(...) end, false);
 
-AddCSLuaFile("expression3/extentions/math.lua");
-
-include("expression3/expr_lib.lua");
+extention:EnableExtension()
