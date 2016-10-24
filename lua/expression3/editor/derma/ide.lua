@@ -114,7 +114,8 @@ function PANEL:Init( )
 	-- self.pnlTabHolder:AddSheet( "Test 3", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
 	
 	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
-	self:NewTab( "editor", self:GetFileCode( "example 1" ) )
+	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
+	self:LoadFile( "example 1" ) 
 	-- self:OpenOldTabs( )
 	
 	self:NewTab( "options" )
@@ -132,8 +133,16 @@ function PANEL:Init( )
 		end
 	end 
 	
-	self:SetSize( EXPADV.ReadUserSetting( "editor_w", math.min( 1000, ScrW( ) * 0.8 ) ), EXPADV.ReadUserSetting( "editor_h", math.min( 800, ScrH( ) * 0.8 ) ) )
-	self:SetPos( math.Clamp( EXPADV.ReadUserSetting( "editor_x", ScrW( ) / 2 - self:GetWide( ) / 2 ), 0, ScrW( ) - 20 ), EXPADV.ReadUserSetting( "editor_y", ScrH( ) / 2 - self:GetTall( ) / 2 ) )
+	local w, h, x, y = cookie.GetNumber( "golem_w", math.min( 1000, ScrW( ) * 0.8 ) ), cookie.GetNumber( "golem_h", math.min( 800, ScrH( ) * 0.8 ) ), cookie.GetNumber( "golem_x", ScrW( ) * 0.1 ), cookie.GetNumber( "golem_y", ScrH( ) * 0.1 ) 
+	
+	if x >= ScrW( ) - m_iMinWidth then x = 0 end 
+	if y >= ScrH( ) - m_iMinHeight then y = 0 end 
+	
+	w = math.Clamp( w, m_iMinWidth, ScrW( ) - x )
+	h = math.Clamp( h, m_iMinHeight, ScrH( ) - y )
+	
+	self:SetSize( w, h )
+	self:SetPos( x, y )
 end
 
 /*---------------------------------------------------------------------------
@@ -922,12 +931,10 @@ function PANEL:Paint( w, h )
 end
 
 function PANEL:SaveCoords( )
-	if not EXPADV.CL_Settings.settings then return end 
-	EXPADV.CL_Settings.settings["editor_x"] = self.x
-	EXPADV.CL_Settings.settings["editor_y"] = self.y
-	EXPADV.CL_Settings.settings["editor_w"] = self:GetWide( )
-	EXPADV.CL_Settings.settings["editor_h"] = self:GetTall( )
-	EXPADV.SaveConfig( )
+	cookie.Set( "golem_x", self.x )
+	cookie.Set( "golem_y", self.y )
+	cookie.Set( "golem_w", self:GetWide( ) )
+	cookie.Set( "golem_h", self:GetTall( ) )
 end
 
 function PANEL:ShowCloseButton( Bool )

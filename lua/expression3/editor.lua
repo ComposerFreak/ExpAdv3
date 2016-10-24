@@ -26,7 +26,7 @@ if SERVER then
 end 
 
 function Golem.Init( )
-	self:Reload( ) 
+	Golem.Reload( ) 
 end
 
 function Golem.Create( )
