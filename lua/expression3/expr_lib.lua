@@ -729,7 +729,24 @@ function EXPR_LIB.Initalize()
 	include("parser.lua");
 	include("compiler.lua");
 
+	hook.Run("Expression3.LoadGolem");
+
 	MsgN("Expression 3 has loaded.");
 end
+
+--[[
+	:::Hooks For Loading Golem Editor:::
+	''''''''''''''''''''''''''''''''''''
+]]
+
+hook.Add("Expression3.LoadGolem", "Expression3.Golem.Init", function()
+	include("expression3/editor.lua");
+	Golem.Init();
+end);
+
+--[[
+	:::Load Expression 3:::
+	'''''''''''''''''''''''
+]]
 
 EXPR_LIB.Initalize();
