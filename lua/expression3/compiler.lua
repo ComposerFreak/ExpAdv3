@@ -32,6 +32,7 @@ function COMPILER.Initalize(this, instance)
 	this.__scope.server = true;
 	this.__scope.client = true;
 
+	this.__constructors = {};
 	this.__operators = {};
 	this.__functions = {};
 	this.__methods = {};
@@ -67,6 +68,7 @@ function COMPILER._Run(this)
 	local result = {}
 	result.script = this.__script;
 	result.compiled = script;
+	result.constructors = this.__constructors;
 	result.operators = this.__operators;
 	result.functions = this.__functions;
 	result.methods = this.__methods;
@@ -173,6 +175,8 @@ function COMPILER.GetOption(this, option, nonDeep)
 end
 
 function COMPILER.SetVariable(this, name, class, scope)
+	print("SetVariable", name, class, scope)
+
 	if (not scope) then
 		scope = this.__scopeID;
 	end
@@ -356,7 +360,20 @@ end
 --[[
 ]]
 
+--local i = 0;
+
 function COMPILER.Compile(this, inst)
+
+	--[[i = i + 1;
+
+	if (i >= 100) then
+		debug.Trace()
+		error("LOOP EXIRED");
+	end
+
+	print(i .. ", " .. inst.type .. ", " .. tostring(inst.compiled));
+	]]
+
 	if (not inst) then
 		debug.Trace();
 		error("Compiler was asked to compile a nil instruction.")
@@ -366,7 +383,7 @@ function COMPILER.Compile(this, inst)
 		local instruction = string.upper(inst.type);
 		local fun = this["Compile_" .. instruction];
 
-		--print("Compiler->" .. instruction .. "->#" .. #inst.instructions)
+		-- print("Compiler->" .. instruction .. "->#" .. #inst.instructions)
 
 		if (not fun) then
 			this:Throw(inst.token, "Failed to compile unknown instruction %s", instruction);
@@ -469,7 +486,7 @@ end
 --[[
 ]]
 
-function COMPILER.CheckState(state, token, msg, frst, ...)
+function COMPILER.CheckState(this, state, token, msg, frst, ...)
 	local s = this:GetOption("state");
 	
 	if (state == EXPR_SHARED or s == state) then
@@ -528,7 +545,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 	local tExprs = #expressions;
 
 	local pos = 1;
-	while pos <= tVars && pos <= tExprs do
+	while pos <= tVars and pos <= tExprs do
 		local t = inst.variables[pos];
 		local expr = expressions[pos];
 
@@ -540,23 +557,34 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 
 		local res, cnt = this:Compile(expr);
 
-		for i = 1, cnt do
-			local snd = i < cnt or cnt == 1;
-			local tkn = inst.variables[pos];
-			local var = tkn.data;
-			
-			local class, scope, info = this:AssignVariable(tkn, true, var, res, 0);
-			
+		if (cnt > 0) then
+			for i = 1, cnt do
+				local snd = i < cnt or cnt == 1;
+				local tkn = inst.variables[pos];
+				local var = tkn.data;
+				
+				local class, scope, info = this:AssignVariable(tkn, true, var, inst.class, 0);
+				
+				if (info) then
+					info.prefix = "GLOBAL";
+					this:QueueInjectionBefore(inst, tkn, info.prefix .. ".");
+				end
+
+				pos = pos + 1;
+
+				if (snd) then
+					break;
+				end
+			end
+		else
+			local class, scope, info = this:AssignVariable(tkn, true, t.data, inst.class, 0);
+
 			if (info) then
 				info.prefix = "GLOBAL";
-				this:QueueInjectionBefore(inst, tkn, info.prefix .. ".");
+				this:QueueInjectionBefore(inst, t, info.prefix .. ".");
 			end
 
 			pos = pos + 1;
-
-			if (snd) then
-				break;
-			end
 		end
 	end
 
@@ -604,34 +632,36 @@ function COMPILER.Compile_ASS(this, inst, token, expressions)
 
 		local res, cnt = this:Compile(expr);
 
-		for i = 1, cnt do
-			local snd = i < cnt or cnt == 1;
-			local tkn = inst.variables[pos];
-			local var = tkn.data;
-			local class, scope, info = this:GetVariable(var, nil, false);
+		if (cnt > 0 ) then
+			for i = 1, cnt do
+				local snd = i < cnt or cnt == 1;
+				local tkn = inst.variables[pos];
+				local var = tkn.data;
+				local class, scope, info = this:GetVariable(var, nil, false);
 
-			if (not class) then
-				this:Throw(var, "Unable to assign variable %s, Variable does not exist.", var);
-			elseif (snd and (class ~= res)) then
-				local noErr = this:CastExpression(class, expr);
+				if (not class) then
+					this:Throw(var, "Unable to assign variable %s, Variable does not exist.", var);
+				elseif (snd and (class ~= res)) then
+					local noErr = this:CastExpression(class, expr);
 
-				if (not noErr) then
+					if (not noErr) then
+						this:Throw(token, "Unable to assign variable %s, %s expected got %s.", var, class, res);
+					end
+				elseif (class ~= res) then
 					this:Throw(token, "Unable to assign variable %s, %s expected got %s.", var, class, res);
 				end
-			elseif (class ~= res) then
-				this:Throw(token, "Unable to assign variable %s, %s expected got %s.", var, class, res);
-			end
 
-			local class, scope, info = this:AssignVariable(tkn, false, var, res);
-			
-			if (info and info.prefix) then
-				this:QueueInjectionBefore(inst, tkn, info.prefix .. ".");
-			end
+				local class, scope, info = this:AssignVariable(tkn, false, var, res);
+				
+				if (info and info.prefix) then
+					this:QueueInjectionBefore(inst, tkn, info.prefix .. ".");
+				end
 
-			pos = pos + 1;
+				pos = pos + 1;
 
-			if (snd) then
-				break;
+				if (snd) then
+					break;
+				end
 			end
 		end
 	end
@@ -1708,7 +1738,7 @@ end
 
 function COMPILER.Compile_VAR(this, inst, token, expressions)
 	local c, s, var = this:GetVariable(inst.variable)
-
+	print("VAR_>", inst.variable, c, s, var)
 	if (var and var.prefix) then
 		this:QueueInjectionBefore(inst, token, var.prefix .. ".");
 	end
@@ -1774,17 +1804,19 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 	local ids = {};
 	local total = #expressions;
 
+	local cls = EXPR_LIB.GetClass(inst.class);
+	local constructors = cls.constructors;
+
 	if (total == 0) then
-		op = EXPR_CONSTRUCTORS[inst.class .. "()"];
+		op = constructors[inst.class .. "()"];
 
 		if (not op) then
-			op = EXPR_CONSTRUCTORS[inst.class .. "(...)"];
+			op = constructors[inst.class .. "(...)"];
 		end
 	else
-		for k, v in pairs(expressions) do
-			local expr = expressions[k];
-			local r, c = this:Compile(expr);
 
+		for k, expr in pairs(expressions) do
+			local r, c = this:Compile(expr);
 			ids[#ids + 1] = r;
 
 			if (k == total) then
@@ -1802,13 +1834,13 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 			if (i >= total) then
 				local signature = string.format("%s(%s)", inst.class, args);
 
-				op = EXPR_CONSTRUCTORS[signature];
+				op = constructors[signature];
 			end
 
 			if (not op) then
 				local signature = string.format("%s(%s,...)", inst.class, args);
 
-				op = EXPR_CONSTRUCTORS[signature];
+				op = constructors[signature];
 			end
 
 			if (op) then
@@ -1827,19 +1859,24 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 
 	if (type(op.operator) == "function") then
 
-		this:QueueInjectionBefore(inst, token, "_CONST[\"" .. op.signature .. "\"]");
+		this:QueueRemove(inst, inst.__new);
+		this:QueueRemove(inst, inst.__const);
+
+		this:QueueInjectionBefore(inst, inst.__const, "_CONST[\"" .. op.signature .. "\"]");
 
 		if (op.context) then
-		    this:QueueInjectionBefore(inst, token, "CONTEXT");
+		    this:QueueInjectionBefore(inst, inst.__const, "CONTEXT");
 
 		    if (total > 0) then
-				this:QueueInjectionBefore(inst, token, ",");
+				this:QueueInjectionBefore(inst, inst.__const, ",");
 			end
 		end
 
 		this.__constructors[op.signature] = op.operator;
 	elseif (type(op.operator) == "string") then
-		this:QueueReplace(inst, token, op.operator);
+		this:QueueRemove(inst, inst.__new);
+		this:QueueRemove(inst, inst.__const);
+		this:QueueReplace(inst, inst.__const, op.operator);
 	else
 		local signature = string.format("%s.", inst.library, op.signature);
 		error("Attempt to inject " .. op.signature .. " but operator was incorrect " .. type(op.operator) .. ".");
@@ -1848,7 +1885,7 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 	expr.result = op.type;
 	expr.rCount = 0;
 
-	return true, expr;
+	return expr.result, expr.rCount;
 end
 
 function COMPILER.Compile_METH(this, inst, token, expressions)
@@ -1859,38 +1896,39 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 	local total = #expressions;
 
 	if (total == 1) then
-		op = EXPR_METHODS[string.format("%s:%s()", mClass, this.method)];
+		op = EXPR_METHODS[string.format("%s.%s()", mClass, inst.method)];
 
 		if (not op) then
-			op = EXPR_METHODS[string.format("%s:%s(...)", mClass, this.method)];
+			op = EXPR_METHODS[string.format("%s.%s(...)", mClass, inst.method)];
 		end
 	else
-		for k, v in pairs(expressions) do
-			local expr = expressions[k];
-			local r, c = this:Compile(expr);
+		for k, expr in pairs(expressions) do
+			if (k > 1) then
+				local r, c = this:Compile(expr);
 
-			ids[#ids + 1] = r;
+				ids[#ids + 1] = r;
 
-			if (k == total) then
-				if (c > 1) then
-					for i = 2, c do
-						ids[#ids + 1] = r;
+				if (k == total) then
+					if (c > 1) then
+						for i = 2, c do
+							ids[#ids + 1] = r;
+						end
 					end
 				end
 			end
 		end
 
-		for i = #ids, 2, -1 do
+		for i = #ids, 1, -1 do
 			local args = table.concat(ids,",", 1, i);
 
-			if (i >= total) then
-				local signature = string.format("%s:%s(%s)", mClass, inst.class, args);
+			if (i <= total) then
+				local signature = string.format("%s.%s(%s)", mClass, inst.method, args);
 
 				op = EXPR_METHODS[signature];
 			end
 
 			if (not op) then
-				local signature = string.format("%s:%s(%s,...)", mClass, inst.class, args);
+				local signature = string.format("%s.%s(%s,...)", mClass, inst.method, args);
 
 				op = EXPR_METHODS[signature];
 			end
@@ -1907,7 +1945,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 
 	this:CheckState(op.state, token, "Method %s.%s(%s)", mClass, inst.method, table.concat(ids, ","));
 
-	if (type(op.operator) == "table") then
+	if (type(op.operator) == "function") then
 		this:QueueRemove(inst, inst.__operator);
 		this:QueueRemove(inst, inst.__method);
 
@@ -1917,10 +1955,10 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 			this:QueueReplace(inst, inst.__lpa, ",");
 		end
 
-		this:QueueInjectionBefore(inst, inst.__func, "_METH[\"" .. op.signature .. "\"](");
+		this:QueueInjectionBefore(inst, inst.__meth, "_METH[\"" .. op.signature .. "\"](");
 
 		if (op.context) then
-		    this:QueueInjectionBefore(inst, inst.__func, "CONTEXT,");
+		    this:QueueInjectionBefore(inst, inst.__meth, "CONTEXT,");
 		end
 
 		this.__methods[op.signature] = op.operator;
@@ -1929,7 +1967,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 		this:QueueReplace(inst, this.__method, op.operator);
 	else
 		local signature = string.format("%s.", inst.library, op.signature);
-		error("Attempot to inject " .. signature .. " but operator was incorrect.")
+		error("Attempt to inject " .. op.signature .. " but operator was incorrect, got " .. type(op.operator));
 	end
 
 	return op.result, op.rCount;
@@ -1955,8 +1993,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 			op = lib._functions[inst.name .. "(...)"];
 		end
 	else
-		for k, v in pairs(expressions) do
-			local expr = expressions[k];
+		for k, expr in pairs(expressions) do
 			local r, c = this:Compile(expr);
 
 			ids[#ids + 1] = r;

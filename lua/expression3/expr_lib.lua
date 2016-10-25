@@ -266,7 +266,7 @@ function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeCont
 	op.state = STATE;
 	op.parameter = signature;
 	op.signature = string.format("%s(%s)", cls.id, signature);
-	op.result = res.id;
+	op.result = cls.id;
 	op.rCount = count;
 	op.operator = constructor;
 	op.context = not excludeContext;
@@ -283,25 +283,25 @@ function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method, ex
 	-- if method is nil lua, compiler will use native Object:(...);
 
 	if (not loadMethods) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) outside of Hook::Expression3.LoadMethods", class, name, parameter);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s.%s(%s) outside of Hook::Expression3.LoadMethods", class, name, parameter);
 	end
 
 	local cls = EXPR_LIB.GetClass(class);
 
 	if (not cls) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) for none existing class %s", class, name, parameter, class);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s.%s(%s) for none existing class %s", class, name, parameter, class);
 	end
 
 	local state, signature = EXPR_LIB.SortArgs(parameter);
 
 	if (not state) then
-		EXPR_LIB.ThrowInternal(0, "%s for method %s:%s(%s)", signature, class, name, parameter);
+		EXPR_LIB.ThrowInternal(0, "%s for method %s.%s(%s)", signature, class, name, parameter);
 	end
 
 	local res = EXPR_LIB.GetClass(type);
 
 	if (not res) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s:%s(%s) with none existing return class %s", class, name, parameter, type);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register method %s.%s(%s) with none existing return class %s", class, name, parameter, type);
 	end
 
 	local meth = {};
@@ -309,7 +309,7 @@ function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method, ex
 	meth.class = cls.id;
 	meth.state = STATE;
 	meth.parameter = signature;
-	meth.signature = string.format("%s:%s(%s)", cls.id, name, signature);
+	meth.signature = string.format("%s.%s(%s)", cls.id, name, signature);
 	meth.result = res.id;
 	meth.rCount = count;
 	meth.operator = method;
@@ -494,11 +494,15 @@ end
 
 
 function EXPR_LIB.GetClass(class)
+	if (class == "") then
+		return classIDs["_nil"];
+	end
+
 	if (classes[class]) then
 		return classes[class];
 	end
 
-	if (string.len(class) > 1) then
+	if (string.len(class) > 1 and string.sub(class, 1, 1) ~= "_") then
 		class = "_" .. class;
 	end
 
@@ -693,7 +697,7 @@ end
 function EXPR_LIB.Initalize()
 	MsgN("Loading Expression 3");
 
-	include("expression3/extentions/core.lua");
+	include("expression3/extensions/core.lua");
 
 	hook.Run("Expression3.RegisterExtensions");
 

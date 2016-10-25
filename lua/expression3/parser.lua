@@ -196,7 +196,7 @@ function PARSER.StepBackward(this, steps)
 		steps = 1;
 	end
 
-	local pos = this.__pos - steps
+	local pos = this.__pos - (steps + 1);
 
 	if (pos < 0) then
 		pos = 0;
@@ -589,12 +589,12 @@ function PARSER.Statment_5(this)
 
 		this:Require("var", "Variable('s) expected after class for global variable.");
 		variables[1] = this.__token;
-		--this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
+		this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
 
 		while (this:Accept("com")) do
 			this:Require("var", "Variable expected after comma (,).");
 			variables[#variables + 1] = this.__token;
-			--this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
+			this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
 		end
 
 		local expressions = {};
@@ -714,6 +714,8 @@ function PARSER.Statment_6(this)
 	end
 
 	-- return this:Statment_7();
+
+	return this:Expression_1(); 
 end
 
 --[[
@@ -1224,13 +1226,13 @@ function PARSER.Expression_25(this)
 	if (this:Accept("new")) then
 		local inst = this:StartInstruction("new", this.__token);
 
-		this:QueueRemove(inst, this.__token);
+		inst.__new = this.__token; -- this:QueueRemove(inst, this.__token);
 
 		this:Require("typ", "Type expected after new for constructor.");
 
 		inst.class = this.__token.data;
 
-		this:QueueRemove(inst, this.__token);
+		inst.__const = this.__token; -- this:QueueRemove(inst, this.__token);
 		
 		this:Require("lpa", "Left parenthesis (( ) expected to open constructor parameters.")
 
@@ -1298,13 +1300,13 @@ function PARSER.Expression_Trailing(this, expr)
 
 			this:Require("var", "method name expected after method operator (.)");
 
-			this.__method = this.__token;
+			inst.__method = this.__token;
 
-			this.method = this.__token.data;
+			inst.method = this.__token.data;
 
 			this:Require("lpa", "Left parenthesis (( ) expected to open method parameters.")
 
-			this.__lpa = this.__token;
+			inst.__lpa = this.__token;
 			local expressions = {};
  
 			expressions[1] = expr;
@@ -1382,7 +1384,7 @@ function PARSER.ExpressionErr(this)
 	--this:Exclude("cth", "Catch keyword (catch) must be part of an try-statement");
 	--this:Exclude("fnl", "Final keyword (final) must be part of an try-statement");
 	--this:Exclude("dir", "directive operator (@) must not appear inside an equation");
-	this:Error(this.__token, "Unexpected symbol found (%s)", this.__token.name);
+	this:Throw(this.__token, "Unexpected symbol found (%s)", this.__token.name);
 end
 --[[
 ]]

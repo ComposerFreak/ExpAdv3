@@ -21,7 +21,13 @@ AddCSLuaFile("expression3/parser.lua");
 
 AddCSLuaFile("expression3/compiler.lua");
 
-AddCSLuaFile("expression3/extentions/math.lua");
+AddCSLuaFile("expression3/extensions/core.lua");
+
+AddCSLuaFile("expression3/extensions/vector.lua");
+
+AddCSLuaFile("expression3/extensions/math.lua");
+
+AddCSLuaFile("expression3/compiler.lua");
 
 AddCSLuaFile("expression3/editor.lua");
 
