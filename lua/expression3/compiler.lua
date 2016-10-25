@@ -567,7 +567,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 				
 				if (info) then
 					info.prefix = "GLOBAL";
-					this:QueueInjectionBefore(inst, tkn, info.prefix .. ".");
+					this:QueueReplace(inst, tkn, info.prefix .. "." .. tkn.data);
 				end
 
 				pos = pos + 1;
@@ -581,7 +581,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 
 			if (info) then
 				info.prefix = "GLOBAL";
-				this:QueueInjectionBefore(inst, t, info.prefix .. ".");
+				this:QueueReplace(inst, t, info.prefix .. "." .. t.data);
 			end
 
 			pos = pos + 1;
@@ -654,7 +654,7 @@ function COMPILER.Compile_ASS(this, inst, token, expressions)
 				local class, scope, info = this:AssignVariable(tkn, false, var, res);
 				
 				if (info and info.prefix) then
-					this:QueueInjectionBefore(inst, tkn, info.prefix .. ".");
+					this:QueueReplacee(inst, tkn, info.prefix .. "." .. tkn.data);
 				end
 
 				pos = pos + 1;
@@ -681,7 +681,7 @@ function COMPILER.Compile_AADD(this, inst, token, expressions)
 		local class, scope, info = this:GetVariable(token.data, nil, false);
 
 		if (info and info.prefix) then
-			this:QueueInjectionBefore(inst, token, info.prefix .. ".");
+			this:QueueReplace(inst, token, info.prefix .. "." .. token.data);
 		end
 
 		local char = "+";
@@ -1738,9 +1738,9 @@ end
 
 function COMPILER.Compile_VAR(this, inst, token, expressions)
 	local c, s, var = this:GetVariable(inst.variable)
-	print("VAR_>", inst.variable, c, s, var)
+
 	if (var and var.prefix) then
-		this:QueueInjectionBefore(inst, token, var.prefix .. ".");
+		this:QueueReplace(inst, token, var.prefix .. "." .. token.data);
 	end
 
 	if (not c) then
@@ -1889,7 +1889,8 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 end
 
 function COMPILER.Compile_METH(this, inst, token, expressions)
-	local mClass, mCount = this:Compile(expressions[1]);
+	local expr = expressions[1];
+	local mClass, mCount = this:Compile(expr);
 
 	local op;
 	local ids = {};
@@ -1955,10 +1956,10 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 			this:QueueReplace(inst, inst.__lpa, ",");
 		end
 
-		this:QueueInjectionBefore(inst, inst.__meth, "_METH[\"" .. op.signature .. "\"](");
+		this:QueueInjectionBefore(inst, expr.token, "_METH[\"" .. op.signature .. "\"](");
 
 		if (op.context) then
-		    this:QueueInjectionBefore(inst, inst.__meth, "CONTEXT,");
+		    this:QueueInjectionBefore(inst, expr.token , "CONTEXT,");
 		end
 
 		this.__methods[op.signature] = op.operator;
@@ -1966,7 +1967,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 		this:QueueReplace(inst, inst.__operator, ":");
 		this:QueueReplace(inst, this.__method, op.operator);
 	else
-		local signature = string.format("%s.", inst.library, op.signature);
+		local signature = string.format("%s.%s", inst.class, op.signature);
 		error("Attempt to inject " .. op.signature .. " but operator was incorrect, got " .. type(op.operator));
 	end
 

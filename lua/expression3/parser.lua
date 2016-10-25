@@ -589,12 +589,12 @@ function PARSER.Statment_5(this)
 
 		this:Require("var", "Variable('s) expected after class for global variable.");
 		variables[1] = this.__token;
-		this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
+		--this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
 
 		while (this:Accept("com")) do
 			this:Require("var", "Variable expected after comma (,).");
 			variables[#variables + 1] = this.__token;
-			this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
+			--this:QueueInjectionBefore(inst, this.__token, "GLOBAL", ".");
 		end
 
 		local expressions = {};
