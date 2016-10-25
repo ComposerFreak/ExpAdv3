@@ -1825,19 +1825,25 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 
 	this:CheckState(op.state, token, "Constructor 'new %s", signature);
 
-	this:QueueInjectionBefore(inst, token, "_CONST[\"" .. op.signature .. "\"](");
-	
-	if (op.context) then
-	    this:QueueInjectionBefore(inst, token "CONTEXT");
+	if (type(op.operator) == "function") then
 
-	    if (total > 0) then
-			this:QueueInjectionBefore(inst, token, ",");
+		this:QueueInjectionBefore(inst, token, "_CONST[\"" .. op.signature .. "\"]");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, token, "CONTEXT");
+
+		    if (total > 0) then
+				this:QueueInjectionBefore(inst, token, ",");
+			end
 		end
+
+		this.__constructors[op.signature] = op.operator;
+	elseif (type(op.operator) == "string") then
+		this:QueueReplace(inst, token, op.operator);
+	else
+		local signature = string.format("%s.", inst.library, op.signature);
+		error("Attempt to inject " .. op.signature .. " but operator was incorrect " .. type(op.operator) .. ".");
 	end
-
-	this:QueueInjectionAfter(inst, inst.final, ")" );
-
-	this.__constructors[op.signature] = op.operator;
 
 	expr.result = op.type;
 	expr.rCount = 0;
