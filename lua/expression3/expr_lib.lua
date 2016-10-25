@@ -33,14 +33,31 @@
 		It is possible to register an extension outside the extension folder by creating it inside Expression3.RegisterExtensions hook.
 		
 	::RULES::
-		A constructor must always be a function, the first parameter will always be context unless exclude context is true;
+		A constructor's function can be a string, if so the compiler will attempt to use a native lua function at the given string; e.g string.replace.
+		The first parameter to a constructor's function will always be context unless exclude context is true;
 		Some operator's and casting operator's function is optional, if not given the compiler will attempt to use lua's native method.
 		The first parameter to an operator / casting operator function will always be context unless exclude context is true;
 		A method's function can be a string, if so the compiler will attempt to use a native lua method on that object.
 		The first parameter to a method's function will always be context unless exclude context is true;
 		A function's function can be a string, if so the compiler will attempt to use a native lua function at the given string; e.g string.replace.
 		The first parameter to a function's function will always be context unless exclude context is true;
+	
+	::Examples::
+		Using a string as an operation.
+		Operator: 	extension:RegisterConstructor("v", "n,n,n", "Vector", true);
+		Input:		new vector(1,2,3);
+		OutPut:		Vector(1,2,3);
 		
+		Using a function as operation with context.
+		Operator: 	extension:RegisterConstructor("v", "n,n,n", function(c,x,y,z) end, false);
+		Input:		new vector(1,2,3);
+		OutPut:		_Ops["v(n,n,n)"](context, 1,2,3);
+		
+		using a function as operation with out context.
+		Operator: 	extension:RegisterConstructor("v", "n,n,n", function(x,y,z) end, true);
+		Input:		new vector(1,2,3);
+		OutPut:		_Ops["v(n,n,n)"](1,2,3);
+
 	::EXPR_LIB::
 		EXPR_LIB.RegisterClass(string short name, string class name, boolean = function(object) isType, boolean = function(object) isValid)
 			Registers a new class with expression 3.
