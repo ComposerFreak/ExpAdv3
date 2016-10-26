@@ -62,6 +62,11 @@ function Golem.Reload( )
 	-- include "editor/derma/syntaxer.lua"
 end
 
+function Golem.GetInstance( )
+	Golem.Create( ) 
+	return Golem.Instance 
+end
+
 function Golem.Open( sFile ) 
 	Golem.Create( ) 
 	if sFile then 
