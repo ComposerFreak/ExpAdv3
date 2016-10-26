@@ -52,7 +52,7 @@ function PANEL:AddSheet( strName, pnlContent, strMaterial )
 	-- Sheet.Tab:SetColor( Color( 60, 100, 180 ) )
 	
 	Sheet.Tab.btnClose = vgui.Create( "GOLEM_ImageButton", Sheet.Tab ) 
-	Sheet.Tab.btnClose.DoClick = function( btn ) self:GetParent( ):CloseTab( true, Sheet.Tab ) end 
+	Sheet.Tab.btnClose.DoClick = function( btn ) self:GetParent( ):CloseTab( Sheet.Tab, true ) end 
 	-- Sheet.Tab.btnClose.DoRightClick = function( ) self:GetParent( ):CloseTab( false, Sheet.Tab ) end --Keep?
 	-- Sheet.Tab.btnClose:SetMaterial( Material( "fugue/cross-small.png" ) ) 
 	-- Sheet.Tab.btnClose:SetMaterial( Material( "fugue/cross-circle.png" ) ) 

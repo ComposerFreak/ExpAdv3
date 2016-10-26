@@ -29,6 +29,8 @@ function PANEL:Init( )
 	self.FileList = { }
 	self.GateTabs = { }
 	
+	self.tTabTypes = { } 
+	
 	self.bVoice = false 
 	
 	self:DockPadding( 0, 25, 0, 0 )
@@ -109,84 +111,11 @@ function PANEL:Init( )
 	self.pnlTabHolder:DockMargin( 5, 5, 5, 5 )
 	self.pnlTabHolder:SetPadding( 0 )
 	
-	-- self.pnlTabHolder:AddSheet( "Test 1", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
-	-- self.pnlTabHolder:AddSheet( "Test 2", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
-	-- self.pnlTabHolder:AddSheet( "Test 3", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
 	
-	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
-	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
-	self:LoadFile( "example 1" ) 
-	-- self:OpenOldTabs( )
+	-- Default Tab Types init 
+	-- self:AddTabType( sName, fCreate, fClose )
 	
-	self:NewTab( "options" )
-	
-	-- for i = 1, 30 do
-	-- 	self.pnlTabHolder:AddSheet( "Test " .. i, vgui.Create("GOLEM_Editor"), "fugue/script.png" )
-	-- end
-	
-	//print( utf8.codepoint( "Мёнём", 1, -1 ) )
-	
-	Golem.Font.OnFontChange = function( Font, sFontID )
-		for i = 1, #self.pnlTabHolder.Items do
-			if not self.pnlTabHolder.Items[i].Tab.IsCode then continue end 
-			self.pnlTabHolder.Items[i].Panel:SetFont( sFontID )
-		end
-	end 
-	
-	local w, h, x, y = cookie.GetNumber( "golem_w", math.min( 1000, ScrW( ) * 0.8 ) ), cookie.GetNumber( "golem_h", math.min( 800, ScrH( ) * 0.8 ) ), cookie.GetNumber( "golem_x", ScrW( ) * 0.1 ), cookie.GetNumber( "golem_y", ScrH( ) * 0.1 ) 
-	
-	if x >= ScrW( ) - m_iMinWidth then x = 0 end 
-	if y >= ScrH( ) - m_iMinHeight then y = 0 end 
-	
-	w = math.Clamp( w, m_iMinWidth, ScrW( ) - x )
-	h = math.Clamp( h, m_iMinHeight, ScrH( ) - y )
-	
-	self:SetSize( w, h )
-	self:SetPos( x, y )
-end
-
-/*---------------------------------------------------------------------------
-Syntax highlighter
----------------------------------------------------------------------------*/
-function PANEL:SetSyntaxColorLine( func )
-	self.SyntaxColorLine = func
-	for i = 1, #self.pnlTabHolder.Items do
-		if self.pnlTabHolder.Items[i].Tab.IsCode then 
-			self.pnlTabHolder.Items[i].Panel.SyntaxColorLine = func
-		end 
-	end
-end
-
-function PANEL:GetSyntaxColorLine( ) 
-	return self.SyntaxColorLine 
-end
-
-/*---------------------------------------------------------------------------
-Tab Management
----------------------------------------------------------------------------*/
-local function DoRightClick( self )
-	local Menu = DermaMenu( )
-	
-	Menu:AddOption( "Close", function( ) self.Editor:CloseTab( false, self ) end )
-	Menu:AddOption( "Close others", function( ) self.Editor:CloseAllBut( self ) end )
-	Menu:AddOption( "Close all tabs", function( ) self.Editor:CloseAll( )  end )
-	
-	Menu:AddSpacer( )
-	
-	Menu:AddOption( "Save", function( ) self.Editor:SaveFile( self.FilePath, false, self ) end )
-	-- Menu:AddOption( "Save As", function( ) end )
-	
-	Menu:AddSpacer( )
-	
-	Menu:AddOption( "New File", function( ) self.Editor:NewTab( "editor" ) end )
-	
-	Menu:Open( )
-end
-
-function PANEL:NewTab( sType, ... )
-	if sType == "editor" then -- Editor
-		local sCode, sPath, sName = unpack{...}
-		
+	self:AddTabType( "editor", function( self, sCode, sPath, sName) 
 		if sPath and not string.EndsWith( sPath, ".txt" ) then sPath = sPath .. ".txt" end 
 		if sPath and not string.StartWith( sPath, "golem/" ) then sPath = "golem/" .. sPath end
 		if sPath and self.FileList[sPath] then 
@@ -211,7 +140,6 @@ function PANEL:NewTab( sType, ... )
 		
 		Sheet.Tab.DoRightClick = DoRightClick
 		Sheet.Tab.Editor = self
-		Sheet.Tab.IsCode = true 
 		
 		if sPath then
 			Sheet.Tab.FilePath = sPath
@@ -223,34 +151,7 @@ function PANEL:NewTab( sType, ... )
 		end
 		
 		return Editor, Sheet.Tab, Sheet
-	elseif sType == "options" then -- Options 
-		if self.Options then 
-			self.pnlTabHolder:SetActiveTab( self.Options.Tab )
-			self.Options.Panel:RequestFocus( )
-			return 
-		end 
-		
-		local Panel = vgui.Create( "GOLEM_Options" ) 
-		local Sheet = self.pnlTabHolder:AddSheet( "options", Panel, "fugue/gear.png" )
-		self.pnlTabHolder:SetActiveTab( Sheet.Tab )
-		self.Options = Sheet
-		Sheet.Panel:RequestFocus( )
-		
-		Panel.Paint = function( p, w, h )
-			surface.SetDrawColor( 30, 30, 30, 255 )
-			surface.DrawRect( 0, 0, w, h ) 
-		end
-		
-		Sheet.Tab.DoRightClick = DoRightClick
-		Sheet.Tab.Editor = self
-	end 
-end
-
-function PANEL:CloseTab( bSave, pTab ) 
-	if pTab == true then pTab = self.pnlTabHolder:GetActiveTab( ) end
-	if not ValidPanel( pTab ) then return end
-	
-	if pTab.IsCode then 
+	end, function( self, pTab, bSave ) 
 		local Editor = pTab:GetPanel( )
 		
 		if bSave and pTab.FilePath and pTab.FilePath ~= "" then // Ask about this?
@@ -270,16 +171,139 @@ function PANEL:CloseTab( bSave, pTab )
 		if Editor.OnTabClose then
 			Editor:OnTabClose( bSave, pTab )
 		end
+	end )
+	
+	self:AddTabType( "options", function(self) 
+		if self.Options then 
+			self.pnlTabHolder:SetActiveTab( self.Options.Tab )
+			self.Options.Panel:RequestFocus( )
+			return 
+		end 
+		
+		local Panel = vgui.Create( "GOLEM_Options" ) 
+		local Sheet = self.pnlTabHolder:AddSheet( "options", Panel, "fugue/gear.png" )
+		self.pnlTabHolder:SetActiveTab( Sheet.Tab )
+		self.Options = Sheet
+		Sheet.Panel:RequestFocus( )
+		
+		Panel.Paint = function( p, w, h )
+			surface.SetDrawColor( 30, 30, 30, 255 )
+			surface.DrawRect( 0, 0, w, h ) 
+		end
+		
+		Sheet.Tab.DoRightClick = DoRightClick
+		Sheet.Tab.Editor = self
+		
+		return Panel, Sheet.Tab, Sheet 
+	end, function(self, pTab, bSave) 
+		self.Options = nil
+	end )
+	
+	
+	
+	
+	
+	
+	-- self.pnlTabHolder:AddSheet( "Test 1", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
+	-- self.pnlTabHolder:AddSheet( "Test 2", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
+	-- self.pnlTabHolder:AddSheet( "Test 3", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
+	
+	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
+	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
+	self:LoadFile( "example 1" ) 
+	-- self:OpenOldTabs( )
+	
+	self:NewTab( "options" )
+	
+	-- for i = 1, 30 do
+	-- 	self.pnlTabHolder:AddSheet( "Test " .. i, vgui.Create("GOLEM_Editor"), "fugue/script.png" )
+	-- end
+	
+	//print( utf8.codepoint( "Мёнём", 1, -1 ) )
+	
+	Golem.Font.OnFontChange = function( Font, sFontID )
+		for i = 1, #self.pnlTabHolder.Items do
+			if not self.pnlTabHolder.Items[i].Tab.__type == "editor" then continue end 
+			self.pnlTabHolder.Items[i].Panel:SetFont( sFontID )
+		end
 	end 
 	
-	if self.Options.Tab == pTab then self.Options = { } end 
+	local w, h, x, y = cookie.GetNumber( "golem_w", math.min( 1000, ScrW( ) * 0.8 ) ), cookie.GetNumber( "golem_h", math.min( 800, ScrH( ) * 0.8 ) ), cookie.GetNumber( "golem_x", ScrW( ) * 0.1 ), cookie.GetNumber( "golem_y", ScrH( ) * 0.1 ) 
+	
+	if x >= ScrW( ) - m_iMinWidth then x = 0 end 
+	if y >= ScrH( ) - m_iMinHeight then y = 0 end 
+	
+	w = math.Clamp( w, m_iMinWidth, ScrW( ) - x )
+	h = math.Clamp( h, m_iMinHeight, ScrH( ) - y )
+	
+	self:SetSize( w, h )
+	self:SetPos( x, y )
+end
+
+/*---------------------------------------------------------------------------
+Syntax highlighter
+---------------------------------------------------------------------------*/
+function PANEL:SetSyntaxColorLine( func )
+	self.SyntaxColorLine = func
+	for i = 1, #self.pnlTabHolder.Items do
+		if self.pnlTabHolder.Items[i].Tab.__type == "editor" then 
+			self.pnlTabHolder.Items[i].Panel.SyntaxColorLine = func
+		end 
+	end
+end
+
+function PANEL:GetSyntaxColorLine( ) 
+	return self.SyntaxColorLine 
+end
+
+/*---------------------------------------------------------------------------
+Tab Management
+---------------------------------------------------------------------------*/
+local function DoRightClick( self )
+	local Menu = DermaMenu( )
+	
+	Menu:AddOption( "Close", function( ) self.Editor:CloseTab( self, false ) end )
+	Menu:AddOption( "Close others", function( ) self.Editor:CloseAllBut( self ) end )
+	Menu:AddOption( "Close all tabs", function( ) self.Editor:CloseAll( )  end )
+	
+	Menu:AddSpacer( )
+	
+	Menu:AddOption( "Save", function( ) self.Editor:SaveFile( self.FilePath, false, self ) end )
+	-- Menu:AddOption( "Save As", function( ) end )
+	
+	Menu:AddSpacer( )
+	
+	Menu:AddOption( "New File", function( ) self.Editor:NewTab( "editor" ) end )
+	
+	Menu:Open( )
+end
+
+function PANEL:AddTabType( sName, fCreate, fClose )
+	self.tTabTypes[sName] = { NewTab = fCreate, CloseTab, fClose } 
+end
+
+function PANEL:NewTab( sType, ... )
+	if self.tTabTypes[sType] then 
+		local pPanel, pTab, tSheet = self.tTabTypes[sType]( self, ... ) 
+		pTab.__type = sType
+		return pPanel, pTab, tSheet 
+	else 
+		error( 2, "No such tab type!" ) 
+	end 
+end
+
+function PANEL:CloseTab( pTab, bSave ) 
+	if pTab == true then pTab = self.pnlTabHolder:GetActiveTab( ) end
+	if not ValidPanel( pTab ) then return end
+	
+	self.tTabTypes[pTab.__type]( self, pTab, bSave )
 	
 	self.pnlTabHolder:CloseTab( pTab, true )
 end 
 
 function PANEL:CloseAll( )
 	for I = #self.pnlTabHolder.Items, 1, -1 do
-		self:CloseTab( true, self.pnlTabHolder.Items[I].Tab )
+		self:CloseTab( self.pnlTabHolder.Items[I].Tab, true )
 	end 
 end
 
@@ -291,7 +315,7 @@ function PANEL:CloseAllBut( pTab )
 			found = 1
 			continue
 		end
-		self:CloseTab( false, self.pnlTabHolder.Items[found+1].Tab )
+		self:CloseTab( self.pnlTabHolder.Items[found+1].Tab, false )
 	end
 end
 
@@ -425,7 +449,7 @@ local function TempID( )
 end 
 
 function PANEL:SaveTempFile( Tab )
-	if not ValidPanel( Tab ) or not Tab.IsCode then return end
+	if not ValidPanel( Tab ) or not Tab.__type == "editor" then return end
 	local sCode = Tab:GetPanel( ):GetCode( )
 	local sPath = Tab.TempFile or "golem_temp/" .. TempID( ) .. ".txt"
 	MakeFolders( sPath )
