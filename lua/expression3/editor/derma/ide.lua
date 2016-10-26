@@ -138,9 +138,6 @@ function PANEL:Init( )
 			Sheet.Panel.SyntaxColorLine = func
 		end
 		
-		Sheet.Tab.DoRightClick = DoRightClick
-		Sheet.Tab.Editor = self
-		
 		if sPath then
 			Sheet.Tab.FilePath = sPath
 			self.FileList[sPath] = Sheet.Tab
@@ -190,9 +187,6 @@ function PANEL:Init( )
 			surface.SetDrawColor( 30, 30, 30, 255 )
 			surface.DrawRect( 0, 0, w, h ) 
 		end
-		
-		Sheet.Tab.DoRightClick = DoRightClick
-		Sheet.Tab.Editor = self
 		
 		return Panel, Sheet.Tab, Sheet 
 	end, function(self, pTab, bSave) 
@@ -286,6 +280,11 @@ function PANEL:NewTab( sType, ... )
 	if self.tTabTypes[sType] then 
 		local pPanel, pTab, tSheet = self.tTabTypes[sType]( self, ... ) 
 		pTab.__type = sType
+		
+		
+		tSheet.Tab.DoRightClick = DoRightClick
+		tSheet.Tab.Editor = self
+		
 		return pPanel, pTab, tSheet 
 	else 
 		error( 2, "No such tab type!" ) 
