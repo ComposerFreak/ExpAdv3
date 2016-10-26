@@ -172,5 +172,5 @@ EXPR_LIB.ValidateAndDebug = function(editor, goto, code)
 	editor.btnValidate:SetText("Validation sucessful");
 	editor.btnValidate:SetColor(Color(0, 255, 255));
 
-	EXPR_LIB.ShowDebug(ts.__tokens, pr.__tasks);
+	EXPR_LIB.ShowDebug(ts.tokens, pr.tasks);
 end;
