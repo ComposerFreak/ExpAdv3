@@ -549,7 +549,7 @@ end
 Code Validation
 ---------------------------------------------------------------------------*/
 function PANEL:DoValidate( Goto, Code )
-	Code = Code or self:GetCode( )
+	--[[Code = Code or self:GetCode( )
 	
 	if not Code or Code == "" then
 		self:OnValidateError( false,"No code submited, compiler exited.")
@@ -567,6 +567,9 @@ function PANEL:DoValidate( Goto, Code )
 	self.btnValidate:SetText( "Validation Successful!" )
 
 	return true
+	]]
+
+	return EXPR_LIB.ValidateAndDebug(this, Goto, Code);
 end
 
 function PANEL:OnValidateError( Goto, Error )

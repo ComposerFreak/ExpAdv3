@@ -122,7 +122,7 @@ EXPR_LIB.ValidateAndDebug = function(editor, goto, code)
 			end
 		end
 
-		return;
+		return false;
 	end
 
 	local p = EXPR_PARSER.New();
@@ -144,7 +144,7 @@ EXPR_LIB.ValidateAndDebug = function(editor, goto, code)
 			end
 		end
 
-		return;
+		return false;
 	end
 
 	local c = EXPR_COMPILER.New();
@@ -166,11 +166,13 @@ EXPR_LIB.ValidateAndDebug = function(editor, goto, code)
 			end
 		end
 
-		return;
+		return false;
 	end
 
 	editor.btnValidate:SetText("Validation sucessful");
 	editor.btnValidate:SetColor(Color(0, 255, 255));
 
 	EXPR_LIB.ShowDebug(ts.tokens, pr.tasks);
+
+	return true;
 end;
