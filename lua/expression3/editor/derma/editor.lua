@@ -62,6 +62,9 @@ function PANEL:Init( )
 	self.PaintRows = { }
 	self.Bookmarks = { } 
 	
+	self.tCursors = { } 
+	self.tSelections = { } 
+	
 	self.Blink = RealTime( ) 
 	self.BookmarkWidth = 16
 	self.LineNumberWidth = 2 
@@ -1567,6 +1570,10 @@ end
 function PANEL:DrawTextUnderlay( w, h )
 	self:PaintSelection( self:Selection( ) )
 	
+	for k, v in pairs( self.tSelections ) do
+		self:PaintSelection( v[1], v[2], v[3] )
+	end
+	
 	if self.Params and not self:HasSelection( ) then 
 		surface_SetDrawColor( 160, 160, 160, 255 ) -- TODO: Allow users to configure color and if it is active
 		surface_DrawRect( 
@@ -1625,6 +1632,11 @@ end
 
 function PANEL:DrawTextOverlay( w, h )
 	self:PaintCursor( ) 
+	
+	for k, v in pairs( self.tCursors ) do
+		self:PaintCursor( v )
+	end
+	
 	self:PaintStatus( )
 end
 
@@ -1870,6 +1882,23 @@ function PANEL:PaintStatus( )
 	local Wide, Tall = self:GetSize( )
 	draw_WordBox( 4, Wide - Width - 20 - ( self.pScrollBar.Enabled and 16 or 0 ) , Tall - Height - 20 - ( self.pHScrollBar.Enabled and 16 or 0 ), Line, "Trebuchet18", Color( 50, 50, 50, 100 ), Color( 235, 235, 235, 255 ) )
 end
+
+-- TODO: this 
+function PANEL:AddCursor( sID, Caret )
+	self.tCursors[sID] = { Caret } 
+end
+
+function PANEL:RemoveCursor( sID ) 
+	self.tCursors[sID] = nil 
+end 
+
+function PANEL:AddSelection( sID, tSelection, cColor, bOutline )
+	self.tSelections[sID] = { tSelection, cColor, bOutline } 
+end
+
+function PANEL:RemoveSelection( sID ) 
+	self.tCursors[sID] = nil 
+end 
 
 function PANEL:SyntaxColorLine( Row ) 
 	return { { self.Rows[Row], C_white } }
