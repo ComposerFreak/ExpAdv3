@@ -32,6 +32,8 @@ function COMPILER.Initalize(this, instance)
 	this.__scope.server = true;
 	this.__scope.client = true;
 
+	this.__defined = {};
+
 	this.__constructors = {};
 	this.__operators = {};
 	this.__functions = {};
@@ -225,7 +227,7 @@ function COMPILER.AssignVariable(this, token, declaired, name, class, scope)
 		end
 	else
 		if (not c) then
-			this:Throw(token, "Unable to assign variable %s, Variable doesn't exist", name);
+			this:Throw(token, "Unable to assign variable %s, Variable doesn't exist.", name);
 		elseif (c ~= class) then
 			this:Throw(token, "Unable to assign variable %s, %s expected got %s.", name, c, class);
 		end
@@ -538,19 +540,18 @@ end
 ]]
 
 function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
-
 	local tVars = #inst.variables;
 	local tExprs = #expressions;
 
 	local pos = 1;
-	while pos <= tVars and pos <= tExprs do
+	while pos <= tVars or pos <= tExprs do
 		local t = inst.variables[pos];
 		local expr = expressions[pos];
 
 		if (not t) then
 			this:Throw(expr.token, "Unable to assign here, value #%i has no matching variable.", pos);
 		elseif (not expr) then
-			this:Throw(t, "Unable to assign variable %s, no matching value.")
+			this:Throw(t, "Unable to assign variable %s, no matching value.", t.data);
 		end
 
 		local res, cnt = this:Compile(expr);
@@ -563,6 +564,8 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 				
 				local class, scope, info = this:AssignVariable(tkn, true, var, inst.class, 0);
 				
+				this.__defined[var] = true;
+
 				if (info) then
 					info.prefix = "GLOBAL";
 					this:QueueReplace(inst, tkn, info.prefix .. "." .. tkn.data);
@@ -577,6 +580,8 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 		else
 			local class, scope, info = this:AssignVariable(tkn, true, t.data, inst.class, 0);
 
+			this.__defined[t.data] = true;
+
 			if (info) then
 				info.prefix = "GLOBAL";
 				this:QueueReplace(inst, t, info.prefix .. "." .. t.data);
@@ -585,6 +590,8 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 			pos = pos + 1;
 		end
 	end
+
+	this.__defined = {};
 
 	return "", 0;
 end
@@ -608,7 +615,11 @@ function COMPILER.Compile_LOCAL(this, inst, token, expressions)
 		end
 
 		this:AssignVariable(token, true, variable, r);
+
+		this.__defined[variable] = true;
 	end
+
+	this.__defined = {};
 
 	return "", 0;
 end
@@ -618,14 +629,14 @@ function COMPILER.Compile_ASS(this, inst, token, expressions)
 	local tExprs = #expressions;
 
 	local pos = 1;
-	while pos <= tVars and pos <= tExprs do
+	while pos <= tVars or pos <= tExprs do
 		local t = inst.variables[pos];
 		local expr = expressions[pos];
 
 		if (not t) then
 			this:Throw(expr.token, "Unable to assign here, value #%i has no matching variable.", pos);
 		elseif (not expr) then
-			this:Throw(t, "Unable to assign variable %s, no matching value.")
+			this:Throw(t, "Unable to assign variable %s, no matching value.", t.data);
 		end
 
 		local res, cnt = this:Compile(expr);
@@ -721,7 +732,7 @@ function COMPILER.Compile_AADD(this, inst, token, expressions)
 			this:QueueInjectionAfter(inst, expr.final, ")" );
 		end	
 
-		this:AssignVariable(token, false, variable, r);
+		this:AssignVariable(token, false, token.data, r);
 	end
 end
 
@@ -1751,6 +1762,10 @@ function COMPILER.Compile_CAST(this, inst, token, expressions)
 end
 
 function COMPILER.Compile_VAR(this, inst, token, expressions)
+	if (this.__defined[inst.variable]) then
+		this:Throw(token, "Variable %s is defined here and can not be used as part of an expression.", inst.variable);
+	end
+
 	local c, s, var = this:GetVariable(inst.variable)
 
 	if (var and var.prefix) then

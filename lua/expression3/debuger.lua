@@ -55,7 +55,7 @@ local function ProcessLines(tokens, alltasks)
 
 			if (prefixs) then
 				for _, prefix in pairs(prefixs) do
-					lua[#lua + 1] = {postfix.str .. " ", COLORS.Before}
+					lua[#lua + 1] = {prefix.str .. " ", COLORS.Before}
 				end
 			end
 
