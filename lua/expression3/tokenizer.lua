@@ -289,7 +289,8 @@ end
 --[[
 ]]
 
-function TOKENIZER.CreateToken(this, type, name, data)
+function TOKENIZER.CreateToken(this, type, name, data, origonal)
+
 	if (not data) then
 		data = this.__data;
 	end
@@ -305,7 +306,8 @@ function TOKENIZER.CreateToken(this, type, name, data)
 	tkn.char = this.__readChar;
 	tkn.line = this.__readLine;
 	tkn.depth = this.__depth;
-
+	tkn.orig = origonal;
+	
 	local prev = this.__tokens[#this.__tokens];
 
 	if (prev and prev.line < tkn.line) then
@@ -503,12 +505,12 @@ function TOKENIZER.Loop(this)
 	
 	for k, v in pairs(EXPR_CLASSES) do
 		if (this:NextPattern("%( *" .. k .. " *%)")) then
-			this:CreateToken("cst", "cast", v.id);
+			this:CreateToken("cst", "cast", v.id, k);
 			return true;
 		end
 
 		if (this:NextPattern(k, true)) then
-			this:CreateToken("typ", "type", v.id);
+			this:CreateToken("typ", "type", v.id, k);
 			return true;
 		end
 	end
@@ -535,12 +537,14 @@ function TOKENIZER.Loop(this)
 		local op = v[1];
 
 		if (this:NextPattern(op, true)) then
+			if (op == "}") then
+				this.__depth = this.__depth - 1;
+			end
+
 			this:CreateToken(v[2], v[3]);
 
 			if (op == "{") then
 				this.__depth = this.__depth + 1;
-			elseif (op == "}") then
-				this.__depth = this.__depth - 1;
 			end
 
 			return true;

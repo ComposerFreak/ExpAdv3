@@ -147,12 +147,12 @@ end
 function PARSER.Next(this)
 	this.__pos = this.__pos + 1;
 	
+	this.__token = this.__tokens[this.__pos];
+	this.__next = this.__tokens[this.__pos + 1];
+	
 	if (this.__pos > this.__total) then
 		return false;
 	end
-
-	this.__token = this.__tokens[this.__pos];
-	this.__next = this.__tokens[this.__pos + 1];
 
 	return true;
 end
@@ -453,13 +453,12 @@ function PARSER.Statments(this, block)
 	local stmts = {};
 
 	while true do
-		if (pre and this:Accept("sep")) then
-			sep = true;
-		end
 
 		local stmt = this:Statment_1();
 
 		stmts[#stmts + 1] = stmt;
+
+		local seperated = this:Accept("sep");
 
 		if (not stmt) then
 			break;
@@ -487,6 +486,8 @@ function PARSER.Statments(this, block)
 			end
 		end
 
+		sep = seperated;
+
 		pre = stmt;
 	end
  	
@@ -506,7 +507,7 @@ function PARSER.Statment_1(this)
 
 		inst._else = this:Statment_2();
 
-		this:QueueInjectionAfter(inst, this.__token, "\nend");
+		this:QueueInjectionAfter(inst, this.__token, "end");
 
 		return this:EndInstruction(inst, {});
 	end
@@ -694,6 +695,8 @@ function PARSER.Statment_6(this)
 
 			if (this:Accept("aadd", "asub", "amul", "advi")) then
 				inst.__operator = this.__token;
+
+				inst.type = this.__token.type;
 
 				this:ExcludeWhiteSpace("Assignment operator (%s), must not be preceded by whitespace.", this.__token.data);
 				

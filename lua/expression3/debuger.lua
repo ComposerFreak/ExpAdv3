@@ -12,30 +12,42 @@
 
 local COLORS = {}
 
-COLORS.Generic = Color(2555, 255, 255);
+COLORS.Generic = Color(200, 200, 200);
 COLORS.Removed = Color(255, 0, 0);
 COLORS.Replaced = Color(150, 150, 0);
-COLORS.Before = Color(100, 200, 200);
-COLORS.After = Color(100, 200, 250);
+COLORS.Before = Color(0, 150, 100);
+COLORS.After = Color(0, 100, 150);
 
 local function ProcessLines(tokens, alltasks)
 	local rows = {};
 
 	local expr, lua = {}, {};
 
-	for k, v in pairs(tokens) do
-		
+	for k = 1, #tokens do
+		local v = tokens[k];
+		local data = v.data;
+
+		if (v.orig) then
+			data = v.orig;
+		end
+
 		if (v.newLine) then
 			rows[#rows + 1] = expr;
 			rows[#rows + 1] = lua;
+			rows[#rows + 1] = {{" ", COLORS.Generic}};
 
 			expr, lua = {}, {};
+
+			if (v.depth and v.depth > 0) then
+				expr[#expr + 1] = {string.rep("\t", v.depth) .. " ", COLORS.Generic}
+				lua[#lua + 1] = {string.rep("\t", v.depth) .. " ", COLORS.Generic}
+			end
 		end
 
 		local tasks = alltasks[v.pos];
 
 		if (not tasks) then
-			expr[#expr + 1] = {v.data .. " ", COLORS.Generic}
+			expr[#expr + 1] = {data .. " ", COLORS.Generic}
 			lua[#lua + 1] = {v.data .. " ", COLORS.Generic}
 		else
 
@@ -43,27 +55,27 @@ local function ProcessLines(tokens, alltasks)
 
 			if (prefixs) then
 				for _, prefix in pairs(prefixs) do
-					lua[#lua + 1] = {v.data .. " ", COLORS.Before}
+					lua[#lua + 1] = {postfix.str .. " ", COLORS.Before}
 				end
 			end
 
 			if (not tasks.remove) then
 				if (tasks.replace) then
-					expr[#expr + 1] = {v.data .. " ", COLORS.Replaced}
+					expr[#expr + 1] = {data .. " ", COLORS.Replaced}
 					lua[#lua + 1] = {tasks.replace.str .. " ", COLORS.Replaced}
 				else
-					expr[#expr + 1] = {v.data .. " ", COLORS.Generic}
+					expr[#expr + 1] = {data .. " ", COLORS.Generic}
 					lua[#lua + 1] = {v.data .. " ", COLORS.Generic}
 				end
 			else
-				expr[#expr + 1] = {v.data .. " ", COLORS.Removed}
+				expr[#expr + 1] = {data .. " ", COLORS.Removed}
 			end
 
 			local postfixs = tasks.postfix;
 
 			if (postfixs) then
 				for _, postfix in pairs(postfixs) do
-					lua[#lua + 1] = {v.data .. " ", COLORS.After}
+					lua[#lua + 1] = {postfix.str .. " ", COLORS.After}
 				end
 			end
 		end
@@ -82,7 +94,7 @@ local function ProcessLines(tokens, alltasks)
 		allTokens[#allTokens + 1] = "\n";
 	end
 
-	return rows, table.concat(allTokens, " ");
+	return rows, table.concat(allTokens, "");
 end
 
 EXPR_LIB.ShowDebug = function(tokens, tasks)

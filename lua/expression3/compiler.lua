@@ -175,8 +175,6 @@ function COMPILER.GetOption(this, option, nonDeep)
 end
 
 function COMPILER.SetVariable(this, name, class, scope)
-	print("SetVariable", name, class, scope)
-
 	if (not scope) then
 		scope = this.__scopeID;
 	end
@@ -673,7 +671,7 @@ end
 function COMPILER.Compile_AADD(this, inst, token, expressions)
 	this:QueueReplace(inst, inst.__operator, "=");
 
-	for k = 1, inst.variables do
+	for k = 1, #inst.variables do
 		local token = inst.variables[k];
 		local expr = expressions[k];
 		local r, c = this:Compile(expr);
@@ -705,7 +703,11 @@ function COMPILER.Compile_AADD(this, inst, token, expressions)
 				char = "..";
 			end
 
-			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, char);
+			if (info and info.prefix) then
+				this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, char);
+			else
+				this:QueueInjectionBefore(inst, expr.token, token.data, char);
+			end
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
@@ -726,7 +728,7 @@ end
 function COMPILER.Compile_ASUB(this, inst, token, expressions)
 	this:QueueReplace(inst, inst.__operator, "=");
 
-	for k = 1, inst.variables do
+	for k = 1, #inst.variables do
 		local token = inst.variables[k];
 		local expr = expressions[k];
 		local r, c = this:Compile(expr);
@@ -753,7 +755,11 @@ function COMPILER.Compile_ASUB(this, inst, token, expressions)
 
 		if (not op.operation) then
 
-			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "-");
+			if (info and info.prefix) then
+				this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "-");
+			else
+				this:QueueInjectionBefore(inst, expr.token, token.data, char);
+			end
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
@@ -776,7 +782,7 @@ end
 function COMPILER.Compile_ADIV(this, inst, token, expressions)
 	this:QueueReplace(inst, inst.__operator, "=");
 
-	for k = 1, inst.variables do
+	for k = 1, #inst.variables do
 		local token = inst.variables[k];
 		local expr = expressions[k];
 		local r, c = this:Compile(expr);
@@ -803,7 +809,11 @@ function COMPILER.Compile_ADIV(this, inst, token, expressions)
 
 		if (not op.operation) then
 
-			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data,"/");
+			if (info and info.prefix) then
+				this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "/");
+			else
+				this:QueueInjectionBefore(inst, expr.token, token.data, char);
+			end
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
@@ -824,7 +834,7 @@ end
 function COMPILER.Compile_AMUL(this, inst, token, expressions)
 	this:QueueReplace(inst, inst.__operator, "=");
 
-	for k = 1, inst.variables do
+	for k = 1, #inst.variables do
 		local token = inst.variables[k];
 		local expr = expressions[k];
 		local r, c = this:Compile(expr);
@@ -851,7 +861,11 @@ function COMPILER.Compile_AMUL(this, inst, token, expressions)
 
 		if (not op.operation) then
 
-			this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "*");
+			if (info and info.prefix) then
+				this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "*");
+			else
+				this:QueueInjectionBefore(inst, expr.token, token.data, char);
+			end
 		else
 			-- Implement Operator
 			this.__operators[op.signature] = op.operator;
