@@ -273,14 +273,13 @@ local function DoRightClick( self )
 end
 
 function PANEL:AddTabType( sName, fCreate, fClose )
-	self.tTabTypes[sName] = { NewTab = fCreate, CloseTab, fClose } 
+	self.tTabTypes[sName] = { NewTab = fCreate, CloseTab = fClose } 
 end
 
 function PANEL:NewTab( sType, ... )
 	if self.tTabTypes[sType] then 
-		local pPanel, pTab, tSheet = self.tTabTypes[sType]( self, ... ) 
+		local pPanel, pTab, tSheet = self.tTabTypes[sType].NewTab( self, ... ) 
 		pTab.__type = sType
-		
 		
 		tSheet.Tab.DoRightClick = DoRightClick
 		tSheet.Tab.Editor = self
@@ -295,7 +294,7 @@ function PANEL:CloseTab( pTab, bSave )
 	if pTab == true then pTab = self.pnlTabHolder:GetActiveTab( ) end
 	if not ValidPanel( pTab ) then return end
 	
-	self.tTabTypes[pTab.__type]( self, pTab, bSave )
+	self.tTabTypes[pTab.__type].CloseTab( self, pTab, bSave )
 	
 	self.pnlTabHolder:CloseTab( pTab, true )
 end 
