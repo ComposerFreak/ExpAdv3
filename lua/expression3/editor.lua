@@ -38,26 +38,28 @@ function Golem.Create( )
 end
 
 function Golem.Reload( )
-	include( "editor/font.lua" )
-	include( "editor/vector2.lua" )
+	include( "expression3/editor/font.lua" )
+	include( "expression3/editor/vector2.lua" )
 	
-	if Golem.Instance and ValidPanel( Golem.Instance ) then 
-		Golem.Instance:Close( )
-		Golem.Instance:Remove( )
+	if Golem.Instance then 
+		if ValidPanel( Golem.Instance ) then 
+			Golem.Instance:Close( )
+			Golem.Instance:Remove( )
+		end
 		Golem.Instance = nil
 	end 
 	
-	include( "editor/derma/button.lua" )
-	include( "editor/derma/closebutton.lua" )
-	include( "editor/derma/editor.lua" )
-	include( "editor/derma/filebrowser.lua" )
-	include( "editor/derma/frame.lua" )
-	include( "editor/derma/hscrollbar.lua" )
-	include( "editor/derma/ide.lua" )
-	include( "editor/derma/imagebutton.lua" )
-	include( "editor/derma/options.lua" )
-	include( "editor/derma/propertysheet.lua" )
-	include( "editor/derma/toolbar.lua" )
+	include( "expression3/editor/derma/button.lua" )
+	include( "expression3/editor/derma/closebutton.lua" )
+	include( "expression3/editor/derma/editor.lua" )
+	include( "expression3/editor/derma/filebrowser.lua" )
+	include( "expression3/editor/derma/frame.lua" )
+	include( "expression3/editor/derma/hscrollbar.lua" )
+	include( "expression3/editor/derma/ide.lua" )
+	include( "expression3/editor/derma/imagebutton.lua" )
+	include( "expression3/editor/derma/options.lua" )
+	include( "expression3/editor/derma/propertysheet.lua" )
+	include( "expression3/editor/derma/toolbar.lua" )
 	
 	-- include "editor/derma/syntaxer.lua"
 end

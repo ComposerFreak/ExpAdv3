@@ -174,7 +174,7 @@ function PANEL:Init( )
 		if self.Options then 
 			self.pnlTabHolder:SetActiveTab( self.Options.Tab )
 			self.Options.Panel:RequestFocus( )
-			return 
+			return self.Options.Panel, self.Options.Tab. self.Options
 		end 
 		
 		local Panel = vgui.Create( "GOLEM_Options" ) 
@@ -196,6 +196,9 @@ function PANEL:Init( )
 	
 	
 	
+	self:NewTab( "editor", "global int a = 1")
+	
+	
 	
 	
 	-- self.pnlTabHolder:AddSheet( "Test 1", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
@@ -204,10 +207,10 @@ function PANEL:Init( )
 	
 	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
 	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
-	self:LoadFile( "example 1" ) 
+	-- self:LoadFile( "example 1" ) 
 	-- self:OpenOldTabs( )
 	
-	self:NewTab( "options" )
+	-- self:NewTab( "options" )
 	
 	-- for i = 1, 30 do
 	-- 	self.pnlTabHolder:AddSheet( "Test " .. i, vgui.Create("GOLEM_Editor"), "fugue/script.png" )
@@ -224,11 +227,11 @@ function PANEL:Init( )
 	
 	local w, h, x, y = cookie.GetNumber( "golem_w", math.min( 1000, ScrW( ) * 0.8 ) ), cookie.GetNumber( "golem_h", math.min( 800, ScrH( ) * 0.8 ) ), cookie.GetNumber( "golem_x", ScrW( ) * 0.1 ), cookie.GetNumber( "golem_y", ScrH( ) * 0.1 ) 
 	
-	if x >= ScrW( ) - m_iMinWidth then x = 0 end 
-	if y >= ScrH( ) - m_iMinHeight then y = 0 end 
+	if x >= ScrW( ) - self.m_iMinWidth then x = 0 end 
+	if y >= ScrH( ) - self.m_iMinHeight then y = 0 end 
 	
-	w = math.Clamp( w, m_iMinWidth, ScrW( ) - x )
-	h = math.Clamp( h, m_iMinHeight, ScrH( ) - y )
+	w = math.Clamp( w, self.m_iMinWidth, ScrW( ) - x )
+	h = math.Clamp( h, self.m_iMinHeight, ScrH( ) - y )
 	
 	self:SetSize( w, h )
 	self:SetPos( x, y )
@@ -447,7 +450,7 @@ local function TempID( )
 end 
 
 function PANEL:SaveTempFile( Tab )
-	if not ValidPanel( Tab ) or not Tab.__type == "editor" then return end
+	if not ValidPanel( Tab ) or Tab.__type ~= "editor" then return end
 	local sCode = Tab:GetPanel( ):GetCode( )
 	local sPath = Tab.TempFile or "golem_temp/" .. TempID( ) .. ".txt"
 	MakeFolders( sPath )
@@ -548,7 +551,8 @@ end
 Code Validation
 ---------------------------------------------------------------------------*/
 function PANEL:DoValidate( Goto, Code )
-	--[[Code = Code or self:GetCode( )
+	Code = Code or self:GetCode( )
+	--[[
 	
 	if not Code or Code == "" then
 		self:OnValidateError( false,"No code submited, compiler exited.")
@@ -568,7 +572,7 @@ function PANEL:DoValidate( Goto, Code )
 	return true
 	]]
 
-	return EXPR_LIB.ValidateAndDebug(this, Goto, Code);
+	return EXPR_LIB.ValidateAndDebug(self, Goto, Code);
 end
 
 function PANEL:OnValidateError( Goto, Error )

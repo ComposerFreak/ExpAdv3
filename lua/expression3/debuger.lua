@@ -32,7 +32,7 @@ local function ProcessLines(tokens, alltasks)
 			expr, lua = {}, {};
 		end
 
-		local taks = alltasks[v.pos];
+		local tasks = alltasks[v.pos];
 
 		if (not tasks) then
 			expr[#expr + 1] = {v.data .. " ", COLORS.Generic}
@@ -74,22 +74,22 @@ local function ProcessLines(tokens, alltasks)
 
 	local allTokens = {};
 
-	for k, row in pairs(Rows) do
+	for k, row in pairs(rows) do
 		for j, token in pairs(row) do
-			allTokens[#AllTokens + 1] = token[1];
+			allTokens[#allTokens + 1] = token[1];
 		end
 
 		allTokens[#allTokens + 1] = "\n";
 	end
 
-	return rows, table.concat(AllTokens, " ");
+	return rows, table.concat(allTokens, " ");
 end
 
 EXPR_LIB.ShowDebug = function(tokens, tasks)
 	if (Golem) then
 		local inst = Golem:GetInstance();
 
-		local rows, text = ProcessLines(tokens, alltasks);
+		local rows, text = ProcessLines(tokens, tasks);
 
 		local editor, tab, sheet = inst:NewTab("editor", text, nil, "Debug");
 
@@ -97,7 +97,14 @@ EXPR_LIB.ShowDebug = function(tokens, tasks)
 		editor._OnTextChanged = function() end;
 
 		sheet.Panel.SyntaxColorLine = function(self, row)
-			return rows[row];
+			-- print( "SCL" )
+			-- print( rows[row] )
+			
+			if rows[row] then 
+				-- PrintTableGrep( rows[row] ) 
+				return rows[row];
+			end 
+			return {{self.Rows[row], Color(255,255,255)}}
 		end;
 	end
 end
@@ -149,7 +156,7 @@ EXPR_LIB.ValidateAndDebug = function(editor, goto, code)
 
 	local c = EXPR_COMPILER.New();
 
-	c:Initalize();
+	c:Initalize(pr);
 
 	local cs, cr = c:Run();
 
@@ -172,7 +179,7 @@ EXPR_LIB.ValidateAndDebug = function(editor, goto, code)
 	editor.btnValidate:SetText("Validation sucessful");
 	editor.btnValidate:SetColor(Color(0, 255, 255));
 
-	EXPR_LIB.ShowDebug(ts.tokens, pr.tasks);
+	EXPR_LIB.ShowDebug(tr.tokens, pr.tasks);
 
 	return true;
 end;
