@@ -663,7 +663,7 @@ function COMPILER.Compile_ASS(this, inst, token, expressions)
 				local class, scope, info = this:AssignVariable(tkn, false, var, res);
 				
 				if (info and info.prefix) then
-					this:QueueReplacee(inst, tkn, info.prefix .. "." .. tkn.data);
+					this:QueueReplace(inst, tkn, info.prefix .. "." .. tkn.data);
 				end
 
 				pos = pos + 1;
