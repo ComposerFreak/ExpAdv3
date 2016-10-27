@@ -57,11 +57,11 @@
 			Expr19 ← ("!" Expr22)? Expr20
 			Expr20 ← ("#" Expr22)? Expr21
 			Expr21 ← ("("type")" Expr1)? Expr22
-			Expr22 ← ("(" Expr1 ")")? Expr23
-			Expr23 ← (Var)? Expr24
-			Expr24 ← ("new" Type "(" (Expr1 ((","")?)*)?) ")")? Expr25
-			Expr25 ← Expr26? Expr27
-			Expr26 ← (library "." function "(" (Expr1 ((","")?)*)?) ")")?
+			Expr22 ← ("(" Expr1 ")" (Trailing)?)? Expr23
+			Expr23 ← (Library "." Function  "(" (Expr1 ((","")?)*)?) ")")? Expr24
+			Expr24 ← (Var (Trailing)?)? Expr25
+			Expr25 ← ("new" Type "(" (Expr1 ((","")?)*)?) ")")? Expr25
+			Expr26 ← Expr27? Error
 			Expr27 ← (String / Number / "true" / "false", "void")?
 
 		:::Syntax:::
@@ -69,6 +69,9 @@
 			Block ← "{" (Stmt1 ((";" / " ") Stmt1)*)? "}"
 			Values ← "[" Expr1 ("," Expr1)* "]"
 			Raw ← (Str / Num / Bool)
+			Trailing ← (Method / Get)?
+			Method ← (("." Method "(" (Expr1 ((","")?)*)?) ")")? 
+			Get ← ("[" Expr1 ("," Type)? "]")?
 
 ]]
 

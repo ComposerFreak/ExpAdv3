@@ -752,6 +752,8 @@ function EXPR_LIB.Initalize()
 
 	hook.Run("Expression3.LoadGolem");
 
+	include("debuger.lua");
+
 	MsgN("Expression 3 has loaded.");
 end
 
@@ -761,7 +763,7 @@ end
 ]]
 
 hook.Add("Expression3.LoadGolem", "Expression3.Golem.Init", function()
-	include("expression3/editor.lua");
+	include("editor.lua");
 	Golem.Init();
 end);
 
@@ -771,3 +773,9 @@ end);
 ]]
 
 EXPR_LIB.Initalize();
+
+if (CLIENT) then
+	concommand.Add("e3_editor", function()
+		Golem.Open( nil ); 
+	end)
+end

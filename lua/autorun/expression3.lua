@@ -31,4 +31,6 @@ AddCSLuaFile("expression3/compiler.lua");
 
 AddCSLuaFile("expression3/editor.lua");
 
+AddCSLuaFile("expression3/debuger.lua");
+
 include("expression3/expr_lib.lua");
