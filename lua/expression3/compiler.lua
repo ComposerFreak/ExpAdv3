@@ -84,9 +84,17 @@ function COMPILER.BuildScript(this)
 
 	local buffer = {};
 	local alltasks = this.__tasks;
+
+	local char = 0;
+	local line = 1;
+	local traceTable = {{}};
+
 	for k, v in pairs(this.__tokens) do
 
 		if (v.newLine) then
+			char = 0;
+			line = line + 1;
+			traceTable[line] = {};
 			buffer[#buffer + 1] = "\n";
 		end
 
@@ -98,15 +106,21 @@ function COMPILER.BuildScript(this)
 
 			if (prefixs) then
 				for _, prefix in pairs(prefixs) do
+					traceTable[line][char] = {v.line, v.char};
 					buffer[#buffer + 1] = prefix.str;
+					char = char + #prefix.str + 1;
 				end
 			end
 
 			if (not tasks.remove) then
 				if (tasks.replace) then
+					traceTable[line][char] = {v.line, v.char};
 					buffer[#buffer + 1] = tasks.replace.str;
+					char = char + #tasks.replace;
 				else
+					traceTable[line][char] = {v.line, v.char};
 					buffer[#buffer + 1] = v.data;
+					char = char + #v.data + 1;
 				end
 			end
 
@@ -114,15 +128,19 @@ function COMPILER.BuildScript(this)
 
 			if (postfixs) then
 				for _, postfix in pairs(postfixs) do
+					traceTable[line][char] = {v.line, v.char};
+					char = char + #postfix.str + 1;
 					buffer[#buffer + 1] = postfix.str;
 				end
 			end
 		else
+			traceTable[line][char] = {v.line, v.char};
 			buffer[#buffer + 1] = v.data;
+			char = char + #v.data + 1;
 		end
 	end
 
-	return table.concat(buffer, " ");
+	return table.concat(buffer, " "), traceTable;
 end
 
 function COMPILER.Throw(this, token, msg, fst, ...)
