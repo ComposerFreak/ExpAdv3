@@ -65,7 +65,7 @@ function COMPILER._Run(this)
 
 	this:Compile(this.__root);
 
-	local script = this:BuildScript();
+	local script, traceTbl = this:BuildScript();
 
 	local result = {}
 	result.script = this.__script;
@@ -75,7 +75,8 @@ function COMPILER._Run(this)
 	result.functions = this.__functions;
 	result.methods = this.__methods;
 	result.enviroment = this.__enviroment;
-
+	result.traceTbl = traceTbl;
+	
 	return result;
 end
 
@@ -1053,7 +1054,7 @@ function COMPILER.Compile_BXOR(this, inst, token, expressions)
 		
 		this:QueueInjectionAfter(inst, expr2.final, ")" );
 
-		this.__enviroment.bit = bit;
+		
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
 
@@ -1091,7 +1092,6 @@ function COMPILER.Compile_BOR(this, inst, token, expressions)
 		
 		this:QueueInjectionAfter(inst, expr2.final, ")" );
 
-		this.__enviroment.bit = bit;
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
 
@@ -1129,7 +1129,7 @@ function COMPILER.Compile_BAND(this, inst, token, expressions)
 		
 		this:QueueInjectionAfter(inst, expr2.final, ")" );
 
-		this.__enviroment.bit = bit;
+		
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
 
@@ -1365,7 +1365,7 @@ function COMPILER.Compile_BSHL(this, inst, token, expressions)
 		
 		this:QueueInjectionAfter(inst, expr2.final, ")" );
 
-		this.__enviroment.bit = bit;
+		
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
 
@@ -1403,7 +1403,7 @@ function COMPILER.Compile_BSHR(this, inst, token, expressions)
 		
 		this:QueueInjectionAfter(inst, expr2.final, ")" );
 
-		this.__enviroment.bit = bit;
+		
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
 
