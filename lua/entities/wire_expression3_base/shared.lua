@@ -10,6 +10,16 @@
 	::Expression 3 Base::
 ]]
 
+local CONTEXT = {};
+CONTEXT.__index = CONTEXT;
+
+function CONTEXT:Throw(errTbl)
+
+end
+
+--[[
+]]
+
 function ENT:SetCode(script)
 	this.script = script;
 
@@ -41,49 +51,30 @@ function ENT:SetCode(script)
 		return false;
 	end
 
+	self.nativeScript = res.script;
 	self:BuildContext(res);
 
 	return true;
 end
 
---[[ I dont need this yet.
-local function import(env, object)
-	local G = _G;
-	local E = env;
-	local exp = string.Explode(".", object);
-
-	for i = 1, #exp do
-		local k = exp[i];
-
-		if (i == #exp) then
-			E[k] = G[k];
-			break;
-		end
-
-		if (G[k]) then
-			local v = G[k];
-
-			if (istable(v)) then
-				
-				if (not E[v]) then
-					E[v] = {};
-				end
-
-				E = E[v];
-				G = G[V];
-			else
-				error("Failed to import " .. object, 1);
-			end
-		end
-	end
-end
+--[[
 ]]
+
+function ENT:BuildContext(instance)
+	local context = setmetatable({}, CONTEXT);
+	context.entity = self;
+	context.player = self.player;
+
+	self:BuildEnv(context, instance);
+
+	self.context = this;
+end
 
 function ENT:BuildEnv(Context, instance)
 
 	local env = {};
 	env.GLOBAL  = {};
-	env.CONTEXT = Context;
+	env.CONTEXT = context;
 	env._OPS	= instance.operators;
 	env._CONST	= instance.constructors;
 	env._METH	= instance.methods;
@@ -99,9 +90,30 @@ function ENT:BuildEnv(Context, instance)
 		error("Attempt to write to lua environment " .. v, 1);
 	end 
 
-	Context.env = env;
+	context.env = env;
 
 	-- TODO: Initalize global variables.
 
 	return setmetatable(env, meta);
+end
+
+function ENT:InitScript()
+	local native = table.concat({
+		"return function(env)",
+		"	setfenv(1, env);",
+			self.nativeScript,
+		"end",
+	}, "\n");
+
+	local main = CompileString(native, "Expression 3", false);
+
+	if (isstring(main)) then
+		local err = {};
+		this:Throw(err); -- TODO: Error message :P
+		return;
+	end
+
+	local initFunc = main(self.context);
+
+	--TODO: Execute code here.
 end
