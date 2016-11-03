@@ -134,6 +134,10 @@ function COMPILER.BuildScript(this)
 					buffer[#buffer + 1] = postfix.str;
 				end
 			end
+
+			if (tasks.instruction) then
+				traceTable[line][char][3] = tasks.instruction.type;
+			end
 		else
 			traceTable[line][char] = {v.line, v.char};
 			buffer[#buffer + 1] = v.data;
@@ -379,20 +383,27 @@ end
 --[[
 ]]
 
---local i = 0;
+function COMPILER.QueueInstruction(this, inst, inst.token, inst.type);
+	local op = {};
+	op.token = token;
+	op.inst = inst;
+	op.type = type;
 
-function COMPILER.Compile(this, inst)
+	local tasks = this.__tasks[token.pos];
 
-	--[[i = i + 1;
-
-	if (i >= 100) then
-		debug.Trace()
-		error("LOOP EXIRED");
+	if (not tasks) then
+		tasks = {};
+		this.__tasks[token.pos] = tasks;
 	end
 
-	print(i .. ", " .. inst.type .. ", " .. tostring(inst.compiled));
-	]]
+	if (not tasks.instruction) then
+		tasks.instruction = op;
+	end
 
+	return op;
+end
+
+function COMPILER.Compile(this, inst)
 	if (not inst) then
 		debug.Trace();
 		error("Compiler was asked to compile a nil instruction.")
@@ -407,6 +418,8 @@ function COMPILER.Compile(this, inst)
 		if (not fun) then
 			this:Throw(inst.token, "Failed to compile unknown instruction %s", instruction);
 		end
+
+		this:QueueInstruction(inst, inst.token, inst.type);
 
 		local type, count = fun(this, inst, inst.token, inst.instructions);
 

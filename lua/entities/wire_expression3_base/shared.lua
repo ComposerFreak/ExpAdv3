@@ -13,17 +13,10 @@
 local CONTEXT = {};
 CONTEXT.__index = CONTEXT;
 
-function CONTEXT.Throw(this, error, fst, ...)
-	local err = {};
+function CONTEXT.Trace(this, level, max)
+	local stack = {};
 
-	if (fst) then
-		msg = string.format(msg, fst, ...);
-	end
-
-	local trace;
-	local level = 1;
-
-	while(true) do
+	for i = level + 1, max do
 		local info = debug.getinfo( level, "Sln" );
 		
 		if (not info) then
@@ -31,14 +24,30 @@ function CONTEXT.Throw(this, error, fst, ...)
 		end
 
 		if (info.short_src == "Expresion 3") then
-			trace = this:GetScriptPos(info.currentline, 0)
-			break;
+			local trace = this:GetScriptPos(info.currentline, 0);
+
+			if (trace) then
+				trace.level = #stack + 1;
+				stack[stack.level] = trace;
+			end
 		end
 	end
 
+	return trace;
+end
+
+function CONTEXT.Throw(this, error, fst, ...)
+	if (fst) then
+		msg = string.format(msg, fst, ...);
+	end
+
+	local stack = this:Trace(1, 1);
+	local trace = stack[1];
+	
+	local err = {};
 	err.state = "runtime";
-	err.char = trace and trace[1] or 0;
-	err.line = trace and trace[2] or 0;
+	err.char = trace[1];
+	err.line = trace[2];
 	err.msg = msg;
 
 	error(err, 0);
@@ -49,13 +58,13 @@ function CONTEXT.GetScriptPos(this, line, char)
 		if (l >= line) then
 			for c = 1, trace in pairs(row) do
 				if (c >= char) then
-					return true, trace[1], trace[2];
+					return trace;
 				end
 			end
 		end
 	end
 
-	return false, 0, 0;
+	return nil;
 end
 
 --[[
@@ -222,7 +231,7 @@ function ENT:HandelThrown(thrown)
 	end
 
 	if (istable(thrown)) then
-		
+
 	end
 end
 
