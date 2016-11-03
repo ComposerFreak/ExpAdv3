@@ -13,14 +13,55 @@
 local CONTEXT = {};
 CONTEXT.__index = CONTEXT;
 
-function CONTEXT:Throw(errTbl)
+function CONTEXT.Throw(this, error, fst, ...)
+	local err = {};
 
+	if (fst) then
+		msg = string.format(msg, fst, ...);
+	end
+
+	local trace;
+	local level = 1;
+
+	while(true) do
+		local info = debug.getinfo( level, "Sln" );
+		
+		if (not info) then
+			break;
+		end
+
+		if (info.short_src == "Expresion 3") then
+			trace = this:GetScriptPos(info.currentline, 0)
+			break;
+		end
+	end
+
+	err.state = "runtime";
+	err.char = trace and trace[1] or 0;
+	err.line = trace and trace[2] or 0;
+	err.msg = msg;
+
+	error(err, 0);
+end
+
+function CONTEXT.GetScriptPos(this, line, char)
+	for l, row in pairs(this.traceTable) do
+		if (l >= line) then
+			for c = 1, trace in pairs(row) do
+				if (c >= char) then
+					return true, trace[1], trace[2];
+				end
+			end
+		end
+	end
+
+	return false, 0, 0;
 end
 
 --[[
 ]]
 
-function ENT:SetCode(script)
+function ENT:SetCode(script, run)
 	this.script = script;
 
 	local Toker = EXPR_TOKENIZER.New();
@@ -46,13 +87,20 @@ function ENT:SetCode(script)
 	end
 
 	if (not ok) then
-		self:Throw(res);
+		self:HandelThrown(res);
 
 		return false;
 	end
 
 	self.nativeScript = res.script;
+
 	self:BuildContext(res);
+
+	if (run) then
+		timer.Simple(1, function()
+			self:InitScript();
+		end);
+	end
 
 	return true;
 end
@@ -62,8 +110,10 @@ end
 
 function ENT:BuildContext(instance)
 	local context = setmetatable({}, CONTEXT);
+
 	context.entity = self;
 	context.player = self.player;
+	context.traceTable = instance.traceTbl;
 
 	self:BuildEnv(context, instance);
 
@@ -92,7 +142,7 @@ function ENT:BuildEnv(Context, instance)
 
 	context.env = env;
 
-	-- TODO: Initalize global variables.
+	hook.Run("Expression3.BuildEntitySandbox", self, self.context, env);
 
 	return setmetatable(env, meta);
 end
@@ -108,12 +158,75 @@ function ENT:InitScript()
 	local main = CompileString(native, "Expression 3", false);
 
 	if (isstring(main)) then
-		local err = {};
-		this:Throw(err); -- TODO: Error message :P
+		self:HandelThrown(main);
 		return;
 	end
 
-	local initFunc = main(self.context);
+	local init = main(self.context);
 
-	--TODO: Execute code here.
+	hook.Run("Expression3.StartEntity", self, self.context);
+
+	self.context.status = self:Execute(init);
 end
+
+--[[
+]]
+
+function ENT:Execute(func, ...)
+	self:PreExecute();
+
+	local results = {pcall(func, ...)};
+
+	self:PostExecute();
+
+	if (results[1]) then
+		hook.Run("Expression3.UpdateEntity", self, self.context);
+	else
+		self:HandelThrown(results[2]);
+	end
+
+	return unpack(results);
+end
+
+function ENT:PreExecute()
+
+end
+
+function ENT:PostExecute()
+
+end
+
+--[[
+]]
+
+function ENT:IsRunning()
+	return (self.context and self.context.status);
+end
+
+function ENT:ShutDown()
+	if (self:IsRunning()) then
+		self.context.status = false;
+		hook.Run("Expression3.StopEntity", self, self.context);
+	end
+end
+
+function ENT:HandelThrown(thrown)
+	self:ShutDown();
+
+	if (not thrown) then
+
+	end
+
+	if (isstring(thrown)) then
+
+	end
+
+	if (istable(thrown)) then
+		
+	end
+end
+
+--[[
+]]
+
+

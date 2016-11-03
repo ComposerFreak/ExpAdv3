@@ -24,6 +24,10 @@
 		Expression3.LoadFunctions				-> Functions must be registered inside this hook.
 		Expression3.LoadEvents					-> Events must be registered inside this hook.
 		Expression3.PostRegisterExtensions		-> This is called once expadv3 has loaded its extensions.
+		Expression3.BuildEntitySandbox			-> This is called when building the sandboxed enviroment for an entity.		-> (entity, context, enviroment)
+		Expression3.StartEntity					-> This is called when an entity is about to run for the first time.		-> (entity, context)
+		Expression3.UpdateEntity				-> This is called when an entity has sucessfuly executed.					-> (entity, context)
+		Expression3.StopEntity					-> This is called when an entity has shutdown for any given reason.			-> (entity, context)
 	
 	::IMPORTANT::
 		You should use 'Extension = EXPR_LIB.RegisterExtension(string)' to create a new Extension object.
@@ -39,7 +43,7 @@
 		The first parameter to an operator / casting operator function will always be context unless exclude context is true;
 		A method's function can be a string, if so the compiler will attempt to use a native lua method on that object.
 		The first parameter to a method's function will always be context unless exclude context is true;
-		A function's function can be a string, if so the compiler will attempt to use a native lua function at the given string; e.g string.replace.
+		NO LONGER SUPPORTED: A function's function can be a string, if so the compiler will attempt to use a native lua function at the given string; e.g string.replace.
 		The first parameter to a function's function will always be context unless exclude context is true;
 	
 	::Examples::
@@ -115,7 +119,7 @@
 
 		EXPR_LIB.RegisterFunction(str library, str name, str parameters, str type, number amount of values returned, (obj = function(ctx, ...) / str) function, boolean exclude context)
 			Registers a function with library, these functions are overloaded.
-			If function is a string then expression 3 will use _G[str function]() with out context as a parameter.
+			NO LONGER SUPPORTED: If function is a string then expression 3 will use _G[str function]() with out context as a parameter.
 
 		EXPR_LIB.RegisterEvent(str name, str parameters, str type, number amount of values returned)
 			Registers an event with expression 3.
@@ -133,7 +137,7 @@
 		Extension.RegisterConstructorRegisterConstructor(str class, str parameters, obj = function(ctx*, ...) constructor, boolean exclude context)
 			Calls EXPR_LIB.RegisterConstructorRegisterConstructor(...) at the correct time with all given valid parameters.
 
-		Extension:RegisterMethod(class, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) method / string)*, boolean exclude context)
+		Extension:RegisterMethod(class, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) method) / string*, boolean exclude context)
 			Calls EXPR_LIB.RegisterMethod(...) at the correct time with all given valid parameters.
 
 		Extension:RegisterOperator(str operation, str parameters, str type, number amount of values returned, obj = function(ctx*, ...) operator*, boolean exclude context)
@@ -145,7 +149,7 @@
 		Extension:RegisterLibrary(name)
 			Calls EXPR_LIB.RegisterLibrary(...) at the correct time with all given valid parameters.
 
-		Extension:RegisterFunction(str library, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) / str) function, boolean exclude context)
+		Extension:RegisterFunction(str library, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...)) function, boolean exclude context)
 			Calls EXPR_LIB.RegisterFunction(...) at the correct time with all given valid parameters.
 
 		Extension:RegisterEvent(str name, str parameters, str type, number amount of values returned)
