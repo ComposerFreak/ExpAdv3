@@ -16,7 +16,7 @@ CONTEXT.__index = CONTEXT;
 function CONTEXT.Trace(this, level, max)
 	local stack = {};
 
-	for i = level + 1, max do
+	for i = level + 1, level + max do
 		local info = debug.getinfo( level, "Sln" );
 		
 		if (not info) then
