@@ -34,7 +34,9 @@ function Golem.Create( )
 	Golem.Instance = vgui.Create( "GOLEM_IDE" ) 
 	Golem.Instance:SetText( "Expression Advanced 3 IDE - Golem" )
 	Golem.Instance:SetIcon( "fugue/application-sidebar-list.png" ) // Keep or not to keep, that is the question.
-	Golem.Instance:MakePopup( ) 
+	Golem.Instance:Open( )
+	
+	hook.Run( "Expression3.GolemInit" ) 
 end
 
 function Golem.Reload( )
@@ -70,7 +72,9 @@ function Golem.GetInstance( )
 end
 
 function Golem.Open( sFile ) 
-	Golem.Create( ) 
+	if not Golem.Instance then Golem.Create( ) 
+	else Golem.Instance:Open( ) end 
+	
 	if sFile then 
 		Golem.Instance:LoadFile( sFile )
 	end 

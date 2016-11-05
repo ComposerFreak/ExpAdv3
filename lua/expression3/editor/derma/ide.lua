@@ -115,7 +115,7 @@ function PANEL:Init( )
 	-- Default Tab Types init 
 	-- self:AddTabType( sName, fCreate, fClose )
 	
-	self:AddTabType( "editor", function( self, sCode, sPath, sName) 
+	self:AddTabType( "editor", function( self, sCode, sPath, sName ) 
 		if sPath and not string.EndsWith( sPath, ".txt" ) then sPath = sPath .. ".txt" end 
 		if sPath and not string.StartWith( sPath, "golem/" ) then sPath = "golem/" .. sPath end
 		if sPath and self.FileList[sPath] then 
@@ -170,7 +170,7 @@ function PANEL:Init( )
 		end
 	end )
 	
-	self:AddTabType( "options", function(self) 
+	self:AddTabType( "options", function( self ) 
 		if self.Options then 
 			self.pnlTabHolder:SetActiveTab( self.Options.Tab )
 			self.Options.Panel:RequestFocus( )
@@ -189,14 +189,14 @@ function PANEL:Init( )
 		end
 		
 		return Panel, Sheet.Tab, Sheet 
-	end, function(self, pTab, bSave) 
+	end, function( self, pTab, bSave ) 
 		self.Options = nil
 	end )
 	
+	hook.Run( "Expression3.AddGolemTabTypes", self )
 	
 	
-	
-	self:NewTab( "editor", "global int a = 1")
+	self:NewTab( "editor", "global int a = 1" )
 	
 	
 	
@@ -532,6 +532,13 @@ function PANEL:DoAutoRefresh( )
 			
 			if file.Time( File, "DATA" ) ~= Tab.LastEdit then 
 				Tab.LastEdit = file.Time( File, "DATA" )
+				
+				if not self:IsVisible( ) then 
+					self.ChangeQueue = self.ChangeQueue or { }
+					self.ChangeQueue[File] = true
+					continue 
+				end 
+				
 				local Message = string.format( "File %q has been changed outside of the editor, would you like to refresh?", File )
 				
 				local function YesFunc( ) 
@@ -986,8 +993,31 @@ function PANEL:Close( )
 		self:ToggleVoice( )
 	end
 	
-	-- Temp
-	-- self:Remove( )
+	hook.Run( "Expression3.CloseGolem" ) 
+end
+
+function PANEL:Open( )
+	self:SetVisible( true )
+	self:MakePopup( )
+	
+	if self.ChangeQueue then 
+		for File, _ in pairs( self.ChangeQueue ) do
+			local Message = string.format( "File %q has been changed outside of the editor, would you like to refresh?", File )
+			
+			local function YesFunc( ) 
+				if not IsValid( Panel ) then return end 
+				Panel:SetCode( self:GetFileCode( File, true ) ) 
+			end 
+			
+			local Window = Derma_Query( Message, "Update tab?", "Refresh", YesFunc, "Ignore", function( ) end )
+				
+			timer.Simple( 30, function( ) if IsValid( Window ) then Window:Close( ) end end )
+		end
+		
+		self.ChangeQueue = nil 
+	end 
+	
+	hook.Run( "Expression3.OpenGolem" ) 
 end
 
 vgui.Register( "GOLEM_IDE", PANEL, "EditablePanel" )
