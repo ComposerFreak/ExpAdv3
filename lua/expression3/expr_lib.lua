@@ -6,14 +6,14 @@
 	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
 	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
-
+	
 	::Expression Advanced 3 Library::
 	`````````````````````````````````
 		Some operators, methods and functions can return more then one value of the same type at once.
 		You need to tell the compiler how many results it returns even if that is 0.
 		Parameters should always be class id's separated by a comma (,); e.g "n,n,s".
 		All documentation below is to be considered work in progress and this api will more then likely change.
-		
+	
 	::HOOKS::
 		Expression3.RegisterExtensions			-> Called when extensions should be registered.
 		Expression3.LoadClasses					-> Classes must be registered inside this hook.
@@ -28,6 +28,10 @@
 		Expression3.StartEntity					-> This is called when an entity is about to run for the first time.		-> (entity, context)
 		Expression3.UpdateEntity				-> This is called when an entity has sucessfuly executed.					-> (entity, context)
 		Expression3.StopEntity					-> This is called when an entity has shutdown for any given reason.			-> (entity, context)
+		Expression3.GolemInit					-> this is called when the editor is created.
+		Expression3.OpenGolem					-> this is called when the editor opens.
+		Expression3.CloseGolem					-> this is called when the editor closes.
+		Expression3.AddGolemTabTypes			-> This is called when custom tab types should be registered on the editor. -> (Editor)
 	
 	::IMPORTANT::
 		You should use 'Extension = EXPR_LIB.RegisterExtension(string)' to create a new Extension object.
