@@ -7,6 +7,17 @@
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
 	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
 
-	::Compiler::
+	::Expression 3 Base::
 ]]
+
+include("shared.lua");
+
+function ENT:SubmitToServer(code)
+	if (code and code ~= "") then
+		net.Start("Expression3.SubmitToServer");
+			net.WriteEntity(self)
+			net.WriteString(code);
+		net.SendToServer();
+	end
+end
 

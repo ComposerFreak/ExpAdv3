@@ -10,6 +10,12 @@
 	::Expression 3 Base::
 ]]
 
+AddCSLuaFile();
+
+--[[
+	Base Context:
+]]
+
 local CONTEXT = {};
 CONTEXT.__index = CONTEXT;
 
@@ -28,7 +34,7 @@ function CONTEXT.Trace(this, level, max)
 
 			if (trace) then
 				trace.level = #stack + 1;
-				stack[stack.level] = trace;
+				stack[trace.level] = trace;
 			end
 		end
 	end
@@ -68,6 +74,7 @@ function CONTEXT.GetScriptPos(this, line, char)
 end
 
 --[[
+	Set Code
 ]]
 
 function ENT:SetCode(script, run)
@@ -115,6 +122,7 @@ function ENT:SetCode(script, run)
 end
 
 --[[
+	Building a new context
 ]]
 
 function ENT:BuildContext(instance)
@@ -179,6 +187,7 @@ function ENT:InitScript()
 end
 
 --[[
+	Executing
 ]]
 
 function ENT:Execute(func, ...)
@@ -206,6 +215,7 @@ function ENT:PostExecute()
 end
 
 --[[
+	Gate is running and exceptions
 ]]
 
 function ENT:IsRunning()

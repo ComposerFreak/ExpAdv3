@@ -10,3 +10,36 @@
 	::Expression 3 Base::
 ]]
 
+AddCSLuaFile("cl_init.lua");
+include("shared.lua");
+
+--[[
+]]
+
+util.AddNetworkString("Expression3.SubmitToServer");
+
+net.Receive("Expression3.SubmitToServer", function(len, ply)
+	local ent = net.ReadEntity();
+	local script = net.ReadString();
+
+	if (IsValid(ent) and ent.ReceiveFromClient) then
+		ent:ReceiveFromClient(ply, script);
+	end	
+end)
+
+function ENT:ReceiveFromClient(ply, script)
+	if (self:CanSetCode(ply)) then
+		timer.Simple(1, function()
+			if (IsValid(self) then
+				self:SetCode(script, true);
+			end
+		end);
+	end
+end
+
+--[[
+]]
+
+function ENT:CanSetCode(ply)
+	return true; -- TODO: Make this do somthing more secure.
+end
