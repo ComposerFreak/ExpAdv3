@@ -784,8 +784,8 @@ EXPR_LIB.Initalize();
 
 if (CLIENT) then
 	concommand.Add("e3_editor", function()
-		local Editor = Golem.GetInstance()
-		Editor:SetVisible(true)
-		Editor:MakePopup()
+		local editor = Golem.GetInstance();
+		editor:SetVisible(true);
+		editor:MakePopup();
 	end)
 end

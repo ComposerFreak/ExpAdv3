@@ -12,6 +12,14 @@
 
 AddCSLuaFile();
 
+ENT.Type 			= "anim"
+ENT.Base 			= "base_gmodentity"
+
+ENT.PrintName       = "Expression 3"
+ENT.Author          = "Rusketh"
+ENT.Contact         = ""
+ENT.Expression3 	= true
+
 --[[
 	Base Context:
 ]]
@@ -141,6 +149,8 @@ function ENT:BuildEnv(Context, instance)
 
 	local env = {};
 	env.GLOBAL  = {};
+	env.SERVER = SERVER;
+	env.CLIENT = CLIENT;
 	env.CONTEXT = context;
 	env._OPS	= instance.operators;
 	env._CONST	= instance.constructors;

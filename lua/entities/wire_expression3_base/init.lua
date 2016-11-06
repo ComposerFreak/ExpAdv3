@@ -43,3 +43,13 @@ end
 function ENT:CanSetCode(ply)
 	return true; -- TODO: Make this do somthing more secure.
 end
+
+--[[
+]]
+
+function ENT:Initialize( )
+	self:PhysicsInit(SOLID_VPHYSICS);
+	self:SetMoveType(MOVETYPE_VPHYSICS);
+	self:SetSolid(SOLID_VPHYSICS);
+	self:SetUseType(SIMPLE_USE);
+end
