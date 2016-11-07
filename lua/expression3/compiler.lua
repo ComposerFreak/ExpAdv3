@@ -383,7 +383,7 @@ end
 --[[
 ]]
 
-function COMPILER.QueueInstruction(this, inst, inst.token, inst.type);
+function COMPILER.QueueInstruction(this, inst, inst, token, inst, type)
 	local op = {};
 	op.token = token;
 	op.inst = inst;

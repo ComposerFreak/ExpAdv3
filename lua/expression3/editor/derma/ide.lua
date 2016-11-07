@@ -96,7 +96,7 @@ function PANEL:Init( )
 	self.tbBottom:SetupButton( "Save As", "fugue/disks-black.png", RIGHT, function( ) self:SaveFile( true, true ) end )
 	self.tbBottom:SetupButton( "Save", 	"fugue/disk-black.png", RIGHT, function( ) self:SaveFile( true ) end )
 	
-	self.tbRight:SetupButton( "Options", "fugue/gear.png", BOTTOM, function( ) self:NewTab( "options" ) end )
+	-- self.tbRight:SetupButton( "Options", "fugue/gear.png", BOTTOM, function( ) self:NewTab( "options" ) end )
 	
 	
 	
@@ -105,12 +105,23 @@ function PANEL:Init( )
 	-- self.tbRight:SetupButton( "Open user manual", 	"fugue/question.png", 	TOP, function( ) end )
 	-- self.tbRight:SetupButton( "Visit the wiki", 	"fugue/home.png", 		BOTTOM, function( ) end )
 	
-	
-	self.pnlTabHolder = vgui.Create( "GOLEM_PropertySheet", self )
-	self.pnlTabHolder:Dock( FILL )
+	self.pnlDivider = vgui.Create( "DHorizontalDivider", self )
+	self.pnlDivider:Dock( FILL )
+	self.pnlDivider:DockMargin( 5, 5, 5, 5 )
+
+	self.pnlSideTabHolder = vgui.Create( "GOLEM_PropertySheet" ) --, self )
+	--self.pnlSideTabHolder:Dock( LEFT )
+	self.pnlSideTabHolder:DockMargin( 5, 5, 5, 5 )
+	self.pnlSideTabHolder:SetPadding( 0 )
+	self.pnlSideTabHolder:SetWide( 100 )
+
+	self.pnlTabHolder = vgui.Create( "GOLEM_PropertySheet" ) --, self )
+	--self.pnlTabHolder:Dock( FILL )
 	self.pnlTabHolder:DockMargin( 5, 5, 5, 5 )
 	self.pnlTabHolder:SetPadding( 0 )
 	
+	self.pnlDivider:SetLeft( self.pnlSideTabHolder )
+	self.pnlDivider:SetRight( self.pnlTabHolder )
 	
 	-- Default Tab Types init 
 	-- self:AddTabType( sName, fCreate, fClose )
@@ -172,14 +183,14 @@ function PANEL:Init( )
 	
 	self:AddTabType( "options", function( self ) 
 		if self.Options then 
-			self.pnlTabHolder:SetActiveTab( self.Options.Tab )
+			self.pnlSideTabHolder:SetActiveTab( self.Options.Tab )
 			self.Options.Panel:RequestFocus( )
 			return self.Options.Panel, self.Options.Tab. self.Options
 		end 
 		
 		local Panel = vgui.Create( "GOLEM_Options" ) 
-		local Sheet = self.pnlTabHolder:AddSheet( "options", Panel, "fugue/gear.png" )
-		self.pnlTabHolder:SetActiveTab( Sheet.Tab )
+		local Sheet = self.pnlSideTabHolder:AddSheet( "", Panel, "fugue/gear.png" )
+		self.pnlSideTabHolder:SetActiveTab( Sheet.Tab )
 		self.Options = Sheet
 		Sheet.Panel:RequestFocus( )
 		
@@ -195,8 +206,26 @@ function PANEL:Init( )
 	
 	hook.Run( "Expression3.AddGolemTabTypes", self )
 	
-	
-	self:NewTab( "editor", "global int a = 1" )
+	self:NewTab( "editor", [[
+		/*******************************************
+			EXPRESSION THREE BETA
+		*******************************************/
+
+		Here we go,
+		This editor is a WIP,
+		It does nothing...
+
+		Except {
+			code, folding? {
+				Yes
+					Its
+						Awsome :D
+			}
+		}
+		
+		Much love to Oskar94,
+			This editor is his birth child :D
+	]] )
 	
 	
 	
@@ -210,7 +239,7 @@ function PANEL:Init( )
 	-- self:LoadFile( "example 1" ) 
 	-- self:OpenOldTabs( )
 	
-	-- self:NewTab( "options" )
+	self:NewTab( "options" )
 	
 	-- for i = 1, 30 do
 	-- 	self.pnlTabHolder:AddSheet( "Test " .. i, vgui.Create("GOLEM_Editor"), "fugue/script.png" )

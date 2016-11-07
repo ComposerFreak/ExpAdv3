@@ -24,7 +24,7 @@ function PANEL:Init( )
 	self.btnNewTab:SetMaterial( Material( "fugue/script--plus.png" ) )
 	
 	self.btnNewTab.DoClick = function( btn ) 
-		self:GetParent( ):NewTab( "editor", false, nil, "generic" )
+		self:GetParent( ):GetParent( ):NewTab( "editor", false, nil, "generic" )
 	end
 	
 	self.tabScroller:Remove( )
@@ -52,8 +52,8 @@ function PANEL:AddSheet( strName, pnlContent, strMaterial )
 	-- Sheet.Tab:SetColor( Color( 60, 100, 180 ) )
 	
 	Sheet.Tab.btnClose = vgui.Create( "GOLEM_ImageButton", Sheet.Tab ) 
-	Sheet.Tab.btnClose.DoClick = function( btn ) self:GetParent( ):CloseTab( Sheet.Tab, true ) end 
-	-- Sheet.Tab.btnClose.DoRightClick = function( ) self:GetParent( ):CloseTab( false, Sheet.Tab ) end --Keep?
+	Sheet.Tab.btnClose.DoClick = function( btn ) self:GetParent( ):GetParent( ):CloseTab( Sheet.Tab, true ) end 
+	-- Sheet.Tab.btnClose.DoRightClick = function( ) self:GetParent( ):GetParent( ):CloseTab( false, Sheet.Tab ) end --Keep?
 	-- Sheet.Tab.btnClose:SetMaterial( Material( "fugue/cross-small.png" ) ) 
 	-- Sheet.Tab.btnClose:SetMaterial( Material( "fugue/cross-circle.png" ) ) 
 	Sheet.Tab.btnClose:SetMaterial( Material( "oskar/close.png" ) ) 
@@ -133,7 +133,7 @@ end
 function PANEL:SetActiveTab( active )
 	if self.m_pActiveTab == active then return end
 	if self.m_pActiveTab then
-		-- self:GetParent( ):ChangeTab( self.m_pActiveTab, active )
+		-- self:GetParent( ):GetParent( ):ChangeTab( self.m_pActiveTab, active )
 		self.m_pActiveTab:GetPanel( ):SetVisible( false )
 		-- self.m_pActiveTab:SetColor( Color( 60, 100, 180 ) )
 		self.m_pActiveTab:SetColor( Color( 100, 100, 100 ) )
