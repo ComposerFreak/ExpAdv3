@@ -32,7 +32,8 @@
 		Expression3.OpenGolem					-> this is called when the editor opens.
 		Expression3.CloseGolem					-> this is called when the editor closes.
 		Expression3.AddGolemTabTypes			-> This is called when custom tab types should be registered on the editor. -> (Editor)
-	
+		Expression3.LoadWiki					-> This is called when its time to register the helpers to the wiki.
+
 	::IMPORTANT::
 		You should use 'Extension = EXPR_LIB.RegisterExtension(string)' to create a new Extension object.
 		You should then use the api methods on the new Extension to register everything.
@@ -161,6 +162,20 @@
 
 		Extension:EnableExtension()
 			Must be called to allow the extension to register its contents.
+
+	::WIKI::
+		EXPR_WIKI.RegisterConstructor(str class, str parameter, str html)
+			Creates a wiki section for this constructor.
+
+		EXPR_WIKI.RegisterMethod(str class, str name, str parameter, str html)
+			Creates a wiki section for this method.
+
+		EXPR_WIKI.RegisterFunction(str library, str name, str parameter, str html)
+			Creates a wiki section for this function.
+
+		EXPR_WIKI.RegisterPage(str title, str catagory, str html)
+			Creates a new wiki page.
+
 ]]
 
 EXPR_LIB = {};
@@ -424,7 +439,6 @@ local functions;
 local loadFunctions = false;
 
 function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _function, excludeContext)
-	-- If _function is a string then lua will use str(...) e.g; string.Replace
 	if (not loadFunctions) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) outside of Hook::Expression3.LoadFunctions", library, name, parameter);
 	end
@@ -646,33 +660,38 @@ function Extension.EnableExtension(this)
 	hook.Add("Expression3.LoadClasses", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.classes) do
 			STATE = v[5];
-			this:CheckRegistration(EXPR_LIB.RegisterClass, v[1], v[2], v[3], v[4]);
+			local op = this:CheckRegistration(EXPR_LIB.RegisterClass, v[1], v[2], v[3], v[4]);
+			op.extension = this.name;
 		end
 	end);
 
 	hook.Add("Expression3.LoadConstructors", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.constructors) do
 			STATE = v[5];
-			this:CheckRegistration(EXPR_LIB.RegisterConstructor, v[1], v[2], v[3], v[4]);
+			local op = this:CheckRegistration(EXPR_LIB.RegisterConstructor, v[1], v[2], v[3], v[4]);
+			op.extension = this.name;
 		end
 	end);
 
 	hook.Add("Expression3.LoadMethods", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.methods) do
 			STATE = v[8];
-			this:CheckRegistration(EXPR_LIB.RegisterMethod, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+			local op = this:CheckRegistration(EXPR_LIB.RegisterMethod, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+			op.extension = this.name;
 		end
 	end);
 
 	hook.Add("Expression3.LoadOperators", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.operators) do
 			STATE = v[7];
-			this:CheckRegistration(EXPR_LIB.RegisterOperator, v[1], v[2], v[3], v[4], v[5], v[6]);
+			local op = this:CheckRegistration(EXPR_LIB.RegisterOperator, v[1], v[2], v[3], v[4], v[5], v[6]);
+			op.extension = this.name;
 		end
 
 		for _, v in pairs(this.castOperators) do
 			STATE = v[5];
-			this:CheckRegistration(EXPR_LIB.RegisterCastingOperator, v[1], v[2], v[3], v[4]);
+			local op = this:CheckRegistration(EXPR_LIB.RegisterCastingOperator, v[1], v[2], v[3], v[4]);
+			op.extension = this.name;
 		end
 	end);
 
@@ -685,14 +704,16 @@ function Extension.EnableExtension(this)
 	hook.Add("Expression3.LoadFunctions", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.functions) do
 			STATE = v[8];
-			this:CheckRegistration(EXPR_LIB.RegisterFunction, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+			local op = this:CheckRegistration(EXPR_LIB.RegisterFunction, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+			op.extension = this.name;
 		end
 	end);
 
 	hook.Add("Expression3.LoadEvents", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.events) do
 			STATE = v[5];
-			this:CheckRegistration(EXPR_LIB.RegisterEvent, v[1], v[2], v[3], v[4]);
+			local op = this:CheckRegistration(EXPR_LIB.RegisterEvent, v[1], v[2], v[3], v[4]);
+			op.extension = this.name;
 		end
 	end);
 end
