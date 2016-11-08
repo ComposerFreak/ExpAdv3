@@ -34,11 +34,11 @@ function PANEL:Init( )
 		Mixer:SetColor( Color( r, g, b ) ) 
 	end
 	
-	local first = true 
+	--[[local first = true 
 	for k, v in pairs( EXPADV.Syntaxer.ColorConvars ) do
 		syntaxColor:AddChoice( k, v, k=="variable" )
 		first = false 
-	end 
+	end ]]
 	
 	function Mixer:ValueChanged( color )
 		-- RunConsoleCommand( "lemon_editor_color_" .. syntaxColor.Choices[currentIndex], color.r .. "_" .. color.g .. "_" .. color.b ) 
