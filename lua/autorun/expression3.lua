@@ -31,6 +31,8 @@ if (SERVER) then
 
 	AddCSLuaFile("expression3/extensions/math.lua");
 
+	AddCSLuaFile("expression3/editor/expr_editor_lib.lua");
+	
 	AddCSLuaFile("expression3/compiler.lua");
 
 	AddCSLuaFile("expression3/editor.lua");

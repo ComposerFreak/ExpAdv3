@@ -18,8 +18,8 @@ if (not Extension) then
 end
 
 function Extension.RegisterEditorMenu(this, name, icon, open, close)
-	if (this.enabled) then
-		hook.Add("Expression3.AddGolemTabTypes", "Expression3." .. this.name .. "." .. name, function(editor)
+	hook.Add("Expression3.AddGolemTabTypes", "Expression3." .. this.name .. "." .. name, function(editor)
+		if (this.enabled) then
 			editor:AddTabType(name, function(self)
 				local menu = self.tMenuTabs[name];
 
@@ -52,10 +52,9 @@ function Extension.RegisterEditorMenu(this, name, icon, open, close)
 				self.tMenuTabs[name] = nil;
 			end);
 
-			--[[ editor:AddMenuOption(name, icon, function(self)
-				-- this is not the actual function, this is a template ready forthe real thing.
-				self:NewTab(name);
-			end);]]
-		end);
-	end
+			editor.tbRight:SetupButton(name, icon, BOTTOM, function()
+				editor:NewTab(name);
+			end);
+		end
+	end);
 end

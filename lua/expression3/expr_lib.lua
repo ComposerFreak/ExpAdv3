@@ -168,7 +168,6 @@
 			CLIENTSIDE ONLY: Used to add a new tab to the lefthand menu with its own menu icon to open it.
 			The first function (arg #3) is called when the tab is created for the first time. The panel returned is used as the tabs main panel.
 			The second function (arg #4) is called when the tab is closed.
-			NOTE: This function does not yet add the menu icon but will in a later commit (Make this happen Oskar).
 
 	::WIKI::
 		EXPR_WIKI.RegisterConstructor(str class, str parameter, str html)
@@ -785,6 +784,10 @@ function EXPR_LIB.Initalize()
 	hook.Run("Expression3.LoadEvents");
 	loadEvents = false;
 	EXPADV_EVENTS = events;
+
+	if (CLIENT) then
+		include("expression3/editor/expr_editor_lib.lua");
+	end
 
 	hook.Run("Expression3.PostRegisterExtensions");
 
