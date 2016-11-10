@@ -162,6 +162,13 @@
 
 		Extension:EnableExtension()
 			Must be called to allow the extension to register its contents.
+		
+	::Editor Extention::
+		Extension.RegisterEditorMenu(str name, str icon, panel function(panel editor), function(panel editor, panel tab, boolean save))
+			CLIENTSIDE ONLY: Used to add a new tab to the lefthand menu with its own menu icon to open it.
+			The first function (arg #3) is called when the tab is created for the first time. The panel returned is used as the tabs main panel.
+			The second function (arg #4) is called when the tab is closed.
+			NOTE: This function does not yet add the menu icon but will in a later commit (Make this happen Oskar).
 
 	::WIKI::
 		EXPR_WIKI.RegisterConstructor(str class, str parameter, str html)
@@ -594,6 +601,10 @@ function EXPR_LIB.RegisterExtension(name)
 	return setmetatable(ext, Extension);
 end
 
+function EXPR_LIB.GetExtensionMetatable()
+	return Extension;
+end
+
 function Extension.SetServerState(this)
 	this.state = EXPR_SERVER;
 end
@@ -657,6 +668,8 @@ function Extension.CheckRegistration(this, _function, ...)
 end
 
 function Extension.EnableExtension(this)
+	this.enabled = true;
+
 	hook.Add("Expression3.LoadClasses", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.classes) do
 			STATE = v[5];

@@ -30,7 +30,8 @@ function PANEL:Init( )
 	self.GateTabs = { }
 	
 	self.tTabTypes = { } 
-	
+	self.tMenuTabs = { }
+
 	self.bVoice = false 
 	
 	self:DockPadding( 0, 25, 0, 0 )
@@ -185,7 +186,7 @@ function PANEL:Init( )
 		if self.Options then 
 			self.pnlSideTabHolder:SetActiveTab( self.Options.Tab )
 			self.Options.Panel:RequestFocus( )
-			return self.Options.Panel, self.Options.Tab. self.Options
+			return self.Options.Panel, self.Options.Tab, self.Options
 		end 
 		
 		local Panel = vgui.Create( "GOLEM_Options" ) 
