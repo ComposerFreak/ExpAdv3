@@ -49,7 +49,7 @@ local function MakeExpression3(ply, pos, ang, model)
 	if (ent and ent.IsValid()) then
 		ent:SetPos(pos);
 		ent:SetAngles(ang);
-		ent:SetModel(model);
+		--ent:SetModel(model);
 		ent:Activate();
 		ent:Spawn();
 	end
@@ -65,25 +65,25 @@ duplicator.RegisterEntityClass( "wire_expression3_base", MakeExpression3, "pos",
 function TOOL:LeftClick(trace)
 
 	local hit = trace.Entity;
+		print("LEFT CLICK", hit);
 
-	if (hit and hit.IsValid() and hit.Expression3) then
-		if (CLIENT) then
-			hit:SubmitToServer(Golem.GetCode());
-		end
-	elseif (SERVER) then
+	if (SERVER) then
 		local model = self:GetClientInfo("model");
 
 		local ang = trace.HitNormal:Angle() + Angle(90, 0, 0);
 
 		local ent = MakeExpression3(self:GetOwner(), trace.HitPos, ang, model);
 
+		print("ent::", ent)
+
 		if (ent and ent.IsValid()) then
 			ent.player = self:GetOwner();
-
-			ExpAdv:SetPos(trace.HitPos - trace.HitNormal * ent:OBBMins().z);
+			ent:SetPos(trace.HitPos - trace.HitNormal * ent:OBBMins().z);
+			undo.Create("expression3");
+			undo.AddEntity(ent);
+			undo.SetPlayer(self:GetOwner());
+			self:GetOwner():AddCleanup("expression3", ExpAdv);
 		end
-	elseif (CLIENT) then
-
 	end
 
 	return true;
@@ -93,9 +93,10 @@ end
 ]]
 
 function TOOL:RightClick( Trace )
-	if (CLIENT) then
+	if (SERVER) then
+		self:GetOwner():SendLua( [[
 		local editor = Golem.GetInstance();
 		editor:SetVisible(true);
-		editor:MakePopup();
+		editor:MakePopup();]]);
 	end
 end

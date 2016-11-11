@@ -70,7 +70,7 @@ end
 function CONTEXT.GetScriptPos(this, line, char)
 	for l, row in pairs(this.traceTable) do
 		if (l >= line) then
-			for c = 1, trace in pairs(row) do
+			for c, trace in pairs(row) do
 				if (c >= char) then
 					return trace;
 				end

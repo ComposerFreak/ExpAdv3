@@ -30,7 +30,7 @@ end)
 function ENT:ReceiveFromClient(ply, script)
 	if (self:CanSetCode(ply)) then
 		timer.Simple(1, function()
-			if (IsValid(self) then
+			if (IsValid(self)) then
 				self:SetCode(script, true);
 			end
 		end);
@@ -52,4 +52,14 @@ function ENT:Initialize( )
 	self:SetMoveType(MOVETYPE_VPHYSICS);
 	self:SetSolid(SOLID_VPHYSICS);
 	self:SetUseType(SIMPLE_USE);
+end
+
+--[[
+]]
+
+function ENT:Initialize( )
+	self:SetModel("models/Items/combine_rifle_ammo01.mdl");
+	self:PhysicsInit(SOLID_VPHYSICS);
+	self:SetMoveType(MOVETYPE_VPHYSICS);
+	self:SetSolid(SOLID_VPHYSICS);
 end

@@ -11,6 +11,7 @@
 ]]
 
 include("shared.lua");
+AddCSLuaFile("cl_init.lua");
 
 function ENT:SubmitToServer(code)
 	if (code and code ~= "") then
@@ -21,3 +22,9 @@ function ENT:SubmitToServer(code)
 	end
 end
 
+--[[
+]]
+
+function ENT:Draw()
+	self:DrawModel( )
+end

@@ -791,13 +791,13 @@ function EXPR_LIB.Initalize()
 
 	hook.Run("Expression3.PostRegisterExtensions");
 
-	include("tokenizer.lua");
-	include("parser.lua");
-	include("compiler.lua");
+	include("expression3/tokenizer.lua");
+	include("expression3/parser.lua");
+	include("expression3/compiler.lua");
 
 	hook.Run("Expression3.LoadGolem");
 
-	include("debuger.lua");
+	include("expression3/debuger.lua");
 
 	MsgN("Expression 3 has loaded.");
 end
@@ -808,8 +808,9 @@ end
 ]]
 
 hook.Add("Expression3.LoadGolem", "Expression3.Golem.Init", function()
-	include("editor.lua");
-	Golem.Init();
+	include("expression3/editor.lua");
+	print("Golem::", Golem);
+	Golem.Reload();
 end);
 
 --[[
@@ -817,7 +818,7 @@ end);
 	'''''''''''''''''''''''
 ]]
 
-EXPR_LIB.Initalize();
+timer.Simple(5, EXPR_LIB.Initalize);
 
 if (CLIENT) then
 	concommand.Add("e3_editor", function()
