@@ -48,17 +48,7 @@ end
 ]]
 
 function ENT:Initialize( )
-	self:PhysicsInit(SOLID_VPHYSICS);
-	self:SetMoveType(MOVETYPE_VPHYSICS);
-	self:SetSolid(SOLID_VPHYSICS);
-	self:SetUseType(SIMPLE_USE);
-end
-
---[[
-]]
-
-function ENT:Initialize( )
-	self:SetModel("models/Items/combine_rifle_ammo01.mdl");
+	self:SetModel("models/Combine_Helicopter/helicopter_bomb01.mdl");
 	self:PhysicsInit(SOLID_VPHYSICS);
 	self:SetMoveType(MOVETYPE_VPHYSICS);
 	self:SetSolid(SOLID_VPHYSICS);

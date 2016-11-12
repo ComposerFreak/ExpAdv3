@@ -795,7 +795,9 @@ function EXPR_LIB.Initalize()
 	include("expression3/parser.lua");
 	include("expression3/compiler.lua");
 
-	hook.Run("Expression3.LoadGolem");
+	if (CLIENT) then
+		hook.Run("Expression3.LoadGolem");
+	end
 
 	include("expression3/debuger.lua");
 
@@ -807,11 +809,13 @@ end
 	''''''''''''''''''''''''''''''''''''
 ]]
 
-hook.Add("Expression3.LoadGolem", "Expression3.Golem.Init", function()
-	include("expression3/editor.lua");
-	print("Golem::", Golem);
-	Golem.Reload();
-end);
+if (CLIENT) then
+	hook.Add("Expression3.LoadGolem", "Expression3.Golem.Init", function()
+		include("expression3/editor.lua");
+		print("Golem::", Golem);
+		Golem.Reload();
+	end);
+end
 
 --[[
 	:::Load Expression 3:::

@@ -71,18 +71,27 @@ function TOOL:LeftClick(trace)
 		local model = self:GetClientInfo("model");
 
 		local ang = trace.HitNormal:Angle() + Angle(90, 0, 0);
-
+		print("hitPos::", trace.HitPos);
 		local ent = MakeExpression3(self:GetOwner(), trace.HitPos, ang, model);
 
 		print("ent::", ent)
 
-		if (ent and ent.IsValid()) then
+		if (ent and IsValid(ent)) then
 			ent.player = self:GetOwner();
-			ent:SetPos(trace.HitPos - trace.HitNormal * ent:OBBMins().z);
+
+			print("DrPrincessPony", ent.player);
+
+			ent:SetPos(trace.HitPos + Vector(0, 0, 30));
+			print("entPos::", ent:GetPos());
 			undo.Create("expression3");
+
 			undo.AddEntity(ent);
+
 			undo.SetPlayer(self:GetOwner());
-			self:GetOwner():AddCleanup("expression3", ExpAdv);
+
+			undo.Finish( );
+
+			self:GetOwner():AddCleanup("expression3", ent);
 		end
 	end
 

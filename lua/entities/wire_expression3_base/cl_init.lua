@@ -10,8 +10,12 @@
 	::Expression 3 Base::
 ]]
 
+print("expr3->cl_init");
 include("shared.lua");
 AddCSLuaFile("cl_init.lua");
+
+function ENT:Initialize( )
+end
 
 function ENT:SubmitToServer(code)
 	if (code and code ~= "") then
@@ -26,5 +30,6 @@ end
 ]]
 
 function ENT:Draw()
+	print("expr3->cl_init->draw->",ent);
 	self:DrawModel( )
 end
