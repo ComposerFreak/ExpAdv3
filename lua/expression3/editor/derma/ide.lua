@@ -211,11 +211,11 @@ function PANEL:Init( )
 		/*******************************************
 			EXPRESSION THREE BETA
 		*******************************************/
-
+		
 		Here we go,
 		This editor is a WIP,
 		It does nothing...
-
+		
 		Except {
 			code, folding? {
 				Yes

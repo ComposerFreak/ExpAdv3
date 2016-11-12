@@ -1916,7 +1916,7 @@ function PANEL:SetCode( Text )
 	self.pScrollBar:SetScroll( 0 ) 
 	self.pHScrollBar:SetScroll( 0 ) 
 	
-	self.Rows = string_Explode( "\n", Text ) 
+	self.Rows = string_Explode( "\n", string.Replace( Text, "\t", "    ") ) 
 	self:MakeFoldData( )
 	
 	self.PaintRows = { } 
