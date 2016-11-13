@@ -48,6 +48,40 @@ end
 --[[
 ]]
 
+net.Receive("Expression3.SendToClient", function(len)
+	local ent = net.ReadEntity();
+	local ply = net.ReadEntity();
+	local script = net.ReadString();
+
+	if (script and script ~= "") then
+		if (ent and IsValid(ent) and ent.ReceiveFromServer) then
+			if (ply and IsValid(ply)) then
+				ent:ReceiveFromServer(ply, script);
+			end
+		end
+	end
+end);
+
+function ENT:ReceiveFromServer(ply, script)
+	print("CLIENT");
+	print("Reciveied:", self, ply);
+	print(script);
+	print("----------------------");
+
+	timer.Simple(1, function()
+		if (IsValid(self)) then
+			self:SetCode(script, true);
+		end
+	end);
+end
+
+function ENT:PostInitScript()
+
+end
+
+--[[
+]]
+
 function ENT:Draw()
 	--print("expr3->cl_init->draw->",ent);
 	self:DrawModel( )

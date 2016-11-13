@@ -197,6 +197,8 @@ function ENT:InitScript()
 	hook.Run("Expression3.StartEntity", self, self.context);
 
 	self.context.status = self:Execute(init, self.context.env);
+
+	self:PostInitScript();
 end
 
 --[[

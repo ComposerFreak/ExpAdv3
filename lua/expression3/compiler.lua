@@ -108,6 +108,10 @@ function COMPILER.BuildScript(this)
 
 			if (prefixs) then
 				for _, prefix in pairs(prefixs) do
+					if (prefix.newLine) then
+						buffer[#buffer + 1] = "\n";
+					end
+
 					traceTable[line][char] = {v.line, v.char};
 					buffer[#buffer + 1] = prefix.str;
 					char = char + #prefix.str + 1;
@@ -130,6 +134,10 @@ function COMPILER.BuildScript(this)
 
 			if (postfixs) then
 				for _, postfix in pairs(postfixs) do
+					if (postfix.newLine) then
+						buffer[#buffer + 1] = "\n";
+					end
+
 					traceTable[line][char] = {v.line, v.char};
 					char = char + #postfix.str + 1;
 					buffer[#buffer + 1] = postfix.str;
@@ -180,8 +188,19 @@ function COMPILER.PopScope(this)
 	this.__scope = this.__scopeData[this.__scopeID];
 end
 
-function COMPILER.SetOption(this, option, value)
-	this.__scope[option] = value;
+function COMPILER.SetOption(this, option, value, deep)
+	if (not deep) then
+		this.__scope[option] = value;
+	else
+		for i = this.__scopeID, 0, -1 do
+			local v = this.__scopeData[i][option];
+
+			if (v) then
+				this.__scopeData[i][option] = value;
+				break;
+			end
+		end
+	end
 end
 
 function COMPILER.GetOption(this, option, nonDeep)
@@ -245,7 +264,7 @@ function COMPILER.AssignVariable(this, token, declaired, name, class, scope)
 
 	if (declaired) then
 		if (c) then
-			this:Throw(token, "Unable to assign declare variable %s, Variable already exists.", name);
+			this:Throw(token, "Unable to declare variable %s, Variable already exists.", name);
 		else
 			return this:SetVariable(name, class, scope);
 		end
@@ -318,6 +337,8 @@ function COMPILER.QueueRemove(this, inst, token)
 	return op;
 end
 
+local injectNewLine = false;
+
 function COMPILER.QueueInjectionBefore(this, inst, token, str, ...)
 	local tasks = this.__tasks[token.pos];
 
@@ -339,6 +360,10 @@ function COMPILER.QueueInjectionBefore(this, inst, token, str, ...)
 		op.token = token;
 		op.str = t[i];
 		op.inst = inst;
+
+		if (i == 1) then
+			op.newLine = injectNewLine;
+		end
 
 		tasks.prefix[#tasks.prefix + 1] = op;
 	end
@@ -373,6 +398,10 @@ function COMPILER.QueueInjectionAfter(this, inst, token, str, ...)
 		op.token = token;
 		op.str = t[i];
 		op.inst = inst;
+		
+		if (i == 1) then
+			op.newLine = injectNewLine;
+		end
 
 		r[#r + 1] = op;
 		tasks.postfix[#tasks.postfix + 1] = op;
@@ -2046,7 +2075,6 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-
 function COMPILER.Compile_FUNC(this, inst, token, expressions)
 	local lib = EXPR_LIBRARIES[inst.library];
 
@@ -2137,9 +2165,114 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
+--[[
+]]
 
+function COMPILER.Compile_LAMBDA(this, inst, token, expressions)
+	this:PushScope();
 
+	for _, peram in pairs(inst.perams) do
+		local var = peram[2];
+		local class = peram[1];
 
+		this:AssignVariable(token, true, var, class);
+
+		if (class ~= "_vr") then
+			injectNewLine = true;
+			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end", var, var, class, var));
+			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, class, class, var, var));
+			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("%s = %s[2];", var, var));
+			injectNewLine = false;
+		end
+	end
+
+	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
+
+	this:SetOption("retunClass", "?"); -- Indicate we do not know this yet.
+	this:SetOption("retunCount", -1); -- Indicate we do not know this yet.
+
+	this:Compile(inst.stmts);
+
+	local result = this:GetOption("retunClass");
+	local count = this:GetOption("retunCount");
+
+	this:PopScope();
+	
+
+	if (result == "?" or count == "?") then
+		result = "";
+		count = 0;
+	end
+
+	this:QueueInjectionAfter(inst, inst.__end, ", result = \"" .. result .. "\"");
+	this:QueueInjectionAfter(inst, inst.__end, ", count = " .. count);
+	this:QueueInjectionAfter(inst, inst.__end, "}");
+
+	return "f", 1;
+end
+
+--[[
+]]
+
+function COMPILER.Compile_RETURN(this, inst, token, expressions)
+	local result = this:GetOption("retunClass");
+	local count = this:GetOption("retunCount");
+
+	local results = {};
+
+	for _, expr in pairs(expressions) do
+		local r, c = this:Compile(expr);
+		results[#results + 1] = {r, c};
+	end
+
+	local outClass;
+
+	if (result == "?") then
+		for i = 1, #results do
+			local t = results[i][1];
+
+			if (not outClass) then
+				outClass = t;
+			elseif (outClass ~= t) then
+				outClass = "_vr";
+				break;
+			end
+		end
+
+		this:SetOption("retunClass", outClass or "", true);
+	end
+
+	local outCount = 0;
+
+	for i = 1, #results do
+		local expr = expressions[i];
+		local res = results[i][1];
+		local cnt = results[i][2];
+
+		if (res ~= outClass) then
+			local ok = this:CastExpression(outClass, expr);
+
+			if (not ok) then
+				this:throw(expr.token, "Can not return %s here, %s expected.", res, outClass);
+			end
+		end
+
+		if (i < #results) then
+			outCount = outCount + 1;
+		else
+			outCount = outCount + cnt;
+		end
+	end
+
+	if (count == -1) then
+		count = outCount;
+		this:SetOption("retunCount", outCount, true);
+	end
+
+	if (count ~= outCount) then
+		this:throw(expr.token, "Can not return %i %s('s) here, %i %s('s) expected.", outCount, outClass, res, count);
+	end
+end
 
 --[[
 ]]

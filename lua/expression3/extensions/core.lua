@@ -142,11 +142,21 @@ local function RegisterStringClass()
 		end);
 end
 
+local function RegisterFunctionClass()
+	EXPR_LIB.RegisterClass("f", {"function"}, istable, isNotNil);
+end
+
+local function RegisterVariantClass()
+	EXPR_LIB.RegisterClass("vr", {"variant"}, istable, isNotNil);
+end
+
 hook.Add("Expression3.LoadClasses", "Expression3.Core.Classes", function()
 	RegisterVoidClass();
 	RegisterBooleanClass();
 	RegisterNumberClass();
 	RegisterStringClass();
+	RegisterFunctionClass();
+	RegisterVariantClass();
 end);
 
 hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", function()

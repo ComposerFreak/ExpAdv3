@@ -32,9 +32,10 @@
 			Stmt2 ← ("elseif" Cond Block Stmt2)? Stmt3
 			Stmt3 ← ("else" Block)
 			Stmt4 ← (("server" / "client") Block)? Stmt5
-			Stmt6 ← "global"? (type (Var("," Var)* "="? (Expr1? ("," Expr1)*)))
-			Stmt7 ← (type (Var("," Var)* ("=" / "+=" / "-=" / "/=" / "*=")? (Expr1? ("," Expr1)*)))
-		
+			Stmt5 ← "global"? (type (Var("," Var)* "="? (Expr1? ("," Expr1)*)))? Stmt8
+			Stmt6 ← (type (Var("," Var)* ("=" / "+=" / "-=" / "/=" / "*=")? (Expr1? ("," Expr1)*)))? Stmt7
+			Stmt7 ← ("return" (Expr1 ((","")?)*)?)?)?
+
 		:::Expressions:::
 			Expr1 ← (Expr1 "?" Expr1 ":" Expr1)? Expr2
 			Expr2 ← (Expr3 "||" Expr3)? Expr3
@@ -61,8 +62,9 @@
 			Expr23 ← (Library "." Function  "(" (Expr1 ((","")?)*)?) ")")? Expr24
 			Expr24 ← (Var (Trailing)?)? Expr25
 			Expr25 ← ("new" Type "(" (Expr1 ((","")?)*)?) ")")? Expr25
-			Expr26 ← Expr27? Error
-			Expr27 ← (String / Number / "true" / "false", "void")?
+			Expr26 ← ("Function" Perams Block1)? Expr27
+			Expr27 ← Expr28? Error
+			Expr28 ← (String / Number / "true" / "false", "void")?
 
 		:::Syntax:::
 			Cond ← "(" Expr1 ")"
@@ -70,8 +72,9 @@
 			Values ← "[" Expr1 ("," Expr1)* "]"
 			Raw ← (Str / Num / Bool)
 			Trailing ← (Method / Get)?
-			Method ← (("." Method "(" (Expr1 ((","")?)*)?) ")")? 
+			Method ← (("." Method "(" (Expr1 ((","")?)*)?) ")")
 			Get ← ("[" Expr1 ("," Type)? "]")?
+			Perams ← ("(" (Type Var (("," Type Var)*)?)? ")")
 
 ]]
 
@@ -149,7 +152,7 @@ function PARSER.Next(this)
 	
 	this.__token = this.__tokens[this.__pos];
 	this.__next = this.__tokens[this.__pos + 1];
-	
+
 	if (this.__pos > this.__total) then
 		return false;
 	end
@@ -177,6 +180,15 @@ end
 
 function PARSER.Accept(this, type, ...)
 	if (this:CheckToken(type, ...)) then
+		this:Next();
+		return true;
+	end
+
+	return false;
+end
+
+function PARSER.AcceptWithData(this, type, data)
+	if (this:CheckToken(type) and this.__next.data == data) then
 		this:Next();
 		return true;
 	end
@@ -448,7 +460,6 @@ function PARSER.Block_1(this, _end, lcb)
 end
 
 function PARSER.Statments(this, block)
-	local pre;
 	local sep = false;
 	local stmts = {};
 
@@ -472,11 +483,14 @@ function PARSER.Statments(this, block)
 			break;
 		end
 
+		local pre = stmts[#stmts - 1];
+
 		if (pre) then
 			if (pre.line == stmt.line and not sep) then
 				this:Throw(stmt.token, "Statements must be separated by semicolon (;) or newline")
 			end
 
+			print(#stmts, "PRE-STMT:", pre.type);
 			if (pre.type == "return") then
 				this:Throw(stmt.token, "Statement can not appear after return.")
 			elseif (pre.type == "continue") then
@@ -487,8 +501,6 @@ function PARSER.Statments(this, block)
 		end
 
 		sep = seperated;
-
-		pre = stmt;
 	end
  	
  	return stmts;
@@ -719,7 +731,32 @@ function PARSER.Statment_6(this)
 		end
 	end
 
-	-- return this:Statment_7();
+	return this:Statment_7();
+end
+
+function PARSER.Statment_7(this)
+	if (this:Accept("ret")) then
+		local expressions = {};
+		local inst = this:StartInstruction("return", this.__token);
+
+		if (not this:CheckToken("sep", "rcb")) then
+			while (true) do
+				expressions[#expressions + 1] = this:Expression_1();
+
+				if (not this:HasTokens()) then
+					break;
+				end
+
+				if (not this:Accept("com")) then --"sep", "rcb")) then
+					break;
+				end
+
+				-- this:Require("com", "Comma (,) expected to seperate return values.");
+			end
+		end
+
+		return this:EndInstruction(inst, expressions);
+	end
 
 	return this:Expression_1(); 
 end
@@ -1255,7 +1292,7 @@ function PARSER.Expression_25(this)
 
 		end
 
-		this:Require("rpa", "Right parenthesis ( )) expected to close constructor parameters.")
+		this:Require("rpa", "Right parenthesis ( )) expected to close constructor parameters.");
 
 		return this:EndInstruction(inst, expressions);
 	end
@@ -1264,7 +1301,72 @@ function PARSER.Expression_25(this)
 end
 
 function PARSER.Expression_26(this)
-	expr = this:Expression_27();
+	if (this:AcceptWithData("typ", "f")) then
+		local inst = this:StartInstruction("lambda", this.__token);
+
+		this:QueueInjectionBefore(inst, this.__token, "{op = ");
+
+		this:QueueReplace(inst, this.__token, "function");
+
+		local perams, signature = this:InputPeramaters(inst);
+		inst.perams = perams;
+		inst.signature = signature;
+
+		inst.stmts = this:Block_1(true, " ");
+		
+		this:QueueInjectionAfter(inst, this.__token, ", signature = \"" .. signature .. "\"");
+		
+		inst.__end = this.__token;
+		-- We inject the } in the compiler.
+		-- this:QueueInjectionAfter(inst, this.__token, "}");
+
+		return this:EndInstruction(inst, {});
+	end
+
+	return this:Expression_27();
+end
+
+function PARSER.InputPeramaters(this, inst)
+	this:Require("lpa", "Left parenthesis (() ) expected to close function parameters.");
+
+	local signature = {};
+
+	local perams = {};
+
+	if (not this:CheckToken("rpa")) then
+		while (true) do
+			this:Require("typ", "Class expected for new peramater.");
+
+			this:QueueRemove(inst, this.__token);
+
+			local class = this.__token.data;
+
+			this:Require("var", "Peramater expected after class.");
+
+			signature[#signature + 1] = class;
+
+			perams[#perams + 1] = {class, this.__token.data}
+
+			if (this:CheckToken("rpa")) then
+				break;
+			end
+
+			if (not this:HasTokens()) then
+				break;
+			end
+
+			this:Require("com", "Right parenthesis ( )) expected to close function parameters.");
+			-- May not look logical, but it is :D
+		end
+	end
+
+	this:Require("rpa", "Right parenthesis ( )) expected to close function parameters.");
+
+	return perams, table.concat(signature, ",");
+end
+
+function PARSER.Expression_27(this)
+	expr = this:Expression_28();
 
 	if (expr) then
 		return expr;
@@ -1273,7 +1375,7 @@ function PARSER.Expression_26(this)
 	this:ExpressionErr();
 end
 
-function PARSER.Expression_27(this)
+function PARSER.Expression_28(this)
 	if (this:Accept("tre", "fls")) then
 		local inst = this:StartInstruction("bool", this.__token);
 		inst.value = this.__token.data;
@@ -1352,6 +1454,10 @@ function PARSER.GetCondition(this)
 end
 
 function PARSER.ExpressionErr(this)
+	if (not this.__token) then
+		this:Throw(this.__tokens[#this.__tokens], "Further input required at end of code, incomplete expression");
+	end
+
 	this:ExcludeWhiteSpace("Further input required at end of code, incomplete expression");
 	this:Exclude("void", "void must not appear inside an equation");
 	this:Exclude("add", "Arithmetic operator (+) must be preceded by equation or value");
@@ -1390,7 +1496,8 @@ function PARSER.ExpressionErr(this)
 	--this:Exclude("cth", "Catch keyword (catch) must be part of an try-statement");
 	--this:Exclude("fnl", "Final keyword (final) must be part of an try-statement");
 	--this:Exclude("dir", "directive operator (@) must not appear inside an equation");
-	this:Throw(this.__token, "Unexpected symbol found (%s)", this.__token.name);
+
+	this:Throw(this.__token, "Unexpected symbol found (%s)", this.__token.type);
 end
 --[[
 ]]

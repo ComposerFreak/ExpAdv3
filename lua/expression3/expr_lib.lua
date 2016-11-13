@@ -193,6 +193,8 @@ if (SERVER) then
 	util.AddNetworkString("Expression3.SubmitToServer");
 
 	util.AddNetworkString("Expression3.RequestUpload");
+
+	util.AddNetworkString("Expression3.SendToClient");
 end
 
 --[[
