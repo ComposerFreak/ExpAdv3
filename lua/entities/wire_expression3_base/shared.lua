@@ -86,7 +86,7 @@ end
 ]]
 
 function ENT:SetCode(script, run)
-	this.script = script;
+	self.script = script;
 
 	local Toker = EXPR_TOKENIZER.New();
 
@@ -116,7 +116,7 @@ function ENT:SetCode(script, run)
 		return false;
 	end
 
-	self.nativeScript = res.script;
+	self.nativeScript = res.compiled;
 
 	self:BuildContext(res);
 
@@ -134,18 +134,17 @@ end
 ]]
 
 function ENT:BuildContext(instance)
-	local context = setmetatable({}, CONTEXT);
+	self.context = setmetatable({}, CONTEXT);
 
-	context.entity = self;
-	context.player = self.player;
-	context.traceTable = instance.traceTbl;
+	self.context.entity = self;
+	self.context.player = self.player;
+	self.context.traceTable = instance.traceTbl;
 
-	self:BuildEnv(context, instance);
+	self:BuildEnv(self.context, instance);
 
-	self.context = this;
 end
 
-function ENT:BuildEnv(Context, instance)
+function ENT:BuildEnv(context, instance)
 
 	local env = {};
 	env.GLOBAL  = {};
@@ -169,7 +168,7 @@ function ENT:BuildEnv(Context, instance)
 
 	context.env = env;
 
-	hook.Run("Expression3.BuildEntitySandbox", self, self.context, env);
+	hook.Run("Expression3.BuildEntitySandbox", self, context, env);
 
 	return setmetatable(env, meta);
 end
@@ -182,6 +181,10 @@ function ENT:InitScript()
 		"end",
 	}, "\n");
 
+	print("Native Lua");
+	print(native);
+	print("-----------------------------");
+
 	local main = CompileString(native, "Expression 3", false);
 
 	if (isstring(main)) then
@@ -189,11 +192,11 @@ function ENT:InitScript()
 		return;
 	end
 
-	local init = main(self.context);
+	local init = main();
 
 	hook.Run("Expression3.StartEntity", self, self.context);
 
-	self.context.status = self:Execute(init);
+	self.context.status = self:Execute(init, self.context.env);
 end
 
 --[[
@@ -217,11 +220,11 @@ function ENT:Execute(func, ...)
 end
 
 function ENT:PreExecute()
-
+	print("pre-execute");
 end
 
 function ENT:PostExecute()
-
+	print("post-execute");
 end
 
 --[[
@@ -242,16 +245,21 @@ end
 function ENT:HandelThrown(thrown)
 	self:ShutDown();
 
-	if (not thrown) then
+	print("Expression 3 Error:", self);
 
+	if (not thrown) then
+		print("nil info given.")
 	end
 
 	if (isstring(thrown)) then
-
+		print("error:", thrown);
 	end
 
 	if (istable(thrown)) then
-
+		print("state:", thrown.state);
+		print("msg:", thrown.msg);
+		print("char:", thrown.char);
+		print("line:", thrown.line);
 	end
 end
 

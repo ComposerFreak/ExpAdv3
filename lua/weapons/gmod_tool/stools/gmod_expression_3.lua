@@ -46,7 +46,7 @@ cleanup.Register("expression3");
 local function MakeExpression3(ply, pos, ang, model)
 	local ent = ents.Create("wire_expression3_base");
 
-	if (ent and ent.IsValid()) then
+	if (ent and IsValid(ent)) then
 		ent:SetPos(pos);
 		ent:SetAngles(ang);
 		--ent:SetModel(model);
@@ -65,7 +65,6 @@ duplicator.RegisterEntityClass( "wire_expression3_base", MakeExpression3, "pos",
 function TOOL:LeftClick(trace)
 
 	local hit = trace.Entity;
-		print("LEFT CLICK", hit);
 
 	if (SERVER) then
 		local model = self:GetClientInfo("model");
@@ -79,10 +78,10 @@ function TOOL:LeftClick(trace)
 		if (ent and IsValid(ent)) then
 			ent.player = self:GetOwner();
 
-			print("DrPrincessPony", ent.player);
+			ent:SetPos(trace.HitPos - trace.HitNormal * ent:OBBMins().z);
 
-			ent:SetPos(trace.HitPos + Vector(0, 0, 30));
-			print("entPos::", ent:GetPos());
+			print("entPos::",ent:GetPos());
+
 			undo.Create("expression3");
 
 			undo.AddEntity(ent);
@@ -92,6 +91,12 @@ function TOOL:LeftClick(trace)
 			undo.Finish( );
 
 			self:GetOwner():AddCleanup("expression3", ent);
+
+			net.Start("Expression3.RequestUpload");
+				net.WriteEntity(ent);
+			net.Send(self:GetOwner());
+
+			--self:GetOwner():SendLua("Entity(" .. ent:EntIndex() .. "):SubmitToServer(Golem.GetCode( ));");
 		end
 	end
 

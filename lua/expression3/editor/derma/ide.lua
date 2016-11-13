@@ -204,7 +204,36 @@ function PANEL:Init( )
 	end, function( self, pTab, bSave ) 
 		self.Options = nil
 	end )
-	
+
+	self:AddTabType( "Save", function( self, dir, name ) 
+		if self.SavePnl then 
+			self.pnlSideTabHolder:SetActiveTab( self.SavePnl.Tab )
+			self.SavePnl.Panel:RequestFocus( )
+			return self.SavePnl.Panel, self.SavePnl.Tab, self.SavePnl
+		end 
+
+		local Panel = vgui.Create(" GOLEM_FileMenu" )
+		--Panel:SetSaveFile( "filename", dir )
+
+		local Sheet = self.pnlSideTabHolder:AddSheet( "", Panel, "fugue/gear.png" )
+		self.pnlSideTabHolder:SetActiveTab( Sheet.Tab )
+		self.SavePnl = Sheet
+		Sheet.Panel:RequestFocus( )
+		
+		Panel.Paint = function( p, w, h )
+			surface.SetDrawColor( 30, 30, 30, 255 )
+			surface.DrawRect( 0, 0, w, h ) 
+		end
+		
+		return Panel, Sheet.Tab, Sheet
+	end, function( self, pTab, bSave ) 
+		self.SavePnl = nil
+	end )
+
+	self.tbRight:SetupButton("Save", "fugue/blue-folder-horizontal-open.png", BOTTOM, function()
+		self:NewTab("Save");
+	end);
+
 	hook.Run( "Expression3.AddGolemTabTypes", self )
 	
 	self:NewTab( "editor", [[

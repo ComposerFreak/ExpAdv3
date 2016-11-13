@@ -189,6 +189,15 @@ EXPR_LIB = {};
 --[[
 ]]
 
+if (SERVER) then
+	util.AddNetworkString("Expression3.SubmitToServer");
+
+	util.AddNetworkString("Expression3.RequestUpload");
+end
+
+--[[
+]]
+
 function EXPR_LIB.ThrowInternal(level, msg, fst, ...)
 	if (fst) then
 		msg = string.format(msg, fst, ...);

@@ -20,7 +20,7 @@ end
 function Extension.RegisterEditorMenu(this, name, icon, open, close)
 	hook.Add("Expression3.AddGolemTabTypes", "Expression3." .. this.name .. "." .. name, function(editor)
 		if (this.enabled) then
-			editor:AddTabType(name, function(self)
+			editor:AddTabType(name, function(self, ...)
 				local menu = self.tMenuTabs[name];
 
 				if (menu) then
@@ -31,7 +31,7 @@ function Extension.RegisterEditorMenu(this, name, icon, open, close)
 					return menu.Panel, menu.Tab, menu;
 				end
 
-				local panel = open(editor);
+				local panel = open(editor, ...);
 
 				local sheet = self.pnlSideTabHolder:AddSheet(name, panel, icon);
 

@@ -16,8 +16,6 @@ include("shared.lua");
 --[[
 ]]
 
-util.AddNetworkString("Expression3.SubmitToServer");
-
 net.Receive("Expression3.SubmitToServer", function(len, ply)
 	local ent = net.ReadEntity();
 	local script = net.ReadString();
@@ -28,6 +26,10 @@ net.Receive("Expression3.SubmitToServer", function(len, ply)
 end)
 
 function ENT:ReceiveFromClient(ply, script)
+	print("Reciveied:", self, ply);
+	print(script);
+	print("----------------------");
+
 	if (self:CanSetCode(ply)) then
 		timer.Simple(1, function()
 			if (IsValid(self)) then

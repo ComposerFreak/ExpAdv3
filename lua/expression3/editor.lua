@@ -20,6 +20,7 @@ if SERVER then
 	AddCSLuaFile( "editor/derma/options.lua" )
 	AddCSLuaFile( "editor/derma/propertysheet.lua" )
 	AddCSLuaFile( "editor/derma/toolbar.lua" )
+	AddCSLuaFile( "editor/derma/filemenu.lua" )
 	
 	-- AddCSLuaFile "editor/derma/syntaxer.lua"
 	return 
@@ -51,6 +52,7 @@ function Golem.Reload( )
 		Golem.Instance = nil
 	end 
 	
+	
 	include( "expression3/editor/derma/button.lua" )
 	include( "expression3/editor/derma/closebutton.lua" )
 	include( "expression3/editor/derma/editor.lua" )
@@ -62,6 +64,7 @@ function Golem.Reload( )
 	include( "expression3/editor/derma/options.lua" )
 	include( "expression3/editor/derma/propertysheet.lua" )
 	include( "expression3/editor/derma/toolbar.lua" )
+	include( "expression3/editor/derma/filemenu.lua" )
 	
 	-- include "editor/derma/syntaxer.lua"
 end

@@ -91,6 +91,7 @@ function COMPILER.BuildScript(this)
 	local traceTable = {{}};
 
 	for k, v in pairs(this.__tokens) do
+		local data = tostring(v.data);
 
 		if (v.newLine) then
 			char = 0;
@@ -120,8 +121,8 @@ function COMPILER.BuildScript(this)
 					char = char + #tasks.replace;
 				else
 					traceTable[line][char] = {v.line, v.char};
-					buffer[#buffer + 1] = v.data;
-					char = char + #v.data + 1;
+					buffer[#buffer + 1] = data;
+					char = char + #data + 1;
 				end
 			end
 
@@ -140,8 +141,8 @@ function COMPILER.BuildScript(this)
 			end
 		else
 			traceTable[line][char] = {v.line, v.char};
-			buffer[#buffer + 1] = v.data;
-			char = char + #v.data + 1;
+			buffer[#buffer + 1] = data;
+			char = char + #data + 1;
 		end
 	end
 
@@ -389,6 +390,12 @@ function COMPILER.QueueInstruction(this, inst, inst, token, inst, type)
 	op.inst = inst;
 	op.type = type;
 
+	--[[if (isstring(token)) then
+		debug.Trace();
+		print("inst::", inst)
+		print("token::", token)
+	end]]
+
 	local tasks = this.__tasks[token.pos];
 
 	if (not tasks) then
@@ -409,6 +416,11 @@ function COMPILER.Compile(this, inst)
 		error("Compiler was asked to compile a nil instruction.")
 	end
 
+	if (not istable(inst.token)) then
+		debug.Trace();
+		print("token is ", type(inst.token), inst.token);
+	end
+
 	if (not inst.compiled) then
 		local instruction = string.upper(inst.type);
 		local fun = this["Compile_" .. instruction];
@@ -419,7 +431,7 @@ function COMPILER.Compile(this, inst)
 			this:Throw(inst.token, "Failed to compile unknown instruction %s", instruction);
 		end
 
-		this:QueueInstruction(inst, inst.token, inst.type);
+		--this:QueueInstruction(inst, inst.token, inst.type);
 
 		local type, count = fun(this, inst, inst.token, inst.instructions);
 

@@ -12,10 +12,29 @@
 
 print("expr3->cl_init");
 include("shared.lua");
-AddCSLuaFile("cl_init.lua");
+
+--[[
+]]
 
 function ENT:Initialize( )
 end
+
+
+--[[
+]]
+
+net.Receive("Expression3.RequestUpload", function(len)
+	local ent = net.ReadEntity();
+
+	print("Upload request recived:", ent, IsValid(ent), ent.SubmitToServer);
+
+	timer.Create("Expression3.SubmitToServer", 1, 1, function()
+		if (IsValid(ent) and ent.SubmitToServer) then
+			print("Submitting to server!");
+			ent:SubmitToServer(Golem.GetCode( ));
+		end
+	end);
+end)
 
 function ENT:SubmitToServer(code)
 	if (code and code ~= "") then
@@ -30,6 +49,6 @@ end
 ]]
 
 function ENT:Draw()
-	print("expr3->cl_init->draw->",ent);
+	--print("expr3->cl_init->draw->",ent);
 	self:DrawModel( )
 end

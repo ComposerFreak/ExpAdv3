@@ -156,3 +156,10 @@ hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", functi
 	include("expression3/extensions/vector.lua");
 end);
 
+hook.Add("Expression3.LoadLibraries", "Expression3.Core.Extensions", function()
+	EXPR_LIB.RegisterLibrary("debug")
+end);
+
+hook.Add("Expression3.LoadFunctions", "Expression3.Core.Extensions", function()
+	EXPR_LIB.RegisterFunction("debug", "print", "n", "", 0, function(n) print("OUT->", n) end, true);
+end);
