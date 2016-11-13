@@ -83,7 +83,7 @@ table.Empty( cvars.GetConVarCallbacks( "golem_font_name", true ) )
 table.Empty( cvars.GetConVarCallbacks( "golem_font_size", true ) ) 
 
 CreateClientConVar( "golem_font_name", "Courier New", true, false ) 
-CreateClientConVar( "golem_font_size", 15, true, false )
+CreateClientConVar( "golem_font_size", 16, true, false )
 
 cvars.AddChangeCallback( "golem_font_name", function( sCVar, sOld, sNew ) Font:SetFont( sNew, GetConVarNumber( "golem_font_size" ), true ) end ) 
 cvars.AddChangeCallback( "golem_font_size", function( sCVar, sOld, sNew ) Font:SetFont( GetConVarString( "golem_font_name" ), sNew, true ) end ) 
@@ -118,7 +118,7 @@ function Font:SetFont( sFont, nSize, bConVar )
 	
 	self.sFontID = CreateFont( sFont, nSize )
 	
-	self:OnFontChange( self.sFontID )
+	self:OnFontChange( self.sFontID, sFont, nSize )
 end
 
 function Font:ChangeFontSize( nInc, bAbs )

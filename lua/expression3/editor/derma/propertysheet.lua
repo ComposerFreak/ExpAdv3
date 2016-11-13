@@ -33,7 +33,7 @@ function PANEL:Init( )
 	self.tabScroller:SetOverlap( -2 )
 end
 
-function PANEL:AddSheet( strName, pnlContent, strMaterial )
+function PANEL:AddSheet( strName, pnlContent, strMaterial, fClose )
 	if not IsValid( pnlContent ) then return end 
 	
 	local Sheet = { }
@@ -44,7 +44,7 @@ function PANEL:AddSheet( strName, pnlContent, strMaterial )
 	Sheet.Tab:SetFont( "Trebuchet18" )
 	Sheet.Tab:SetTall( 24 )
 	Sheet.Tab:SetFlat( true )
-	-- Sheet.Tab:SetOutlined( true )
+	Sheet.Tab:SetOutlined( true )
 	Sheet.Tab:DrawButton( true )
 	Sheet.Tab:SetPadding( 5 )
 	Sheet.Tab:SetMaterial( Material( strMaterial ) )
@@ -52,7 +52,7 @@ function PANEL:AddSheet( strName, pnlContent, strMaterial )
 	-- Sheet.Tab:SetColor( Color( 60, 100, 180 ) )
 
 	Sheet.Tab.btnClose = vgui.Create( "GOLEM_ImageButton", Sheet.Tab ) 
-	Sheet.Tab.btnClose.DoClick = function( btn ) self:GetParent( ):GetParent( ):CloseTab( Sheet.Tab, true ) end 
+	Sheet.Tab.btnClose.DoClick = fClose --function( btn ) self:GetParent( ):GetParent( ):CloseTab( Sheet.Tab, true ) end 
 	-- Sheet.Tab.btnClose.DoRightClick = function( ) self:GetParent( ):GetParent( ):CloseTab( false, Sheet.Tab ) end --Keep?
 	-- Sheet.Tab.btnClose:SetMaterial( Material( "fugue/cross-small.png" ) ) 
 	-- Sheet.Tab.btnClose:SetMaterial( Material( "fugue/cross-circle.png" ) ) 
@@ -156,7 +156,7 @@ end
 function PANEL:PerformLayout( )
 	local ActiveTab = self:GetActiveTab( )
 	
-	if not ActiveTab then return end
+	if not ActiveTab /*or not ValidPanel( ActiveTab )*/ then return end
 	
 	ActiveTab:InvalidateLayout( true )
 	-- self.tabScroller:SetTall( ActiveTab:GetTall( ) )

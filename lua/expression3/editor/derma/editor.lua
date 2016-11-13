@@ -361,6 +361,7 @@ function PANEL:_OnKeyCodeTyped( code )
 			self:ScrollCaret()
 		elseif code == KEY_UP then 
 			if self.Caret.x > 1 then
+				self:FoldAll( tFolds )
 				self.Caret.x = self.Caret.x - 1
 				
 				if istable( self.Rows[self.Caret.x] ) and self.Rows[self.Caret.x].Primary ~= self.Caret.x then 
@@ -373,6 +374,7 @@ function PANEL:_OnKeyCodeTyped( code )
 				if self.Caret.y > length + 1 then
 					self.Caret.y = length + 1
 				end
+				tFolds = self:ExpandAll( )
 			end
 			
 			self:ScrollCaret( )
@@ -381,6 +383,7 @@ function PANEL:_OnKeyCodeTyped( code )
 			end
 		elseif code == KEY_DOWN then 
 			if self.Caret.x < #self.Rows then
+				self:FoldAll( tFolds )
 				self.Caret.x = self.Caret.x + 1
 				
 				if istable( self.Rows[self.Caret.x] ) and self.Rows[self.Caret.x].Primary ~= self.Caret.x then 
@@ -393,6 +396,7 @@ function PANEL:_OnKeyCodeTyped( code )
 				if self.Caret.y > length + 1 then
 					self.Caret.y = length + 1
 				end
+				tFolds = self:ExpandAll( )
 			end
 			
 			self:ScrollCaret( )
@@ -511,9 +515,9 @@ function PANEL:_OnKeyCodeTyped( code )
 					self.Caret = self:MovePosition( Caret, #text - oldLength ) 
 					self.Start = self.Caret:Clone( ) 
 				else 
-					self:FoldAll( tFolds )
+					-- self:FoldAll( tFolds )
 					self:SetSelection( "" )
-					tFolds = self:ExpandAll( )
+					-- tFolds = self:ExpandAll( )
 				end
 			else 
 				if code == KEY_O then 
@@ -1916,7 +1920,7 @@ function PANEL:SetCode( Text )
 	self.pScrollBar:SetScroll( 0 ) 
 	self.pHScrollBar:SetScroll( 0 ) 
 	
-	self.Rows = string_Explode( "\n", string.Replace( Text, "\t", "    ") ) 
+	self.Rows = string_Explode( "\n", string_gsub( Text, "\t", "    ") ) 
 	self:MakeFoldData( )
 	
 	self.PaintRows = { } 

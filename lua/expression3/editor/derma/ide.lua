@@ -30,6 +30,8 @@ function PANEL:Init( )
 	self.GateTabs = { }
 	
 	self.tTabTypes = { } 
+	self.tMenuTypes = { }
+	
 	self.tMenuTabs = { }
 
 	self.bVoice = false 
@@ -97,115 +99,99 @@ function PANEL:Init( )
 	self.tbBottom:SetupButton( "Save As", "fugue/disks-black.png", RIGHT, function( ) self:SaveFile( true, true ) end )
 	self.tbBottom:SetupButton( "Save", 	"fugue/disk-black.png", RIGHT, function( ) self:SaveFile( true ) end )
 	
-	-- self.tbRight:SetupButton( "Options", "fugue/gear.png", BOTTOM, function( ) self:NewTab( "options" ) end )
+	
+	
+	-- self.tbRight:SetupButton( "Increase font size.", "fugue/edit-size-up.png", TOP, function( ) end )
+	-- self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", TOP, function( ) end )
+	
+	self.tbRight:SetupButton( "Open user manual", "fugue/question.png", TOP, function( ) end )
+	self.tbRight:SetupButton( "Options", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options" ) end )
+	
 	
 	
 	
 	-- self.tbRight:SetupButton( "New tab", 	"fugue/script--plus.png", 		TOP, function( ) end )
 	-- self.tbRight:SetupButton( "Close tab", 	"fugue/script--minus.png", 		TOP, function( ) end ) 
-	-- self.tbRight:SetupButton( "Open user manual", 	"fugue/question.png", 	TOP, function( ) end )
 	-- self.tbRight:SetupButton( "Visit the wiki", 	"fugue/home.png", 		BOTTOM, function( ) end )
 	
-	self.pnlDivider = vgui.Create( "DHorizontalDivider", self )
-	self.pnlDivider:Dock( FILL )
-	self.pnlDivider:DockMargin( 5, 5, 5, 5 )
+	
+	-- self.pnlDivider = vgui.Create( "DHorizontalDivider", self )
+	-- self.pnlDivider:Dock( FILL )
+	-- self.pnlDivider:DockMargin( 5, 5, 5, 5 )
+	-- self.pnlDivider:SetLeftMin( 265 )
+	-- self.pnlDivider:SetRightMin( 400 )
 
-	self.pnlSideTabHolder = vgui.Create( "GOLEM_PropertySheet" ) --, self )
-	--self.pnlSideTabHolder:Dock( LEFT )
-	self.pnlSideTabHolder:DockMargin( 5, 5, 5, 5 )
+	self.pnlSideTabHolder = vgui.Create( "GOLEM_PropertySheet", self )
+	self.pnlSideTabHolder:Dock( LEFT )
+	self.pnlSideTabHolder:DockMargin( 5, 5, 0, 5 )
 	self.pnlSideTabHolder:SetPadding( 0 )
-	self.pnlSideTabHolder:SetWide( 100 )
-
-	self.pnlTabHolder = vgui.Create( "GOLEM_PropertySheet" ) --, self )
-	--self.pnlTabHolder:Dock( FILL )
-	self.pnlTabHolder:DockMargin( 5, 5, 5, 5 )
+	self.pnlSideTabHolder:SetWide( 265 )
+	self.pnlSideTabHolder.btnNewTab:Remove( ) 
+	
+	self.btnHideSidebar = vgui.Create( "GOLEM_ImageButton", self )
+	self.btnHideSidebar:Dock( LEFT )
+	self.btnHideSidebar:DockMargin( 0, 5, 0, 5 )
+	self.btnHideSidebar:SetMaterial( Material( "diagona-icons/132.png" ) )
+	self.btnHideSidebar:DrawButton( false )
+	self.btnHideSidebar:SetIconCentered( true )
+	self.btnHideSidebar:SetIconFading( false )
+	self.btnHideSidebar:SetOutlined( true )
+	self.btnHideSidebar.Expanded = true 
+	
+	self.btnHideSidebar.DoClick = function( btn ) 
+		if btn.mov then return end 
+		if btn.Expanded then 
+			btn.mov = true
+			self.pnlSideTabHolder:SizeTo( 0, -1, 0.5, nil, nil, function() 
+				btn:SetMaterial( Material( "diagona-icons/131.png" ) ) 
+				btn.Expanded = false 
+				btn.mov = nil
+			end )
+		else 
+			btn.mov = true
+			self.pnlSideTabHolder:SizeTo( 265, -1, 0.5, nil, nil, function() 
+				btn:SetMaterial( Material( "diagona-icons/132.png" ) ) 
+				btn.Expanded = true 
+				btn.mov = nil
+			end )
+		end 
+	end
+	
+	
+	self.pnlTabHolder = vgui.Create( "GOLEM_PropertySheet", self )
+	self.pnlTabHolder:Dock( FILL )
+	self.pnlTabHolder:DockMargin( 0, 5, 5, 5 )
 	self.pnlTabHolder:SetPadding( 0 )
 	
-	self.pnlDivider:SetLeft( self.pnlSideTabHolder )
-	self.pnlDivider:SetRight( self.pnlTabHolder )
+	-- self.pnlDivider:SetLeft( self.pnlSideTabHolder )
+	-- self.pnlDivider:SetRight( self.pnlTabHolder )
 	
-	-- Default Tab Types init 
-	-- self:AddTabType( sName, fCreate, fClose )
+	hook.Run( "Expression3.AddGolemTabTypes", self )
 	
-	self:AddTabType( "editor", function( self, sCode, sPath, sName ) 
-		if sPath and not string.EndsWith( sPath, ".txt" ) then sPath = sPath .. ".txt" end 
-		if sPath and not string.StartWith( sPath, "golem/" ) then sPath = "golem/" .. sPath end
-		if sPath and self.FileList[sPath] then 
-			self.pnlTabHolder:SetActiveTab( self.FileList[Path] )
-			self.FileList[Path]:GetPanel( ):RequestFocus( )
-			return
-		end 
-		
-		if not sName or sName == "" then
-			sName = Path and string.match( Path, "/([^%./]+)%.txt$" ) or "generic"
-		end
-		
-		local Editor = vgui.Create( "GOLEM_Editor" ) 
-		local Sheet = self.pnlTabHolder:AddSheet( sName or "generic", Editor, "fugue/script.png" )
-		self.pnlTabHolder:SetActiveTab( Sheet.Tab )
-		Sheet.Panel:RequestFocus( )
-		
-		local func = self:GetSyntaxColorLine( )
-		if func ~= nil then
-			Sheet.Panel.SyntaxColorLine = func
-		end
-		
-		if sPath then
-			Sheet.Tab.FilePath = sPath
-			self.FileList[sPath] = Sheet.Tab
-		end
-		
-		if sCode and sCode ~= "" then
-			Editor:SetCode( sCode )
-		end
-		
-		return Editor, Sheet.Tab, Sheet
-	end, function( self, pTab, bSave ) 
-		local Editor = pTab:GetPanel( )
-		
-		if bSave and pTab.FilePath and pTab.FilePath ~= "" then // Ask about this?
-			self:SaveFile( pTab.FilePath, false, pTab, true )
-		end
-		
-		if pTab.FilePath and self.FileList[pTab.FilePath] then
-			self.FileList[pTab.FilePath] = nil
-		end
-		
-		if pTab.Entity and self.GateTabs[pTab.Entity] then 
-			self.GateTabs[pTab.Entity] = nil 
-		end 
-		
-		if pTab.TempFile then file.Delete( pTab.TempFile ) end 
-		
-		if Editor.OnTabClose then
-			Editor:OnTabClose( bSave, pTab )
-		end
-	end )
 	
-	self:AddTabType( "options", function( self ) 
+	
+	//self:AddCustomTab( bScope, sName, fCreate, fClose )
+	
+	self:AddCustomTab( false, "options", function( self )
 		if self.Options then 
 			self.pnlSideTabHolder:SetActiveTab( self.Options.Tab )
 			self.Options.Panel:RequestFocus( )
-			return self.Options.Panel, self.Options.Tab, self.Options
+			return self.Options
 		end 
 		
 		local Panel = vgui.Create( "GOLEM_Options" ) 
-		local Sheet = self.pnlSideTabHolder:AddSheet( "", Panel, "fugue/gear.png" )
+		local Sheet = self.pnlSideTabHolder:AddSheet( "", Panel, "fugue/gear.png", function(pnl) self:CloseMenuTab( pnl:GetParent( ), true ) end )
 		self.pnlSideTabHolder:SetActiveTab( Sheet.Tab )
 		self.Options = Sheet
 		Sheet.Panel:RequestFocus( )
 		
-		Panel.Paint = function( p, w, h )
-			surface.SetDrawColor( 30, 30, 30, 255 )
-			surface.DrawRect( 0, 0, w, h ) 
-		end
-		
-		return Panel, Sheet.Tab, Sheet 
-	end, function( self, pTab, bSave ) 
+		return Sheet 
+	end, function( self )
 		self.Options = nil
 	end )
-
-	self:AddTabType( "Save", function( self, dir, name ) 
+	
+	
+	/*self:AddTabType( "Save", function( self, dir, name ) 
 		if self.SavePnl then 
 			self.pnlSideTabHolder:SetActiveTab( self.SavePnl.Tab )
 			self.SavePnl.Panel:RequestFocus( )
@@ -228,34 +214,33 @@ function PANEL:Init( )
 		return Panel, Sheet.Tab, Sheet
 	end, function( self, pTab, bSave ) 
 		self.SavePnl = nil
-	end )
+	end )*/
 
-	self.tbRight:SetupButton("Save", "fugue/blue-folder-horizontal-open.png", BOTTOM, function()
-		self:NewTab("Save");
-	end);
+	-- self.tbRight:SetupButton("Save", "fugue/blue-folder-horizontal-open.png", BOTTOM, function()
+	-- 	self:NewTab("Save");
+	-- end);
 
-	hook.Run( "Expression3.AddGolemTabTypes", self )
 	
 	self:NewTab( "editor", [[
-		/*******************************************
-			EXPRESSION THREE BETA
-		*******************************************/
-		
-		Here we go,
-		This editor is a WIP,
-		It does nothing...
-		
-		Except {
-			code, folding? {
-				Yes
-					Its
-						Awsome :D
-			}
-		}
-		
-		Much love to Oskar94,
-			This editor is his birth child :D
-	]] )
+/*******************************************
+	EXPRESSION THREE BETA
+*******************************************/
+
+Here we go,
+This editor is a WIP,
+It does nothing...
+
+Except {
+	code, folding? {
+		Yes
+			Its
+				Awsome :D
+	}
+}
+
+Much love to Oskar94,
+	This editor is his birth child :D
+]] )
 	
 	
 	
@@ -266,10 +251,10 @@ function PANEL:Init( )
 	
 	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
 	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
-	-- self:LoadFile( "example 1" ) 
+	self:LoadFile( "example 1" ) 
 	-- self:OpenOldTabs( )
 	
-	self:NewTab( "options" )
+	self:NewMenuTab( "options" )
 	
 	-- for i = 1, 30 do
 	-- 	self.pnlTabHolder:AddSheet( "Test " .. i, vgui.Create("GOLEM_Editor"), "fugue/script.png" )
@@ -313,9 +298,137 @@ function PANEL:GetSyntaxColorLine( )
 end
 
 /*---------------------------------------------------------------------------
+Tab Management 2.0
+---------------------------------------------------------------------------*/
+function PANEL:AddCustomTab( bScope, sName, fCreate, fClose )
+	if bScope then -- Main editor view
+		self.tTabTypes[sName] = { Create = fCreate, Close = fClose } 
+	else -- Sidepanel
+		self.tMenuTypes[sName] = { Create = fCreate, Close = fClose } 
+	end 
+end
+
+function PANEL:NewTab( sType, ... )
+	if sType == "editor" then 
+		local sCode, sPath, sName = unpack{...}
+		if sPath and not string.EndsWith( sPath, ".txt" ) then sPath = sPath .. ".txt" end 
+		if sPath and not string.StartWith( sPath, "golem/" ) then sPath = "golem/" .. sPath end
+		if sPath and self.FileList[sPath] then 
+			self.pnlTabHolder:SetActiveTab( self.FileList[Path] )
+			self.FileList[Path]:GetPanel( ):RequestFocus( )
+			return self.FileList[Path].Sheet
+		end 
+		
+		if not sName or sName == "" then
+			sName = Path and string.match( Path, "/([^%./]+)%.txt$" ) or "generic"
+		end
+		
+		local Editor = vgui.Create( "GOLEM_Editor" ) 
+		local Sheet = self.pnlTabHolder:AddSheet( sName or "generic", Editor, "fugue/script.png", function(pnl) self:CloseTab( pnl:GetParent( ), true ) end )
+		self.pnlTabHolder:SetActiveTab( Sheet.Tab )
+		Sheet.Panel:RequestFocus( )
+		
+		Sheet.Tab.__type = "editor"
+		
+		local func = self:GetSyntaxColorLine( )
+		if func ~= nil then
+			Sheet.Panel.SyntaxColorLine = func
+		end
+		
+		if sPath then
+			Sheet.Tab.FilePath = sPath
+			self.FileList[sPath] = Sheet.Tab
+		end
+		
+		if sCode and sCode ~= "" then
+			Editor:SetCode( sCode )
+		end
+		
+		Sheet.Tab.DoRightClick = function( pnl )
+			local Menu = DermaMenu( )
+			
+			Menu:AddOption( "Close", function( ) self:CloseTab( pnl, false ) end )
+			Menu:AddOption( "Close others", function( ) self:CloseAllBut( pnl ) end )
+			Menu:AddOption( "Close all tabs", function( ) self:CloseAll( )  end )
+			
+			Menu:AddSpacer( )
+			
+			Menu:AddOption( "Save", function( ) self:SaveFile( pnl.FilePath, false, pnl ) end )
+			-- Menu:AddOption( "Save As", function( ) end )
+			
+			-- Menu:AddSpacer( )
+			
+			-- Menu:AddOption( "New File", function( ) self:NewTab( "editor" ) end )
+			
+			Menu:Open( )
+		end
+		
+		return Sheet 
+	elseif self.tTabTypes[sType] then
+		local Sheet = self.tTabTypes[sType].Create( self, ... )
+		Sheet.Tab.__type = sType
+		return Sheet
+	end 
+	
+	return false
+end
+
+function PANEL:CloseTab( pTab, bSave )
+	if pTab == true then pTab = self.pnlTabHolder:GetActiveTab( ) end
+	if not ValidPanel( pTab ) then return end
+	
+	if pTab.__type == "editor" then 
+		local Editor = pTab:GetPanel( )
+		
+		if bSave and pTab.FilePath and pTab.FilePath ~= "" then // Ask about this?
+			self:SaveFile( pTab.FilePath, false, pTab, true )
+		end
+		
+		if pTab.FilePath and self.FileList[pTab.FilePath] then
+			self.FileList[pTab.FilePath] = nil
+		end
+		
+		if pTab.Entity and self.GateTabs[pTab.Entity] then 
+			self.GateTabs[pTab.Entity] = nil 
+		end 
+		
+		if pTab.TempFile then file.Delete( pTab.TempFile ) end 
+		
+		if Editor.OnTabClose then
+			Editor:OnTabClose( bSave, pTab )
+		end
+	elseif self.tTabTypes[pTab.__type] then  
+		self.tTabTypes[pTab.__type].Close( self, pTab, bSave )
+	end 
+	
+	self.pnlTabHolder:CloseTab( pTab, true )
+end
+
+function PANEL:NewMenuTab( sType, ... )
+	if self.tMenuTypes[sType] then
+		local Sheet = self.tMenuTypes[sType].Create( self, ... )
+		Sheet.Tab.__type = sType
+		return Sheet
+	end 
+	
+	return false
+end
+
+function PANEL:CloseMenuTab( pTab )
+	if pTab == true then pTab = self.pnlSideTabHolder:GetActiveTab( ) end
+	if not ValidPanel( pTab ) then return end
+	
+	if self.tMenuTypes[pTab.__type] then 
+		self.tMenuTypes[pTab.__type].Close( self, pTab, bSave )
+	end 
+	
+	self.pnlSideTabHolder:CloseTab( pTab, true )
+end
+
+/*---------------------------------------------------------------------------
 Tab Management
 ---------------------------------------------------------------------------*/
-local function DoRightClick( self )
+/*local function DoRightClick( self )
 	local Menu = DermaMenu( )
 	
 	Menu:AddOption( "Close", function( ) self.Editor:CloseTab( self, false ) end )
@@ -359,7 +472,7 @@ function PANEL:CloseTab( pTab, bSave )
 	self.tTabTypes[pTab.__type].CloseTab( self, pTab, bSave )
 	
 	self.pnlTabHolder:CloseTab( pTab, true )
-end 
+end */
 
 function PANEL:CloseAll( )
 	for I = #self.pnlTabHolder.Items, 1, -1 do
@@ -446,6 +559,8 @@ function PANEL:SaveFile( sPath, bSaveAs, pTab, bNoSound )
 		sPath = pTab.FilePath
 	end
 	
+	if pTab.__type ~= "editor" then return end 
+	
 	if bSaveAs or not sPath then
 		// TODO: Actually make this
 		
@@ -483,6 +598,7 @@ function PANEL:SaveFile( sPath, bSaveAs, pTab, bNoSound )
 		surface.PlaySound( "ambient/water/drip3.wav" )
 		self.btnValidate:SetText( "Saved as " .. sPath ) 
 	end
+	
 	if not pTab.FilePath or string.lower( pTab.FilePath ) ~= string.lower( sPath ) then
 		if self.FileTabs[pTab.FilePath] then 
 			self.FileTabs[pTab.FilePath] = nil 
