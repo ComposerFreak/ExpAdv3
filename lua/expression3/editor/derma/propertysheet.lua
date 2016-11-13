@@ -24,7 +24,7 @@ function PANEL:Init( )
 	self.btnNewTab:SetMaterial( Material( "fugue/script--plus.png" ) )
 	
 	self.btnNewTab.DoClick = function( btn ) 
-		self:GetParent( ):GetParent( ):NewTab( "editor", false, nil, "generic" )
+		self:GetParent( ):NewTab( "editor", false, nil, "generic" )
 	end
 	
 	self.tabScroller:Remove( )

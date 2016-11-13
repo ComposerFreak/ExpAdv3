@@ -100,14 +100,14 @@ end
 EXPR_LIB.ShowDebug = function(tokens, tasks)
 	if (Golem) then
 		local inst = Golem:GetInstance();
-
+		
 		local rows, text = ProcessLines(tokens, tasks);
-
-		local editor, tab, sheet = inst:NewTab("editor", text, nil, "Debug");
-
-		editor._OnKeyCodeTyped = function() end;
-		editor._OnTextChanged = function() end;
-
+		
+		local sheet = inst:NewTab("editor", text, nil, "Debug");
+		
+		sheet.Panel._OnKeyCodeTyped = function() end;
+		sheet.Panel._OnTextChanged = function() end;
+		
 		sheet.Panel.SyntaxColorLine = function(self, row)
 			-- print( "SCL" )
 			-- print( rows[row] )
