@@ -34,7 +34,8 @@
 			Stmt4 ← (("server" / "client") Block)? Stmt5
 			Stmt5 ← "global"? (type (Var("," Var)* "="? (Expr1? ("," Expr1)*)))? Stmt8
 			Stmt6 ← (type (Var("," Var)* ("=" / "+=" / "-=" / "/=" / "*=")? (Expr1? ("," Expr1)*)))? Stmt7
-			Stmt7 ← ("return" (Expr1 ((","")?)*)?)?)?
+			Stmt7 ← 
+			Stmt8 ← ("return" (Expr1 ((","")?)*)?)?)?
 
 		:::Expressions:::
 			Expr1 ← (Expr1 "?" Expr1 ":" Expr1)? Expr2
@@ -489,15 +490,14 @@ function PARSER.Statments(this, block)
 			if (pre.line == stmt.line and not sep) then
 				this:Throw(stmt.token, "Statements must be separated by semicolon (;) or newline")
 			end
+		end
 
-			print(#stmts, "PRE-STMT:", pre.type);
-			if (pre.type == "return") then
-				this:Throw(stmt.token, "Statement can not appear after return.")
-			elseif (pre.type == "continue") then
-				this:Throw(stmt.token, "Statement can not appear after continue.")
-			elseif (pre.type == "break") then
-				this:Throw(stmt.token, "Statement can not appear after break.")
-			end
+		if (stmt.type == "return") then
+			this:Throw(stmt.final, "Statement can not appear after return.")
+		elseif (stmt.type == "continue") then
+			this:Throw(stmt.final, "Statement can not appear after continue.")
+		elseif (stmt.type == "break") then
+			this:Throw(stmt.final, "Statement can not appear after break.")
 		end
 
 		sep = seperated;
@@ -735,6 +735,86 @@ function PARSER.Statment_6(this)
 end
 
 function PARSER.Statment_7(this)
+	if (this:Accept("del")) then
+		local inst = this:StartInstruction("delegate", this.__token);
+		
+		this:QueueRemove(inst, this.__token);
+		
+		this:Require("typ", "Return class expected after delegate.");
+
+		inst.resultClass = this.__token.data;
+
+		this:QueueRemove(inst, this.__token);
+
+		this:Require("var", "Delegate name expected after delegate return class.")
+
+		inst.variable = this.__token.data;
+
+		this:QueueRemove(inst, this.__token);
+
+		this:Require("lpa", "Left parenthesis (( ) expected to open delegate peramaters.");
+
+		this:QueueRemove(inst, this.__token);
+
+		local classes = {};
+
+		if (not this:CheckToken("rpa")) then
+
+			while (true) do
+				this:Require("typ", "Peramater type expected for peramater.");
+
+				this:QueueRemove(inst, this.__token);
+
+				classes[#classes + 1] = this.__token.data;
+
+				if (not this:Accept("com")) then
+					break;
+				end
+
+				this:QueueRemove(inst, this.__token);
+			end
+
+		end
+		
+		inst.peramaters = classes;
+
+		this:Require("rpa", "Right parenthesis ( ) expected to close delegate peramaters.");
+
+		this:QueueRemove(inst, this.__token);
+
+		local lcb = this:Accept("lcb");
+
+		if (lcb) then
+			this:QueueRemove(inst, this.__token);
+		end
+
+		this:Require("ret", "Delegate body must be return followed by return count");
+		
+		this:QueueRemove(inst, this.__token);
+
+		this:Require("num", "Delegate body must be return followed by return count as number.");
+
+		this:QueueRemove(inst, this.__token);
+
+		inst.resultCount = this.__token.data;
+
+		if (this:Accept("sep")) then
+			this:QueueRemove(inst, this.__token);
+		end
+
+		if (lcb) then
+			this:Require("rcb", "Right curly bracket ( }) expected to close delegate.");
+
+			this:QueueRemove(inst, this.__token);
+		end
+
+		return this:EndInstruction(inst, {});
+	end
+
+	return this:Statment_8();
+end
+
+function PARSER.Statment_8(this)
 	if (this:Accept("ret")) then
 		local expressions = {};
 		local inst = this:StartInstruction("return", this.__token);

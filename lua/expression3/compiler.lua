@@ -483,8 +483,8 @@ end
 ]]
 
 function COMPILER.Compile_SEQ(this, inst, token, stmts)
-	for k, v in pairs(stmts) do
-		this:Compile(v);
+	for i = 1, #stmts do
+		this:Compile(stmts[i]);
 	end
 
 	return "", 0;
@@ -735,8 +735,33 @@ function COMPILER.Compile_ASS(this, inst, token, expressions)
 
 				local class, scope, info = this:AssignVariable(tkn, false, var, res);
 				
+				local luaVar = tkn.data;
+
 				if (info and info.prefix) then
-					this:QueueReplace(inst, tkn, info.prefix .. "." .. tkn.data);
+					luaVar = info.prefix .. "." .. tkn.data;
+
+					this:QueueReplace(inst, tkn, luaVar);
+				end
+
+				if (class == "f") then
+					injectNewLine = true;
+					
+					if (info.signature) then
+						local msg = string.format("Failed to assign function to delegate %s(%s), permater missmatch.", luaVar, info.signature);
+						this:QueueInjectionAfter(inst, inst.final, string.format("if (%s and %s.signature ~= %q) then CONTEXT:Throw(%q); %s = nil; end", luaVar, luaVar, info.signature, msg, luaVar));
+					end
+					
+					if (info.resultClass) then
+						local msg = string.format("Failed to assign function to delegate %s(%s), result type missmatch.", luaVar, info.resultClass);
+						this:QueueInjectionAfter(inst, inst.final, string.format("if (%s and %s.result ~= %q) then CONTEXT:Throw(%q); %s = nil; end", luaVar, luaVar, info.resultClass, msg, luaVar));
+					end
+					
+					if (info.resultCount) then
+						local msg = string.format("Failed to assign function to delegate %s(%s), result count missmatch.", luaVar, info.resultCount);
+						this:QueueInjectionAfter(inst, inst.final, string.format("if (%s and %s.count ~= %i) then CONTEXT:Throw(%q); %s = nil; end", luaVar, luaVar, info.resultCount, msg, luaVar));
+					end
+
+					injectNewLine = false;
 				end
 
 				pos = pos + 1;
@@ -2240,6 +2265,8 @@ function COMPILER.Compile_RETURN(this, inst, token, expressions)
 		end
 
 		this:SetOption("retunClass", outClass or "", true);
+	else
+		outClass = result;
 	end
 
 	local outCount = 0;
@@ -2253,7 +2280,7 @@ function COMPILER.Compile_RETURN(this, inst, token, expressions)
 			local ok = this:CastExpression(outClass, expr);
 
 			if (not ok) then
-				this:throw(expr.token, "Can not return %s here, %s expected.", res, outClass);
+				this:Throw(expr.token, "Can not return %s here, %s expected.", res, outClass);
 			end
 		end
 
@@ -2270,7 +2297,21 @@ function COMPILER.Compile_RETURN(this, inst, token, expressions)
 	end
 
 	if (count ~= outCount) then
-		this:throw(expr.token, "Can not return %i %s('s) here, %i %s('s) expected.", outCount, outClass, res, count);
+		this:Throw(expr.token, "Can not return %i %s('s) here, %i %s('s) expected.", outCount, outClass, count, outClass);
+	end
+end
+
+--[[
+]]
+
+function COMPILER.Compile_DELEGATE(this, inst, token, expressions)
+	local class, scope, info = this:AssignVariable(token, true, inst.variable, "f");
+
+	if (info) then
+		info.signature = table.concat(inst.peramaters, ",");
+		info.peramaters = inst.peramaters;
+		info.resultClass = inst.resultClass;
+		info.resultCount = inst.resultCount;
 	end
 end
 
