@@ -636,13 +636,18 @@ function PARSER.Statment_5(this)
 		
 		local type = this.__token.data;
 
+		if (type == "f" and this:CheckToken("typ")) then
+			this:StepBackward(1);
+			return this:Statment_6()
+		end
+
 		this:QueueReplace(inst, this.__token, "local");
 
 		inst.class = type;
 		
 		local variables = {};
 
-		this:Require("var", "Variable('s) expected after class for global variable.");
+		this:Require("var", "Variable('s) expected after class for variable.");
 		variables[1] = this.__token.data;
 
 		while (this:Accept("com")) do
@@ -816,7 +821,31 @@ end
 
 function PARSER.Statment_8(this)
 	if (this:AcceptWithData("typ", "f")) then
-		local inst = this:StartInstruction("udf", this.__token);
+		local inst = this:StartInstruction("funct", this.__token);
+
+		this:QueueReplace(inst, this.__token, "function");
+		
+		this:Require("typ", "Return class expected after delegate.");
+
+		inst.resultClass = this.__token.data;
+
+		this:QueueRemove(inst, this.__token);
+
+		this:Require("var", "Delegate name expected after delegate return class.")
+
+		inst.variable = this.__token.data;
+
+		this:QueueRemove(inst, this.__token);
+
+		local perams, signature = this:InputPeramaters(inst);
+		
+		inst.perams = perams;
+		
+		inst.signature = signature;
+
+		inst.stmts = this:Block_1(true, " ");
+
+		inst.__end = this.__token;
 
 		return this:EndInstruction(inst, {});
 	end
@@ -1399,7 +1428,9 @@ function PARSER.Expression_26(this)
 		this:QueueReplace(inst, this.__token, "function");
 
 		local perams, signature = this:InputPeramaters(inst);
+		
 		inst.perams = perams;
+		
 		inst.signature = signature;
 
 		inst.stmts = this:Block_1(true, " ");

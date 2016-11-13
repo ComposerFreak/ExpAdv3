@@ -2315,6 +2315,58 @@ function COMPILER.Compile_DELEGATE(this, inst, token, expressions)
 	end
 end
 
+function COMPILER.Compile_FUNCT(this, inst, token, expressions)
+	this:PushScope();
+
+	for _, peram in pairs(inst.perams) do
+		local var = peram[2];
+		local class = peram[1];
+
+		this:AssignVariable(token, true, var, class);
+
+		if (class ~= "_vr") then
+			injectNewLine = true;
+			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end", var, var, class, var));
+			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, class, class, var, var));
+			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("%s = %s[2];", var, var));
+			injectNewLine = false;
+		end
+	end
+
+	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
+
+	this:SetOption("retunClass", inst.resultClass);
+	this:SetOption("retunCount", -1); -- Indicate we do not know this yet.
+
+	this:Compile(inst.stmts);
+
+	local count = this:GetOption("retunCount");
+
+	this:PopScope();
+
+	local variable = inst.variable;
+
+	local class, scope, info = this:AssignVariable(token, true, variable, "f");
+
+	if (info) then
+		info.signature = inst.signature;
+		info.peramaters = inst.perams;
+		info.resultClass = inst.resultClass;
+		info.resultCount = count;
+
+		if (info.prefix) then
+			variable = info.prefix .. "." .. variable;
+		else
+			this:QueueInjectionBefore(inst, token, "local");
+		end
+	end
+
+	this:QueueInjectionBefore(inst, token, variable, " = { op = ");
+	this:QueueInjectionAfter(inst, inst.__end, ", result = \"" .. info.resultClass .. "\"");
+	this:QueueInjectionAfter(inst, inst.__end, ", count = " .. count);
+	this:QueueInjectionAfter(inst, inst.__end, "}");
+end
+
 --[[
 ]]
 
