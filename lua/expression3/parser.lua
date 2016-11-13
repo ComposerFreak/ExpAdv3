@@ -34,7 +34,7 @@
 			Stmt4 ← (("server" / "client") Block)? Stmt5
 			Stmt5 ← "global"? (type (Var("," Var)* "="? (Expr1? ("," Expr1)*)))? Stmt8
 			Stmt6 ← (type (Var("," Var)* ("=" / "+=" / "-=" / "/=" / "*=")? (Expr1? ("," Expr1)*)))? Stmt7
-			Stmt7 ← 
+			Stmt7 ← ("delegate" "(" (Type ((",")?)*)?) ")" ("{")? "return" Num ("}")?)? Stmt8
 			Stmt8 ← ("return" (Expr1 ((","")?)*)?)?)?
 
 		:::Expressions:::
@@ -60,7 +60,7 @@
 			Expr20 ← ("#" Expr22)? Expr21
 			Expr21 ← ("("type")" Expr1)? Expr22
 			Expr22 ← ("(" Expr1 ")" (Trailing)?)? Expr23
-			Expr23 ← (Library "." Function  "(" (Expr1 ((","")?)*)?) ")")? Expr24
+			Expr23 ← (Library "." Function  "(" (Expr1 ((",")?)*)?) ")")? Expr24
 			Expr24 ← (Var (Trailing)?)? Expr25
 			Expr25 ← ("new" Type "(" (Expr1 ((","")?)*)?) ")")? Expr25
 			Expr26 ← ("Function" Perams Block1)? Expr27
@@ -737,7 +737,7 @@ end
 function PARSER.Statment_7(this)
 	if (this:Accept("del")) then
 		local inst = this:StartInstruction("delegate", this.__token);
-		
+
 		this:QueueRemove(inst, this.__token);
 		
 		this:Require("typ", "Return class expected after delegate.");
@@ -815,6 +815,16 @@ function PARSER.Statment_7(this)
 end
 
 function PARSER.Statment_8(this)
+	if (this:AcceptWithData("typ", "f")) then
+		local inst = this:StartInstruction("udf", this.__token);
+
+		return this:EndInstruction(inst, {});
+	end
+
+	return this:Statment_9();
+end
+
+function PARSER.Statment_9(this)
 	if (this:Accept("ret")) then
 		local expressions = {};
 		local inst = this:StartInstruction("return", this.__token);

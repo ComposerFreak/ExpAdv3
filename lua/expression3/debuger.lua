@@ -19,70 +19,69 @@ COLORS.Before = Color(0, 150, 100);
 COLORS.After = Color(0, 100, 150);
 
 local function ProcessLines(tokens, alltasks)
+	local off = "";
+	local row = {};
 	local rows = {};
 
-	local expr, lua = {}, {};
-
 	for k = 1, #tokens do
-		local v = tokens[k];
-		local data = v.data;
+		local token = tokens[k];
+		local data = token.data;
 
-		if (v.orig) then
-			data = v.orig;
+		if (token.orig) then
+			data = token.orig;
 		end
 
-		if (v.newLine) then
-			rows[#rows + 1] = expr;
-			rows[#rows + 1] = lua;
-			rows[#rows + 1] = {{" ", COLORS.Generic}};
-
-			expr, lua = {}, {};
-
-			if (v.depth and v.depth > 0) then
-				expr[#expr + 1] = {string.rep("\t", v.depth) .. " ", COLORS.Generic}
-				lua[#lua + 1] = {string.rep("\t", v.depth) .. " ", COLORS.Generic}
-			end
+		if (token.newLine) then
+			rows[#rows + 1] = row;
+			row = {{off, COLORS.Generic}};
 		end
 
-		local tasks = alltasks[v.pos];
+		if (token.depth and token.depth > 0) then
+			-- off = string.rep("    ", token.depth)
+			-- row[#row + 1] = {off, COLORS.Generic}
+		end
+
+		local tasks = alltasks[token.pos];
 
 		if (not tasks) then
-			expr[#expr + 1] = {data .. " ", COLORS.Generic}
-			lua[#lua + 1] = {v.data .. " ", COLORS.Generic}
+			row[#row + 1] = {data .. " ", COLORS.Generic};
 		else
+			if (tasks.prefix) then
+				for _, task in pairs(tasks.prefix) do
+					if (task.newLine) then
+						rows[#rows + 1] = row;
+						row = {{off, COLORS.Generic}};
+					end
 
-			local prefixs = tasks.prefix;
-
-			if (prefixs) then
-				for _, prefix in pairs(prefixs) do
-					lua[#lua + 1] = {prefix.str .. " ", COLORS.Before}
+					row[#row + 1] = {task.str .. " ", COLORS.Before}
 				end
 			end
 
 			if (not tasks.remove) then
 				if (tasks.replace) then
-					expr[#expr + 1] = {data .. " ", COLORS.Replaced}
-					lua[#lua + 1] = {tasks.replace.str .. " ", COLORS.Replaced}
+					row[#row + 1] = {tasks.replace.str .. " ", COLORS.Replaced}
 				else
-					expr[#expr + 1] = {data .. " ", COLORS.Generic}
-					lua[#lua + 1] = {v.data .. " ", COLORS.Generic}
+					row[#row + 1] = {data .. " ", COLORS.Generic}
 				end
 			else
-				expr[#expr + 1] = {data .. " ", COLORS.Removed}
+				row[#row + 1] = {data .. " ", COLORS.Removed}
 			end
 
-			local postfixs = tasks.postfix;
+			if (tasks.postfix) then
+				for _, task in pairs(tasks.postfix) do
+					if (task.newLine) then
+						rows[#rows + 1] = row;
+						row = {{off, COLORS.Generic}};
+					end
 
-			if (postfixs) then
-				for _, postfix in pairs(postfixs) do
-					lua[#lua + 1] = {postfix.str .. " ", COLORS.After}
+					row[#row + 1] = {task.str .. " ", COLORS.After}
 				end
 			end
 		end
 	end
 
-	rows[#rows + 1] = expr;
-	rows[#rows + 1] = lua;
+	rows[#rows + 1] = row;
+
 
 	local allTokens = {};
 
