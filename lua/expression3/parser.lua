@@ -824,7 +824,7 @@ end
 
 function PARSER.Statment_8(this)
 	if (this:AcceptWithData("typ", "f")) then
-		print("STMT8 REACHED")
+		
 		local inst = this:StartInstruction("funct", this.__token);
 
 		this:QueueReplace(inst, this.__token, "function");

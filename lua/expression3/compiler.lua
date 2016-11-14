@@ -2383,6 +2383,12 @@ function COMPILER.Compile_CALL(this, inst, token, expressions)
 
 			prms[#prms + 1] = r;
 
+			if (r ~= "_vr") then
+				this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. r .. "\"", ",");
+
+				this:QueueInjectionAfter(inst, arg.final, "}");
+			end
+
 			if (i == #expressions and c > 1) then
 				for j = 2, c do
 					prms[#prms + 1] = r;
