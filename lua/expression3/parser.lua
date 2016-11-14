@@ -214,8 +214,11 @@ function PARSER.StepBackward(this, steps)
 
 	local pos = this.__pos - (steps + 1);
 
-	if (pos < 0) then
-		pos = 0;
+	if (pos == 0) then
+		this.__pos = 0;
+		this.__token = this.__tokens[0];
+		this.__next = this.__tokens[1];
+		return;
 	end
 
 	if (pos > this.__total) then
@@ -821,6 +824,7 @@ end
 
 function PARSER.Statment_8(this)
 	if (this:AcceptWithData("typ", "f")) then
+		print("STMT8 REACHED")
 		local inst = this:StartInstruction("funct", this.__token);
 
 		this:QueueReplace(inst, this.__token, "function");
@@ -1349,11 +1353,11 @@ function PARSER.Expression_23(this)
 			
 			local expressions = {};
 
-			if (not this:CheckToken("lpa")) then
+			if (not this:CheckToken("rpa")) then
 				expressions[1] = this:Expression_1();
 
 				while(this:Accept("com")) do
-					this:Exclude("lpa", "Expression or value expected after comma (,).");
+					this:Exclude("rpa", "Expression or value expected after comma (,).");
 
 					expressions[#expressions + 1] = this:Expression_1();
 				end
@@ -1400,11 +1404,11 @@ function PARSER.Expression_25(this)
 
 		local expressions = {};
 
-		if (not this:CheckToken("lpa")) then
+		if (not this:CheckToken("rpa")) then
 			expressions[1] = this:Expression_1();
 
 			while(this:Accept("com")) do
-				this:Exclude("lpa", "Expression or value expected after comma (,).");
+				this:Exclude("rpa", "Expression or value expected after comma (,).");
 
 				expressions[#expressions + 1] = this:Expression_1();
 			end
@@ -1519,7 +1523,7 @@ function PARSER.Expression_28(this)
 end
 
 function PARSER.Expression_Trailing(this, expr)
-	while this:CheckToken("prd", "lsb") do --, "lpa") do
+	while this:CheckToken("prd", "lsb", "lpa") do --, "lpa") do
 		
 		-- Methods
 		if (this:Accept("prd")) then
@@ -1540,11 +1544,11 @@ function PARSER.Expression_Trailing(this, expr)
  
 			expressions[1] = expr;
 
-			if (not this:CheckToken("lpa")) then
+			if (not this:CheckToken("rpa")) then
 				expressions[2] = this:Expression_1();
 
 				while(this:Accept("com")) do
-					this:Exclude("lpa", "Expression or value expected after comma (,).");
+					this:Exclude("rpa", "Expression or value expected after comma (,).");
 
 					expressions[#expressions + 1] = this:Expression_1();
 				end
@@ -1557,6 +1561,31 @@ function PARSER.Expression_Trailing(this, expr)
 		end
 
 		-- Getters
+
+		-- Call
+
+		if (this:Accept("lpa")) then
+			local inst = this:StartInstruction("call", this.__token);
+
+			local expressions = {};
+ 
+			expressions[1] = expr;
+
+			if (not this:CheckToken("rpa")) then
+				expressions[2] = this:Expression_1();
+
+				while (this:Accept("com")) do
+					this:Exclude("rpa", "Expression or value expected after comma (,).");
+
+					expressions[#expressions + 1] = this:Expression_1();
+				end
+
+			end  
+
+			this:Require("rpa", "Right parenthesis ( )) expected to close call parameters.")
+
+			expr = this:EndInstruction(inst, expressions);
+		end
 	end
 
 	return expr;
@@ -1620,6 +1649,7 @@ function PARSER.ExpressionErr(this)
 
 	this:Throw(this.__token, "Unexpected symbol found (%s)", this.__token.type);
 end
+
 --[[
 ]]
 

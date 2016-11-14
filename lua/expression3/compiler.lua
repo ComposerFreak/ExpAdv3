@@ -2370,4 +2370,60 @@ end
 --[[
 ]]
 
+function COMPILER.Compile_CALL(this, inst, token, expressions)
+	local expr = expressions[1];
+	local res, count = this:Compile(expr);
+
+	local prms = {};
+
+	if (#expressions > 1) then
+		for i = 2, #expressions do
+			local arg = expressions[i];
+			local r, c = this:Compile(arg);
+
+			prms[#prms + 1] = r;
+
+			if (i == #expressions and c > 1) then
+				for j = 2, c do
+					prms[#prms + 1] = r;
+				end
+			end
+		end
+	end
+
+	local signature = table.concat(prms, ",");
+
+	if (res == "f" and expr.type == "var") then
+		local c, s, info = this:GetVariable(expr.variable);
+		-- The var instruction will have already validated this variable.
+		
+		if (info.signature) then
+			if (info.signature ~= signature) then
+				this:Throw(token, "Invalid arguments to user function got %s(%s), %s(%s) expected.", expr.variable, signature, expr.variable, info.signature);
+			end
+
+			this:QueueReplace(inst, expr.token, "invoke");
+
+			this:QueueInjectionAfter(inst, token, "\"" .. info.resultClass .. "\",", tostring(info.resultCount), ",");
+
+			if (info.prefix) then
+				this:QueueInjectionAfter(inst, token, info.prefix .. "." .. expr.variable);
+			else
+				this:QueueInjectionAfter(inst, token, expr.variable);
+			end
+
+			if (#prms >= 1) then
+				this:QueueInjectionAfter(inst, token, ",");
+			end
+
+			return info.resultClass, info.resultCount;
+		end
+	end
+
+	this:Throw(token, "You cannot call this here (yet).");
+end
+
+--[[
+]]
+
 EXPR_COMPILER = COMPILER;
