@@ -613,54 +613,54 @@ end
 ]]
 
 function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
-	local tVars = #inst.variables;
-	local tExprs = #expressions;
+	local tArgs = #expressions;
 
-	local pos = 1;
-	while pos <= tVars or pos <= tExprs do
-		local t = inst.variables[pos];
-		local expr = expressions[pos];
+	local results = {};
 
-		if (not t) then
-			this:Throw(expr.token, "Unable to assign here, value #%i has no matching variable.", pos);
-		elseif (not expr) then
-			this:Throw(t, "Unable to assign variable %s, no matching value.", t.data);
+	for i = 1, tArgs do
+		local arg = expressions[i];
+		local r, c = this:Compile(arg);
+
+		if (not inst.variables[i]) then
+			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
+		elseif (i < tArgs) then
+			results[#results + 1] = {r, arg, true};
+		else
+			for j = 1, c do
+				results[#results + 1] = {r, arg, j == 1};
+			end
+		end
+	end
+
+	for i = 1, #inst.variables do
+		local result = results[i];
+		local token = inst.variables[i];
+		local var = token.data;
+
+		if (not result) then
+			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
 		end
 
-		local res, cnt = this:Compile(expr);
+		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0);
 
-		if (cnt > 0) then
-			for i = 1, cnt do
-				local snd = i < cnt or cnt == 1;
-				local tkn = inst.variables[pos];
-				local var = tkn.data;
-				
-				local class, scope, info = this:AssignVariable(tkn, true, var, inst.class, 0);
-				
-				this.__defined[var] = true;
+		if (info) then
+			info.prefix = "GLOBAL";
+			this:QueueReplace(inst, token, info.prefix .. "." .. var);
+		end
 
-				if (info) then
-					info.prefix = "GLOBAL";
-					this:QueueReplace(inst, tkn, info.prefix .. "." .. tkn.data);
-				end
+		this.__defined[var] = true;
 
-				pos = pos + 1;
+		if (result[1] ~= inst.class) then
+			local casted = false;
+			local arg = result[2];
 
-				if (snd) then
-					break;
-				end
-			end
-		else
-			local class, scope, info = this:AssignVariable(tkn, true, t.data, inst.class, 0);
-
-			this.__defined[t.data] = true;
-
-			if (info) then
-				info.prefix = "GLOBAL";
-				this:QueueReplace(inst, t, info.prefix .. "." .. t.data);
+			if (result[3]) then
+				-- TODO: CAST
 			end
 
-			pos = pos + 1;
+			if (not casted) then
+				this:AssignVariable(arg.token, true, var, result[1], 0);
+			end
 		end
 	end
 
@@ -670,26 +670,50 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 end
 
 function COMPILER.Compile_LOCAL(this, inst, token, expressions)
-	
-	for i, variable in pairs(inst.variables) do
+	local tArgs = #expressions;
 
-		local r, c = this:Compile(expressions[i]);
+	local results = {};
 
-		if (not r) then
-			break;
-		end
+	for i = 1, tArgs do
+		local arg = expressions[i];
+		local r, c = this:Compile(arg);
 
-		if (r ~= inst.class) then
-			local t, expr = this:CastExpression(inst.class, expr);
-
-			if (not t) then
-				this:Throw(token, "Unable to assign variable %s, %s expected got %s.", variable, inst.class, r);
+		if (not inst.variables[i]) then
+			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
+		elseif (i < tArgs) then
+			results[#results + 1] = {r, arg, true};
+		else
+			for j = 1, c do
+				results[#results + 1] = {r, arg, j == 1};
 			end
 		end
+	end
 
-		this:AssignVariable(token, true, variable, r);
+	for i = 1, #inst.variables do
+		local result = results[i];
+		local token = inst.variables[i];
+		local var = token.data;
 
-		this.__defined[variable] = true;
+		if (not result) then
+			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
+		end
+
+		local class, scope, info = this:AssignVariable(token, true, var, inst.class);
+
+		this.__defined[var] = true;
+
+		if (result[1] ~= inst.class) then
+			local casted = false;
+			local arg = result[2];
+
+			if (result[3]) then
+				-- TODO: CAST
+			end
+
+			if (not casted) then
+				this:AssignVariable(arg.token, true, var, result[1]);
+			end
+		end
 	end
 
 	this.__defined = {};
@@ -698,80 +722,82 @@ function COMPILER.Compile_LOCAL(this, inst, token, expressions)
 end
 
 function COMPILER.Compile_ASS(this, inst, token, expressions)
-	local tVars = #inst.variables;
-	local tExprs = #expressions;
+	local tArgs = #expressions;
 
-	local pos = 1;
-	while pos <= tVars or pos <= tExprs do
-		local t = inst.variables[pos];
-		local expr = expressions[pos];
+	local results = {};
 
-		if (not t) then
-			this:Throw(expr.token, "Unable to assign here, value #%i has no matching variable.", pos);
-		elseif (not expr) then
-			this:Throw(t, "Unable to assign variable %s, no matching value.", t.data);
-		end
+	for i = 1, tArgs do
+		local arg = expressions[i];
+		local r, c = this:Compile(arg);
 
-		local res, cnt = this:Compile(expr);
-
-		if (cnt > 0 ) then
-			for i = 1, cnt do
-				local snd = i < cnt or cnt == 1;
-				local tkn = inst.variables[pos];
-				local var = tkn.data;
-				local class, scope, info = this:GetVariable(var, nil, false);
-
-				if (not class) then
-					this:Throw(var, "Unable to assign variable %s, Variable does not exist.", var);
-				elseif (snd and (class ~= res)) then
-					local noErr = this:CastExpression(class, expr);
-
-					if (not noErr) then
-						this:Throw(token, "Unable to assign variable %s, %s expected got %s.", var, class, res);
-					end
-				elseif (class ~= res) then
-					this:Throw(token, "Unable to assign variable %s, %s expected got %s.", var, class, res);
-				end
-
-				local class, scope, info = this:AssignVariable(tkn, false, var, res);
-				
-				local luaVar = tkn.data;
-
-				if (info and info.prefix) then
-					luaVar = info.prefix .. "." .. tkn.data;
-
-					this:QueueReplace(inst, tkn, luaVar);
-				end
-
-				if (class == "f") then
-					injectNewLine = true;
-					
-					if (info.signature) then
-						local msg = string.format("Failed to assign function to delegate %s(%s), permater missmatch.", luaVar, info.signature);
-						this:QueueInjectionAfter(inst, inst.final, string.format("if (%s and %s.signature ~= %q) then CONTEXT:Throw(%q); %s = nil; end", luaVar, luaVar, info.signature, msg, luaVar));
-					end
-					
-					if (info.resultClass) then
-						local msg = string.format("Failed to assign function to delegate %s(%s), result type missmatch.", luaVar, info.resultClass);
-						this:QueueInjectionAfter(inst, inst.final, string.format("if (%s and %s.result ~= %q) then CONTEXT:Throw(%q); %s = nil; end", luaVar, luaVar, info.resultClass, msg, luaVar));
-					end
-					
-					if (info.resultCount) then
-						local msg = string.format("Failed to assign function to delegate %s(%s), result count missmatch.", luaVar, info.resultCount);
-						this:QueueInjectionAfter(inst, inst.final, string.format("if (%s and %s.count ~= %i) then CONTEXT:Throw(%q); %s = nil; end", luaVar, luaVar, info.resultCount, msg, luaVar));
-					end
-
-					injectNewLine = false;
-				end
-
-				pos = pos + 1;
-
-				if (snd) then
-					break;
-				end
+		if (not inst.variables[i]) then
+			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
+		elseif (i < tArgs) then
+			results[#results + 1] = {r, arg, true};
+		else
+			for j = 1, c do
+				results[#results + 1] = {r, arg, j == 1};
 			end
 		end
 	end
+
+	for i = 1, #inst.variables do
+		local result = results[i];
+
+		local token = inst.variables[i];
+		local var = token.data;
+
+		if (not result) then
+			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
+		end
+
+		this.__defined[var] = true;
+
+		local type = result[1];
+		local class, scope, info = this:GetVariable(var);
+
+		if (type ~= class) then
+			local arg = result[2];
+
+			if (result[3]) then
+				-- TODO: CAST
+				-- Once done rember: type = class;
+			end
+		end
+
+		local class, scope, info = this:AssignVariable(token, false, var, class);
+
+		if (info and info.prefix) then
+			var = info.prefix .. "." .. var;
+
+			this:QueueReplace(inst, token, var);
+		end
+
+		if (inst.class == "f") then
+			injectNewLine = true;
+			
+			if (info.signature) then
+				local msg = string.format("Failed to assign function to delegate %s(%s), permater missmatch.", var, info.signature);
+				this:QueueInjectionAfter(inst, inst.final, string.format("if (%s and %s.signature ~= %q) then CONTEXT:Throw(%q); %s = nil; end", var, var, info.signature, msg, var));
+			end
+			
+			if (info.resultClass) then
+				local msg = string.format("Failed to assign function to delegate %s(%s), result type missmatch.", var, info.resultClass);
+				this:QueueInjectionAfter(inst, inst.final, string.format("if (%s and %s.result ~= %q) then CONTEXT:Throw(%q); %s = nil; end", var, var, info.resultClass, msg, var));
+			end
+			
+			if (info.resultCount) then
+				local msg = string.format("Failed to assign function to delegate %s(%s), result count missmatch.", var, info.resultCount);
+				this:QueueInjectionAfter(inst, inst.final, string.format("if (%s and %s.count ~= %i) then CONTEXT:Throw(%q); %s = nil; end", var, var, info.resultCount, msg, var));
+			end
+
+			injectNewLine = false;
+		end
+	end
+
+	this.__defined = {};
+
+	return "", 0;
 end
 
 --[[
@@ -2383,12 +2409,6 @@ function COMPILER.Compile_CALL(this, inst, token, expressions)
 
 			prms[#prms + 1] = r;
 
-			if (r ~= "_vr") then
-				this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. r .. "\"", ",");
-
-				this:QueueInjectionAfter(inst, arg.final, "}");
-			end
-
 			if (i == #expressions and c > 1) then
 				for j = 2, c do
 					prms[#prms + 1] = r;
@@ -2406,6 +2426,18 @@ function COMPILER.Compile_CALL(this, inst, token, expressions)
 		if (info.signature) then
 			if (info.signature ~= signature) then
 				this:Throw(token, "Invalid arguments to user function got %s(%s), %s(%s) expected.", expr.variable, signature, expr.variable, info.signature);
+			end
+
+			if (#expressions > 1) then
+				for i = 2, #expressions do
+					local arg = expressions[i];
+
+					if (arg.result ~= "_vr") then
+						this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. arg.result .. "\"", ",");
+
+						this:QueueInjectionAfter(inst, arg.final, "}");
+					end
+				end
 			end
 
 			this:QueueReplace(inst, expr.token, "invoke");

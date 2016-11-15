@@ -651,11 +651,11 @@ function PARSER.Statment_5(this)
 		local variables = {};
 
 		this:Require("var", "Variable('s) expected after class for variable.");
-		variables[1] = this.__token.data;
+		variables[1] = this.__token;
 
 		while (this:Accept("com")) do
 			this:Require("var", "Variable expected after comma (,).");
-			variables[#variables + 1] = this.__token.data;
+			variables[#variables + 1] = this.__token;
 		end
 		
 		local expressions = {};
@@ -824,7 +824,7 @@ end
 
 function PARSER.Statment_8(this)
 	if (this:AcceptWithData("typ", "f")) then
-		
+
 		local inst = this:StartInstruction("funct", this.__token);
 
 		this:QueueReplace(inst, this.__token, "function");
@@ -1320,7 +1320,7 @@ function PARSER.Expression_22(this)
 		return this:Expression_Trailing(expr);
 	end
 
-	return this:Expression_23();
+	return this:Expression_Trailing(this:Expression_23());
 end
 
 function PARSER.Expression_23(this)
@@ -1523,7 +1523,7 @@ function PARSER.Expression_28(this)
 end
 
 function PARSER.Expression_Trailing(this, expr)
-	while this:CheckToken("prd", "lsb", "lpa") do --, "lpa") do
+	while this:CheckToken("prd", "lsb", "lpa") do
 		
 		-- Methods
 		if (this:Accept("prd")) then

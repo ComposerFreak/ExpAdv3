@@ -98,6 +98,9 @@ local function RegisterNumberClass()
 			EXPR_LIB.RegisterOperator("eq*", "n,n", "b", 1, eqM, true);
 			EXPR_LIB.RegisterOperator("neq*", "n,n", "b", 1, neqM, true);
 
+			-- TESTING
+			EXPR_LIB.RegisterOperator("call", "n,n", "n", 1, function(a, b) return a + b end);
+
 			local function notN(context, number)
 				return number == 0;
 			end
