@@ -2388,6 +2388,7 @@ function COMPILER.Compile_FUNCT(this, inst, token, expressions)
 	end
 
 	this:QueueInjectionBefore(inst, token, variable, " = { op = ");
+	this:QueueInjectionAfter(inst, inst.__end, ", signature = \"" .. inst.signature .. "\"");
 	this:QueueInjectionAfter(inst, inst.__end, ", result = \"" .. info.resultClass .. "\"");
 	this:QueueInjectionAfter(inst, inst.__end, ", count = " .. count);
 	this:QueueInjectionAfter(inst, inst.__end, "}");
