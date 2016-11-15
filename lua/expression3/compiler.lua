@@ -2426,7 +2426,53 @@ function COMPILER.Compile_CALL(this, inst, token, expressions)
 		end
 	end
 
-	this:Throw(token, "You cannot call this here (yet).");
+	local op;
+
+	if (#prms == 0) then
+		op = this:GetOperator("call", res, "");
+
+		if (not op) then
+			op = this:GetOperator("call", res, "...");
+		end
+	else
+		for i = #prms, 1, -1 do
+			local args = table.concat(prms,",", 1, i);
+
+			if (i >= #prms) then
+				op = this:GetOperator("call", res, args);
+			end
+
+			if (not op) then
+				op = this:GetOperator("call", args, res, "...");
+			end
+
+			if (op) then
+				break;
+			end
+		end
+	end
+
+	if (not op) then
+		this:Throw(token, "No such call operation %s(%s)", res, table.concat(prms, ","));
+	end
+
+	this:CheckState(op.state, token, "call operation %s(%s).", res, table.concat(prms, ","));
+
+	this:QueueRemove(inst, token); -- Removes (
+
+	this:QueueInjectionBefore(inst, expr.token, "_OPS[\"" .. op.signature .. "\"]", "(");
+
+	if (op.context) then
+		this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
+	end
+
+	if (#prms >= 1) then
+		this:QueueInjectionBefore(inst, token, ",");
+	end
+
+	this.__operators[op.signature] = op.operator;
+
+	return op.result, op.rCount;
 end
 
 --[[
