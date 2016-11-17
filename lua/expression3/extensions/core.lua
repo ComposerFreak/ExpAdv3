@@ -154,6 +154,9 @@ local function RegisterVariantClass()
 end
 
 hook.Add("Expression3.LoadClasses", "Expression3.Core.Classes", function()
+	-- This is the base class of everything.
+	EXPR_LIB.RegisterClass("o", {"object"}, isNotNil, isNotNil);
+
 	RegisterVoidClass();
 	RegisterBooleanClass();
 	RegisterNumberClass();

@@ -68,8 +68,11 @@
 		OutPut:		_Ops["v(n,n,n)"](1,2,3);
 
 	::EXPR_LIB::
-		EXPR_LIB.RegisterClass(string short name, string class name, boolean = function(object) isType, boolean = function(object) isValid)
+		EXPR_LIB.RegisterClass(string short name, string class name, string class boolean = function(object) isType, boolean = function(object) isValid)
 			Registers a new class with expression 3.
+		
+		EXPR_LIB.RegisterExtendedClass(string short name, string class name, string base class name, boolean = function(object) isType, boolean = function(object) isValid)
+			Registers a new class based of an existing class.
 
 		EXPR_LIB.RegisterConstructor(str class, str parameters, obj = function(ctx, ...) constructor, boolean exclude context)
 			Registers a constructor for class with expression 3; new vector(1, 2, 3)
@@ -113,6 +116,7 @@
 			neg		(type1)					-type1
 			not		(type1)					!type1
 			len		(type1)					#type1
+			call 	(type1, ...)			type(...)
 
 		EXPR_LIB.RegisterCastingOperator(str type, str parameter, obj = function(ctx*, ...) operator, boolean exclude context)
 			Registers a casting operator with expression 3 for casting from one class to another;
@@ -139,6 +143,9 @@
 		Extension:RegisterClass(string short name, string class name, boolean = function(object) isType, boolean = function(object) isValid)
 			Calls EXPR_LIB.RegisterClass(...) at the correct time with all given valid parameter.
 		
+		Extension:RegisterExtendedClass(string short name, string class name, string base class name, boolean = function(object) isType, boolean = function(object) isValid)
+			Calls EXPR_LIB.RegisterExtendedClass(...) at the correct time with all given valid parameter.
+
 		Extension.RegisterConstructorRegisterConstructor(str class, str parameters, obj = function(ctx*, ...) constructor, boolean exclude context)
 			Calls EXPR_LIB.RegisterConstructorRegisterConstructor(...) at the correct time with all given valid parameters.
 
@@ -266,6 +273,7 @@ function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 
 	class.id = string.lower(id);
 	class.name = string.lower(name);
+	class.base = "o";
 	class.state = STATE;
 
 	class.isType = isType;
@@ -277,6 +285,24 @@ function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 	classes[class.name] = class;
 
 	MsgN("Registered Class: ", class.id, " - ", class.name);
+
+	return class;
+end
+
+function EXPR_LIB.RegisterExtendedClass(id, name, base, isType, isValid)
+	if (not loadClasses) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register class %s outside of Hook::Expression3.LoadClasses", name);
+	end
+
+	local cls = EXPR_LIB.GetClass(base);
+
+	if (not cls) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register extended class %s for none existing class", class, base);
+	end
+
+	local class = EXPR_LIB.RegisterClass(id, name, isType, isValid);
+
+	class.base = cls.id;
 
 	return class;
 end
@@ -315,6 +341,8 @@ function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeCont
 
 	return op;
 end
+
+local loadConstructors = false;
 
 local methods;
 local loadMethods = false;
@@ -632,6 +660,11 @@ function Extension.RegisterClass(this, id, name, isType, isValid)
 	this.classes[#this.classes + 1] = entry;
 end
 
+function Extension.RegisterExtendedClass(this, id, name, base, isType, isValid)
+	local entry = {[0] = base, id, name, isType, isValid, this.state};
+	this.classes[#this.classes + 1] = entry;
+end
+
 function Extension.RegisterConstructor(this, class, parameter, constructor, excludeContext)
 	local entry = {class, parameter, constructor, excludeContext, this.state};
 	this.constructors[#this.constructors + 1] = entry;
@@ -683,8 +716,14 @@ function Extension.EnableExtension(this)
 	hook.Add("Expression3.LoadClasses", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.classes) do
 			STATE = v[5];
-			local op = this:CheckRegistration(EXPR_LIB.RegisterClass, v[1], v[2], v[3], v[4]);
-			op.extension = this.name;
+
+			if (not v[0]) then
+				local op = this:CheckRegistration(EXPR_LIB.RegisterClass, v[1], v[2], v[3], v[4]);
+				op.extension = this.name;
+			else
+				local op = this:CheckRegistration(EXPR_LIB.RegisterExtendedClass, v[1], v[2], v[0], v[3], v[4]);
+				op.extension = this.name;
+			end
 		end
 	end);
 
@@ -746,6 +785,57 @@ end
 	''''''''''''''''''''''''''''''''''
 ]]
 
+local extendClass;
+
+function extendClass(class, base)
+	c = EXPR_LIB.GetClass(class);
+	
+	if (not c.extends) then
+		c.extends = {};
+	end
+	
+	b = EXPR_LIB.GetClass(base);
+
+	if (not c.extends[base]) then
+
+		if (not c.isType) then
+			c.isType = b.isType;
+		end
+
+		if (not c.isValid) then
+			c.isValid = b.isValid;
+		end
+
+		local constructors = c.constructors;
+
+		for _, op in pairs(b.constructors) do
+			local signature = string.format("%s(%s)", class, op.parameter);
+
+			if (not constructors[signature]) then
+				constructors[signature] = op;
+			end
+		end
+
+		for _, op in pairs(methods) do
+			if (op.class == base) then
+				local signature = string.format("%s.%s(%s)", class, op.name, op.parameter);
+
+				if (not methods[signature]) then
+					methods[signature] = op;
+				end
+			end
+		end
+
+		c.extends[base] = true;
+
+		MsgN("Extended Class: ", class.name, " from ", base.name);
+	end
+
+	if (b.base) then
+		extendClass(class, b.base);
+	end
+end
+
 function EXPR_LIB.Initalize()
 	MsgN("Loading Expression 3");
 
@@ -795,6 +885,10 @@ function EXPR_LIB.Initalize()
 	hook.Run("Expression3.LoadEvents");
 	loadEvents = false;
 	EXPADV_EVENTS = events;
+
+	for id, class in pairs(classes) do
+		extendClass(id, class.base);
+	end
 
 	if (CLIENT) then
 		include("expression3/editor/expr_editor_lib.lua");
