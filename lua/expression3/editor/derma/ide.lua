@@ -95,7 +95,28 @@ function PANEL:Init( )
 	end
 	
 	
-	self.tbBottom:SetupButton( "Open", 	"fugue/blue-folder-horizontal-open.png", RIGHT, function( ) end )
+	self.tbBottom:SetupButton( "Open", 	"fugue/blue-folder-horizontal-open.png", RIGHT, function( ) 
+		local frame = vgui.Create( "DFrame" )
+		frame:SetSize( 500, 250 )
+		frame:SetSizable( true )
+		frame:Center( )
+		frame:MakePopup( )
+		frame:SetTitle( "Open file" )
+
+		local browser = vgui.Create( "DFileBrowser", frame )
+		browser:Dock( FILL )
+
+		browser:SetPath( "data" ) 
+		browser:SetBaseFolder( "golem" )
+		browser:SetOpen( true )
+		browser:SetCurrentFolder( "golem" )
+
+		browser.OnDoubleClick = function(pnl,path,panel)
+			self:LoadFile( path )
+			frame:Remove( ) 
+		end
+	end )
+	
 	self.tbBottom:SetupButton( "Save As", "fugue/disks-black.png", RIGHT, function( ) self:SaveFile( true, true ) end )
 	self.tbBottom:SetupButton( "Save", 	"fugue/disk-black.png", RIGHT, function( ) self:SaveFile( true ) end )
 	
@@ -197,10 +218,10 @@ function PANEL:Init( )
 			self.SavePnl.Panel:RequestFocus( )
 			return self.SavePnl.Panel, self.SavePnl.Tab, self.SavePnl
 		end 
-
+		
 		local Panel = vgui.Create(" GOLEM_FileMenu" )
 		--Panel:SetSaveFile( "filename", dir )
-
+		
 		local Sheet = self.pnlSideTabHolder:AddSheet( "", Panel, "fugue/gear.png" )
 		self.pnlSideTabHolder:SetActiveTab( Sheet.Tab )
 		self.SavePnl = Sheet
@@ -215,13 +236,14 @@ function PANEL:Init( )
 	end, function( self, pTab, bSave ) 
 		self.SavePnl = nil
 	end )*/
-
+	
 	-- self.tbRight:SetupButton("Save", "fugue/blue-folder-horizontal-open.png", BOTTOM, function()
 	-- 	self:NewTab("Save");
 	-- end);
-
 	
-	self:NewTab( "editor", [[
+	if not self:OpenOldTabs( ) then 
+	
+		self:NewTab( "editor", [[
 /*******************************************
 	EXPRESSION THREE BETA
 *******************************************/
@@ -241,8 +263,7 @@ Except {
 Much love to Oskar94,
 	This editor is his birth child :D
 ]] )
-	
-	
+	end 
 	
 	
 	-- self.pnlTabHolder:AddSheet( "Test 1", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
@@ -251,8 +272,8 @@ Much love to Oskar94,
 	
 	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
 	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
-	self:LoadFile( "example 1" ) 
-	-- self:OpenOldTabs( )
+	-- self:LoadFile( "example 1" ) 
+	
 	
 	self:NewMenuTab( "options" )
 	
@@ -581,6 +602,11 @@ function PANEL:SaveFile( sPath, bSaveAs, pTab, bNoSound )
 		FileMenu:Center( )
 		FileMenu:MakePopup( )*/
 		
+		local Window = Derma_StringRequest( "Save", "Save file", "generic", function( sFileName )
+			sFileName = string.gsub( sFileName, ".", invalid_filename_chars )
+			self:SaveFile( sFileName, nil, pTab, bNoSound )
+		end )
+		
 		return true
 	end
 	
@@ -600,11 +626,11 @@ function PANEL:SaveFile( sPath, bSaveAs, pTab, bNoSound )
 	end
 	
 	if not pTab.FilePath or string.lower( pTab.FilePath ) ~= string.lower( sPath ) then
-		if self.FileTabs[pTab.FilePath] then 
-			self.FileTabs[pTab.FilePath] = nil 
+		if self.FileList[pTab.FilePath] then 
+			self.FileList[pTab.FilePath] = nil 
 		end 
 		pTab.FilePath = sPath
-		self.FileTabs[pTab.FilePath] = pTab
+		self.FileList[pTab.FilePath] = pTab
 	end
 end 
 
@@ -660,11 +686,11 @@ function PANEL:SaveTabs( )
 end
 
 function PANEL:OpenOldTabs( )
-	-- if not file.Exists( "golem_temp/_tabs_.txt", "DATA" ) then return false end 
-	if not file.Exists( "golem/_tabs_.txt", "DATA" ) then return false end 
+	if not file.Exists( "golem_temp/_tabs_.txt", "DATA" ) then return false end 
+	-- if not file.Exists( "golem/_tabs_.txt", "DATA" ) then return false end 
 	
-	-- local tabs = file.Read( "golem_temp/_tabs_.txt" )
-	local tabs = file.Read( "golem/_tabs_.txt" )
+	local tabs = file.Read( "golem_temp/_tabs_.txt" )
+	-- local tabs = file.Read( "golem/_tabs_.txt" )
 	if not tabs or tabs == "" then return false end
 	
 	tabs = string.Explode( ";", tabs )
