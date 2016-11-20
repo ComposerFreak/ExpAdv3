@@ -342,8 +342,6 @@ function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeCont
 	return op;
 end
 
-local loadConstructors = false;
-
 local methods;
 local loadMethods = false;
 
@@ -728,6 +726,7 @@ function Extension.EnableExtension(this)
 	end);
 
 	hook.Add("Expression3.LoadConstructors", "Expression3.Extension." .. this.name, function()
+		--print("E3,LOAD CONSTRUCTORS:", loadConstructors)
 		for _, v in pairs(this.constructors) do
 			STATE = v[5];
 			local op = this:CheckRegistration(EXPR_LIB.RegisterConstructor, v[1], v[2], v[3], v[4]);
@@ -788,52 +787,60 @@ end
 local extendClass;
 
 function extendClass(class, base)
-	c = EXPR_LIB.GetClass(class);
-	
+	local c = EXPR_LIB.GetClass(class);
+	local b = EXPR_LIB.GetClass(base);
+
+	if (not c or not b) then
+		return;
+	end
+
 	if (not c.extends) then
 		c.extends = {};
 	end
-	
-	b = EXPR_LIB.GetClass(base);
 
-	if (not c.extends[base]) then
+	if (c.extends[b.id]) then
+		return;
+	end
 
-		if (not c.isType) then
-			c.isType = b.isType;
-		end
-
-		if (not c.isValid) then
-			c.isValid = b.isValid;
-		end
-
-		local constructors = c.constructors;
-
-		for _, op in pairs(b.constructors) do
-			local signature = string.format("%s(%s)", class, op.parameter);
-
-			if (not constructors[signature]) then
-				constructors[signature] = op;
-			end
-		end
-
-		for _, op in pairs(methods) do
-			if (op.class == base) then
-				local signature = string.format("%s.%s(%s)", class, op.name, op.parameter);
-
-				if (not methods[signature]) then
-					methods[signature] = op;
-				end
-			end
-		end
-
-		c.extends[base] = true;
-
-		MsgN("Extended Class: ", class.name, " from ", base.name);
+	if (c.id == b.id) then
+		return;
 	end
 
 	if (b.base) then
-		extendClass(class, b.base);
+		extendClass(base, b.base)
 	end
+
+	if (not c.isType) then
+		c.isType = b.isType;
+	end
+
+	if (not c.isValid) then
+		c.isValid = b.isValid;
+	end
+
+	local constructors = c.constructors;
+
+	for _, op in pairs(b.constructors) do
+		local signature = string.format("%s(%s)", class, op.parameter);
+
+		if (not constructors[signature]) then
+			constructors[signature] = op;
+		end
+	end
+
+	for _, op in pairs(methods) do
+		if (op.class == base) then
+			local signature = string.format("%s.%s(%s)", class, op.name, op.parameter);
+
+			if (not methods[signature]) then
+				methods[signature] = op;
+			end
+		end
+	end
+
+	c.extends[b.id] = true;
+
+	MsgN("Extended Class: ", c.name, " from ", b.name);
 end
 
 function EXPR_LIB.Initalize()
