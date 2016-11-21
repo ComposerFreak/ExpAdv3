@@ -54,6 +54,10 @@ local function RegisterVoidClass()
 	EXPR_LIB.RegisterClass("nil", {"void"}, isnumber, isNil);
 end
 
+local function RegisterClassObject()
+	EXPR_LIB.RegisterClass("cls", {"class"}, isstring, isNil);
+end
+
 local function RegisterBooleanClass()
 	EXPR_LIB.RegisterClass("b", {"boolean", "bool"}, isbool, isNotNil);
 
@@ -156,7 +160,7 @@ end
 hook.Add("Expression3.LoadClasses", "Expression3.Core.Classes", function()
 	-- This is the base class of everything.
 	EXPR_LIB.RegisterClass("o", {"object"}, isNotNil, isNotNil);
-
+	RegisterClassObject();
 	RegisterVoidClass();
 	RegisterBooleanClass();
 	RegisterNumberClass();
@@ -172,10 +176,56 @@ hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", functi
 	include("expression3/extensions/vector.lua");
 end);
 
+--[[
+	SYSTEM LIBRARY!!!!!
+]]
+
 hook.Add("Expression3.LoadLibraries", "Expression3.Core.Extensions", function()
-	EXPR_LIB.RegisterLibrary("debug")
+	EXPR_LIB.RegisterLibrary("system")
 end);
 
 hook.Add("Expression3.LoadFunctions", "Expression3.Core.Extensions", function()
-	EXPR_LIB.RegisterFunction("debug", "print", "n", "", 0, function(n) print("OUT->", n) end, true);
+	EXPR_LIB.RegisterFunction("system", "invoke", "cls,n,f,...", "", 0, EXPR_LIB.Invoke);
+
+	EXPR_LIB.RegisterFunction("system", "print", "...", "", 0, function(Context, ...)
+		local values = {...};
+		print("OUT->", table.concat(values, " "));
+	end);
+end);
+
+hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions", function(this, inst, token, expressions)
+	-- First all expressions passed to vararg need to be variants.
+
+	if (#expressions > 3) then
+		for i = 4, #expressions do
+			local arg = expressions[i];
+
+			if (arg.result ~= "_vr") then
+				this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. arg.result .. "\"", ",");
+
+				this:QueueInjectionAfter(inst, arg.final, "}");
+			end
+		end
+	end
+
+	-- Secondly we need to instruct the compiler what this actualy returns.
+	local class = expressions[1].token.data; -- Return class was arg 1.
+	local count = expressions[2].token.data; -- Return count was arg 2.
+	return class, count;
+end);
+
+hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions", function(this, inst, token, expressions)
+	-- All expressions passed to vararg need to be strings.
+
+	if (#expressions > 1) then
+		for i = 1, #expressions do
+			local arg = expressions[i];
+			if (arg.result ~= "s") then
+				if (not this:CastExpression("s", arg)) then
+					this:QueueInjectionBefore(inst, arg.token, "tostring", "(");
+					this:QueueInjectionAfter(inst, arg.final, ")");
+				end
+			end
+		end
+	end
 end);

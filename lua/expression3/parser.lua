@@ -1325,7 +1325,8 @@ end
 
 function PARSER.Expression_23(this)
 	if (this:CheckToken("var")) then
-		local lib = EXPR_LIBRARIES[this.__next.data];
+		local library = this.__next.data;
+		local lib = EXPR_LIBRARIES[library];
 
 		if (lib) then
 			this:Next();
@@ -1519,6 +1520,10 @@ function PARSER.Expression_28(this)
 		local inst = this:StartInstruction("str", this.__token);
 		inst.value = this.__token.data;
 		return this:EndInstruction(inst, {});
+	elseif this:Accept("typ") then
+		local inst = this:StartInstruction("cls", this.__token);
+		inst.value = this.__token.data;
+		return this:EndInstruction(inst, {});
 	end
 end
 
@@ -1649,6 +1654,8 @@ function PARSER.ExpressionErr(this)
 
 	this:Throw(this.__token, "Unexpected symbol found (%s)", this.__token.type);
 end
+--[[
+]]
 
 --[[
 ]]

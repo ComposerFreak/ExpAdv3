@@ -1918,6 +1918,11 @@ function COMPILER.Compile_STR(this, inst, token, expressions)
 	return "s", 1
 end
 
+function COMPILER.Compile_CLS(this, inst, token, expressions)
+	this:QueueReplace(inst, token, "\"" .. token.data .. "\"");
+	return "_cls", 1
+end
+
 function COMPILER.Compile_COND(this, inst, token, expressions)
 	local expr = expressions[1];
 	local r, c = this:Compile(expr);
@@ -2213,6 +2218,14 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		error("Attempt to inject " .. signature .. " but operator was incorrect " .. type(op.operator) .. ".");
 	end
 
+	if (inst.library == "system") then
+		local res, count = hook.Run("Expression3.PostCompile.System." .. inst.name, this, inst, token, expressions);
+		
+		if (res and count) then
+			return res, count;
+		end
+	end
+
 	return op.result, op.rCount;
 end
 
@@ -2443,7 +2456,7 @@ function COMPILER.Compile_CALL(this, inst, token, expressions)
 
 			this:QueueReplace(inst, expr.token, "invoke");
 
-			this:QueueInjectionAfter(inst, token, "\"" .. info.resultClass .. "\",", tostring(info.resultCount), ",");
+			this:QueueInjectionAfter(inst, token, "CONTEXT", ",\"" .. info.resultClass .. "\",", tostring(info.resultCount), ",");
 
 			if (info.prefix) then
 				this:QueueInjectionAfter(inst, token, info.prefix .. "." .. expr.variable);

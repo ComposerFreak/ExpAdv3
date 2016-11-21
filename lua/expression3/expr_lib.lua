@@ -15,24 +15,26 @@
 		All documentation below is to be considered work in progress and this api will more then likely change.
 	
 	::HOOKS::
-		Expression3.RegisterExtensions			-> Called when extensions should be registered.
-		Expression3.LoadClasses					-> Classes must be registered inside this hook.
-		Expression3.LoadConstructors			-> Constructors must be registered inside this hook.
-		Expression3.LoadMethods					-> Methods must be registered inside this hook.
-		Expression3.LoadOperators				-> Operators must be registered inside this hook.
-		Expression3.LoadLibraries				-> Libraries must be registered inside this hook.
-		Expression3.LoadFunctions				-> Functions must be registered inside this hook.
-		Expression3.LoadEvents					-> Events must be registered inside this hook.
-		Expression3.PostRegisterExtensions		-> This is called once expadv3 has loaded its extensions.
-		Expression3.BuildEntitySandbox			-> This is called when building the sandboxed enviroment for an entity.		-> (entity, context, enviroment)
-		Expression3.StartEntity					-> This is called when an entity is about to run for the first time.		-> (entity, context)
-		Expression3.UpdateEntity				-> This is called when an entity has sucessfuly executed.					-> (entity, context)
-		Expression3.StopEntity					-> This is called when an entity has shutdown for any given reason.			-> (entity, context)
-		Expression3.GolemInit					-> this is called when the editor is created.
-		Expression3.OpenGolem					-> this is called when the editor opens.
-		Expression3.CloseGolem					-> this is called when the editor closes.
-		Expression3.AddGolemTabTypes			-> This is called when custom tab types should be registered on the editor. -> (Editor)
-		Expression3.LoadWiki					-> This is called when its time to register the helpers to the wiki.
+		Expression3.RegisterExtensions					-> Called when extensions should be registered.
+		Expression3.LoadClasses							-> Classes must be registered inside this hook.
+		Expression3.LoadConstructors					-> Constructors must be registered inside this hook.
+		Expression3.LoadMethods							-> Methods must be registered inside this hook.
+		Expression3.LoadOperators						-> Operators must be registered inside this hook.
+		Expression3.LoadLibraries						-> Libraries must be registered inside this hook.
+		Expression3.LoadFunctions						-> Functions must be registered inside this hook.
+		Expression3.LoadEvents							-> Events must be registered inside this hook.
+		Expression3.PostRegisterExtensions				-> This is called once expadv3 has loaded its extensions.
+		Expression3.PostCompile.System.<function>		-> This is called after compiling every function on the system library,		-> ressult class, result count = (comiler, instruction, token, expressions)
+														   (replace <function> with the name of the function on the library..		
+		Expression3.BuildEntitySandbox					-> This is called when building the sandboxed enviroment for an entity.		-> (entity, context, enviroment)
+		Expression3.StartEntity							-> This is called when an entity is about to run for the first time.		-> (entity, context)
+		Expression3.UpdateEntity						-> This is called when an entity has sucessfuly executed.					-> (entity, context)
+		Expression3.StopEntity							-> This is called when an entity has shutdown for any given reason.			-> (entity, context)
+		Expression3.GolemInit							-> this is called when the editor is created.
+		Expression3.OpenGolem							-> this is called when the editor opens.
+		Expression3.CloseGolem							-> this is called when the editor closes.
+		Expression3.AddGolemTabTypes					-> This is called when custom tab types should be registered on the editor. -> (Editor)
+		Expression3.LoadWiki							-> This is called when its time to register the helpers to the wiki.
 
 	::IMPORTANT::
 		You should use 'Extension = EXPR_LIB.RegisterExtension(string)' to create a new Extension object.
@@ -726,7 +728,6 @@ function Extension.EnableExtension(this)
 	end);
 
 	hook.Add("Expression3.LoadConstructors", "Expression3.Extension." .. this.name, function()
-		--print("E3,LOAD CONSTRUCTORS:", loadConstructors)
 		for _, v in pairs(this.constructors) do
 			STATE = v[5];
 			local op = this:CheckRegistration(EXPR_LIB.RegisterConstructor, v[1], v[2], v[3], v[4]);
