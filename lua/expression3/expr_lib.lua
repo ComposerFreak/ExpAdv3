@@ -22,10 +22,10 @@
 		Expression3.LoadOperators						-> Operators must be registered inside this hook.
 		Expression3.LoadLibraries						-> Libraries must be registered inside this hook.
 		Expression3.LoadFunctions						-> Functions must be registered inside this hook.
-		Expression3.LoadEvents							-> Events must be registered inside this hook.
+		REMOVED: Expression3.LoadEvents					-> Events must be registered inside this hook.
 		Expression3.PostRegisterExtensions				-> This is called once expadv3 has loaded its extensions.
 		Expression3.PostCompile.System.<function>		-> This is called after compiling every function on the system library,		-> ressult class, result count = (comiler, instruction, token, expressions)
-														   (replace <function> with the name of the function on the library..		
+												  		   (replace <function> with the name of the function on the library..		
 		Expression3.BuildEntitySandbox					-> This is called when building the sandboxed enviroment for an entity.		-> (entity, context, enviroment)
 		Expression3.StartEntity							-> This is called when an entity is about to run for the first time.		-> (entity, context)
 		Expression3.UpdateEntity						-> This is called when an entity has sucessfuly executed.					-> (entity, context)
@@ -132,7 +132,7 @@
 			Registers a function with library, these functions are overloaded.
 			NO LONGER SUPPORTED: If function is a string then expression 3 will use _G[str function]() with out context as a parameter.
 
-		EXPR_LIB.RegisterEvent(str name, str parameters, str type, number amount of values returned)
+		REMOVED: EXPR_LIB.RegisterEvent(str name, str parameters, str type, number amount of values returned)
 			Registers an event with expression 3.
 
 		EXPR_LIB.GetClass(str class)
@@ -166,7 +166,7 @@
 		Extension:RegisterFunction(str library, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...)) function, boolean exclude context)
 			Calls EXPR_LIB.RegisterFunction(...) at the correct time with all given valid parameters.
 
-		Extension:RegisterEvent(str name, str parameters, str type, number amount of values returned)
+		REMOVED: Extension:RegisterEvent(str name, str parameters, str type, number amount of values returned)
 			Calls EXPR_LIB.RegisterEvent(...) at the correct time with all given valid parameters.
 
 		Extension:EnableExtension()
@@ -523,6 +523,7 @@ function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _funct
 	return op;
 end
 
+--[[
 local events;
 local loadEvents = false;
 
@@ -554,7 +555,7 @@ function EXPR_LIB.RegisterEvent(name, parameter, type, count)
 	events[evt.signature] = evt;
 
 	return evt;
-end
+end]]
 
 --[[
 ]]
@@ -695,10 +696,10 @@ function Extension.RegisterFunction(this, library, name, parameter, type, count,
 	this.functions[#this.functions + 1] = entry;
 end
 
-function Extension.RegisterEvent(this, name, parameter, type, count)
+--[[function Extension.RegisterEvent(this, name, parameter, type, count)
 	local entry = {name, parameter, type, count, this.state};
 	this.events[#this.events + 1] = entry;
-end
+end]]
 
 function Extension.CheckRegistration(this, _function, ...)
 	local state, err = pcall(_function, ...);
@@ -771,13 +772,13 @@ function Extension.EnableExtension(this)
 		end
 	end);
 
-	hook.Add("Expression3.LoadEvents", "Expression3.Extension." .. this.name, function()
+	--[[hook.Add("Expression3.LoadEvents", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.events) do
 			STATE = v[5];
 			local op = this:CheckRegistration(EXPR_LIB.RegisterEvent, v[1], v[2], v[3], v[4]);
 			op.extension = this.name;
 		end
-	end);
+	end);]]
 end
 
 --[[
@@ -888,11 +889,11 @@ function EXPR_LIB.Initalize()
 	hook.Run("Expression3.LoadFunctions");
 	loadFunctions = false;
 
-	events = {};
+	--[[events = {};
 	loadEvents = true;
 	hook.Run("Expression3.LoadEvents");
 	loadEvents = false;
-	EXPADV_EVENTS = events;
+	EXPADV_EVENTS = events;]]
 
 	for id, class in pairs(classes) do
 		extendClass(id, class.base);
