@@ -66,7 +66,7 @@ hook.Add("Expression3.LoadClasses", "Expression3.Core.Classes", function()
 end);
 
 
-hook.Add("Expression3.LoadOperators", "Expression3.Core.Operators",
+hook.Add("Expression3.LoadOperators", "Expression3.Core.Operators", function()
 		
 	-- ::BOOLEAN::
 	EXPR_LIB.RegisterOperator("neq", "b,b", "b", 1);
