@@ -180,6 +180,15 @@ end);
 	SYSTEM LIBRARY!!!!!
 ]]
 
+EXPR_LIB.Invoke = function(context, result, count, func, ...)
+	if (result ~= func.result or count ~= func.count) then
+		context:Throw("Function call returns " .. count .. "x" .. result .. " expected to return " .. op.count .. "x" .. op.result .. ".")
+		-- TODO: This error message is poop.
+	end
+
+	return func.op(...);
+end
+
 hook.Add("Expression3.LoadLibraries", "Expression3.Core.Extensions", function()
 	EXPR_LIB.RegisterLibrary("system")
 end);
