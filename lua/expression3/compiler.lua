@@ -2050,6 +2050,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 	local mClass, mCount = this:Compile(expr);
 
 	local op;
+	local vargs;
 	local ids = {};
 	local total = #expressions;
 
@@ -2058,6 +2059,10 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 
 		if (not op) then
 			op = EXPR_METHODS[string.format("%s.%s(...)", mClass, inst.method)];
+
+			if (op) then
+				vargs = 1;
+			end
 		end
 	else
 		for k, expr in pairs(expressions) do
@@ -2089,6 +2094,10 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 				local signature = string.format("%s.%s(%s,...)", mClass, inst.method, args);
 
 				op = EXPR_METHODS[signature];
+
+				if (op) then
+					vargs = i;
+				end
 			end
 
 			if (op) then
@@ -2102,6 +2111,20 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 	end
 
 	this:CheckState(op.state, token, "Method %s.%s(%s)", mClass, inst.method, table.concat(ids, ","));
+
+	if (vargs) do
+		if (#expressions > 1) then
+			for i = vargs, #expressions do
+				local arg = expressions[i];
+
+				if (arg.result ~= "_vr") then
+					this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. arg.result .. "\"", ",");
+
+					this:QueueInjectionAfter(inst, arg.final, "}");
+				end
+			end
+		end
+	end
 
 	if (type(op.operator) == "function") then
 		this:QueueRemove(inst, inst.__operator);
@@ -2140,6 +2163,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 	end
 
 	local op;
+	local vargs;
 	local ids = {};
 	local total = #expressions;
 
@@ -2148,6 +2172,10 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 
 		if (not op) then
 			op = lib._functions[inst.name .. "(...)"];
+			
+			if (op) then
+				vargs = 1;
+			end
 		end
 	else
 		for k, expr in pairs(expressions) do
@@ -2177,6 +2205,10 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 				local signature = string.format("%s(%s,...)", inst.name, args);
 
 				op = lib._functions[signature];
+
+				if (op) then
+					vargs = i;
+				end
 			end
 
 			if (op) then
@@ -2190,6 +2222,20 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 	end
 
 	this:CheckState(op.state, token, "Function %s.%s(%s).", inst.library, inst.name, table.concat(ids, ","));
+
+	if (vargs) do
+		if (#expressions > 1) then
+			for i = vargs, #expressions do
+				local arg = expressions[i];
+
+				if (arg.result ~= "_vr") then
+					this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. arg.result .. "\"", ",");
+
+					this:QueueInjectionAfter(inst, arg.final, "}");
+				end
+			end
+		end
+	end
 
 	if (type(op.operator) == "function") then
 		local signature = string.format("%s.%s", inst.library, op.signature);

@@ -136,6 +136,7 @@ end
 function ENT:BuildContext(instance)
 	self.context = setmetatable({}, CONTEXT);
 
+	self.context.events = {};
 	self.context.entity = self;
 	self.context.player = self.player;
 	self.context.traceTable = instance.traceTbl;
@@ -269,4 +270,51 @@ end
 --[[
 ]]
 
+function ENT:Invoke(where, result, count, udf, ...)
+	if (self:IsRunning()) then
 
+		if (udf and udf.op) then
+
+			if (result ~= func.result or count ~= func.count) then
+				self:HandelThrown("Invoked function returned unexpected results, " .. where);
+			end
+
+			self:PreExecute();
+
+			local results = {pcall(udf.op, ...)};
+
+			local status = table.remove(results, 1);
+
+			self:PostExecute();
+
+			if (status) then
+				hook.Run("Expression3.UpdateEntity", self, self.context);
+			else
+				self:HandelThrown(results[1]);
+			end
+
+			return staus, results;
+		end
+	end
+end
+
+function ENT:CallEvent(result, count, event, ...)
+	if (self:IsRunning()) then
+		local events = self.context.events[event];
+
+		if (events) then
+			for id, udf in pairs(events) do
+				local where = string.format("Event.%s.%s", event, id);
+				local status, results = self:Invoke(where, result, count, udf, ...)
+
+				if (not status) then
+					return false;
+				end
+
+				if (results[1] ~= nil) then
+					return true, results;
+				end
+			end
+		end
+	end
+end

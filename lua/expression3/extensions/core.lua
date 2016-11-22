@@ -151,8 +151,7 @@ end);
 
 EXPR_LIB.Invoke = function(context, result, count, func, ...)
 	if (result ~= func.result or count ~= func.count) then
-		context:Throw("Function call returns " .. count .. "x" .. result .. " expected to return " .. op.count .. "x" .. op.result .. ".")
-		-- TODO: This error message is poop.
+		context:Throw("Invoked function returned unexpected results");
 	end
 
 	return func.op(...);
@@ -206,4 +205,54 @@ hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions",
 			end
 		end
 	end
+end);
+
+--[[
+	::EVENT LIBRARY::
+]]
+
+-- When calling this you must always make your varargs int variants e.g "examp" -> {"s", "examp"}
+function EXPR_LIB.CallEvent(result, count, name, ...)
+	for _, entity in pairs(ents.find("wire_expression3_base")) do
+		if (isValid(entity) then
+			entity:CallEvent(result, count, name, ...)
+		end
+	end
+end
+
+hook.Add("Expression3.LoadLibraries", "Expression3.Core.Events", function()
+	EXPR_LIB.RegisterLibrary("event")
+end);
+
+hook.Add("Expression3.LoadFunctions", "Expression3.Core.Events", function()
+	EXPR_LIB.RegisterFunction("event", "add", "s,s,f", "", 0, function(context, event, id, udf)
+		local events = context.events[event];
+
+		if (not events) then
+			events = {};
+			context.events[event] = events;
+		end
+
+		events[id] = udf;
+	end);
+
+	EXPR_LIB.RegisterFunction("event", "remove", "s,s", "", 0, function(context, event, id)
+		local events = context.events[event];
+
+		if (not events) then
+			return;
+		end
+
+		events[id] = nil;
+	end);
+
+	EXPR_LIB.RegisterFunction("event", "call", "_cls,n,s,...", "", 0, function(context, result, count, event, ...)
+		local status, result = context.ent:CallEvent(result, count, event, ...);
+
+		if (status) then
+			return unpack(result);
+		end
+	end);
+
+	
 end);
