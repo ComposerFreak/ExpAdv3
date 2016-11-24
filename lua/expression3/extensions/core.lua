@@ -125,6 +125,8 @@ hook.Add("Expression3.LoadOperators", "Expression3.Core.Operators", function()
 	EXPR_LIB.RegisterOperator("eq*", "s,s", "b", 1, eqM, true);
 	EXPR_LIB.RegisterOperator("neq*", "s,s", "b", 1, neqM, true); 
 
+	EXPR_LIB.RegisterOperator("get", "s,n", "s", 1); 
+
 	local function isS(context, string)
 		return string and string ~= "";
 	end

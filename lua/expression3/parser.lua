@@ -244,7 +244,9 @@ function PARSER.GetFirstTokenOnLine(this)
 end
 
 function PARSER.StatmentContains(this, token, type)
-	for i = this.__pos, this.__total do
+	local i = this.__pos;
+
+	while (i < this.__total) do
 		local tkn = this.__tokens[i];
 
 		if (not tkn) then
@@ -258,7 +260,34 @@ function PARSER.StatmentContains(this, token, type)
 		if (tkn.type == type) then
 			return tkn;
 		end
+
+		i = i + 1;
 	end
+end
+
+function PARSER.LastInStatment(this, token, type)
+	local last;
+	local i = token.index;
+
+	while (i <= this.__total) do
+		local tkn = this.__tokens[i];
+
+		if (not tkn) then
+			break;
+		end
+
+		if (tkn.type == "sep" or tkn.newLine) then
+			break;
+		end
+
+		if (tkn.type == type) then
+			last = tkn;
+		end
+
+		i = i + 1;
+	end
+
+	return last;
 end
 
 --[[
@@ -903,18 +932,44 @@ function PARSER.Statment_9(this)
 	local expr = this:Expression_1();
 
 	if (expr and this:CheckToken("lsb")) then
-		expr = this:Statment_10(exp);
+		expr = this:Statment_10(expr);
 	end
 
 	return expr;
 end
 
-function PARSER.Statment_10(this)
-	while(this:Accept("lsb")) do
+function PARSER.Statment_10(this, expr)
+	if (this:Accept("lsb")) then
+		local inst = this:StartInstruction("set", this.__token);
 
-	end;
+		local expressions = {};
 
+		expressions[1] = expr;
 
+		expressions[2] = this:Expression_1();
+
+		if (this:Accept("com")) then
+			this:QueueRemove(inst, this.__token);
+
+			this:Require("typ", "Class expected for index operator, after coma (,).");
+
+			inst.class = this.__token.data;
+
+			this:QueueRemove(inst, this.__token);
+		end
+
+		this:Require("rsb", "Right square bracket (]) expected to close index operator.");
+
+		inst.__rsb = this.__token;
+
+		this:Require("ass", "Assigment operator (=) expected after index operator.");
+
+		inst.__ass = this.__token;
+
+		expressions[3] = this:Expression_1();
+
+		return this:EndInstruction(inst, expressions);
+	end
 end
 
 --[[
@@ -939,7 +994,7 @@ function PARSER.Expression_1(this)
 		expr = this:EndInstruction(inst, {expr, expr2, expr3});
 	end
 
-	return expr;
+	return this:Expression_Trailing(expr);
 end
 
 function PARSER.Expression_2(this)
@@ -1350,10 +1405,10 @@ function PARSER.Expression_22(this)
 
 		this:Require("rpa", "Right parenthesis ( )) missing, to close grouped equation.");
 
-		return this:Expression_Trailing(expr);
+		return expr;
 	end
 
-	return this:Expression_Trailing(this:Expression_23());
+	return this:Expression_23();
 end
 
 function PARSER.Expression_23(this)
@@ -1561,10 +1616,15 @@ function PARSER.Expression_28(this)
 end
 
 function PARSER.Expression_Trailing(this, expr)
-	local assign = this:StatmentContains(expr.token, "ass");
 
 	while this:CheckToken("prd", "lsb", "lpa") do
 		
+		local excluded;
+
+		if (this:StatmentContains(this.__token, "ass")) then
+			excluded = this:LastInStatment(this.__token, "lsb");
+		end
+
 		-- Methods
 		if (this:Accept("prd")) then
 			local inst = this:StartInstruction("meth", this.__token);
@@ -1598,11 +1658,20 @@ function PARSER.Expression_Trailing(this, expr)
 			this:Require("rpa", "Right parenthesis ( )) expected to close method parameters.")
 
 			expr = this:EndInstruction(inst, expressions);
-		end
+		elseif (this:Accept("lsb")) then
+			
+			-- Check for a set instruction and locate it,
+			-- If we are at our set indexer then we break.
 
-		-- Getters
+			if (this:StatmentContains(this.__token, "ass")) then
+				local excluded = this:LastInStatment(this.__token, "lsb");
+				
+				if (excluded and excluded.index == this.__token.index) then
+					this:StepBackward(1);
+					break;
+				end
+			end
 
-		if ((not assign) and this:Accept("lsb")) then
 			local inst = this:StartInstruction("get", this.__token);
 
 			local expressions = {};
@@ -1626,11 +1695,7 @@ function PARSER.Expression_Trailing(this, expr)
 			inst.__rsb = this.__token;
 
 			expr = this:EndInstruction(inst, expressions);
-		end
-
-		-- Call
-
-		if (this:Accept("lpa")) then
+		elseif (this:Accept("lpa")) then
 			local inst = this:StartInstruction("call", this.__token);
 
 			local expressions = {};
@@ -1653,7 +1718,7 @@ function PARSER.Expression_Trailing(this, expr)
 			expr = this:EndInstruction(inst, expressions);
 		end
 	end
-
+	
 	return expr;
 end
 

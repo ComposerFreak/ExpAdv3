@@ -2577,23 +2577,23 @@ end
 function COMPILER.Compile_GET(this, inst, token, expressions)
 	local value = expressions[1];
 	local vType = this:Compile(value);
-	local index = expressions[1];
+	local index = expressions[2];
 	local iType = this:Compile(index);
 
 	local op;
 	local cls = inst.class;
 
 	if (not cls) then
-		op = this:GetOperator("get", vType, vType);
+		op = this:GetOperator("get", vType, iType);
 
 		if (not op) then
 			this:Throw(token, "No such get operation %s[%s]", vType, iType);
 		end
 	else
-		op = this:GetOperator("get", vType, vType, cls);
+		op = this:GetOperator("get", vType, iType, cls);
 		
 		if (not op) then
-			op = this:GetOperator("get", vType, vType, "_cls");
+			op = this:GetOperator("get", vType, iType, "_cls");
 		end
 
 		if (not op) then
@@ -2620,8 +2620,54 @@ function COMPILER.Compile_GET(this, inst, token, expressions)
 	this.__operators[op.signature] = op.operator;
 
 	return op.result, op.rCount;
+end
 
+function COMPILER.Compile_SET(this, inst, token, expressions)
+	local value = expressions[1];
+	local vType = this:Compile(value);
+	local index = expressions[2];
+	local iType = this:Compile(index);
+	local expr = expressions[3];
+	local vExpr = this:Compile(expr);
 
+	local op;
+	local cls = inst.class;
+
+	if (cls and vExpr ~= cls) then
+		-- TODO: Cast
+	end
+
+	op = this:GetOperator("set", vType, iType, vExpr);
+
+	if (not op) then
+		if (not cls) then
+			this:Throw(token, "No such set operation %s[%s] = ", vType, iType, vExpr);
+		else
+			this:Throw(token, "No such set operation %s[%s, %s] = ", vType, iType, cls, vExpr);
+		end
+	end
+
+	this:CheckState(op.state);
+
+	if (not op.operation) then
+		return op.result, op.rCount;
+	end
+
+	this:QueueRemove(inst, token );
+
+	this:QueueInjectionBefore(inst, value.token, "_OPS[\"" .. op.signature .. "\"](");
+
+	if (op.context) then
+	   this:QueueInjectionBefore(inst, value.token, "CONTEXT", ",");
+	end
+	
+	this:QueueReplace(inst, inst.__ass, ",");
+
+	this:QueueReplace(inst, inst.__rsb, ")" );
+
+	this.__operators[op.signature] = op.operator;
+
+	return op.result, op.rCount;
 end
 
 EXPR_COMPILER = COMPILER;

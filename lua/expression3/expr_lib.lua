@@ -121,6 +121,7 @@
 			call 	(type1, ...)			type(...)
 			get 	(type1, type2)			type1[type2]
 			get 	(type1, type2, type3)	type1[type2, type3]
+			set 	(type1, type2, type3)	(type1[type2] = type3) or (type1[type2, type3] = type3)
 
 
 		EXPR_LIB.RegisterCastingOperator(str type, str parameter, obj = function(ctx*, ...) operator, boolean exclude context)
