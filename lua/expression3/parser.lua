@@ -1350,7 +1350,7 @@ function PARSER.Expression_23(this)
 
 			this:Require("lpa", "Left parenthesis (( ) expected to open function parameters.")
 
-			this.__lpa = this.__token;
+			inst.__lpa = this.__token;
 			
 			local expressions = {};
 

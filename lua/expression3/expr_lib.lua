@@ -608,7 +608,7 @@ function EXPR_LIB.SortArgs(parameter)
 	end
 
 	if (varg) then
-		signature[#signature] = "...";
+		signature[#signature + 1] = "...";
 	end
 
 	return true, table.concat(signature, ","), varg;

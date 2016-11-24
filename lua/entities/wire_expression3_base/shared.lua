@@ -156,7 +156,7 @@ function ENT:BuildEnv(context, instance)
 	env._CONST	= instance.constructors;
 	env._METH	= instance.methods;
 	env._FUN	= instance.functions;
-	evn.invoke  = EXPR_LIB.Invoke;
+	env.invoke  = EXPR_LIB.Invoke;
 
 	local meta = {};
 

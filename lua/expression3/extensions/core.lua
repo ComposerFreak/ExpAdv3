@@ -165,7 +165,12 @@ hook.Add("Expression3.LoadFunctions", "Expression3.Core.Extensions", function()
 	EXPR_LIB.RegisterFunction("system", "invoke", "cls,n,f,...", "", 0, EXPR_LIB.Invoke);
 
 	EXPR_LIB.RegisterFunction("system", "print", "...", "", 0, function(Context, ...)
-		local values = {...};
+		local values = {};
+
+		for _, v in pairs({...}) do
+			values[#values + 1] = tostring(v[2]);
+		end
+
 		print("OUT->", table.concat(values, " "));
 	end);
 end);
@@ -191,7 +196,7 @@ hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions",
 	return class, count;
 end);
 
-hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions", function(this, inst, token, expressions)
+--[[hook.Add("Expression3.PostCompile.System.print", "Expression3.Core.Extensions", function(this, inst, token, expressions)
 	-- All expressions passed to vararg need to be strings.
 
 	if (#expressions > 1) then
@@ -199,13 +204,13 @@ hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions",
 			local arg = expressions[i];
 			if (arg.result ~= "s") then
 				if (not this:CastExpression("s", arg)) then
-					this:QueueInjectionBefore(inst, arg.token, "tostring", "(");
-					this:QueueInjectionAfter(inst, arg.final, ")");
+					--this:QueueInjectionBefore(inst, arg.token, "tostring", "(");
+					this:QueueInjectionAfter(inst, arg.final, "[1]");
 				end
 			end
 		end
 	end
-end);
+end);]]
 
 --[[
 	::EVENT LIBRARY::
@@ -214,7 +219,7 @@ end);
 -- When calling this you must always make your varargs int variants e.g "examp" -> {"s", "examp"}
 function EXPR_LIB.CallEvent(result, count, name, ...)
 	for _, entity in pairs(ents.find("wire_expression3_base")) do
-		if (isValid(entity) then
+		if (isValid(entity)) then
 			entity:CallEvent(result, count, name, ...)
 		end
 	end

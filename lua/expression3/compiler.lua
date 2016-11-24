@@ -340,6 +340,7 @@ end
 local injectNewLine = false;
 
 function COMPILER.QueueInjectionBefore(this, inst, token, str, ...)
+	
 	local tasks = this.__tasks[token.pos];
 
 	if (not tasks) then
@@ -2112,7 +2113,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 
 	this:CheckState(op.state, token, "Method %s.%s(%s)", mClass, inst.method, table.concat(ids, ","));
 
-	if (vargs) do
+	if (vargs) then
 		if (#expressions > 1) then
 			for i = vargs, #expressions do
 				local arg = expressions[i];
@@ -2169,14 +2170,6 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 
 	if (total == 0) then
 		op = lib._functions[inst.name .. "()"];
-
-		if (not op) then
-			op = lib._functions[inst.name .. "(...)"];
-			
-			if (op) then
-				vargs = 1;
-			end
-		end
 	else
 		for k, expr in pairs(expressions) do
 			local r, c = this:Compile(expr);
@@ -2215,6 +2208,14 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 				break;
 			end
 		end
+
+		if (not op) then
+			op = lib._functions[inst.name .. "(...)"];
+			
+			if (op) then
+				vargs = 1;
+			end
+		end
 	end
 
 	if (not op) then
@@ -2223,7 +2224,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 
 	this:CheckState(op.state, token, "Function %s.%s(%s).", inst.library, inst.name, table.concat(ids, ","));
 
-	if (vargs) do
+	if (vargs) then
 		if (#expressions > 1) then
 			for i = vargs, #expressions do
 				local arg = expressions[i];
@@ -2247,10 +2248,10 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		this:QueueInjectionAfter(inst, inst.__func, "_FUN[\"" .. signature .. "\"]");
 
 		if (op.context) then
-		    this:QueueInjectionBefore(inst, inst.__lpa, "CONTEXT");
+		    this:QueueInjectionAfter(inst, inst.__lpa, "CONTEXT");
 
 		    if (total > 0) then
-				this:QueueInjectionBefore(inst, inst.__lpa, ",");
+				this:QueueInjectionAfter(inst, inst.__lpa, ",");
 			end
 		end
 
