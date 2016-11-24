@@ -68,14 +68,15 @@
 			Expr28 ← (String / Number / "true" / "false", "void")?
 
 		:::Syntax:::
-			Cond ← "(" Expr1 ")"
-			Block ← "{" (Stmt1 ((";" / " ") Stmt1)*)? "}"
-			Values ← "[" Expr1 ("," Expr1)* "]"
-			Raw ← (Str / Num / Bool)
-			Trailing ← (Method / Get)?
-			Method ← (("." Method "(" (Expr1 ((","")?)*)?) ")")
-			Get ← ("[" Expr1 ("," Type)? "]")?
-			Perams ← ("(" (Type Var (("," Type Var)*)?)? ")")
+			Cond 		← "(" Expr1 ")"
+			Block 		← "{" (Stmt1 ((";" / " ") Stmt1)*)? "}"
+			Values 		← "[" Expr1 ("," Expr1)* "]"
+			Raw 		← (Str / Num / Bool)
+			Trailing 	← (Method / Get /Call)?
+			Method 		← (("." Method "(" (Expr1 ((","")?)*)?) ")")
+			Get 		← ("[" Expr1 ("," Type)? "]")
+			Call 		← ("(" (Expr1 ((","")?)*)?) ")")?
+			Perams 		← ("(" (Type Var (("," Type Var)*)?)? ")")
 
 ]]
 
@@ -240,6 +241,24 @@ function PARSER.GetFirstTokenOnLine(this)
 	end
 
 	return this.__tokens[1];
+end
+
+function PARSER.StatmentContains(this, token, type)
+	for i = this.__pos, this.__total do
+		local tkn = this.__tokens[i];
+
+		if (not tkn) then
+			return;
+		end
+
+		if (tkn.type == "sep" or tkn.line ~= token.line) then
+			return;
+		end
+
+		if (tkn.type == type) then
+			return tkn;
+		end
+	end
 end
 
 --[[
@@ -881,7 +900,21 @@ function PARSER.Statment_9(this)
 		return this:EndInstruction(inst, expressions);
 	end
 
-	return this:Expression_1(); 
+	local expr = this:Expression_1();
+
+	if (expr and this:CheckToken("lsb")) then
+		expr = this:Statment_10(exp);
+	end
+
+	return expr;
+end
+
+function PARSER.Statment_10(this)
+	while(this:Accept("lsb")) do
+
+	end;
+
+
 end
 
 --[[
@@ -1528,6 +1561,8 @@ function PARSER.Expression_28(this)
 end
 
 function PARSER.Expression_Trailing(this, expr)
+	local assign = this:StatmentContains(expr.token, "ass");
+
 	while this:CheckToken("prd", "lsb", "lpa") do
 		
 		-- Methods
@@ -1566,6 +1601,32 @@ function PARSER.Expression_Trailing(this, expr)
 		end
 
 		-- Getters
+
+		if ((not assign) and this:Accept("lsb")) then
+			local inst = this:StartInstruction("get", this.__token);
+
+			local expressions = {};
+ 
+			expressions[1] = expr;
+
+			expressions[2] = this:Expression_1();
+
+			if (this:Accept("com")) then
+				this:QueueRemove(inst, this.__token);
+
+				this:Require("typ", "Class expected for index operator, after coma (,).");
+
+				inst.class = this.__token.data;
+
+				this:QueueRemove(inst, this.__token);
+			end
+
+			this:Require("rsb", "Right square bracket (]) expected to close index operator.");
+
+			inst.__rsb = this.__token;
+
+			expr = this:EndInstruction(inst, expressions);
+		end
 
 		-- Call
 

@@ -21,6 +21,16 @@ ENT.Contact         = ""
 ENT.Expression3 	= true
 
 --[[
+]]
+
+include("sh_cppi.lua");
+
+function ENT:SetupDataTables()
+	self:NetworkVar("Entity", 0, "Creator");
+end
+
+
+--[[
 	Base Context:
 ]]
 

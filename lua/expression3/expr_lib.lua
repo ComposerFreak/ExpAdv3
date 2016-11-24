@@ -119,6 +119,9 @@
 			not		(type1)					!type1
 			len		(type1)					#type1
 			call 	(type1, ...)			type(...)
+			get 	(type1, type2)			type1[type2]
+			get 	(type1, type2, type3)	type1[type2, type3]
+
 
 		EXPR_LIB.RegisterCastingOperator(str type, str parameter, obj = function(ctx*, ...) operator, boolean exclude context)
 			Registers a casting operator with expression 3 for casting from one class to another;

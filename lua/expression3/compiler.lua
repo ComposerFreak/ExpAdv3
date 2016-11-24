@@ -1967,12 +1967,7 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 
 	if (total == 0) then
 		op = constructors[inst.class .. "()"];
-
-		if (not op) then
-			op = constructors[inst.class .. "(...)"];
-		end
 	else
-
 		for k, expr in pairs(expressions) do
 			local r, c = this:Compile(expr);
 			ids[#ids + 1] = r;
@@ -2003,6 +1998,14 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 
 			if (op) then
 				break;
+			end
+		end
+
+		if (not op) then
+			op = constructors[inst.class .. "(...)"];
+			
+			if (op) then
+				vargs = 1;
 			end
 		end
 	end
@@ -2055,16 +2058,8 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 	local ids = {};
 	local total = #expressions;
 
-	if (total == 1) then
+	if (total == 0) then
 		op = EXPR_METHODS[string.format("%s.%s()", mClass, inst.method)];
-
-		if (not op) then
-			op = EXPR_METHODS[string.format("%s.%s(...)", mClass, inst.method)];
-
-			if (op) then
-				vargs = 1;
-			end
-		end
 	else
 		for k, expr in pairs(expressions) do
 			if (k > 1) then
@@ -2103,6 +2098,14 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 
 			if (op) then
 				break;
+			end
+		end
+
+		if (not op) then
+			op = EXPR_METHODS[string.format("%s.%s(...)", mClass, inst.method)];
+
+			if (op) then
+				vargs = 1;
 			end
 		end
 	end
@@ -2570,5 +2573,55 @@ end
 
 --[[
 ]]
+
+function COMPILER.Compile_GET(this, inst, token, expressions)
+	local value = expressions[1];
+	local vType = this:Compile(value);
+	local index = expressions[1];
+	local iType = this:Compile(index);
+
+	local op;
+	local cls = inst.class;
+
+	if (not cls) then
+		op = this:GetOperator("get", vType, vType);
+
+		if (not op) then
+			this:Throw(token, "No such get operation %s[%s]", vType, iType);
+		end
+	else
+		op = this:GetOperator("get", vType, vType, cls);
+		
+		if (not op) then
+			op = this:GetOperator("get", vType, vType, "_cls");
+		end
+
+		if (not op) then
+			this:Throw(token, "No such get operation %s[%s,%s]", vType, iType, cls);
+		end
+	end
+
+	this:CheckState(op.state);
+
+	if (not op.operation) then
+		return op.result, op.rCount;
+	end
+
+	this:QueueRemove(inst, token );
+
+	this:QueueInjectionBefore(inst, value.token, "_OPS[\"" .. op.signature .. "\"](");
+
+	if (op.context) then
+	   this:QueueInjectionBefore(inst, value.token, "CONTEXT", ",");
+	end
+			
+	this:QueueReplace(inst, inst.__rsb, ")" );
+
+	this.__operators[op.signature] = op.operator;
+
+	return op.result, op.rCount;
+
+
+end
 
 EXPR_COMPILER = COMPILER;
