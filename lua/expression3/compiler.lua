@@ -255,7 +255,23 @@ function COMPILER.GetVariable(this, name, scope, nonDeep)
 	end
 end
 
+local bannedVars = {
+	["GLOBAL"] = true,
+	["SERVER"] = true,
+	["CLIENT"] = true,
+	["CONTEXT"] = true,
+	["_OPS"] = true,
+	["_CONST"] = true,
+	["_METH"] = true,
+	["_FUN"] = true,
+	["invoke"] = true,
+};
+
 function COMPILER.AssignVariable(this, token, declaired, name, class, scope)
+	if (bannedVars[name]) then
+		this:Throw(token, "Unable to declare variable %s, name is reserved internally.", name);
+	end
+
 	if (not scope) then
 		scope = this.__scopeID;
 	end
