@@ -436,7 +436,7 @@ function PARSER.Block_1(this, _end, lcb)
 		if (not this:Accept("rcb")) then
 			this:Throw(this.__token, "Right curly bracket (}) missing, to close block");
 		end
-
+		print("RCB AETE", this.__next.type);
 		this:QueueReplace(seq, this.__token, _end and "end" or "");
 
 		return this:EndInstruction(seq, stmts);

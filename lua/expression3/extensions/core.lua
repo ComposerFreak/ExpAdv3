@@ -168,6 +168,7 @@ hook.Add("Expression3.LoadFunctions", "Expression3.Core.Extensions", function()
 		local values = {};
 
 		for _, v in pairs({...}) do
+			print(_, v)
 			values[#values + 1] = tostring(v[2]);
 		end
 
@@ -218,8 +219,8 @@ end);]]
 
 -- When calling this you must always make your varargs int variants e.g "examp" -> {"s", "examp"}
 function EXPR_LIB.CallEvent(result, count, name, ...)
-	for _, entity in pairs(ents.find("wire_expression3_base")) do
-		if (isValid(entity)) then
+	for _, entity in pairs(ents.FindByClass("wire_expression3_*")) do
+		if (IsValid(entity)) then
 			entity:CallEvent(result, count, name, ...)
 		end
 	end
@@ -258,6 +259,8 @@ hook.Add("Expression3.LoadFunctions", "Expression3.Core.Events", function()
 			return unpack(result);
 		end
 	end);
+end);
 
-	
+hook.Add("Think", "Expression3.Event", function()
+	EXPR_LIB.CallEvent("", 0, "Think");
 end);

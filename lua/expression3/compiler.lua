@@ -2225,7 +2225,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 	this:CheckState(op.state, token, "Function %s.%s(%s).", inst.library, inst.name, table.concat(ids, ","));
 
 	if (vargs) then
-		if (#expressions > 1) then
+		if (#expressions >= 1) then
 			for i = vargs, #expressions do
 				local arg = expressions[i];
 

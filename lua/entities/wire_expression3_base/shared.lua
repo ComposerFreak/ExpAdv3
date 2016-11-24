@@ -236,7 +236,13 @@ end
 ]]
 
 function ENT:IsRunning()
-	return (self.context and self.context.status);
+	if (self.context) then
+		if (self.context.status) then
+			return true;
+		end
+	end
+
+	return false;
 end
 
 function ENT:ShutDown()
@@ -275,7 +281,7 @@ function ENT:Invoke(where, result, count, udf, ...)
 
 		if (udf and udf.op) then
 
-			if (result ~= func.result or count ~= func.count) then
+			if (result ~= udf.result or count ~= udf.count) then
 				self:HandelThrown("Invoked function returned unexpected results, " .. where);
 			end
 
@@ -301,7 +307,6 @@ end
 function ENT:CallEvent(result, count, event, ...)
 	if (self:IsRunning()) then
 		local events = self.context.events[event];
-
 		if (events) then
 			for id, udf in pairs(events) do
 				local where = string.format("Event.%s.%s", event, id);
