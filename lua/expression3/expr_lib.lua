@@ -390,6 +390,8 @@ function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method, ex
 	methods[meth.signature] = meth;
 	-- <Insert Heisenburg joke here>
 
+	MsgN("Registered method ", meth.signature);
+
 	return meth;
 end
 

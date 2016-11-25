@@ -2092,8 +2092,9 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 	local ids = {};
 	local total = #expressions;
 
-	if (total == 0) then
+	if (total == 1) then
 		op = EXPR_METHODS[string.format("%s.%s()", mClass, inst.method)];
+		--print("method->", string.format("%s.%s()", mClass, inst.method), op)
 	else
 		for k, expr in pairs(expressions) do
 			if (k > 1) then
@@ -2118,12 +2119,14 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 				local signature = string.format("%s.%s(%s)", mClass, inst.method, args);
 
 				op = EXPR_METHODS[signature];
+				--print("method->", signature, op)
 			end
 
 			if (not op) then
 				local signature = string.format("%s.%s(%s,...)", mClass, inst.method, args);
 
 				op = EXPR_METHODS[signature];
+				--print("method->", signature, op)
 
 				if (op) then
 					vargs = i;
@@ -2137,6 +2140,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 
 		if (not op) then
 			op = EXPR_METHODS[string.format("%s.%s(...)", mClass, inst.method)];
+				--print("method->", string.format("%s.%s(...)", mClass, inst.method), op)
 
 			if (op) then
 				vargs = 1;
@@ -2145,10 +2149,10 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 	end
 
 	if (not op) then
-		this:Throw(token, "No such method %s.%s(%s).", mClass, inst.method, table.concat(ids, ","));
+		this:Throw(token, "No such method %s.%s(%s).", name(mClass), inst.method, names(ids));
 	end
 
-	this:CheckState(op.state, token, "Method %s.%s(%s)", mClass, inst.method, table.concat(ids, ","));
+	this:CheckState(op.state, token, "Method %s.%s(%s)", name(mClass), inst.method, names(ids));
 
 	if (vargs) then
 		if (#expressions > 1) then
