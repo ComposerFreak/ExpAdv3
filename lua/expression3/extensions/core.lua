@@ -166,15 +166,15 @@ end);
 hook.Add("Expression3.LoadFunctions", "Expression3.Core.Extensions", function()
 	EXPR_LIB.RegisterFunction("system", "invoke", "cls,n,f,...", "", 0, EXPR_LIB.Invoke);
 
-	EXPR_LIB.RegisterFunction("system", "print", "...", "", 0, function(Context, ...)
+	EXPR_LIB.RegisterFunction("system", "print", "...", "", 0, function(context, ...)
 		local values = {};
 
 		for _, v in pairs({...}) do
-			print(_, v)
-			values[#values + 1] = tostring(v[2]);
+			values[#values + 1] = EXPR_LIB.ToString(context, v[1], v[2])
 		end
 
-		print("OUT->", table.concat(values, " "));
+		print("out->", table.concat(values, " "));
+		-- TODO: EXPR_LIB.PrintOutput(context, EXPR_CONSOLE, table.concat(values, " "));
 	end);
 end);
 
@@ -198,22 +198,6 @@ hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions",
 	local count = expressions[2].token.data; -- Return count was arg 2.
 	return class, count;
 end);
-
---[[hook.Add("Expression3.PostCompile.System.print", "Expression3.Core.Extensions", function(this, inst, token, expressions)
-	-- All expressions passed to vararg need to be strings.
-
-	if (#expressions > 1) then
-		for i = 1, #expressions do
-			local arg = expressions[i];
-			if (arg.result ~= "s") then
-				if (not this:CastExpression("s", arg)) then
-					--this:QueueInjectionBefore(inst, arg.token, "tostring", "(");
-					this:QueueInjectionAfter(inst, arg.final, "[1]");
-				end
-			end
-		end
-	end
-end);]]
 
 --[[
 	::EVENT LIBRARY::

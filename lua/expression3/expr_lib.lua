@@ -339,7 +339,7 @@ function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeCont
 	op.parameter = signature;
 	op.signature = string.format("%s(%s)", cls.id, signature);
 	op.result = cls.id;
-	op.rCount = count;
+	op.rCount = 1;
 	op.operator = constructor;
 	op.context = not excludeContext;
 
@@ -616,6 +616,18 @@ function EXPR_LIB.SortArgs(parameter)
 	end
 
 	return true, table.concat(signature, ","), varg;
+end
+
+function EXPR_LIB.ToString(context, type, value)
+	local op = EXPR_CAST_OPERATORS("(s)" .. type);
+
+	if (not op or not op.operator) then
+		return tostring(value);
+	elseif (not op.context) then
+		return op.operator(value);
+	else
+		return op.operator(context, value);
+	end
 end
 
 --[[
