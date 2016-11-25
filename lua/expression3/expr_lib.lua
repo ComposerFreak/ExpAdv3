@@ -619,7 +619,7 @@ function EXPR_LIB.SortArgs(parameter)
 end
 
 function EXPR_LIB.ToString(context, type, value)
-	local op = EXPR_CAST_OPERATORS("(s)" .. type);
+	local op = EXPR_CAST_OPERATORS["(s)" .. type];
 
 	if (not op or not op.operator) then
 		return tostring(value);

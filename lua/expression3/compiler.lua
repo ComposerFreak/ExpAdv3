@@ -2706,4 +2706,33 @@ function COMPILER.Compile_SET(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
+--[[
+]]
+
+function COMPILER.Compile_FOR(this, inst, token, expressions)
+
+	local start = expressions[1];
+	local tStart = this:Compile(start);
+	local _end = expressions[2];
+	local tEnd = this:Compile(_end);
+	local step = expressions[3];
+	
+	if (not step and (inst.class ~= "n" or tStart  ~= "n" or tEnd ~= "n")) then
+		this:Throw(token, "No such loop 'for(%s i = %s; %s)'.", name(inst.class), name(tStart), name(tEnd));
+	elseif (step) then
+		local tStep = this:Compile(step);
+		if (inst.class ~= "n" or tStart  ~= "n" or tEnd ~= "n" or tEnd ~= "n" or tStep ~= "n") then
+			this:Throw(token, "No such loop 'for(%s i = %s; %s; %s)'.", name(inst.class), name(tStart), name(tEnd), name(tStep));
+		end
+	end
+
+	this:PushScope();
+
+	this:AssignVariable(token, true, inst.variable.data, inst.class, nil);
+
+	this:Compile(inst.stmts);
+
+	this:PopScope();
+end
+
 EXPR_COMPILER = COMPILER;

@@ -54,8 +54,7 @@ function PANEL:Init( )
 	self.tbRight:Dock( RIGHT )
 	self.tbRight:DockMargin( 0, 5, 5, 5 )
 	self.tbRight:SetSize( 24, 24 ) 
-	
-	
+
 	self.tbBottomHolder = vgui.Create( "DPanel", self ) 
 	self.tbBottomHolder:Dock( BOTTOM )
 	self.tbBottomHolder.Paint = function( pnl, w, h ) end 
@@ -65,7 +64,7 @@ function PANEL:Init( )
 	
 	self.tbBottom = vgui.Create( "GOLEM_Toolbar", self.tbBottomHolder )
 	self.tbBottom:Dock( RIGHT )
-	self.tbBottom:SetWide( 78 )  
+	self.tbBottom:SetWide( 78 ) 
 	
 	
 	self.btnValidate = vgui.Create( "GOLEM_Button", self.tbBottomHolder )
@@ -187,6 +186,49 @@ function PANEL:Init( )
 	-- self.pnlDivider:SetLeft( self.pnlSideTabHolder )
 	-- self.pnlDivider:SetRight( self.pnlTabHolder )
 	
+	self.tbConsoleHolder = vgui.Create( "DPanel", self ) 
+	self.tbConsoleHolder:Dock( BOTTOM )
+	self.tbConsoleHolder.Paint = function( pnl, w, h ) end 
+	self.tbConsoleHolder:DockMargin( 5, 0, 5, 5 )
+	self.tbConsoleHolder:SetTall( 22 ) 
+
+	self.tbConsoleToggle = vgui.Create( "GOLEM_Button", self.tbConsoleHolder ) 
+	self.tbConsoleToggle:Dock(TOP)
+	self.tbConsoleToggle:SetTall(22)
+	self.tbConsoleToggle:SetFlat( true )
+	self.tbConsoleToggle:DockMargin( 0, 0, 5, 0 )
+	self.tbConsoleToggle:SetTextCentered( false )
+	self.tbConsoleToggle:SetText( "Toggle Console." )
+
+	self.tbConsoleEditor = vgui.Create("GOLEM_Editor", self.tbConsoleHolder)
+	self.tbConsoleEditor:Dock(BOTTOM)
+	self.tbConsoleEditor:SetTall(150 - 25)
+
+	self.tbConsoleEditor._OnKeyCodeTyped = function() end;
+	self.tbConsoleEditor._OnTextChanged = function() end;
+
+	self.bConsoleVisible = true;
+	self.tbConsoleRows = {}
+	self:HideConsole()
+
+	self.tbConsoleToggle.DoClick = function()
+		if (self.bConsoleVisible) then
+			self:HideConsole()
+		else
+			self:ShowConsole()
+		end
+	end
+
+	--[[self.tbConsoleEditor.SyntaxColorLine = function(_, row)
+		if self.tbConsoleRows[row] then 
+			return self.tbConsoleRows[row];
+		end 
+
+		return {{self.tbConsoleRows[row], Color(255,255,255)}}
+	end;]] -- doesnt quite work how i would like.
+
+	self:Logger(Color(255, 0, 0), "Console is a WIP.")
+
 	hook.Run( "Expression3.AddGolemTabTypes", self )
 	
 	
@@ -300,6 +342,56 @@ Much love to Oskar94,
 	
 	self:SetSize( w, h )
 	self:SetPos( x, y )
+end
+
+/*---------------------------------------------------------------------------
+Console
+---------------------------------------------------------------------------*/
+function PANEL:HideConsole()
+	if (self.bConsoleVisible) then
+		self.tbConsoleHolder:SetTall( 22 )
+		self.tbConsoleEditor:SetVisible(false)
+		self.bConsoleVisible = false
+	end
+end
+
+function PANEL:ShowConsole()
+	if (not self.bConsoleVisible) then
+		self.tbConsoleHolder:SetTall( 150 )
+		self.tbConsoleEditor:SetVisible(true)
+		self.bConsoleVisible = true;
+	end
+end
+
+function PANEL:Logger(...)
+	local token = "";
+	local line = "";
+	local row = {}
+	local color = Color(255, 255, 255);
+	
+	for _, v in pairs({...}) do
+		local t = type(v)
+
+		if (t == "table") then
+			color = v
+
+			if (token ~= "") then
+				row[#row + 1] = {token, color}
+				line = line .. token
+				token = ""
+			end
+		else
+			token = token .. tostring(v)
+		end
+	end
+
+	row[#row + 1] = {token, color}
+
+	self.tbConsoleRows[#self.tbConsoleRows + 1] = row;
+
+	line = line .. token
+
+	self.tbConsoleEditor:SetCode(self.tbConsoleEditor:GetCode() .. line .. "\n")
 end
 
 /*---------------------------------------------------------------------------
