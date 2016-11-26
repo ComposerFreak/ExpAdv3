@@ -89,7 +89,10 @@ function PANEL:Init( )
 		Menu:AddOption( "Copy to clipboard", function( )
 			SetClipboardText( self.btnValidate:GetText( ) )
 		end )
-		
+
+		Menu:AddOption( "Validate and debug.", function( )
+			self:DoValidate(true, nil, true)
+		end )
 		Menu:Open( ) 
 	end
 	
@@ -207,10 +210,19 @@ function PANEL:Init( )
 	-- self.tbConsoleEditor._OnTextChanged = function( ) end
 	self.tbConsoleEditor.bEditable = false 
 
-	self.bConsoleVisible = true;
+	self.bConsoleVisible = true
+
 	self.tbConsoleRows = { }
+
+	self.tbConsoleEditor.SyntaxColorLine = function(_, row)
+		if self.tbConsoleRows[row] then 
+			return self.tbConsoleRows[row]
+		end 
+
+		return {self.tbConsoleRows[row], Color(255,255,255)}
+	end
+
 	self:HideConsole( )
-	-- self:ShowConsole( )
 
 	self.tbConsoleToggle.DoClick = function( )
 		if self.bConsoleVisible then
@@ -220,21 +232,9 @@ function PANEL:Init( )
 		end
 	end
 
-	-- [[
-	self.tbConsoleEditor.SyntaxColorLine = function(_, row)
-		if self.tbConsoleRows[row] then 
-			return self.tbConsoleRows[row]
-		end 
-
-		return {self.tbConsoleRows[row], Color(255,255,255)}
-	end
-	--]] -- doesnt quite work how i would like.
-
-	self:Logger( Color(255, 0, 0), "Console is a WIP." )
+	self:AddPrintOut( Color(255, 255, 0), "Expression 3 Console Initalized:" )
 
 	hook.Run( "Expression3.AddGolemTabTypes", self )
-	
-	
 	
 	//self:AddCustomTab( bScope, sName, fCreate, fClose )
 	
@@ -367,37 +367,30 @@ function PANEL:ShowConsole()
 	end
 end
 
-function PANEL:Logger( ... )
-	local token = ""
-	local line = ""
-	local row = { }
-	local color = Color(255, 255, 255)
-	
-	for _, v in pairs( { ... } ) do
-		local t = type( v )
 
-		if t == "table" then
-			color = v
+function PANEL:AddPrintOut(...)
+	local row = {};
+	local line = "";
+	local token = "";
+	local color = Color(255, 255, 255);
 
-			if token ~= "" then
-				row[#row + 1] = { token, color }
-				line = line .. token
-				token = ""
-			end
+	for k, v in pairs({...}) do
+		if (istable(v)) then
+			row[#row + 1] = {token, color};
+			token = "";
+			color = v;
 		else
-			token = token .. tostring( v )
+			v = tostring(v);
+			line = line .. v;
+			token = token .. v;
 		end
 	end
 
 	row[#row + 1] = {token, color}
 
 	self.tbConsoleRows[#self.tbConsoleRows + 1] = row
-
-	line = line .. token
-
-	self.tbConsoleEditor:SetCode( self.tbConsoleEditor:GetCode( ) .. line .. "\n" )
-	-- self.tbConsoleEditor:SetCaret( Vector2( #self.tbConsoleEditor.Rows, 1 ) )
-	-- self.tbConsoleEditor:SetSelection( line )
+	self.tbConsoleEditor:SetCaret(Vector2( #self.tbConsoleEditor.Rows, 1 ));
+	self.tbConsoleEditor:SetSelection(line .. "\n");
 end
 
 /*---------------------------------------------------------------------------
@@ -856,48 +849,93 @@ end
 /*---------------------------------------------------------------------------
 Code Validation
 ---------------------------------------------------------------------------*/
-function PANEL:DoValidate( Goto, Code )
+function PANEL:DoValidate( Goto, Code, Debug )
 	Code = Code or self:GetCode( )
-	--[[
 	
 	if not Code or Code == "" then
-		self:OnValidateError( false,"No code submited, compiler exited.")
+		self:OnValidateError( false, {msg = "No code submited, compiler exited.", line = 0, char = 0})
 		return false
 	end
 	
-	local Status, Instance, Instruction = EXPADV.SolidCompile(Code, {})
-	
-	if not Status then
-		self:OnValidateError(Goto, Instance)
-		return false
+	local t = EXPR_TOKENIZER.New();
+
+	t:Initalize("EXPADV", Code);
+
+	local ts, tr = t:Run();
+
+	if (not ts) then
+		if (tr.state == "internal") then
+			self:OnValidateError( false, "Internal tokenizer error (see console)." )
+		else
+			self:OnValidateError( Goto, tr )
+		end
+
+		return false;
+	end
+
+	local p = EXPR_PARSER.New();
+
+	p:Initalize(tr);
+
+	local ps, pr = p:Run();
+
+	if (not ps) then
+		if (pr.state == "internal") then
+			self:OnValidateError( false, "Internal parser error (see console)." )
+		else
+			self:OnValidateError( Goto, pr )
+		end
+
+		return false;
+	end
+
+	local c = EXPR_COMPILER.New();
+
+	c:Initalize(pr);
+
+	local cs, cr = c:Run();
+
+	if (not cs) then
+		if (cr.state == "internal") then
+			self:OnValidateError( false, "Internal compiler error (see console)." )
+		else
+			self:OnValidateError( Goto, cr )
+		end
+
+		return false;
 	end
 	
 	self.btnValidate:SetColor( Color( 50, 255, 50 ) )
 	self.btnValidate:SetText( "Validation Successful!" )
 
-	return true
-	]]
+	self:AddPrintOut(Color(0,255,0), "Validation Successful!" )
+	
+	if (Debug) then
+		EXPR_LIB.ShowDebug(tr.tokens, pr.tasks);
+	end
 
-	return EXPR_LIB.ValidateAndDebug(self, Goto, Code);
+	return true
 end
 
-function PANEL:OnValidateError( Goto, Error )
+function PANEL:OnValidateError( Goto, Thrown )
+	local Error;
+
+	if (istable(Thrown)) then
+		Error = string.format("%s, at line %i char %i.", Thrown.msg, Thrown.line, Thrown.char);
+	else
+		Error = Thrown
+		Thrown = nil
+	end
+
 	if Goto then
-		local Row, Col = Error:match( "at line ([0-9]+), char ([0-9]+)$" )
-		if not Row then Row, Col = Error:match( "at line ([0-9]+)$" ), 1 end
-		
-		if Row then
-			Row, Col = tonumber( Row ), tonumber( Col )
-			if Row < 1 or Col < 1 then 
-				Error = string.match( Error, "^(.-)at line [0-9]+" ) .. "| Invalid trace"
-			else 
-				self.pnlTabHolder:GetActiveTab( ):GetPanel( ):SetCaret( Vector2( Row, Col ) )
-			end 
-		end
+		if Thrown and (Thrown.line < 1 or Thrown.char < 1) then 
+			self.pnlTabHolder:GetActiveTab( ):GetPanel( ):SetCaret( Vector2( Thrown.line, Thrown.char ) )
+		end 
 	end
 	
 	self.btnValidate:SetText( Error )
 	self.btnValidate:SetColor( Color( 255, 50, 50 ) )
+	self:AddPrintOut(Color(255,0,0), "Error: ", Error)
 end
 
 /*---------------------------------------------------------------------------
