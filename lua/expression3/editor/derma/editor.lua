@@ -75,6 +75,7 @@ function PANEL:Init( )
 	self.LinePadding = 0 
 	
 	self.Insert = false 
+	self.bEditable = true 
 	
 	self.pTextEntry = self:Add( "TextEntry" ) 
 	self.pTextEntry:SetMultiline( true )
@@ -162,6 +163,12 @@ local SpecialKeys = { }
 
 function PANEL:Think( )
 	if not self.pTextEntry:HasFocus( ) then return end 
+	
+	if not self.bEditable then 
+		self:SetCursor( "arrow" ) 
+		return 
+	end 
+	
 	for I = 1, 12 do
 		local Enum = _G[ "KEY_F" .. I ]
 		local State = input_IsKeyDown( Enum )
@@ -182,6 +189,7 @@ function PANEL:Think( )
 end
 
 function PANEL:_OnKeyCodeTyped( code ) 
+	if not self.bEditable then return end 
 	self.Blink = RealTime( )
 	
 	local alt = input_IsKeyDown( KEY_LALT ) or input_IsKeyDown( KEY_RALT )
@@ -542,6 +550,7 @@ end
 
 -- TODO: Add options to turn on and off the different auto param functionality
 function PANEL:_OnTextChanged( ) 
+	if not self.bEditable then return end 
 	local ctrlv = false
 	local text = self.pTextEntry:GetValue( )
 	self.pTextEntry:SetText( "" )
@@ -674,23 +683,27 @@ function PANEL:OnMouseReleased( code )
 					SetClipboardText( clipboard ) 
 				end ) 
 				
-				Menu:AddOption( "Cut", function( ) 
-					local clipboard = self:GetSelection( ) 
-					clipboard = string_gsub( clipboard, "\n", "\r\n" ) 
-					SetClipboardText( clipboard ) 
-					self:SetSelection( "" ) 
-				end ) 
-				
-				Menu:AddOption( "Indent", function( ) 
-					self:Indent( )
-				end ) 
-				
-				Menu:AddOption( "Outdent", function( ) 
-					self:Indent( true )
-				end ) 
+				if self.bEditable then 
+					Menu:AddOption( "Cut", function( ) 
+						local clipboard = self:GetSelection( ) 
+						clipboard = string_gsub( clipboard, "\n", "\r\n" ) 
+						SetClipboardText( clipboard ) 
+						self:SetSelection( "" ) 
+					end ) 
+					
+					Menu:AddOption( "Indent", function( ) 
+						self:Indent( )
+					end ) 
+					
+					Menu:AddOption( "Outdent", function( ) 
+						self:Indent( true )
+					end ) 
+				end 
 			end 
 			
-			Menu:AddOption( "Paste", function( ) self.pTextEntry:Paste( ) end ) 
+			if self.bEditable then
+				Menu:AddOption( "Paste", function( ) self.pTextEntry:Paste( ) end ) 
+			end 
 			
 			Menu:AddSpacer( ) 
 			Menu:AddOption( "Select All", function( ) self:SelectAll( ) end )
@@ -1874,6 +1887,7 @@ function PANEL:PaintCursor( Caret )
 end 
 
 function PANEL:PaintStatus( )
+	if not self.bEditable then return end 
 	surface_SetFont( "Trebuchet18" )
 	
 	local Line = "Length: " .. #self:GetCode( ) .. " Lines: " .. #self.Rows .. " Row: " .. self.Caret.x .. " Col: " .. self.Caret.y

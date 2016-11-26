@@ -189,45 +189,48 @@ function PANEL:Init( )
 	self.tbConsoleHolder = vgui.Create( "DPanel", self ) 
 	self.tbConsoleHolder:Dock( BOTTOM )
 	self.tbConsoleHolder.Paint = function( pnl, w, h ) end 
-	self.tbConsoleHolder:DockMargin( 5, 0, 5, 5 )
+	self.tbConsoleHolder:DockMargin( 0, 0, 5, 5 )
 	self.tbConsoleHolder:SetTall( 22 ) 
 
 	self.tbConsoleToggle = vgui.Create( "GOLEM_Button", self.tbConsoleHolder ) 
-	self.tbConsoleToggle:Dock(TOP)
-	self.tbConsoleToggle:SetTall(22)
+	self.tbConsoleToggle:Dock( TOP )
+	self.tbConsoleToggle:SetTall( 22 )
 	self.tbConsoleToggle:SetFlat( true )
-	self.tbConsoleToggle:DockMargin( 0, 0, 5, 0 )
 	self.tbConsoleToggle:SetTextCentered( false )
 	self.tbConsoleToggle:SetText( "Toggle Console." )
 
-	self.tbConsoleEditor = vgui.Create("GOLEM_Editor", self.tbConsoleHolder)
-	self.tbConsoleEditor:Dock(BOTTOM)
-	self.tbConsoleEditor:SetTall(150 - 25)
+	self.tbConsoleEditor = vgui.Create( "GOLEM_Editor", self.tbConsoleHolder )
+	self.tbConsoleEditor:Dock( BOTTOM )
+	self.tbConsoleEditor:SetTall( 125 )
 
-	self.tbConsoleEditor._OnKeyCodeTyped = function() end;
-	self.tbConsoleEditor._OnTextChanged = function() end;
+	-- self.tbConsoleEditor._OnKeyCodeTyped = function( ) end
+	-- self.tbConsoleEditor._OnTextChanged = function( ) end
+	self.tbConsoleEditor.bEditable = false 
 
 	self.bConsoleVisible = true;
-	self.tbConsoleRows = {}
-	self:HideConsole()
+	self.tbConsoleRows = { }
+	self:HideConsole( )
+	-- self:ShowConsole( )
 
-	self.tbConsoleToggle.DoClick = function()
-		if (self.bConsoleVisible) then
-			self:HideConsole()
+	self.tbConsoleToggle.DoClick = function( )
+		if self.bConsoleVisible then
+			self:HideConsole( )
 		else
-			self:ShowConsole()
+			self:ShowConsole( )
 		end
 	end
 
-	--[[self.tbConsoleEditor.SyntaxColorLine = function(_, row)
+	-- [[
+	self.tbConsoleEditor.SyntaxColorLine = function(_, row)
 		if self.tbConsoleRows[row] then 
-			return self.tbConsoleRows[row];
+			return self.tbConsoleRows[row]
 		end 
 
-		return {{self.tbConsoleRows[row], Color(255,255,255)}}
-	end;]] -- doesnt quite work how i would like.
+		return {self.tbConsoleRows[row], Color(255,255,255)}
+	end
+	--]] -- doesnt quite work how i would like.
 
-	self:Logger(Color(255, 0, 0), "Console is a WIP.")
+	self:Logger( Color(255, 0, 0), "Console is a WIP." )
 
 	hook.Run( "Expression3.AddGolemTabTypes", self )
 	
@@ -330,6 +333,7 @@ Much love to Oskar94,
 			if not self.pnlTabHolder.Items[i].Tab.__type == "editor" then continue end 
 			self.pnlTabHolder.Items[i].Panel:SetFont( sFontID )
 		end
+		self.tbConsoleEditor:SetFont( sFontID ) 
 	end 
 	
 	local w, h, x, y = cookie.GetNumber( "golem_w", math.min( 1000, ScrW( ) * 0.8 ) ), cookie.GetNumber( "golem_h", math.min( 800, ScrH( ) * 0.8 ) ), cookie.GetNumber( "golem_x", ScrW( ) * 0.1 ), cookie.GetNumber( "golem_y", ScrH( ) * 0.1 ) 
@@ -363,35 +367,37 @@ function PANEL:ShowConsole()
 	end
 end
 
-function PANEL:Logger(...)
-	local token = "";
-	local line = "";
-	local row = {}
-	local color = Color(255, 255, 255);
+function PANEL:Logger( ... )
+	local token = ""
+	local line = ""
+	local row = { }
+	local color = Color(255, 255, 255)
 	
-	for _, v in pairs({...}) do
-		local t = type(v)
+	for _, v in pairs( { ... } ) do
+		local t = type( v )
 
-		if (t == "table") then
+		if t == "table" then
 			color = v
 
-			if (token ~= "") then
-				row[#row + 1] = {token, color}
+			if token ~= "" then
+				row[#row + 1] = { token, color }
 				line = line .. token
 				token = ""
 			end
 		else
-			token = token .. tostring(v)
+			token = token .. tostring( v )
 		end
 	end
 
 	row[#row + 1] = {token, color}
 
-	self.tbConsoleRows[#self.tbConsoleRows + 1] = row;
+	self.tbConsoleRows[#self.tbConsoleRows + 1] = row
 
 	line = line .. token
 
-	self.tbConsoleEditor:SetCode(self.tbConsoleEditor:GetCode() .. line .. "\n")
+	self.tbConsoleEditor:SetCode( self.tbConsoleEditor:GetCode( ) .. line .. "\n" )
+	-- self.tbConsoleEditor:SetCaret( Vector2( #self.tbConsoleEditor.Rows, 1 ) )
+	-- self.tbConsoleEditor:SetSelection( line )
 end
 
 /*---------------------------------------------------------------------------
