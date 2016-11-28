@@ -26,10 +26,10 @@
 		Expression3.PostRegisterExtensions				-> This is called once expadv3 has loaded its extensions.
 		Expression3.PostCompile.System.<function>		-> This is called after compiling every function on the system library,		-> ressult class, result count = (comiler, instruction, token, expressions)
 												  		   (replace <function> with the name of the function on the library..		
-		Expression3.BuildEntitySandbox					-> This is called when building the sandboxed enviroment for an entity.		-> (entity, context, enviroment)
-		Expression3.StartEntity							-> This is called when an entity is about to run for the first time.		-> (entity, context)
-		Expression3.UpdateEntity						-> This is called when an entity has sucessfuly executed.					-> (entity, context)
-		Expression3.StopEntity							-> This is called when an entity has shutdown for any given reason.			-> (entity, context)
+		Expression3.Entity.BuildSandbox					-> This is called when building the sandboxed enviroment for an entity.		-> (entity, context, enviroment)
+		Expression3.Start.Entity							-> This is called when an entity is about to run for the first time.		-> (entity, context)
+		Expression3.Entity.Update						-> This is called when an entity has sucessfuly executed.					-> (entity, context)
+		Expression3.Entity.Stop							-> This is called when an entity has shutdown for any given reason.			-> (entity, context)
 		Expression3.GolemInit							-> this is called when the editor is created.
 		Expression3.OpenGolem							-> this is called when the editor opens.
 		Expression3.CloseGolem							-> this is called when the editor closes.
