@@ -297,6 +297,7 @@ function ENT:UpdateQuotaValues()
 	end
 
 	if (r) then
+		context.cpu_average = (context.cpu_average * 0.95) + (context.cpu_total * 0.05);
 		context.cpu_total = 0;
 		context.cpu_warning = false;
 	end
