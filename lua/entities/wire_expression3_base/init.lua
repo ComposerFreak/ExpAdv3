@@ -21,11 +21,9 @@ net.Receive("Expression3.SubmitToServer", function(len, ply)
 	local script = net.ReadString();
 
 	if (IsValid(ent) and ent.ReceiveFromClient) then
-		if (ent:CPPICanTool(ply, "gmod_expression_3")) then
-			ent:ReceiveFromClient(ply, script);
-		end
+		ent:ReceiveFromClient(ply, script);
 	end	
-end);
+end)
 
 function ENT:ReceiveFromClient(ply, script)
 	print("SERVER");
@@ -66,5 +64,4 @@ function ENT:Initialize( )
 	self:PhysicsInit(SOLID_VPHYSICS);
 	self:SetMoveType(MOVETYPE_VPHYSICS);
 	self:SetSolid(SOLID_VPHYSICS);
-	self.Expression3 = true;
 end

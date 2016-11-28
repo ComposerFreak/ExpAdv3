@@ -12,84 +12,17 @@
 
 AddCSLuaFile();
 
-ENT.Type 			= "anim"
-ENT.Base 			= "base_gmodentity"
-
-ENT.PrintName       = "Expression 3"
-ENT.Author          = "Rusketh"
-ENT.Contact         = ""
-ENT.Expression3 	= true
-
---[[
-]]
-
 include("sh_cppi.lua");
+include("sh_context.lua");
 
-function ENT:SetupDataTables()
-	self:NetworkVar("Entity", 0, "Creator");
-end
+ENT.Type 			= "anim";
+ENT.Base 			= "base_gmodentity";
 
+ENT.PrintName       = "Expression 3";
+ENT.Author          = "Rusketh";
+ENT.Contact         = "";
 
---[[
-	Base Context:
-]]
-
-local CONTEXT = {};
-CONTEXT.__index = CONTEXT;
-
-function CONTEXT.Trace(this, level, max)
-	local stack = {};
-
-	for i = level + 1, level + max do
-		local info = debug.getinfo( level, "Sln" );
-		
-		if (not info) then
-			break;
-		end
-
-		if (info.short_src == "Expresion 3") then
-			local trace = this:GetScriptPos(info.currentline, 0);
-
-			if (trace) then
-				trace.level = #stack + 1;
-				stack[trace.level] = trace;
-			end
-		end
-	end
-
-	return trace;
-end
-
-function CONTEXT.Throw(this, error, fst, ...)
-	if (fst) then
-		msg = string.format(msg, fst, ...);
-	end
-
-	local stack = this:Trace(1, 1);
-	local trace = stack[1];
-	
-	local err = {};
-	err.state = "runtime";
-	err.char = trace[1];
-	err.line = trace[2];
-	err.msg = msg;
-
-	error(err, 0);
-end
-
-function CONTEXT.GetScriptPos(this, line, char)
-	for l, row in pairs(this.traceTable) do
-		if (l >= line) then
-			for c, trace in pairs(row) do
-				if (c >= char) then
-					return trace;
-				end
-			end
-		end
-	end
-
-	return nil;
-end
+ENT.Expression3 	= true;
 
 --[[
 	Set Code
@@ -144,7 +77,7 @@ end
 ]]
 
 function ENT:BuildContext(instance)
-	self.context = setmetatable({}, CONTEXT);
+	self.context = EXPR_CONTEXT.New();
 
 	self.context.events = {};
 	self.context.entity = self;
@@ -166,7 +99,7 @@ function ENT:BuildEnv(context, instance)
 	env._CONST	= instance.constructors;
 	env._METH	= instance.methods;
 	env._FUN	= instance.functions;
-	env.invoke  = EXPR_LIB.Invoke;
+	evn.invoke  = EXPR_LIB.Invoke;
 
 	local meta = {};
 
@@ -180,7 +113,7 @@ function ENT:BuildEnv(context, instance)
 
 	context.env = env;
 
-	hook.Run("Expression3.BuildEntitySandbox", self, context, env);
+	hook.Run("Expression3.Entity.BuildSandbox", self, context, env);
 
 	return setmetatable(env, meta);
 end
@@ -206,7 +139,7 @@ function ENT:InitScript()
 
 	local init = main();
 
-	hook.Run("Expression3.StartEntity", self, self.context);
+	hook.Run("Expression3.Entity.Start", self, self.context);
 
 	self.context.status = self:Execute(init, self.context.env);
 
@@ -225,7 +158,7 @@ function ENT:Execute(func, ...)
 	self:PostExecute();
 
 	if (results[1]) then
-		hook.Run("Expression3.UpdateEntity", self, self.context);
+		self.context.update = true;
 	else
 		self:HandelThrown(results[2]);
 	end
@@ -246,19 +179,13 @@ end
 ]]
 
 function ENT:IsRunning()
-	if (self.context) then
-		if (self.context.status) then
-			return true;
-		end
-	end
-
-	return false;
+	return (self.context and self.context.status);
 end
 
 function ENT:ShutDown()
 	if (self:IsRunning()) then
 		self.context.status = false;
-		hook.Run("Expression3.StopEntity", self, self.context);
+		hook.Run("Expression3.Entity.Stop", self, self.context);
 	end
 end
 
@@ -291,20 +218,22 @@ function ENT:Invoke(where, result, count, udf, ...)
 
 		if (udf and udf.op) then
 
-			if (result ~= udf.result or count ~= udf.count) then
+			if (result ~= func.result or count ~= func.count) then
 				self:HandelThrown("Invoked function returned unexpected results, " .. where);
 			end
 
-			self:PreExecute();
+			self.context:PreExecute();
 
 			local results = {pcall(udf.op, ...)};
 
 			local status = table.remove(results, 1);
 
-			self:PostExecute();
+			self.context:PostExecute();
 
 			if (status) then
-				hook.Run("Expression3.UpdateEntity", self, self.context);
+				self.context.update = true;
+				-- Moving this hook to run once per think instead.
+				-- hook.Run("Expression3.UpdateEntity", self, self.context);
 			else
 				self:HandelThrown(results[1]);
 			end
@@ -317,6 +246,7 @@ end
 function ENT:CallEvent(result, count, event, ...)
 	if (self:IsRunning()) then
 		local events = self.context.events[event];
+
 		if (events) then
 			for id, udf in pairs(events) do
 				local where = string.format("Event.%s.%s", event, id);
@@ -332,4 +262,52 @@ function ENT:CallEvent(result, count, event, ...)
 			end
 		end
 	end
+end
+
+--[[
+	Performance Related Stuff
+]]
+
+function ENT:SetupDataTables()
+	self:NetworkVar("Float", 0, "ServerAverageCPU");
+	self:NetworkVar("Float", 1, "ServerTotalCPU");
+	self:NetworkVar("Bool", 1, "ServerWarning");
+end
+
+if (CLIENT) then
+	AccessorFunc(ENT, "cl_average_cpu", "ClientAverageCPU", FORCE_NUMBER);
+	AccessorFunc(ENT, "cl_total_cpu", "ClientTotalCPU", FORCE_NUMBER);
+	AccessorFunc(ENT, "cl_cpu_warning", "ClientWarning", FORCE_BOOL);
+end
+
+function ENT:UpdateQuotaValues()
+	local r = self:IsRunning();
+	local context = self.context;
+
+	if (SERVER) then
+		self:SetServerAverageCPU(r and context.cpu_average or 0);
+		self:SetServerTotalCPU(r and context.cpu_total or 0);
+		self:SetServerWarning(r and context.cpu_warning or false);
+	end
+
+	if (CLIENT) then
+		self:SetClientAverageCPU(r and context.cpu_average or 0);
+		self:SetClientTotalCPU(r and context.cpu_total or 0);
+		self:SetClientWarning(r and context.cpu_warning or false);
+	end
+
+	if (r) then
+		context.cpu_total = 0;
+		context.cpu_warning = false;
+	end
+
+	if (r and self.context.update) then
+		self.context.update = false;
+		hook.Run("Expression3.Entity.Update", self, context);
+	end
+end
+
+function ENT:Think()
+	self:UpdateQuotaValues();
+	hook.Run("Expression3.Entity.Think", self, self.context);
 end

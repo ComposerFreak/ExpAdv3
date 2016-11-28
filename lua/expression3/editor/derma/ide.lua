@@ -54,7 +54,8 @@ function PANEL:Init( )
 	self.tbRight:Dock( RIGHT )
 	self.tbRight:DockMargin( 0, 5, 5, 5 )
 	self.tbRight:SetSize( 24, 24 ) 
-
+	
+	
 	self.tbBottomHolder = vgui.Create( "DPanel", self ) 
 	self.tbBottomHolder:Dock( BOTTOM )
 	self.tbBottomHolder.Paint = function( pnl, w, h ) end 
@@ -64,7 +65,7 @@ function PANEL:Init( )
 	
 	self.tbBottom = vgui.Create( "GOLEM_Toolbar", self.tbBottomHolder )
 	self.tbBottom:Dock( RIGHT )
-	self.tbBottom:SetWide( 78 ) 
+	self.tbBottom:SetWide( 78 )  
 	
 	
 	self.btnValidate = vgui.Create( "GOLEM_Button", self.tbBottomHolder )
@@ -89,10 +90,7 @@ function PANEL:Init( )
 		Menu:AddOption( "Copy to clipboard", function( )
 			SetClipboardText( self.btnValidate:GetText( ) )
 		end )
-
-		Menu:AddOption( "Validate and debug.", function( )
-			self:DoValidate(true, nil, true)
-		end )
+		
 		Menu:Open( ) 
 	end
 	
@@ -189,52 +187,9 @@ function PANEL:Init( )
 	-- self.pnlDivider:SetLeft( self.pnlSideTabHolder )
 	-- self.pnlDivider:SetRight( self.pnlTabHolder )
 	
-	self.tbConsoleHolder = vgui.Create( "DPanel", self ) 
-	self.tbConsoleHolder:Dock( BOTTOM )
-	self.tbConsoleHolder.Paint = function( pnl, w, h ) end 
-	self.tbConsoleHolder:DockMargin( 0, 0, 5, 5 )
-	self.tbConsoleHolder:SetTall( 22 ) 
-
-	self.tbConsoleToggle = vgui.Create( "GOLEM_Button", self.tbConsoleHolder ) 
-	self.tbConsoleToggle:Dock( TOP )
-	self.tbConsoleToggle:SetTall( 22 )
-	self.tbConsoleToggle:SetFlat( true )
-	self.tbConsoleToggle:SetTextCentered( false )
-	self.tbConsoleToggle:SetText( "Toggle Console." )
-
-	self.tbConsoleEditor = vgui.Create( "GOLEM_Editor", self.tbConsoleHolder )
-	self.tbConsoleEditor:Dock( BOTTOM )
-	self.tbConsoleEditor:SetTall( 125 )
-
-	-- self.tbConsoleEditor._OnKeyCodeTyped = function( ) end
-	-- self.tbConsoleEditor._OnTextChanged = function( ) end
-	self.tbConsoleEditor.bEditable = false 
-
-	self.bConsoleVisible = true
-
-	self.tbConsoleRows = { }
-
-	self.tbConsoleEditor.SyntaxColorLine = function(_, row)
-		if self.tbConsoleRows[row] then 
-			return self.tbConsoleRows[row]
-		end 
-
-		return {self.tbConsoleRows[row], Color(255,255,255)}
-	end
-
-	self:HideConsole( )
-
-	self.tbConsoleToggle.DoClick = function( )
-		if self.bConsoleVisible then
-			self:HideConsole( )
-		else
-			self:ShowConsole( )
-		end
-	end
-
-	self:AddPrintOut( Color(255, 255, 0), "Expression 3 Console Initalized:" )
-
 	hook.Run( "Expression3.AddGolemTabTypes", self )
+	
+	
 	
 	//self:AddCustomTab( bScope, sName, fCreate, fClose )
 	
@@ -333,7 +288,6 @@ Much love to Oskar94,
 			if not self.pnlTabHolder.Items[i].Tab.__type == "editor" then continue end 
 			self.pnlTabHolder.Items[i].Panel:SetFont( sFontID )
 		end
-		self.tbConsoleEditor:SetFont( sFontID ) 
 	end 
 	
 	local w, h, x, y = cookie.GetNumber( "golem_w", math.min( 1000, ScrW( ) * 0.8 ) ), cookie.GetNumber( "golem_h", math.min( 800, ScrH( ) * 0.8 ) ), cookie.GetNumber( "golem_x", ScrW( ) * 0.1 ), cookie.GetNumber( "golem_y", ScrH( ) * 0.1 ) 
@@ -346,51 +300,6 @@ Much love to Oskar94,
 	
 	self:SetSize( w, h )
 	self:SetPos( x, y )
-end
-
-/*---------------------------------------------------------------------------
-Console
----------------------------------------------------------------------------*/
-function PANEL:HideConsole()
-	if (self.bConsoleVisible) then
-		self.tbConsoleHolder:SetTall( 22 )
-		self.tbConsoleEditor:SetVisible(false)
-		self.bConsoleVisible = false
-	end
-end
-
-function PANEL:ShowConsole()
-	if (not self.bConsoleVisible) then
-		self.tbConsoleHolder:SetTall( 150 )
-		self.tbConsoleEditor:SetVisible(true)
-		self.bConsoleVisible = true;
-	end
-end
-
-
-function PANEL:AddPrintOut(...)
-	local row = {};
-	local line = "";
-	local token = "";
-	local color = Color(255, 255, 255);
-
-	for k, v in pairs({...}) do
-		if (istable(v)) then
-			row[#row + 1] = {token, color};
-			token = "";
-			color = v;
-		else
-			v = tostring(v);
-			line = line .. v;
-			token = token .. v;
-		end
-	end
-
-	row[#row + 1] = {token, color}
-
-	self.tbConsoleRows[#self.tbConsoleRows + 1] = row
-	self.tbConsoleEditor:SetCaret(Vector2( #self.tbConsoleEditor.Rows, 1 ));
-	self.tbConsoleEditor:SetSelection(line .. "\n");
 end
 
 /*---------------------------------------------------------------------------
@@ -849,93 +758,48 @@ end
 /*---------------------------------------------------------------------------
 Code Validation
 ---------------------------------------------------------------------------*/
-function PANEL:DoValidate( Goto, Code, Debug )
+function PANEL:DoValidate( Goto, Code )
 	Code = Code or self:GetCode( )
+	--[[
 	
 	if not Code or Code == "" then
-		self:OnValidateError( false, {msg = "No code submited, compiler exited.", line = 0, char = 0})
+		self:OnValidateError( false,"No code submited, compiler exited.")
 		return false
 	end
 	
-	local t = EXPR_TOKENIZER.New();
-
-	t:Initalize("EXPADV", Code);
-
-	local ts, tr = t:Run();
-
-	if (not ts) then
-		if (tr.state == "internal") then
-			self:OnValidateError( false, "Internal tokenizer error (see console)." )
-		else
-			self:OnValidateError( Goto, tr )
-		end
-
-		return false;
-	end
-
-	local p = EXPR_PARSER.New();
-
-	p:Initalize(tr);
-
-	local ps, pr = p:Run();
-
-	if (not ps) then
-		if (pr.state == "internal") then
-			self:OnValidateError( false, "Internal parser error (see console)." )
-		else
-			self:OnValidateError( Goto, pr )
-		end
-
-		return false;
-	end
-
-	local c = EXPR_COMPILER.New();
-
-	c:Initalize(pr);
-
-	local cs, cr = c:Run();
-
-	if (not cs) then
-		if (cr.state == "internal") then
-			self:OnValidateError( false, "Internal compiler error (see console)." )
-		else
-			self:OnValidateError( Goto, cr )
-		end
-
-		return false;
+	local Status, Instance, Instruction = EXPADV.SolidCompile(Code, {})
+	
+	if not Status then
+		self:OnValidateError(Goto, Instance)
+		return false
 	end
 	
 	self.btnValidate:SetColor( Color( 50, 255, 50 ) )
 	self.btnValidate:SetText( "Validation Successful!" )
 
-	self:AddPrintOut(Color(0,255,0), "Validation Successful!" )
-	
-	if (Debug) then
-		EXPR_LIB.ShowDebug(tr.tokens, pr.tasks);
-	end
-
 	return true
+	]]
+
+	return EXPR_LIB.ValidateAndDebug(self, Goto, Code);
 end
 
-function PANEL:OnValidateError( Goto, Thrown )
-	local Error;
-
-	if (istable(Thrown)) then
-		Error = string.format("%s, at line %i char %i.", Thrown.msg, Thrown.line, Thrown.char);
-	else
-		Error = Thrown
-		Thrown = nil
-	end
-
+function PANEL:OnValidateError( Goto, Error )
 	if Goto then
-		if Thrown and (Thrown.line < 1 or Thrown.char < 1) then 
-			self.pnlTabHolder:GetActiveTab( ):GetPanel( ):SetCaret( Vector2( Thrown.line, Thrown.char ) )
-		end 
+		local Row, Col = Error:match( "at line ([0-9]+), char ([0-9]+)$" )
+		if not Row then Row, Col = Error:match( "at line ([0-9]+)$" ), 1 end
+		
+		if Row then
+			Row, Col = tonumber( Row ), tonumber( Col )
+			if Row < 1 or Col < 1 then 
+				Error = string.match( Error, "^(.-)at line [0-9]+" ) .. "| Invalid trace"
+			else 
+				self.pnlTabHolder:GetActiveTab( ):GetPanel( ):SetCaret( Vector2( Row, Col ) )
+			end 
+		end
 	end
 	
 	self.btnValidate:SetText( Error )
 	self.btnValidate:SetColor( Color( 255, 50, 50 ) )
-	self:AddPrintOut(Color(255,0,0), "Error: ", Error)
 end
 
 /*---------------------------------------------------------------------------

@@ -119,3 +119,78 @@ EXPR_LIB.ShowDebug = function(tokens, tasks)
 		end;
 	end
 end
+
+EXPR_LIB.ValidateAndDebug = function(editor, goto, code)
+	local t = EXPR_TOKENIZER.New();
+	
+	t:Initalize("EXPADV", code);
+	
+	local ts, tr = t:Run();
+
+	if (not ts) then
+		if (tr.state == "internal") then
+			editor.btnValidate:SetText("Internal error from tokenizer " .. tr.msg);
+			editor.btnValidate:SetColor(Color(255, 0, 0));
+		else
+			editor.btnValidate:SetText("Tokenizer error " .. tr.msg);
+			editor.btnValidate:SetColor(Color(255, 0, 0));
+
+			if (goto) then
+				editor.pnlTabHolder:GetActiveTab():GetPanel():SetCaret(Vector2(tr.line, tr.char));
+			end
+		end
+
+		return false;
+	end
+
+	local p = EXPR_PARSER.New();
+
+	p:Initalize(tr);
+
+	local ps, pr = p:Run();
+
+	if (not ps) then
+		if (pr.state == "internal") then
+			editor.btnValidate:SetText("Internal error from parser " .. pr.msg);
+			editor.btnValidate:SetColor(Color(255, 0, 0));
+		else
+			editor.btnValidate:SetText("Parser error " .. pr.msg);
+			editor.btnValidate:SetColor(Color(255, 0, 0));
+
+			if (goto) then
+				editor.pnlTabHolder:GetActiveTab():GetPanel():SetCaret(Vector2(pr.line, pr.char));
+			end
+		end
+
+		return false;
+	end
+
+	local c = EXPR_COMPILER.New();
+
+	c:Initalize(pr);
+
+	local cs, cr = c:Run();
+
+	if (not cs) then
+		if (cr.state == "internal") then
+			editor.btnValidate:SetText("Internal error from compiler " .. cr.msg);
+			editor.btnValidate:SetColor(Color(255, 0, 0));
+		else
+			editor.btnValidate:SetText("Compiler error " .. cr.msg);
+			editor.btnValidate:SetColor(Color(255, 0, 0));
+
+			if (goto) then
+				editor.pnlTabHolder:GetActiveTab():GetPanel():SetCaret(Vector2(cr.line, cr.char));
+			end
+		end
+
+		return false;
+	end
+
+	editor.btnValidate:SetText("Validation sucessful");
+	editor.btnValidate:SetColor(Color(0, 255, 255));
+
+	EXPR_LIB.ShowDebug(tr.tokens, pr.tasks);
+
+	return true;
+end;

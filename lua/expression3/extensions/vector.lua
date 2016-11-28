@@ -20,9 +20,9 @@ local function notNil(v)
 	return v ~= nil;
 end
 
-extension:RegisterClass("v", {"vector"}, isvector, notNil)
+extension:RegisterClass("v", {"vector", "vector.3d"}, isvector, notNil)
 
-extension:RegisterConstructor("v", "n,n,n", Vector, true); -- E3 new vector(n,n,n) == Vector(N, N, N) Lua
+extension:RegisterConstructor("v", "n,n,n", Vector, true) -- E3 new vector(n,n,n) == Vector(N, N, N) Lua
 
 --[[
 	Operators
@@ -97,29 +97,6 @@ end, true);
 
 extension:RegisterOperator("neg", "v", "v", 1, function(a)
 	return Vector(-a.x, -a.y, -a.z);
-end, true);
-
---[[
-]]
-
-extension:RegisterOperator("get", "v,n", "n", 1, function(v, a)
-	if (a < 2) then
-		return v.x;
-	elseif (a == 2) then
-		return v.y;
-	else
-		return v.z;
-	end
-end, true);
-
-extension:RegisterOperator("set", "v,n,n", "n", 1, function(v, a, n)
-	if (a < 2) then
-		v.x = n;
-	elseif (a == 2) then
-		v.y = n;
-	else
-		v.z = n;
-	end
 end, true);
 
 --[[

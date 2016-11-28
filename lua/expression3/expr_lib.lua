@@ -26,10 +26,10 @@
 		Expression3.PostRegisterExtensions				-> This is called once expadv3 has loaded its extensions.
 		Expression3.PostCompile.System.<function>		-> This is called after compiling every function on the system library,		-> ressult class, result count = (comiler, instruction, token, expressions)
 												  		   (replace <function> with the name of the function on the library..		
-		Expression3.BuildEntitySandbox					-> This is called when building the sandboxed enviroment for an entity.		-> (entity, context, enviroment)
-		Expression3.StartEntity							-> This is called when an entity is about to run for the first time.		-> (entity, context)
-		Expression3.UpdateEntity						-> This is called when an entity has sucessfuly executed.					-> (entity, context)
-		Expression3.StopEntity							-> This is called when an entity has shutdown for any given reason.			-> (entity, context)
+		Expression3.Entity.BuildSandbox					-> This is called when building the sandboxed enviroment for an entity.		-> (entity, context, enviroment)
+		Expression3.Start.Entity							-> This is called when an entity is about to run for the first time.		-> (entity, context)
+		Expression3.Entity.Update						-> This is called when an entity has sucessfuly executed.					-> (entity, context)
+		Expression3.Entity.Stop							-> This is called when an entity has shutdown for any given reason.			-> (entity, context)
 		Expression3.GolemInit							-> this is called when the editor is created.
 		Expression3.OpenGolem							-> this is called when the editor opens.
 		Expression3.CloseGolem							-> this is called when the editor closes.
@@ -119,10 +119,6 @@
 			not		(type1)					!type1
 			len		(type1)					#type1
 			call 	(type1, ...)			type(...)
-			get 	(type1, type2)			type1[type2]
-			get 	(type1, type2, type3)	type1[type2, type3]
-			set 	(type1, type2, type3)	(type1[type2] = type3) or (type1[type2, type3] = type3)
-
 
 		EXPR_LIB.RegisterCastingOperator(str type, str parameter, obj = function(ctx*, ...) operator, boolean exclude context)
 			Registers a casting operator with expression 3 for casting from one class to another;
@@ -339,7 +335,7 @@ function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeCont
 	op.parameter = signature;
 	op.signature = string.format("%s(%s)", cls.id, signature);
 	op.result = cls.id;
-	op.rCount = 1;
+	op.rCount = count;
 	op.operator = constructor;
 	op.context = not excludeContext;
 
@@ -389,8 +385,6 @@ function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method, ex
 
 	methods[meth.signature] = meth;
 	-- <Insert Heisenburg joke here>
-
-	MsgN("Registered method ", meth.signature);
 
 	return meth;
 end
@@ -614,22 +608,10 @@ function EXPR_LIB.SortArgs(parameter)
 	end
 
 	if (varg) then
-		signature[#signature + 1] = "...";
+		signature[#signature] = "...";
 	end
 
 	return true, table.concat(signature, ","), varg;
-end
-
-function EXPR_LIB.ToString(context, type, value)
-	local op = EXPR_CAST_OPERATORS["(s)" .. type];
-
-	if (not op or not op.operator) then
-		return tostring(value);
-	elseif (not op.context) then
-		return op.operator(value);
-	else
-		return op.operator(context, value);
-	end
 end
 
 --[[
