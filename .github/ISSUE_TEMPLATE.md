@@ -1,4 +1,5 @@
 NOTE:
+
 1: If you wish to alert us to more then one issue or request please submit them separately!
 2: Please make sure that any long quotes of text (e.g code) should be submitted in the form of a gist link.
 3: Check that your request / Issue has not already been mentioned, if it has please comment on that issue instead.
