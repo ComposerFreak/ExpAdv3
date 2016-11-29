@@ -214,7 +214,7 @@ end);
 -- When calling this you must always make your varargs int variants e.g "examp" -> {"s", "examp"}
 function EXPR_LIB.CallEvent(result, count, name, ...)
 	for _, entity in pairs(ents.find("wire_expression3_base")) do
-		if (isValid(entity) then
+		if (isValid(entity)) then
 			entity:CallEvent(result, count, name, ...)
 		end
 	end

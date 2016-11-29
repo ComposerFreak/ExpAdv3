@@ -99,7 +99,7 @@ function ENT:BuildEnv(context, instance)
 	env._CONST	= instance.constructors;
 	env._METH	= instance.methods;
 	env._FUN	= instance.functions;
-	evn.invoke  = EXPR_LIB.Invoke;
+	env.invoke  = EXPR_LIB.Invoke;
 
 	local meta = {};
 
@@ -269,6 +269,7 @@ end
 ]]
 
 function ENT:SetupDataTables()
+	self:NetworkVar("Entity", 0, "Creator");
 	self:NetworkVar("Float", 0, "ServerAverageCPU");
 	self:NetworkVar("Float", 1, "ServerTotalCPU");
 	self:NetworkVar("Bool", 1, "ServerWarning");
@@ -282,6 +283,7 @@ end
 
 function ENT:UpdateQuotaValues()
 	local r = self:IsRunning();
+
 	local context = self.context;
 
 	if (SERVER) then
@@ -297,18 +299,18 @@ function ENT:UpdateQuotaValues()
 	end
 
 	if (r) then
-		context.cpu_average = (context.cpu_average * 0.95) + (context.cpu_total * 0.05);
-		context.cpu_total = 0;
-		context.cpu_warning = false;
-	end
-
-	if (r and self.context.update) then
-		self.context.update = false;
-		hook.Run("Expression3.Entity.Update", self, context);
+		context:UpdateQuotaValues();
 	end
 end
 
 function ENT:Think()
 	self:UpdateQuotaValues();
+
+	if (CLIENT and self:BeingLookedAtByLocalPlayer() and self:GetOverlayText() ~= "") then
+		AddWorldTip( self:EntIndex(), self:GetOverlayText(), 0.5, self:GetPos(), self.Entity );
+
+		halo.Add( { self }, Color( 255, 255, 255, 255 ), 1, 1, 1, true, true );
+	end
+
 	hook.Run("Expression3.Entity.Think", self, self.context);
 end

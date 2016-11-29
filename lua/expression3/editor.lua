@@ -94,3 +94,9 @@ function Golem.Validate( sCode )
 		return Golem.Instance:DoValidate( false, sCode )
 	end
 end 
+
+function Golem.Print(...)
+	if Golem.Instance then 
+		return Golem.Instance:AddPrintOut(...) 
+	end 
+end

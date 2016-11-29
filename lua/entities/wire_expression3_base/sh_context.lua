@@ -83,7 +83,7 @@ function CONTEXT.New()
 
 	tbl.cpu_total = 0;
 	tbl.cpu_average = 0;
-	tbl.cpu_softquota = 1;
+	tbl.cpu_samples = {};
 	tbl.cpu_warning = false;
 	
 	return setmetatable(tbl, CONTEXT);
@@ -92,32 +92,67 @@ end
 
 --[[
 	CPU Benchmarking / Quota
+	Measure: 1000th's of a second.
 ]]
 
-local maxBufferSize = CreateConVar("e3_maxbuffersize", 100, { FCVAR_REPLICATED }, "Window width of the CPU time quota moving average.");
-local maxAverageCPU
+local soft, hard, len;
 
 if (SERVER) then
-	maxAverageCPU = CreateConVar("e3_maxaveragecpu", 0.004, {}, "Max average CPU time for serverside.");
-else
-	maxAverageCPU = CreateClientConVar("e3_maxaveragecpu", 0.015, false, false);
+	soft = CreateConVar("e3_hardquota", 120, { FCVAR_REPLICATED }, "Absolute max usage quota per one tick.");
+	hard = CreateConVar("e3_softquota", 100, { FCVAR_REPLICATED }, "The max average usage quota.");
+	len = CreateConVar("e3_maxbuffersize", 100, { FCVAR_REPLICATED }, "Window width of the CPU time quota moving average.");
 end
 
-function CONTEXT:MaxBufferSize()
-	return maxBufferSize:GetInt() or 3;
+if (CLIENT) then
+	soft = CreateClientConVar("e3_hardquota", 120, false, false);
+	hard = CreateClientConVar("e3_softquota", 100, false, false); 
+	len = CreateClientConVar("e3_maxbuffersize", 100, false, false);
 end
 
-function CONTEXT:MaxCPUAverage()
-	return maxAverageCPU:GetFloat();
+function CONTEXT:MaxSampleSize()
+	return len:GetInt() or 3;
 end
 
-function CONTEXT:movingCPUAverage()
-	local size = self:MaxBufferSize();
-	return (self.cpu_average * (size - 1) + self.cpu_total) / size;
+function CONTEXT:GetSoftQuota()
+	return soft:GetInt() * 0.0001;
+end
+
+function CONTEXT:GetHardQuota()
+	return hard:GetInt() * 0.0001;
+end
+
+--
+
+function CONTEXT:UpdateQuotaValues()
+	if (self.status) then
+		self.cpu_average = (self.cpu_average * 0.95) + (self.cpu_total * 0.05);
+
+		local samples, size = self.cpu_samples, #self.cpu_samples
+		
+		if (size >= self:MaxSampleSize()) then
+			for i = 1, size do
+				samples[i] = samples[i + 1];
+			end -- Move all samples down 1.
+		end
+
+		samples[size] = self.cpu_average;
+
+		-- TODO: Perform test on samples?
+
+		self.cpu_total = 0;
+		self.cpu_warning = false;
+	end
+
+	if (r and self.update) then
+		self.context.update = false;
+		hook.Run("Expression3.Entity.Update", self, context);
+	end
 end
 
 --[[
 ]]
+
+local bJit, fdhk, sdhk, ndhk;
 
 function CONTEXT:PreExecute()
 	local cpuMarker = SysTime() - self.cpu_total;
@@ -125,23 +160,33 @@ function CONTEXT:PreExecute()
 	local cpuCheck = function()
 		self.cpu_total = SysTime() - cpuMarker;
 
-		local usage = self:movingCPUAverage() / self:MaxCPUAverage();
+		local usage = self:GetHardtQuota() / self.cpu_total;
 
 		if (usage > 1) then
 			debug.sethook(nil);
 			self:Throw("CPU Quota exceeded");
-		elseif (usage > self.cpu_softquota) then
+		elseif (usage > self:GetsoftQuota()) then
 			self.cpu_warning = true;
 		else
 			self.cpu_warning = false;
 		end
 	end
 
+	bJit = jit.status();
+
+	jit.off();
+
+	fdhk, sdhk, ndhk = debug.gethook();
+
 	debug.sethook(cpuCheck, "", 500);
 end
 
 function CONTEXT:PostExecute()
-	debug.sethook(nil);
+	debug.sethook(fdhk, sdhk, ndhk);
+
+	if (bJit) then
+		jit.on();
+	end
 end
 
 

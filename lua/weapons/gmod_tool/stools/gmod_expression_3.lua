@@ -67,36 +67,40 @@ function TOOL:LeftClick(trace)
 	local hit = trace.Entity;
 
 	if (SERVER) then
-		local model = self:GetClientInfo("model");
 
-		local ang = trace.HitNormal:Angle() + Angle(90, 0, 0);
-		print("hitPos::", trace.HitPos);
-		local ent = MakeExpression3(self:GetOwner(), trace.HitPos, ang, model);
-
-		print("ent::", ent)
-
-		if (ent and IsValid(ent)) then
-			ent.player = self:GetOwner();
-
-			ent:SetPos(trace.HitPos - trace.HitNormal * ent:OBBMins().z);
-
-			print("entPos::",ent:GetPos());
-
-			undo.Create("expression3");
-
-			undo.AddEntity(ent);
-
-			undo.SetPlayer(self:GetOwner());
-
-			undo.Finish( );
-
-			self:GetOwner():AddCleanup("expression3", ent);
+		if (IsValid(hit) and hit.Expression3) then
+			if (not hit:CPPICanTool(ply, "gmod_expression_3")) then
+				return false;
+			end
 
 			net.Start("Expression3.RequestUpload");
-				net.WriteEntity(ent);
+				net.WriteEntity(hit);
 			net.Send(self:GetOwner());
+		else
+			local model = self:GetClientInfo("model");
 
-			--self:GetOwner():SendLua("Entity(" .. ent:EntIndex() .. "):SubmitToServer(Golem.GetCode( ));");
+			local ang = trace.HitNormal:Angle() + Angle(90, 0, 0);
+			local ent = MakeExpression3(self:GetOwner(), trace.HitPos, ang, model);
+
+			if (ent and IsValid(ent)) then
+				ent.player = self:GetOwner();
+				ent:CPPISetOwner(ent.player);
+				ent:SetPos(trace.HitPos - trace.HitNormal * ent:OBBMins().z);
+
+				undo.Create("expression3");
+
+				undo.AddEntity(ent);
+
+				undo.SetPlayer(self:GetOwner());
+
+				undo.Finish( );
+
+				self:GetOwner():AddCleanup("expression3", ent);
+
+				net.Start("Expression3.RequestUpload");
+					net.WriteEntity(ent);
+				net.Send(self:GetOwner());
+			end
 		end
 	end
 

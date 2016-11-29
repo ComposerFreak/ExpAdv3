@@ -19,7 +19,6 @@ include("shared.lua");
 function ENT:Initialize( )
 end
 
-
 --[[
 ]]
 
@@ -82,7 +81,48 @@ end
 --[[
 ]]
 
+function ENT:DrawTranslucent()
+	self:Draw()
+end
+
 function ENT:Draw()
-	--print("expr3->cl_init->draw->",ent);
 	self:DrawModel( )
+end
+
+--[[
+]]
+
+function ENT:BeingLookedAtByLocalPlayer()
+	if ( LocalPlayer():GetEyeTrace().Entity != self ) then return false end
+	if ( LocalPlayer():GetViewEntity() == LocalPlayer() && LocalPlayer():GetShootPos():Distance( self:GetPos() ) > 256 ) then return false end
+	if ( LocalPlayer():GetViewEntity() ~= LocalPlayer() && LocalPlayer():GetViewEntity():GetPos():Distance( self:GetPos() ) > 256 ) then return false end
+
+	return true
+end
+
+function ENT:GetCreatorName()
+	local owner = self:CPPIGetOwner();
+
+	if (owner == nil) then
+		return "unowned/world";
+	end
+
+	if (not IsValid(owner)) then
+		return "Disconnected";
+	end
+
+	return owner:GetName();
+end
+
+function ENT:GetOverlayText()
+	return table.concat({
+		"::Expression (adv) 3::",
+		self:GetCreatorName(),
+		"SV average: " .. self:GetServerAverageCPU(),
+		"SV total:" .. self:GetServerTotalCPU(),
+		"SV warning:" .. tostring(self:GetServerWarning()),
+		"CL average: " .. self:GetClientAverageCPU(),
+		"CL total:" .. self:GetClientTotalCPU(),
+		"CL warning:" .. tostring(self:GetClientWarning()),
+	}, "\n");
 end
