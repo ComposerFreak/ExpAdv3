@@ -457,12 +457,6 @@ function COMPILER.QueueInstruction(this, inst, inst, token, inst, type)
 	op.inst = inst;
 	op.type = type;
 
-	--[[if (isstring(token)) then
-		debug.Trace();
-		print("inst::", inst)
-		print("token::", token)
-	end]]
-
 	local tasks = this.__tasks[token.pos];
 
 	if (not tasks) then

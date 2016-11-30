@@ -210,6 +210,7 @@ function PARSER.GetToken(this, pos)
 end
 
 function PARSER.StepBackward(this, steps)
+	
 	if (not steps) then
 		steps = 1;
 	end
@@ -485,7 +486,7 @@ function PARSER.Block_1(this, _end, lcb)
 		if (not this:Accept("rcb")) then
 			this:Throw(this.__token, "Right curly bracket (}) missing, to close block");
 		end
-		print("RCB AETE", this.__next.type);
+		
 		this:QueueReplace(seq, this.__token, _end and "end" or "");
 
 		return this:EndInstruction(seq, stmts);
@@ -516,7 +517,6 @@ function PARSER.Statments(this, block)
 	local sep = false;
 	local stmts = {};
 
-	if (block and not this:CheckToken("rcb")) then
 		while true do
 
 			local stmt = this:Statment_1();
@@ -555,8 +555,7 @@ function PARSER.Statments(this, block)
 
 			sep = seperated;
 		end
- 	end
- 	
+
  	return stmts;
 end
 
@@ -1510,7 +1509,7 @@ function PARSER.Expression_23(this)
 				end
 
 			end  
-
+			
 			this:Require("rpa", "Right parenthesis ( )) expected to close function parameters.")
 
 			return this:EndInstruction(inst, expressions);
@@ -1585,8 +1584,6 @@ function PARSER.Expression_26(this)
 		inst.signature = signature;
 
 		inst.stmts = this:Block_1(true, " ");
-
-		error("HERE")
 
 		this:QueueInjectionAfter(inst, this.__token, ", signature = \"" .. signature .. "\"");
 		

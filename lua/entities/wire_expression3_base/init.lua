@@ -26,10 +26,10 @@ net.Receive("Expression3.SubmitToServer", function(len, ply)
 end)
 
 function ENT:ReceiveFromClient(ply, script)
-	print("SERVER");
-	print("Reciveied:", self, ply);
-	print(script);
-	print("----------------------");
+	-- print("SERVER");
+	-- print("Reciveied:", self, ply);
+	-- print(script);
+	-- print("----------------------");
 
 	if (self:CanSetCode(ply)) then
 		timer.Simple(1, function()

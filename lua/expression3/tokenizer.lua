@@ -22,7 +22,6 @@ local KEYWORDS = {
 		["for"] = {"for", "for"},
 		["foreach"] = {"each", "foreach"},
 		["delegate"] = {"del", "delegate"},
-		["event"] = {"evt", "event"},
 		["true"] = {"tre", "true"},
 		["false"] = {"fls", "false"},
 		["void"] = {"void", "void"},
@@ -484,7 +483,10 @@ function TOKENIZER.Loop(this)
 
 			-- Multi line strings need to be converted to lua syntax.
 			if (strChar == "'") then
-				local str = "[[" .. string.sub(this.__data, 1, string.len(this.__data) - 1) .. "]]";
+				local str = "[[" .. string.sub(this.__data, 1, string.len(this.__data)) .. "]]";
+				this:Replace(str);
+			else
+				local str = "\"" .. string.sub(this.__data, 1, string.len(this.__data)) .. "\"";
 				this:Replace(str);
 			end
 

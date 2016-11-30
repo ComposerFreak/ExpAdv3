@@ -126,9 +126,9 @@ function ENT:InitScript()
 		"end",
 	}, "\n");
 
-	print("Native Lua");
-	print(native);
-	print("-----------------------------");
+	-- print("Native Lua");
+	-- print(native);
+	-- print("-----------------------------");
 
 	local main = CompileString(native, "Expression 3", false);
 
@@ -218,7 +218,7 @@ function ENT:Invoke(where, result, count, udf, ...)
 
 		if (udf and udf.op) then
 
-			if (result ~= func.result or count ~= func.count) then
+			if (result ~= udf.result or count ~= udf.count) then
 				self:HandelThrown("Invoked function returned unexpected results, " .. where);
 			end
 

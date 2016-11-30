@@ -251,7 +251,7 @@ end
 
 function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 	if (not loadClasses) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register class %s outside of Hook::Expression3.LoadClasses", name);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register class %s outside of Hook::Expression3.LoadClasses }}", name);
 	end
 
 	if (string.len(id) > 1) then
@@ -843,6 +843,18 @@ function extendClass(class, base)
 	c.extends[b.id] = true;
 
 	MsgN("Extended Class: ", c.name, " from ", b.name);
+end
+
+function EXPR_LIB.ToString(context, type, value)
+	local op = EXPR_CAST_OPERATORS["(s)" .. type];
+
+	if (not op or not op.operator) then
+		return tostring(value);
+	elseif (not op.context) then
+		return op.operator(value);
+	else
+		return op.operator(context, value);
+	end
 end
 
 function EXPR_LIB.Initalize()

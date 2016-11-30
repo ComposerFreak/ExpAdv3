@@ -125,6 +125,8 @@ hook.Add("Expression3.LoadOperators", "Expression3.Core.Operators", function()
 	EXPR_LIB.RegisterOperator("eq*", "s,s", "b", 1, eqM, true);
 	EXPR_LIB.RegisterOperator("neq*", "s,s", "b", 1, neqM, true); 
 
+	EXPR_LIB.RegisterOperator("get", "s,n", "s", 1); 
+
 	local function isS(context, string)
 		return string and string ~= "";
 	end
@@ -164,9 +166,15 @@ end);
 hook.Add("Expression3.LoadFunctions", "Expression3.Core.Extensions", function()
 	EXPR_LIB.RegisterFunction("system", "invoke", "cls,n,f,...", "", 0, EXPR_LIB.Invoke);
 
-	EXPR_LIB.RegisterFunction("system", "print", "...", "", 0, function(Context, ...)
-		local values = {...};
-		print("OUT->", table.concat(values, " "));
+	EXPR_LIB.RegisterFunction("system", "print", "...", "", 0, function(context, ...)
+		local values = {};
+
+		for _, v in pairs({...}) do
+			values[#values + 1] = EXPR_LIB.ToString(context, v[1], v[2])
+		end
+
+		print("out->", table.concat(values, " "));
+		-- TODO: EXPR_LIB.PrintOutput(context, EXPR_CONSOLE, table.concat(values, " "));
 	end);
 end);
 
@@ -191,30 +199,14 @@ hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions",
 	return class, count;
 end);
 
-hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions", function(this, inst, token, expressions)
-	-- All expressions passed to vararg need to be strings.
-
-	if (#expressions > 1) then
-		for i = 1, #expressions do
-			local arg = expressions[i];
-			if (arg.result ~= "s") then
-				if (not this:CastExpression("s", arg)) then
-					this:QueueInjectionBefore(inst, arg.token, "tostring", "(");
-					this:QueueInjectionAfter(inst, arg.final, ")");
-				end
-			end
-		end
-	end
-end);
-
 --[[
 	::EVENT LIBRARY::
 ]]
 
 -- When calling this you must always make your varargs int variants e.g "examp" -> {"s", "examp"}
 function EXPR_LIB.CallEvent(result, count, name, ...)
-	for _, entity in pairs(ents.find("wire_expression3_base")) do
-		if (isValid(entity)) then
+	for _, entity in pairs(ents.FindByClass("wire_expression3_*")) do
+		if (IsValid(entity)) then
 			entity:CallEvent(result, count, name, ...)
 		end
 	end
@@ -253,6 +245,8 @@ hook.Add("Expression3.LoadFunctions", "Expression3.Core.Events", function()
 			return unpack(result);
 		end
 	end);
+end);
 
-	
+hook.Add("Think", "Expression3.Event", function()
+	EXPR_LIB.CallEvent("", 0, "Think");
 end);

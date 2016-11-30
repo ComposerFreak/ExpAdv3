@@ -866,6 +866,7 @@ function PANEL:DoValidate( Goto, Code, Debug )
 	if (not ts) then
 		if (tr.state == "internal") then
 			self:OnValidateError( false, "Internal tokenizer error (see console)." )
+			Golem.Print(Color(255, 255, 255), "Internal tokenizer error: ", tr.msg)
 		else
 			self:OnValidateError( Goto, tr )
 		end
@@ -882,6 +883,7 @@ function PANEL:DoValidate( Goto, Code, Debug )
 	if (not ps) then
 		if (pr.state == "internal") then
 			self:OnValidateError( false, "Internal parser error (see console)." )
+			Golem.Print(Color(255, 255, 255), "Internal parser error: ", pr.msg)
 		else
 			self:OnValidateError( Goto, pr )
 		end
@@ -898,6 +900,7 @@ function PANEL:DoValidate( Goto, Code, Debug )
 	if (not cs) then
 		if (cr.state == "internal") then
 			self:OnValidateError( false, "Internal compiler error (see console)." )
+			Golem.Print(Color(255, 255, 255), "Internal compiler error: ", cr.msg)
 		else
 			self:OnValidateError( Goto, cr )
 		end

@@ -40,7 +40,7 @@ function CONTEXT.Trace(this, level, max)
 		end
 	end
 
-	return trace;
+	return stack;
 end
 
 function CONTEXT.GetScriptPos(this, line, char)
@@ -57,19 +57,28 @@ function CONTEXT.GetScriptPos(this, line, char)
 	return nil;
 end
 
-function CONTEXT.Throw(this, error, fst, ...)
+function CONTEXT.Throw(this, msg, fst, ...)
 	if (fst) then
 		msg = string.format(msg, fst, ...);
 	end
-
-	local stack = this:Trace(1, 1);
-	local trace = stack[1];
 	
 	local err = {};
 	err.state = "runtime";
-	err.char = trace[1];
-	err.line = trace[2];
+	err.char = 0;
+	err.line = 0;
 	err.msg = msg;
+
+	err.stack = this:Trace(1, 1);
+
+	if (stack) then
+		local trace = stack[1];
+		
+		if (trace) then
+			err.char = trace[1];
+			err.line = trace[2];
+		end
+	end
+
 
 	error(err, 0);
 end
@@ -124,6 +133,7 @@ end
 --
 
 function CONTEXT:UpdateQuotaValues()
+	print("update quota values")
 	if (self.status) then
 		self.cpu_average = (self.cpu_average * 0.95) + (self.cpu_total * 0.05);
 
@@ -160,7 +170,7 @@ function CONTEXT:PreExecute()
 	local cpuCheck = function()
 		self.cpu_total = SysTime() - cpuMarker;
 
-		local usage = self:GetHardtQuota() / self.cpu_total;
+		local usage = self:GetHardQuota() / self.cpu_total;
 
 		if (usage > 1) then
 			debug.sethook(nil);
