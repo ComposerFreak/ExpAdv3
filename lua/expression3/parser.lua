@@ -1684,7 +1684,7 @@ function PARSER.Expression_Trailing(this, expr)
 
 		-- Methods
 		if (this:Accept("prd")) then
-			local inst = this:StartInstruction("meth", this.__token);
+			local inst = this:StartInstruction("meth", expr.token);
 
 			inst.__operator = this.__token;
 
@@ -1732,7 +1732,7 @@ function PARSER.Expression_Trailing(this, expr)
 				end
 			end
 
-			local inst = this:StartInstruction("get", this.__token);
+			local inst = this:StartInstruction("get", expr.token);
 
 			local expressions = {};
  
@@ -1756,7 +1756,7 @@ function PARSER.Expression_Trailing(this, expr)
 
 			expr = this:EndInstruction(inst, expressions);
 		elseif (this:Accept("lpa")) then
-			local inst = this:StartInstruction("call", this.__token);
+			local inst = this:StartInstruction("call", expr.token);
 
 			local expressions = {};
  
