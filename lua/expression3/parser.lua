@@ -1697,6 +1697,7 @@ function PARSER.Expression_Trailing(this, expr)
 			this:Require("lpa", "Left parenthesis (( ) expected to open method parameters.")
 
 			inst.__lpa = this.__token;
+
 			local expressions = {};
  
 			expressions[1] = expr;
@@ -1713,6 +1714,8 @@ function PARSER.Expression_Trailing(this, expr)
 			end  
 
 			this:Require("rpa", "Right parenthesis ( )) expected to close method parameters.")
+
+			inst.__rpa = this.__token;
 
 			expr = this:EndInstruction(inst, expressions);
 		elseif (this:Accept("lsb")) then

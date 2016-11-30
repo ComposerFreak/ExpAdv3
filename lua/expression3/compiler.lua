@@ -2181,7 +2181,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 		this.__methods[op.signature] = op.operator;
 	elseif (type(op.operator) == "string") then
 		this:QueueReplace(inst, inst.__operator, ":");
-		this:QueueReplace(inst, this.__method, op.operator);
+		this:QueueReplace(inst, inst.__method, op.operator);
 	else
 		local signature = string.format("%s.%s", name(inst.class), op.signature);
 		error("Attempt to inject " .. op.signature .. " but operator was incorrect, got " .. type(op.operator));
