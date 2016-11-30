@@ -34,7 +34,8 @@ extension:RegisterMethod("e", "isValid", "", "b", 1, function(e)
 	return IsValid(e)
 end, true)
 
--- Position stuff
+extension:RegisterMethod("e", "class", "", "s", 1, "GetClass")
+
 extension:RegisterMethod("e", "getPos", "", "v", 1, "GetPos")
 extension:RegisterMethod("e", "setPos", "v", "", 0, "SetPos")
 
@@ -44,6 +45,13 @@ extension:RegisterMethod("e", "right", "", "v", 1, "GetRight")
 
 extension:RegisterMethod("e", "getVel", "", "v", 1, "GetVelocity")
 extension:RegisterMethod("e", "setVel", "v", "", 0, "SetVelocity")
+
+extension:RegisterMethod("e", "getMaterial", "", "s", 1, "GetMaterial")
+extension:RegisterMethod("e", "setMaterial", "s", "", 0, "SetMaterial")
+
+extension:RegisterMethod("e", "getSubMaterial", "n", "s", 1, "GetSubMaterial")
+extension:RegisterMethod("e", "setSubMaterial", "n,s", "", 0, "SetSubMaterial")
+extension:RegisterMethod("e", "resetSubMaterials", "", "", 0, "SetSubMaterial")
 
 --[[
 ]]
