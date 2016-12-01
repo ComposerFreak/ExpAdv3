@@ -133,7 +133,7 @@ end
 --
 
 function CONTEXT:UpdateQuotaValues()
-	print("update quota values")
+	-- print("update quota values")
 	if (self.status) then
 		self.cpu_average = (self.cpu_average * 0.95) + (self.cpu_total * 0.05);
 
