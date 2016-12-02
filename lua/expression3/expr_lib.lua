@@ -951,7 +951,7 @@ function EXPR_LIB.Initalize()
 	end
 
 	hook.Run("Expression3.PostRegisterExtensions");
-
+	
 	include("expression3/tokenizer.lua");
 	include("expression3/parser.lua");
 	include("expression3/compiler.lua");
