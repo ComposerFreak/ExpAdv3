@@ -799,7 +799,7 @@ function Extension.EnableExtension(this)
 		end
 	end);]]
 
-	hook.Add("Expression3.PostRegisterExtensions","Expression3.Extension." .. this.name, function()
+	hook.Add("Expression3.BuildExtensionData","Expression3.Extension." .. this.name, function()
 		this.classes = classes;
 		this.constructors = constructors;
 		this.methods = methods;
@@ -949,6 +949,8 @@ function EXPR_LIB.Initalize()
 	if (CLIENT) then
 		include("expression3/editor/expr_editor_lib.lua");
 	end
+	
+	hook.Run("Expression3.BuildExtensionData");
 
 	hook.Run("Expression3.PostRegisterExtensions");
 
