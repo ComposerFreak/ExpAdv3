@@ -90,7 +90,8 @@ end
 
 function ENT:BuildEnv(context, instance)
 
-	local env = {};
+	local env = instance.enviroment;
+
 	env.GLOBAL  = {};
 	env.SERVER = SERVER;
 	env.CLIENT = CLIENT;

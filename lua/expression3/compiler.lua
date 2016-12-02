@@ -196,6 +196,38 @@ end
 --[[
 ]]
 
+function COMPILER.Import(this, path)
+	local g = _G;
+	local e = this.__enviroment;
+	local a = string.Explode(".", path);
+	
+	if (#a > 1) then
+		for i = 1, #a - 1 do
+			local k = a[i];
+			local v = g[k];
+			
+			if (istable(v)) then
+				if (not istable(e[k])) then
+					e[k] = {};
+				end
+				
+				g = v;
+				e = e[k];
+			end
+		end
+	end
+	
+	local k = a[#a];
+	local v = g[k];
+	
+	if(isfunction(v)) then
+		e[k] = v;
+	end
+end
+
+--[[
+]]
+
 function COMPILER.PushScope(this)
 	this.__scope = {};
 	this.__scope.memory = {};
@@ -2295,6 +2327,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		this:QueueRemove(inst, token);
 		this:QueueRemove(inst, inst.__operator);
 		this:QueueReplace(inst, inst.__func, op.operator); -- This is error.
+		this:Import(op.operator);
 	else
 		local signature = string.format("%s.", inst.library, op.signature);
 		error("Attempt to inject " .. signature .. " but operator was incorrect " .. type(op.operator) .. ".");
