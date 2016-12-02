@@ -711,8 +711,12 @@ function Extension.CheckRegistration(this, _function, ...)
 	return err;
 end
 
+local enabledExtentions = {};
+
 function Extension.EnableExtension(this)
 	this.enabled = true;
+
+	local classes = {};
 
 	hook.Add("Expression3.LoadClasses", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.classes) do
@@ -721,40 +725,52 @@ function Extension.EnableExtension(this)
 			if (not v[0]) then
 				local op = this:CheckRegistration(EXPR_LIB.RegisterClass, v[1], v[2], v[3], v[4]);
 				op.extension = this.name;
+				classes[op.id] = op;
 			else
 				local op = this:CheckRegistration(EXPR_LIB.RegisterExtendedClass, v[1], v[2], v[0], v[3], v[4]);
 				op.extension = this.name;
+				classes[op.id] = op;
 			end
 		end
 	end);
+
+	local constructors = {};
 
 	hook.Add("Expression3.LoadConstructors", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.constructors) do
 			STATE = v[5];
 			local op = this:CheckRegistration(EXPR_LIB.RegisterConstructor, v[1], v[2], v[3], v[4]);
 			op.extension = this.name;
+			constructors[op.signature] = op;
 		end
 	end);
+
+	local methods = {};
 
 	hook.Add("Expression3.LoadMethods", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.methods) do
 			STATE = v[8];
 			local op = this:CheckRegistration(EXPR_LIB.RegisterMethod, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
 			op.extension = this.name;
+			methods[op.signature] = op;
 		end
 	end);
+
+	local operators = {};
 
 	hook.Add("Expression3.LoadOperators", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.operators) do
 			STATE = v[7];
 			local op = this:CheckRegistration(EXPR_LIB.RegisterOperator, v[1], v[2], v[3], v[4], v[5], v[6]);
 			op.extension = this.name;
+			operators[op.signature] = op;
 		end
 
 		for _, v in pairs(this.castOperators) do
 			STATE = v[5];
 			local op = this:CheckRegistration(EXPR_LIB.RegisterCastingOperator, v[1], v[2], v[3], v[4]);
 			op.extension = this.name;
+			operators[op.signature] = op;
 		end
 	end);
 
@@ -764,11 +780,14 @@ function Extension.EnableExtension(this)
 		end
 	end);
 
+	local functions = {};
+
 	hook.Add("Expression3.LoadFunctions", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.functions) do
 			STATE = v[8];
 			local op = this:CheckRegistration(EXPR_LIB.RegisterFunction, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
 			op.extension = this.name;
+			functions[op.signature] = op;
 		end
 	end);
 
@@ -779,6 +798,22 @@ function Extension.EnableExtension(this)
 			op.extension = this.name;
 		end
 	end);]]
+
+	hook.Add("Expression3.PostRegisterExtensions","Expression3.Extension." .. this.name, function()
+		this.classes = classes;
+		this.constructors = constructors;
+		this.methods = methods;
+		this.operators = operators;
+		this.functions = functions;
+		enabledExtentions[this.name] = this;
+
+		MsgN("Registered extention: ", this.name);
+	end)
+end
+
+-- emtpty table before: Expression3.PostRegisterExtensions
+function EXPR_LIB.GetEnabledExtensions()
+	return enabledExtentions or {};
 end
 
 --[[

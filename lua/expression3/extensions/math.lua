@@ -43,9 +43,9 @@ extension:RegisterFunction("math", "modf", "n", "n", 1, math.modf, true);
 
 extension:RegisterFunction("math", "rad", "n", "n", 1, math.rad, true);
 
-extension:RegisterFunction("math", "random", "", "n", 1, math.random, true); -- math.random() with no arguments generates a real number between 0 and 1
-extension:RegisterFunction("math", "random", "n", "n", 1, math.random, true); -- math.random(upper) generates integer numbers between 1 and upper
-extension:RegisterFunction("math", "random", "n,n", "n", 1, math.random, true); -- math.random(lower, upper) generates integer numbers between lower and upper
+extension:RegisterFunction("math", "random", "", "n", 1, "math.random", true); -- math.random() with no arguments generates a real number between 0 and 1
+extension:RegisterFunction("math", "random", "n", "n", 1, "math.random", true); -- math.random(upper) generates integer numbers between 1 and upper
+extension:RegisterFunction("math", "random", "n,n", "n", 1, "math.random", true); -- math.random(lower, upper) generates integer numbers between lower and upper
 
 
 extension:RegisterFunction("math", "randomseed", "n", "n", 1, math.randomseed, true);
