@@ -152,11 +152,11 @@ end
 ]]
 
 function ENT:Execute(func, ...)
-	self:PreExecute();
+	self.context:PreExecute();
 
 	local results = {pcall(func, ...)};
 
-	self:PostExecute();
+	self.context:PostExecute();
 
 	if (results[1]) then
 		self.context.update = true;
@@ -165,14 +165,6 @@ function ENT:Execute(func, ...)
 	end
 
 	return unpack(results);
-end
-
-function ENT:PreExecute()
-	print("pre-execute");
-end
-
-function ENT:PostExecute()
-	print("post-execute");
 end
 
 --[[

@@ -65,3 +65,11 @@ function ENT:Initialize( )
 	self:SetMoveType(MOVETYPE_VPHYSICS);
 	self:SetSolid(SOLID_VPHYSICS);
 end
+
+--[[
+]]
+
+function ENT:SendToOwner(bConsole, ...)
+	local const = bConsole and EXPR_CONSOLE or EXPR_CHAT;
+	EXPR_LIB.SendToPlayer(self:CPPIGetOwner(), self, const, ...);
+end

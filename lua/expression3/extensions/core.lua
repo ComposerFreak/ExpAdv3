@@ -173,8 +173,16 @@ hook.Add("Expression3.LoadFunctions", "Expression3.Core.Extensions", function()
 			values[#values + 1] = EXPR_LIB.ToString(context, v[1], v[2])
 		end
 
-		print("out->", table.concat(values, " "));
+		-- print("out->", table.concat(values, " "));
 		-- TODO: EXPR_LIB.PrintOutput(context, EXPR_CONSOLE, table.concat(values, " "));
+
+		if (SERVER) then
+			context.entity:SendToOwner(false, unpack(values));
+		end
+
+		if (CLIENT) then
+			chat.AddText(unpack(values));
+		end
 	end);
 end);
 
