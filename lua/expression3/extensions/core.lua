@@ -144,6 +144,7 @@ hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", functi
 	-- TODO: Load extensions here.
 	include("expression3/extensions/math.lua");
 	include("expression3/extensions/vector.lua");
+	include("expression3/extensions/angle.lua");
 	include("expression3/extensions/entity.lua");
 end);
 

@@ -39,6 +39,9 @@ extension:RegisterMethod("e", "class", "", "s", 1, "GetClass")
 extension:RegisterMethod("e", "getPos", "", "v", 1, "GetPos")
 extension:RegisterMethod("e", "setPos", "v", "", 0, "SetPos")
 
+extension:RegisterMethod("e", "getAng", "", "a", 1, "GetAngles")
+extension:RegisterMethod("e", "setAng", "a", "", 0, "SetAngles")
+
 extension:RegisterMethod("e", "forward", "", "v", 1, "GetForward")
 extension:RegisterMethod("e", "up", "", "v", 1, "GetUp")
 extension:RegisterMethod("e", "right", "", "v", 1, "GetRight")
@@ -52,6 +55,16 @@ extension:RegisterMethod("e", "setMaterial", "s", "", 0, "SetMaterial")
 extension:RegisterMethod("e", "getSubMaterial", "n", "s", 1, "GetSubMaterial")
 extension:RegisterMethod("e", "setSubMaterial", "n,s", "", 0, "SetSubMaterial")
 extension:RegisterMethod("e", "resetSubMaterials", "", "", 0, "SetSubMaterial")
+
+extension:RegisterMethod("e", "getMass", "", "n", 1, function(e)
+	local phys = e:GetPhysicsObject()
+	return IsValid(phys) and phys:GetMass() or -1
+end, true)
+
+extension:RegisterMethod("e", "getMassCenter", "", "v", 1, function(e)
+	local phys = e:GetPhysicsObject()
+	return IsValid(phys) and phys:GetMassCenter() or Vector()
+end, true)
 
 --[[
 ]]
