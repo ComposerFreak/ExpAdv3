@@ -746,7 +746,7 @@ function PARSER.Statment_6(this)
 
 		if (type == "f" and this:CheckToken("typ")) then
 			this:StepBackward(1);
-			return this:Statment_6()
+			return this:Statment_7()
 		end
 
 		this:QueueReplace(inst, this.__token, "local");
