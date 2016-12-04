@@ -18,7 +18,7 @@ if (SERVER) then
 	AddCSLuaFile("expression3/expr_lib.lua");
 
 	AddCSLuaFile("expression3/wiki.lua");
-
+	
 	AddCSLuaFile("expression3/tokenizer.lua");
 
 	AddCSLuaFile("expression3/parser.lua");
@@ -43,10 +43,14 @@ if (SERVER) then
 
 	AddCSLuaFile("expression3/debuger.lua");
 
+	AddCSLuaFile("expression3/wiki_inc.lua");
+
 elseif (CLIENT) then
+
+	include("expression3/expr_lib.lua");
 
 	include("expression3/wiki.lua");
 	
-end
+	include("expression3/wiki_inc.lua");
 
-include("expression3/expr_lib.lua");
+end
