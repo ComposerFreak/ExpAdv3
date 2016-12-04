@@ -69,7 +69,6 @@ if (SERVER) then
 
 	AddCSLuaFile( "expression3/editor/derma/wiki.lua" );
 
-
 	AddCSLuaFile("expression3/editor/expr_editor_lib.lua");
 	
 	AddCSLuaFile("expression3/compiler.lua");
@@ -83,6 +82,8 @@ if (SERVER) then
 	AddCSLuaFile("expression3/wiki/html_compiler.lua");
 
 	AddCSLuaFile("expression3/wiki/inits/autogen.lua");
+
+	include("expression3/expr_lib.lua");
 
 elseif (CLIENT) then
 

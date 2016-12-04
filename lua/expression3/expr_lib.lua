@@ -198,7 +198,11 @@ EXPR_LIB = {};
 --[[
 ]]
 
-if (SERVER) then
+print("E3 Lib Loading.")
+
+if (not CLIENT) then
+	print("Adding E3 message names.")
+
 	util.AddNetworkString("Expression3.SubmitToServer");
 
 	util.AddNetworkString("Expression3.RequestUpload");
