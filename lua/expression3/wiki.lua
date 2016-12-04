@@ -13,114 +13,97 @@
 
 EXPR_WIKI = {};
 
---[[
-]]
-
 local loadWiki = false;
 local constructors;
 local methods;
 local functions;
 local pages;
---[[
-]]
+local events;
+local operators;
 
-function EXPR_WIKI.RegisterConstructor(class, parameter, html)
-	if (not loadWiki) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor method new %s(%s) outside of Hook::Expression3.LoadWiki", class, parameter);
+--------------------------------
+
+function EXPR_WIKI.RegisterConstructor(library, html)
+	if not loadWiki then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor %s outside of Hook::Expression3.LoadWiki", library)
 	end
-
-	local cls = EXPR_LIB.GetClass(class);
-
-	if (cls) then
-		local state, signature = EXPR_LIB.SortArgs(parameter);
-
-		if (state) then
-			local signature = string.format("%s(%s)", cls.id, signature);
-			local constructor = cls.constructors[signature];
-
-			if (constructor) then
-				constructor.html = html;
-				constructors[signature] = constructor;
-			end
-		end
-	end
+	
+	constructors[library] = html
 end
 
-function EXPR_WIKI.RegisterMethod(class, name, parameter, html)
-	if (not loadWiki) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register method helper for %s.%s(%s) outside of Hook::Expression3.LoadWiki", class, name, parameter);
+function EXPR_WIKI.RegisterMethod(library, name, html)
+	if not loadWiki then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Method for %s.%s outside of Hook::Expression3.LoadWiki", library, name)
 	end
 
-	local cls = EXPR_LIB.GetClass(class);
-
-	if (cls) then
-		local state, signature = EXPR_LIB.SortArgs(parameter);
-
-		if (state) then
-			local signature = string.format("%s.%s(%s)", cls.id, name, signature);
-			local method = EXPR_METHODS[signature];
-
-			if (method) then
-				method.html = html;
-				methods[signature] = method;
-			end
-		end
-	end
+	methods[library] = methods[library] or {}
+	
+	methods[library][name] = html
 end
 
-function EXPR_WIKI.RegisterFunction(library, name, parameter, html)
-	if (not loadWiki) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register function helper %s.%s(%s) outside of Hook::Expression3.LoadWiki", library, name, parameter);
+function EXPR_WIKI.RegisterFunction(library, name, html)
+	if not loadWiki then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Function %s.%s outside of Hook::Expression3.LoadWiki", library, name)
 	end
-
-	local lib = libraries[string.lower(library)];
-
-	if (lib) then
-		local state, signature = EXPR_LIB.SortArgs(parameter);
-
-		if (state) then
-			local signature = string.format("%s(%s)", name, signature);
-			local _function = lib._functions[signature];
-
-			if (_function) then
-				method.html = html;
-				functions[library .. "." .. signature] = method;
-			end
-		end
-	end
+	
+	functions[library] = functions[library] or {}
+	
+	functions[library][name] = html
 end
 
-function EXPR_WIKI.RegisterPage(title, catagory, html)
-	local page = {};
-	page.title = title;
-	page.catagory = catagory;
-	page.html = html;
-
-	pages[title] = page;
-
-	return page;
+function EXPR_WIKI.RegisterPage(catagory, title, html)
+	if not loadWiki then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Page %s.%s outside of Hook::Expression3.LoadWiki", catagory, title)
+	end
+	
+	pages[catagory] = pages[catagory] or {}
+	
+	pages[catagory][title] = html
 end
 
---[[
-]]
+function EXPR_WIKI.RegisterEvent(library, name, html)
+	if not loadWiki then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Event %s.%s outside of Hook::Expression3.LoadWiki", library, name)
+	end
+	
+	events[library] = pages[library] or {}
+	
+	events[library][name] = html
+end
+
+function EXPR_WIKI.RegisterOperator(library, name, html)
+	if not loadWiki then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Operator %s.%s outside of Hook::Expression3.LoadWiki", library, name)
+	end
+	
+	operators[library] = operators[library] or {}
+	
+	operators[library][name] = html
+end
+
+
+--------------------------------
 
 hook.Add("Expression3.PostRegisterExtensions", "Expression3.Wiki", function()
 	loadWiki = true;
-
-	constructors = {};
-	methods = {};
-	functions = {};
-	pages = {};
-
-	hook.Run("Expression3.LoadWiki");
-
+	
+	constructors = {}
+	methods = {}
+	functions = {}
+	pages = {}
+	events = {}
+	operators = {}
+	
+	hook.Run("Expression3.LoadWiki")
+	
 	--TODO: Load helpers.
-
-	loadWiki = false;
-
-	EXPR_WIKI.CONSTRUCTORS = constructors;
-	EXPR_WIKI.METHODS = methods;
-	EXPR_WIKI.FUNCTIONS = functions;
-	EXPR_WIKI.PAGES = pages;
-end);
-
+	
+	loadWiki = false
+	
+	EXPR_WIKI.CONSTRUCTORS = constructors
+	EXPR_WIKI.METHODS = methods
+	EXPR_WIKI.FUNCTIONS = functions
+	EXPR_WIKI.PAGES = pages
+	EXPR_WIKI.EVENTS = events
+	EXPR_WIKI.OPERATORS = operators
+end)

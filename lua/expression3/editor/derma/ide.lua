@@ -127,7 +127,7 @@ function PANEL:Init( )
 	-- self.tbRight:SetupButton( "Increase font size.", "fugue/edit-size-up.png", TOP, function( ) end )
 	-- self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", TOP, function( ) end )
 	
-	self.tbRight:SetupButton( "Open user manual", "fugue/question.png", TOP, function( ) end )
+	self.tbRight:SetupButton( "Open user manual", "fugue/question.png", TOP, function( ) self:NewMenuTab( "wiki" ) end )
 	self.tbRight:SetupButton( "Options", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options" ) end )
 	
 	
@@ -256,6 +256,24 @@ function PANEL:Init( )
 		self.Options = nil
 	end )
 	
+	self:AddCustomTab( false, "wiki", function( self )
+		if self.Wiki then 
+			self.pnlSideTabHolder:SetActiveTab( self.Wiki.Tab )
+			self.Wiki.Panel:RequestFocus( )
+			return self.Wiki
+		end 
+		
+		local Panel = vgui.Create( "GOLEM_Wiki" ) 
+		local Sheet = self.pnlSideTabHolder:AddSheet( "", Panel, "fugue/question.png", function(pnl) self:CloseMenuTab( pnl:GetParent( ), true ) end )
+		self.pnlSideTabHolder:SetActiveTab( Sheet.Tab )
+		self.Wiki = Sheet
+		Sheet.Panel:RequestFocus( )
+		
+		return Sheet 
+	end, function( self )
+		self.Wiki = nil
+	end )
+	
 	
 	/*self:AddTabType( "Save", function( self, dir, name ) 
 		if self.SavePnl then 
@@ -310,7 +328,6 @@ Much love to Oskar94,
 ]] )
 	end 
 	
-	
 	-- self.pnlTabHolder:AddSheet( "Test 1", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
 	-- self.pnlTabHolder:AddSheet( "Test 2", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
 	-- self.pnlTabHolder:AddSheet( "Test 3", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
@@ -318,7 +335,6 @@ Much love to Oskar94,
 	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
 	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
 	-- self:LoadFile( "example 1" ) 
-	
 	
 	self:NewMenuTab( "options" )
 	
