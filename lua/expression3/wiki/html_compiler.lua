@@ -29,7 +29,8 @@ local getType_ = {
 	["f"] = "function",
 	["vr"] = "variant",
 	["v"] = "vector",
-	["e"] = "entity"
+	["e"] = "entity",
+	["a"] = "angle"
 }
 
 local function getType(t)
