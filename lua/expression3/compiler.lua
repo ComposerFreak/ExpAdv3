@@ -320,28 +320,30 @@ local bannedVars = {
 	["invoke"] = true,
 };
 
-function COMPILER.AssignVariable(this, token, declaired, name, class, scope)
-	if (bannedVars[name]) then
-		this:Throw(token, "Unable to declare variable %s, name is reserved internally.", name);
+function COMPILER.AssignVariable(this, token, declaired, varName, class, scope)
+	if (bannedVars[varName]) then
+		this:Throw(token, "Unable to declare variable %s, name is reserved internally.", varName);
 	end
 
 	if (not scope) then
 		scope = this.__scopeID;
 	end
 
-	local c, s, var = this:GetVariable(name, scope, declaired);
+	local c, s, var = this:GetVariable(varName, scope, declaired);
+
+	--Golem.Print("AssVar:", name, scope, declaired, var)
 
 	if (declaired) then
 		if (c) then
-			this:Throw(token, "Unable to declare variable %s, Variable already exists.", name);
+			this:Throw(token, "Unable to declare variable %s, Variable already exists.", varName);
 		else
-			return this:SetVariable(name, class, scope);
+			return this:SetVariable(varName, class, scope);
 		end
 	else
 		if (not c) then
-			this:Throw(token, "Unable to assign variable %s, Variable doesn't exist.", name);
+			this:Throw(token, "Unable to assign variable %s, Variable doesn't exist.", varName);
 		elseif (c ~= class) then
-			this:Throw(token, "Unable to assign variable %s, %s expected got %s.", name, name(c), name(class));
+			this:Throw(token, "Unable to assign variable %s, %s expected got %s.", varName, name(c), name(class));
 		end
 	end
 
@@ -920,7 +922,7 @@ function COMPILER.Compile_AADD(this, inst, token, expressions)
 			this:QueueInjectionAfter(inst, expr.final, ")" );
 		end	
 
-		this:AssignVariable(token, false, token.data, r);
+		this:AssignVariable(token, false, token.data, op.result);
 	end
 end
 

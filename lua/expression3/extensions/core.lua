@@ -111,9 +111,9 @@ hook.Add("Expression3.LoadOperators", "Expression3.Core.Operators", function()
 
 	-- ::STRING::
 
-	EXPR_LIB.RegisterOperator("add", "s,n", "n", 1);
-	EXPR_LIB.RegisterOperator("add", "n,s", "n", 1);
-	EXPR_LIB.RegisterOperator("add", "s,s", "n", 1);
+	EXPR_LIB.RegisterOperator("add", "s,n", "s", 1);
+	EXPR_LIB.RegisterOperator("add", "n,s", "s", 1);
+	EXPR_LIB.RegisterOperator("add", "s,s", "s", 1);
 
 	EXPR_LIB.RegisterOperator("neq", "s,s", "b", 1);
 	EXPR_LIB.RegisterOperator( "eq", "s,s", "b", 1); 
@@ -213,15 +213,15 @@ end);
 
 -- When calling this you must always make your varargs int variants e.g "examp" -> {"s", "examp"}
 function EXPR_LIB.CallEvent(result, count, name, ...)
-	for _, entity in pairs(ents.FindByClass("wire_expression3_*")) do
-		if (IsValid(entity)) then
-			entity:CallEvent(result, count, name, ...)
+	for _, context in pairs(EXPR_LIB.GetAll()) do
+		if (IsValid(context.entity)) then
+			context.entity:CallEvent(result, count, name, ...);
 		end
 	end
 end
 
 hook.Add("Expression3.LoadLibraries", "Expression3.Core.Events", function()
-	EXPR_LIB.RegisterLibrary("event")
+	EXPR_LIB.RegisterLibrary("event");
 end);
 
 hook.Add("Expression3.LoadFunctions", "Expression3.Core.Events", function()

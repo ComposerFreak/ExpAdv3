@@ -1,0 +1,16 @@
+"VertexLitGeneric"
+{
+	"$model" "1"
+	"$baseTexture" "shadowscion/lemongate/gate_d"
+	"$bumpmap" "shadowscion/lemongate/gate_n"
+	
+	"$alphatest"   "1"
+	"$nocull"      "1" 
+	"$halflambert" "1"
+
+	"$phong" "1"
+	"$phongboost" "1"
+	"$phongexponent" "5"
+	"$phongtint" "[1 0.85 0.85]"
+	"$phongfresnelranges" "[.5 .85 30]"
+}

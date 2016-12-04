@@ -60,7 +60,6 @@ end
 ]]
 
 function ENT:Initialize( )
-	self:SetModel("models/Combine_Helicopter/helicopter_bomb01.mdl");
 	self:PhysicsInit(SOLID_VPHYSICS);
 	self:SetMoveType(MOVETYPE_VPHYSICS);
 	self:SetSolid(SOLID_VPHYSICS);
@@ -69,7 +68,32 @@ end
 --[[
 ]]
 
-function ENT:SendToOwner(bConsole, ...)
+function ENT:SendToOwner(bConsole, a, ...)
 	local const = bConsole and EXPR_CONSOLE or EXPR_CHAT;
 	EXPR_LIB.SendToPlayer(self:CPPIGetOwner(), self, const, ...);
+end
+
+--[[
+]]
+
+function ENT:HandelThrown(thrown)
+	self:ShutDown();
+
+	if (not thrown) then
+		self:SendToOwner(true, Color(255,0,0), "An unkown error ocurred.");
+	end
+
+	if (isstring(thrown)) then
+		self:SendToOwner(true, Color(255,0,0), thrown);
+	end
+
+	if (istable(thrown)) then
+		--self:SendThrownError(thrown);
+		print("state:", thrown.state);
+		print("msg:", thrown.msg);
+		print("char:", thrown.char);
+		print("line:", thrown.line);
+	end
+
+	self:SendToOwner(false, Color(255,0,0), "An expression3 gate has errored (see console).");
 end
