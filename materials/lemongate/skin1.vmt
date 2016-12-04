@@ -1,0 +1,7 @@
+"VertexLitGeneric"
+{
+
+	 $basetexture "lemongate/lemongate_chip_dif"
+	 $bumpmap "lemongate/lemongate_chip_norm"
+	 $selfillum "1"
+}

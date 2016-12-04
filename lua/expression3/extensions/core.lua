@@ -111,9 +111,9 @@ hook.Add("Expression3.LoadOperators", "Expression3.Core.Operators", function()
 
 	-- ::STRING::
 
-	EXPR_LIB.RegisterOperator("add", "s,n", "n", 1);
-	EXPR_LIB.RegisterOperator("add", "n,s", "n", 1);
-	EXPR_LIB.RegisterOperator("add", "s,s", "n", 1);
+	EXPR_LIB.RegisterOperator("add", "s,n", "s", 1);
+	EXPR_LIB.RegisterOperator("add", "n,s", "s", 1);
+	EXPR_LIB.RegisterOperator("add", "s,s", "s", 1);
 
 	EXPR_LIB.RegisterOperator("neq", "s,s", "b", 1);
 	EXPR_LIB.RegisterOperator( "eq", "s,s", "b", 1); 
@@ -144,6 +144,7 @@ hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", functi
 	-- TODO: Load extensions here.
 	include("expression3/extensions/math.lua");
 	include("expression3/extensions/vector.lua");
+	include("expression3/extensions/angle.lua");
 	include("expression3/extensions/entity.lua");
 end);
 
@@ -173,8 +174,16 @@ hook.Add("Expression3.LoadFunctions", "Expression3.Core.Extensions", function()
 			values[#values + 1] = EXPR_LIB.ToString(context, v[1], v[2])
 		end
 
-		print("out->", table.concat(values, " "));
+		-- print("out->", table.concat(values, " "));
 		-- TODO: EXPR_LIB.PrintOutput(context, EXPR_CONSOLE, table.concat(values, " "));
+
+		if (SERVER) then
+			context.entity:SendToOwner(false, unpack(values));
+		end
+
+		if (CLIENT) then
+			chat.AddText(unpack(values));
+		end
 	end);
 end);
 
@@ -205,15 +214,15 @@ end);
 
 -- When calling this you must always make your varargs int variants e.g "examp" -> {"s", "examp"}
 function EXPR_LIB.CallEvent(result, count, name, ...)
-	for _, entity in pairs(ents.FindByClass("wire_expression3_*")) do
-		if (IsValid(entity)) then
-			entity:CallEvent(result, count, name, ...)
+	for _, context in pairs(EXPR_LIB.GetAll()) do
+		if (IsValid(context.entity)) then
+			context.entity:CallEvent(result, count, name, ...);
 		end
 	end
 end
 
 hook.Add("Expression3.LoadLibraries", "Expression3.Core.Events", function()
-	EXPR_LIB.RegisterLibrary("event")
+	EXPR_LIB.RegisterLibrary("event");
 end);
 
 hook.Add("Expression3.LoadFunctions", "Expression3.Core.Events", function()

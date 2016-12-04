@@ -62,11 +62,6 @@ net.Receive("Expression3.SendToClient", function(len)
 end);
 
 function ENT:ReceiveFromServer(ply, script)
-	print("CLIENT");
-	print("Reciveied:", self, ply);
-	print(script);
-	print("----------------------");
-
 	timer.Simple(1, function()
 		if (IsValid(self)) then
 			self:SetCode(script, true);
@@ -125,4 +120,44 @@ function ENT:GetOverlayText()
 		"CL total:" .. self:GetClientTotalCPU(),
 		"CL warning:" .. tostring(self:GetClientWarning()),
 	}, "\n");
+end
+
+--[[
+]]
+
+function ENT:SendToOwner(bConsole, ...)
+	local owner = self:GetCreator();
+
+	print("SEND TO OWNER", self, owner);
+	
+	if (owner == LocalPlayer()) then
+		Golem.Print(...);
+	else
+		local const = bConsole and EXPR_CONSOLE or EXPR_CHAT;
+		EXPR_LIB.SendToClient(owner, self, const, ...);
+	end
+end
+--[[
+]]
+
+function ENT:HandelThrown(thrown)
+	self:ShutDown();
+
+	if (not thrown) then
+		self:SendToOwner(true, Color(255,0,0), "An unkown error ocurred.");
+	end
+
+	if (isstring(thrown)) then
+		self:SendToOwner(true, Color(255,0,0), thrown);
+	end
+
+	if (istable(thrown)) then
+		--self:SendThrownError(thrown);
+		print("state:", thrown.state);
+		print("msg:", thrown.msg);
+		print("char:", thrown.char);
+		print("line:", thrown.line);
+	end
+
+	self:SendToOwner(false, Color(255,0,0), "An expression3 gate has errored (see console).");
 end

@@ -32,8 +32,7 @@ end
 --[[
 ]]
 
-TOOL.ClientConVar.model = "";
-
+TOOL.ClientConVar.model = "models/lemongate/lemongate.mdl";
 
 --[[
 ]]
@@ -49,7 +48,7 @@ local function MakeExpression3(ply, pos, ang, model)
 	if (ent and IsValid(ent)) then
 		ent:SetPos(pos);
 		ent:SetAngles(ang);
-		--ent:SetModel(model);
+		ent:SetModel(model);
 		ent:Activate();
 		ent:Spawn();
 	end
@@ -84,7 +83,7 @@ function TOOL:LeftClick(trace)
 
 			if (ent and IsValid(ent)) then
 				ent.player = self:GetOwner();
-				ent:CPPISetOwner(ent.player);
+				ent:SetCreator(ent.player);
 				ent:SetPos(trace.HitPos - trace.HitNormal * ent:OBBMins().z);
 
 				undo.Create("expression3");

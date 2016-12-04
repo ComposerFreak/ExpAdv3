@@ -86,6 +86,7 @@ function ENT:BuildContext(instance)
 
 	self:BuildEnv(self.context, instance);
 
+	EXPR_LIB.RegisterContext(self.context);
 end
 
 function ENT:BuildEnv(context, instance)
@@ -152,11 +153,11 @@ end
 ]]
 
 function ENT:Execute(func, ...)
-	self:PreExecute();
+	self.context:PreExecute();
 
 	local results = {pcall(func, ...)};
 
-	self:PostExecute();
+	self.context:PostExecute();
 
 	if (results[1]) then
 		self.context.update = true;
@@ -165,14 +166,6 @@ function ENT:Execute(func, ...)
 	end
 
 	return unpack(results);
-end
-
-function ENT:PreExecute()
-	print("pre-execute");
-end
-
-function ENT:PostExecute()
-	print("post-execute");
 end
 
 --[[
@@ -187,27 +180,7 @@ function ENT:ShutDown()
 	if (self:IsRunning()) then
 		self.context.status = false;
 		hook.Run("Expression3.Entity.Stop", self, self.context);
-	end
-end
-
-function ENT:HandelThrown(thrown)
-	self:ShutDown();
-
-	print("Expression 3 Error:", self);
-
-	if (not thrown) then
-		print("nil info given.")
-	end
-
-	if (isstring(thrown)) then
-		print("error:", thrown);
-	end
-
-	if (istable(thrown)) then
-		print("state:", thrown.state);
-		print("msg:", thrown.msg);
-		print("char:", thrown.char);
-		print("line:", thrown.line);
+		EXPR_LIB.UnregisterContext(self.context);
 	end
 end
 
@@ -288,14 +261,14 @@ function ENT:UpdateQuotaValues()
 	local context = self.context;
 
 	if (SERVER) then
-		self:SetServerAverageCPU(r and context.cpu_average or 0);
-		self:SetServerTotalCPU(r and context.cpu_total or 0);
+		self:SetServerAverageCPU((r and context.cpu_average or 0) * 1000);
+		self:SetServerTotalCPU((r and context.cpu_total or 0) * 1000);
 		self:SetServerWarning(r and context.cpu_warning or false);
 	end
 
 	if (CLIENT) then
-		self:SetClientAverageCPU(r and context.cpu_average or 0);
-		self:SetClientTotalCPU(r and context.cpu_total or 0);
+		self:SetClientAverageCPU((r and context.cpu_average or 0) * 1000);
+		self:SetClientTotalCPU((r and context.cpu_total or 0) * 1000);
 		self:SetClientWarning(r and context.cpu_warning or false);
 	end
 

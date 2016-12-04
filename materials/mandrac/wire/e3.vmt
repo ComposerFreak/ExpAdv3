@@ -1,0 +1,14 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "mandrac/wire/e3"
+	"$surfaceprop" "metal"
+	"$model" 1
+	"$bumpmap" "mandrac/wire/e3_normal"
+	"$phong"     "1"
+	"$halflambert"	"1"
+ 	"$phongboost"   "1"
+	"$phongexponent" "100"
+ 	"$phongfresnelranges"   "[0.5 5 10]"
+}
+
+

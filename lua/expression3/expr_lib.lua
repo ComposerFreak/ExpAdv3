@@ -949,7 +949,7 @@ function EXPR_LIB.Initalize()
 	if (CLIENT) then
 		include("expression3/editor/expr_editor_lib.lua");
 	end
-	
+
 	hook.Run("Expression3.BuildExtensionData");
 
 	hook.Run("Expression3.PostRegisterExtensions");
@@ -967,6 +967,168 @@ function EXPR_LIB.Initalize()
 	MsgN("Expression 3 has loaded.");
 end
 
+
+--[[
+	:::TRANSMITION OF DATA:::
+	'''''''''''''''''''''''''
+]]
+
+EXPR_CHAT = 0
+EXPR_CONSOLE = 1
+
+if (SERVER) then
+	util.AddNetworkString("Expression3.Print");
+	util.AddNetworkString("Expression3.RelayToClient");
+
+	function EXPR_LIB.SendToPlayer(ply, ent, const, ...)
+		local t = {...};
+
+		net.Start("Expression3.Print");
+			net.WriteEntity(ent);
+			net.WriteInt(const, 3);
+			net.WriteInt(#t, 16);
+
+			for _, v in pairs(t) do
+				if (not istable(v)) then
+					net.WriteBit(0);
+					net.WriteString(tostring(v));
+				else
+					net.WriteBit(1);
+					net.WriteInt(v.r, 16);
+					net.WriteInt(v.g, 16);
+					net.WriteInt(v.b, 16);
+				end
+			end
+
+		net.Send(ply);
+	end
+
+	function EXPR_LIB.SendToChat(ply, ent, ...)
+		return EXPR_LIB.SendToPlayer(ply, ent, EXPR_CHAT, ...);
+	end
+
+	function EXPR_LIB.SendToConsole(ply, ent, ...)
+		return EXPR_LIB.SendToPlayer(ply, ent, EXPR_CONSOLE, ...);
+	end
+
+	net.Receive("Expression3.RelayToClient", function(len, ply)
+		local ent = net.ReadEntity();
+		local trg = net.ReadEntity();
+		local const = net.ReadInt(3);
+		local count = net.ReadInt(16);
+		local output = {};
+
+		for i = 1, count do
+			if (net.ReadBit() == 0) then
+				output[i] = net.ReadString();
+			else
+				output[i] = Color(
+					net.ReadInt(16),
+					net.ReadInt(16),
+					net.ReadInt(16)
+				);
+			end
+		end
+
+		net.Start("Expression3.RelayToClient");
+			net.WriteEntity(ent);
+			net.WriteEntity(ply);
+			net.WriteInt(const, 3);
+			net.WriteInt(count, 16);
+
+			for _, v in pairs(output) do
+				if (not istable(v)) then
+					net.WriteBit(0);
+					net.WriteString(tostring(v));
+				else
+					net.WriteBit(1);
+					net.WriteInt(v.r, 16);
+					net.WriteInt(v.g, 16);
+					net.WriteInt(v.b, 16);
+				end
+			end
+
+		net.Send(trg);
+	end)
+
+end
+
+if (CLIENT) then
+	net.Receive("Expression3.Print", function()
+		local ent = net.ReadEntity();
+		local const = net.ReadInt(3);
+		local count = net.ReadInt(16);
+		local output = {};
+
+		for i = 1, count do
+			if (net.ReadBit() == 0) then
+				output[i] = net.ReadString();
+			else
+				output[i] = Color(
+					net.ReadInt(16),
+					net.ReadInt(16),
+					net.ReadInt(16)
+				);
+			end
+		end
+
+		-- Might pass this to the entity instead later.
+
+		if (const == EXPR_CHAT) then
+			chat.AddText(unpack(output));
+		elseif (const == EXPR_CONSOLE) then
+			-- TODO: Console tab per entity :D
+			Golem.Print(tostring(ent), ":", unpack(output));
+		end
+	end)
+
+	function EXPR_LIB.SendToClient(ply, ent, const, ...)
+		local t = {...};
+
+		net.Start("Expression3.RelayToClient");
+			net.WriteEntity(ent);
+			net.WriteEntity(ply);
+			net.WriteInt(const, 3);
+			net.WriteInt(#t, 16);
+
+			for _, v in pairs(t) do
+				if (not istable(v)) then
+					net.WriteBit(0);
+					net.WriteString(tostring(v));
+				else
+					net.WriteBit(1);
+					net.WriteInt(v.r, 16);
+					net.WriteInt(v.g, 16);
+					net.WriteInt(v.b, 16);
+				end
+			end
+
+		net.SendToServer();
+	end
+
+	net.Receive("Expression3.RelayToClient", function()
+		local ent = net.ReadEntity();
+		local frm = net.ReadEntity();
+		local const = net.ReadInt(3);
+		local count = net.ReadInt(16);
+		local output = {};
+
+		for i = 1, count do
+			if (net.ReadBit() == 0) then
+				output[i] = net.ReadString();
+			else
+				output[i] = Color(
+					net.ReadInt(16),
+					net.ReadInt(16),
+					net.ReadInt(16)
+				);
+			end
+		end
+
+		-- Todo: Pass this to entity :D
+	end)
+end
+
 --[[
 	:::Hooks For Loading Golem Editor:::
 	''''''''''''''''''''''''''''''''''''
@@ -981,16 +1143,27 @@ if (CLIENT) then
 end
 
 --[[
+	:::Context Registry:::
+	''''''''''''''''''''''
+]]
+
+local AllRunning = {};
+
+function EXPR_LIB.GetAll()
+	return AllRunning;
+end
+
+function EXPR_LIB.RegisterContext(context)
+	AllRunning[context] = context;
+end
+
+function EXPR_LIB.UnregisterContext(context)
+	AllRunning[context] = nil;
+end
+
+--[[
 	:::Load Expression 3:::
 	'''''''''''''''''''''''
 ]]
 
 timer.Simple(5, EXPR_LIB.Initalize);
-
-if (CLIENT) then
-	concommand.Add("e3_editor", function()
-		local editor = Golem.GetInstance();
-		editor:SetVisible(true);
-		editor:MakePopup();
-	end)
-end
