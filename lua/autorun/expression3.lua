@@ -35,6 +35,10 @@ if (SERVER) then
 
 	AddCSLuaFile("expression3/extensions/entity.lua");
 
+	AddCSLuaFile("expression3/editor/font.lua");
+
+	AddCSLuaFile("expression3/editor/vector2.lua");
+
 	AddCSLuaFile("expression3/editor/expr_editor_lib.lua");
 	
 	AddCSLuaFile("expression3/compiler.lua");
@@ -44,6 +48,10 @@ if (SERVER) then
 	AddCSLuaFile("expression3/debuger.lua");
 
 	AddCSLuaFile("expression3/wiki_inc.lua");
+
+	AddCSLuaFile("expression3/wiki/html_compiler.lua");
+
+	AddCSLuaFile("expression3/wiki/inits/autogen.lua");
 
 elseif (CLIENT) then
 
