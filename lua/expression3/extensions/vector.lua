@@ -158,4 +158,9 @@ end, true);
 --[[
 ]]
 
+extension:RegisterMethod("v", "toAngle", "", "a", 1, Angle);
+
+--[[
+]]
+
 extension:EnableExtension()
