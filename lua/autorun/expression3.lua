@@ -35,9 +35,40 @@ if (SERVER) then
 
 	AddCSLuaFile("expression3/extensions/entity.lua");
 
-	AddCSLuaFile("expression3/editor/font.lua");
+	AddCSLuaFile( "expression3/editor.lua");
 
-	AddCSLuaFile("expression3/editor/vector2.lua");
+	AddCSLuaFile( "expression3/editor/font.lua" );
+
+	AddCSLuaFile( "expression3/editor/vector2.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/button.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/closebutton.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/editor.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/dhtml.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/filebrowser.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/frame.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/hscrollbar.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/ide.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/imagebutton.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/options.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/propertysheet.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/toolbar.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/filemenu.lua" );
+
+	AddCSLuaFile( "expression3/editor/derma/wiki.lua" );
+
 
 	AddCSLuaFile("expression3/editor/expr_editor_lib.lua");
 	

@@ -4,25 +4,6 @@
 Golem = { }
 
 if SERVER then 
-	AddCSLuaFile( ) 
-	
-	AddCSLuaFile( "editor/font.lua" )
-	AddCSLuaFile( "editor/vector2.lua" )
-	
-	AddCSLuaFile( "editor/derma/button.lua" )
-	AddCSLuaFile( "editor/derma/closebutton.lua" )
-	AddCSLuaFile( "editor/derma/editor.lua" )
-	AddCSLuaFile( "editor/derma/dhtml.lua" )
-	AddCSLuaFile( "editor/derma/filebrowser.lua" )
-	AddCSLuaFile( "editor/derma/frame.lua" )
-	AddCSLuaFile( "editor/derma/hscrollbar.lua" )
-	AddCSLuaFile( "editor/derma/ide.lua" )
-	AddCSLuaFile( "editor/derma/imagebutton.lua" )
-	AddCSLuaFile( "editor/derma/options.lua" )
-	AddCSLuaFile( "editor/derma/propertysheet.lua" )
-	AddCSLuaFile( "editor/derma/toolbar.lua" )
-	AddCSLuaFile( "editor/derma/filemenu.lua" )
-	
 	-- AddCSLuaFile "editor/derma/syntaxer.lua"
 	return 
 end 
