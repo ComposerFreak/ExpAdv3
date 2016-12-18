@@ -1,11 +1,11 @@
 /*============================================================================================================================================
-	Expression-Advanced Syntax Highlighting
+	Expression 3 Syntax Highlighting
 	Autor: Oskar
 	Credits: The authors of the E2 syntax highlighter 
 ============================================================================================================================================*/
 
-EXPADV.Syntaxer2 = EXPADV.Syntaxer2 or { First = true } 
-local Syntaxer = EXPADV.Syntaxer2 
+Golem.Syntaxer = Golem.Syntaxer or { First = true } 
+local Syntaxer = Golem.Syntaxer
 Syntaxer.First = true
 
 /********************************************************************************************************************************************/
@@ -25,27 +25,21 @@ Build Syntaxer Tables
 function Syntaxer:BuildFunctionTable( )
 	local Functions = { }
 	
-	for Name, Data in pairs( EXPADV.Functions ) do 
-		Functions[Data.Name] = true 
-	end 
+	for sName, tData in pairs( EXPR_LIBRARIES ) do
+		if tData._functions then 
+			for _, tFunc in pairs( tData._functions ) do
+				Functions[tFunc.name] = true
+			end
+		end 
+	end
 	
 	self.Functions = Functions
-end
-
-function Syntaxer:BuildEventsTable( )
-	local Events = { }
-	
-	for Name, Data in pairs( EXPADV.Events ) do  
-		Events[Name] = true 
-	end 
-	
-	self.Events = Events
 end
 
 function Syntaxer:BuildTokensTable( ) 
 	local Tokens = { } 
 	
-	for k,v in pairs( EXPADV.Compiler.RawTokens ) do
+	for k,v in pairs( EXPR_TOKENS.EXPADV ) do
 		Tokens[#Tokens+1] = string_gsub( v[1], "[%-%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1" )
 	end
 	
@@ -55,23 +49,22 @@ end
 function Syntaxer.Rebuild( )
 	if EXPADV.IsLoaded then
 		Syntaxer:BuildFunctionTable( )
-		Syntaxer:BuildEventsTable( )
 		Syntaxer:BuildTokensTable( )
 		Syntaxer.UserFunctions = { } 
-		Syntaxer.UserDirective = { } 
+		-- Syntaxer.UserDirective = { } 
 		Syntaxer.Variables = { } 
-		Syntaxer.MetaMethods = { }
+		-- Syntaxer.MetaMethods = { }
 	end
 end
 
 Syntaxer.Rebuild( ) -- For the editor reload command
-hook.Add( "Expadv.PostLoadCore", "Expadv.Syntaxer2", Syntaxer.Rebuild )
+hook.Add( "Expression3.LoadGolem", "Expression3", Syntaxer.Rebuild )
 
 /*============================================================================================================================================
 Syntaxer Functions
 ============================================================================================================================================*/
 local function istype( word )
-	return (EXPADV.Classes[word] or EXPADV.ClassAliases[word])and true or false 
+	return EXPR_LIB.GetClass( word ) and true or false
 end
 
 local function isvar( word, row )
@@ -119,7 +112,7 @@ function Syntaxer:ResetTokenizer( Row )
 		end
 	end
 	
-	self.MetaMethods = { }
+	-- self.MetaMethods = { }
 	
 	for Function, Line in pairs( self.UserFunctions ) do
 		if Line == Row then
@@ -127,11 +120,11 @@ function Syntaxer:ResetTokenizer( Row )
 		end
 	end
 	
-	for Directive, Line in pairs( self.UserDirective ) do
-		if Line == Row then
-			self.UserDirective[Directive] = nil
-		end
-	end
+	-- for Directive, Line in pairs( self.UserDirective ) do
+	-- 	if Line == Row then
+	-- 		self.UserDirective[Directive] = nil
+	-- 	end
+	-- end
 	
 	for Variables, Line in pairs( self.Variables ) do
 		if Line == Row then
@@ -187,17 +180,18 @@ Syntaxer Keywords
 ============================================================================================================================================*/
 
 -- operator_<key>
-local MetaMethods = {
-	["addition"] = true, 
-	["call"] = true, 
-	["division"] = true, 
-	["equal"] = true, 
-	["exponent"] = true, 
-	["greater"] = true, 
-	["modulus"] = true, 
-	["multiply"] = true, 
-	["subtraction"] = true, 
-}
+-- local MetaMethods = {
+-- 	["addition"] = true, 
+-- 	["call"] = true, 
+-- 	["division"] = true, 
+-- 	["equal"] = true, 
+-- 	["exponent"] = true, 
+-- 	["greater"] = true, 
+-- 	["modulus"] = true, 
+-- 	["multiply"] = true, 
+-- 	["subtraction"] = true, 
+-- }
+
 
 local keywords = {
 	-- keywords that can be followed by a "(":
@@ -206,25 +200,28 @@ local keywords = {
 	["while"]    = { true, true }, 
 	["for"]      = { true, true }, 
 	["foreach"]  = { true, true }, 
-	["try"]      = { true, true }, 
-	["catch"]    = { true, true }, 
-	["final"]    = { true, true }, 
+	-- ["try"]      = { true, true }, 
+	-- ["catch"]    = { true, true }, 
+	-- ["final"]    = { true, true }, 
 	
 	-- keywords that cannot be followed by a "(":
 	["else"]     = { true, false },
+	["delegate"] = { true, false },
 	["break"]    = { true, false },
 	["continue"] = { true, false },
 	["return"]   = { true, false },
 	["global"]   = { true, false },
-	["static"]   = { true, false },
-	["input"]    = { true, false },
-	["output"]   = { true, false },
-	["event"]    = { true, false },
 	["true"]     = { true, false },
 	["false"]    = { true, false },
+	["void"]     = { true, false },
+	["new"]      = { true, false },
 	["client"]   = { true, false },
 	["server"]   = { true, false },
-	["method"]   = { true, false },
+	-- ["static"]   = { true, false },
+	-- ["input"]    = { true, false },
+	-- ["output"]   = { true, false },
+	-- ["event"]    = { true, false },
+	-- ["method"]   = { true, false },
 }
 
 -- fallback for nonexistant entries:
@@ -264,8 +261,8 @@ local colors = {
 	*/
 	
 	["comment"]      = Color( 128, 128, 128 ), 
-	["event"]        = Color(  80, 160, 240 ), // TODO: Other color? 
-	["exception"]    = Color(  80, 160, 240 ), // TODO: Other color? 
+	-- ["event"]        = Color(  80, 160, 240 ), // TODO: Other color? 
+	-- ["exception"]    = Color(  80, 160, 240 ), // TODO: Other color? 
 	["function"]     = Color(  80, 160, 240 ), 
 	["keyword"]      = Color(   0, 120, 240 ), 
 	["notfound"]     = Color( 240, 160,   0 ), 
@@ -316,14 +313,14 @@ local norun = false
 function Syntaxer.ResetSyntaxColor( sCVar, sOld, sNew ) 
 	if not norun and sNew ~= "0" then 
 		norun = true
-		RunConsoleCommand( "lemon_editor_resetcolors", "0" ) 
+		RunConsoleCommand( "golem_editor_resetcolors", "0" ) 
 		norun = false
 		
 		if colors_defaults[sNew] then 
-			RunConsoleCommand( "lemon_editor_color_" .. sNew, colors_defaults[sNew].r .. "_" .. colors_defaults[sNew].g .. "_" .. colors_defaults[sNew].b )
+			RunConsoleCommand( "golem_editor_color_" .. sNew, colors_defaults[sNew].r .. "_" .. colors_defaults[sNew].g .. "_" .. colors_defaults[sNew].b )
 		else 
 			for k, v in pairs( colors_defaults ) do
-				RunConsoleCommand( "lemon_editor_color_" .. k, v.r .. "_" .. v.g .. "_" .. v.b )
+				RunConsoleCommand( "golem_editor_color_" .. k, v.r .. "_" .. v.g .. "_" .. v.b )
 			end 
 		end 
 		
@@ -332,20 +329,20 @@ function Syntaxer.ResetSyntaxColor( sCVar, sOld, sNew )
 end 
 
 if Syntaxer.First then 
-	table.Empty( cvars.GetConVarCallbacks( "lemon_editor_resetcolors", true ) ) 
+	table.Empty( cvars.GetConVarCallbacks( "golem_editor_resetcolors", true ) ) 
 	
-	CreateClientConVar( "lemon_editor_resetcolors", "0", true, false ) 
-	cvars.AddChangeCallback( "lemon_editor_resetcolors", function(...) Syntaxer.ResetSyntaxColor(...) end ) 
+	CreateClientConVar( "golem_editor_resetcolors", "0", true, false ) 
+	cvars.AddChangeCallback( "golem_editor_resetcolors", function(...) Syntaxer.ResetSyntaxColor(...) end ) 
 end 
 
 for k,v in pairs( colors ) do 
 	colors_defaults[k] = Color( v.r, v.g, v.b ) -- Copy to save defaults
-	colors_convars[k] = CreateClientConVar( "lemon_editor_color_" .. k, v.r .. "_" .. v.g .. "_" .. v.b, true, false ) 
+	colors_convars[k] = CreateClientConVar( "golem_editor_color_" .. k, v.r .. "_" .. v.g .. "_" .. v.b, true, false ) 
 	
 	if Syntaxer.First then 
-		table.Empty( cvars.GetConVarCallbacks( "lemon_editor_color_" .. k, true ) ) 
+		table.Empty( cvars.GetConVarCallbacks( "golem_editor_color_" .. k, true ) ) 
 		
-		cvars.AddChangeCallback( "lemon_editor_color_" .. k, function(...) Syntaxer.UpdateSyntaxColor(...) end ) 
+		cvars.AddChangeCallback( "golem_editor_color_" .. k, function(...) Syntaxer.UpdateSyntaxColor(...) end ) 
 	end 
 end 
 
@@ -390,14 +387,14 @@ function Syntaxer:AddUserFunction( nRow, sName )
 	self.UserFunctions[sName] = nRow
 end 
 
-function Syntaxer:CreateMethodFunction( nRow, sVarName, sFunctionName ) 
-	self.MetaMethods[sVarName] = self.MetaMethods[sVarName] or {} 
-	self.MetaMethods[sVarName][sFunctionName] = true 
-end 
+-- function Syntaxer:CreateMethodFunction( nRow, sVarName, sFunctionName ) 
+-- 	self.MetaMethods[sVarName] = self.MetaMethods[sVarName] or {} 
+-- 	self.MetaMethods[sVarName][sFunctionName] = true 
+-- end 
 
-function Syntaxer:AddUserDirective( nRow, sName ) 
-	self.UserDirective[sName] = nRow 
-end 
+-- function Syntaxer:AddUserDirective( nRow, sName ) 
+-- 	self.UserDirective[sName] = nRow 
+-- end 
 
 function Syntaxer:Parse( nRow )
 	tOutput, tLastColor = { }, nil 
@@ -509,94 +506,94 @@ function Syntaxer:Parse( nRow )
 				continue 
 			end 
 			
-			if word == "event" then 
-				self:NextPattern( " *" ) 
-				self:AddToken( "keyword" )
+			-- if word == "event" then 
+			-- 	self:NextPattern( " *" ) 
+			-- 	self:AddToken( "keyword" )
 				
-				self:NextPattern( "^[a-z][a-zA-Z0-9_]*" ) 
-				if self.Events[self.sTokenData] then 
-					self:AddToken( "event" )
-				else 
-					self:AddToken( "notfound" )
-				end 
+			-- 	self:NextPattern( "^[a-z][a-zA-Z0-9_]*" ) 
+			-- 	if self.Events[self.sTokenData] then 
+			-- 		self:AddToken( "event" )
+			-- 	else 
+			-- 		self:AddToken( "notfound" )
+			-- 	end 
 				
-				self:NextPattern( " *%( *" ) 
-				self:AddToken( "operator" )
+			-- 	self:NextPattern( " *%( *" ) 
+			-- 	self:AddToken( "operator" )
 				
-				while self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) do 
-					if istype( self.sTokenData ) then 
-						self:AddToken( "typename" )
-					else 
-						self:AddToken( "notfound" ) 
-					end 
+			-- 	while self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) do 
+			-- 		if istype( self.sTokenData ) then 
+			-- 			self:AddToken( "typename" )
+			-- 		else 
+			-- 			self:AddToken( "notfound" ) 
+			-- 		end 
 					
-					self:NextPattern( " *" )
-					self:AddToken( "operator" )
+			-- 		self:NextPattern( " *" )
+			-- 		self:AddToken( "operator" )
 					
-					self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" )
-					self.Variables[self.sTokenData] = nRow 
-					self:AddToken( "variable" )
+			-- 		self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" )
+			-- 		self.Variables[self.sTokenData] = nRow 
+			-- 		self:AddToken( "variable" )
 					
-					if not self:NextPattern( " *, *" ) then break end 
-					self:AddToken( "operator" )
-				end 
+			-- 		if not self:NextPattern( " *, *" ) then break end 
+			-- 		self:AddToken( "operator" )
+			-- 	end 
 				
-				continue 
-			end 
+			-- 	continue 
+			-- end 
 			
-			if word == "catch" then 
-				self:NextPattern( " *" ) 
-				self:AddToken( "keyword" )
+			-- if word == "catch" then 
+			-- 	self:NextPattern( " *" ) 
+			-- 	self:AddToken( "keyword" )
 				
-				if self:NextPattern( "%(" ) then 
-					self:NextPattern( " *" ) 
-					self:AddToken( "operator" )
+			-- 	if self:NextPattern( "%(" ) then 
+			-- 		self:NextPattern( " *" ) 
+			-- 		self:AddToken( "operator" )
 					
-					if self:NextPattern( "[a-z0-9]+" ) then 
-						local exception = self.sTokenData 
-						self:NextPattern( " *" ) 
+			-- 		if self:NextPattern( "[a-z0-9]+" ) then 
+			-- 			local exception = self.sTokenData 
+			-- 			self:NextPattern( " *" ) 
 						
-						if EXPADV.Exceptions[ exception ] then 
-							self:AddToken( "exception" )
-						else 
-							self:AddToken( "notfound" )
-						end 
+			-- 			if EXPADV.Exceptions[ exception ] then 
+			-- 				self:AddToken( "exception" )
+			-- 			else 
+			-- 				self:AddToken( "notfound" )
+			-- 			end 
 						
-						self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) 
-						self.Variables[self.sTokenData] = nRow 
-						self:AddToken( "variable" ) 
-					end 
-				end 
+			-- 			self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) 
+			-- 			self.Variables[self.sTokenData] = nRow 
+			-- 			self:AddToken( "variable" ) 
+			-- 		end 
+			-- 	end 
 				
-				continue 
-			end 
+			-- 	continue 
+			-- end 
 			
-			if word == "method" then 
-				self:NextPattern( " *" ) 
-				self:AddToken( "keyword" )
+			-- if word == "method" then 
+			-- 	self:NextPattern( " *" ) 
+			-- 	self:AddToken( "keyword" )
 				
-				if self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) then 
-					if isvar( self.sTokenData ) then 
-						local MethodVar = self.sTokenData 
-						self:AddToken( "variable" )
-						self:NextPattern( " *: *" ) 
-						self:AddToken( "operator" )
+			-- 	if self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) then 
+			-- 		if isvar( self.sTokenData ) then 
+			-- 			local MethodVar = self.sTokenData 
+			-- 			self:AddToken( "variable" )
+			-- 			self:NextPattern( " *: *" ) 
+			-- 			self:AddToken( "operator" )
 						
-						if self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) then 
-							if MetaMethods[string_match( self.sTokenData, "operator_(.*)" )] then 
-								self:AddToken( "metamethod" )
-							else 
-								self:AddToken( "userfunction" )
-								self:CreateMethodFunction( nRow, MethodVar, self.sTokenData )
-							end 
-						end 
-					else 
-						self:AddToken( "notfound" )
-					end 
-				end 
+			-- 			if self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) then 
+			-- 				if MetaMethods[string_match( self.sTokenData, "operator_(.*)" )] then 
+			-- 					self:AddToken( "metamethod" )
+			-- 				else 
+			-- 					self:AddToken( "userfunction" )
+			-- 					self:CreateMethodFunction( nRow, MethodVar, self.sTokenData )
+			-- 				end 
+			-- 			end 
+			-- 		else 
+			-- 			self:AddToken( "notfound" )
+			-- 		end 
+			-- 	end 
 				
-				continue
-			end 
+			-- 	continue
+			-- end 
 			
 			if keywords[word][1] then 
 				if keywords[word][2] then 
@@ -618,10 +615,10 @@ function Syntaxer:Parse( nRow )
 				continue 
 			end 
 			
-			if self.UserDirective[self.sTokenData] and self.UserDirective[self.sTokenData] <= nRow then 
-				self:AddToken( "directive" ) 
-				continue 
-			end 
+			-- if self.UserDirective[self.sTokenData] and self.UserDirective[self.sTokenData] <= nRow then 
+			-- 	self:AddToken( "directive" ) 
+			-- 	continue 
+			-- end 
 			
 			if isvar( word ) then 
 				self:AddToken( "variable" )
@@ -648,21 +645,21 @@ function Syntaxer:Parse( nRow )
 			
 			self:AddToken( "notfound" )
 			continue 
-		elseif self:NextPattern( "^@[a-zA-Z][a-zA-Z0-9_]*" ) then 
-			if EXPADV.Directives[string_sub( self.sTokenData, 2 )] then 
-				self:AddToken( "directive" )
+		-- elseif self:NextPattern( "^@[a-zA-Z][a-zA-Z0-9_]*" ) then 
+		-- 	if EXPADV.Directives[string_sub( self.sTokenData, 2 )] then 
+		-- 		self:AddToken( "directive" )
 				
-				if self:NextPattern( " *: *" ) then 
-					self:AddToken( "operator" ) 
-					if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
-						self:AddUserDirective( nRow, self.sTokenData )
-						self:AddToken( "variable" ) 
-					end 
-				end 
+		-- 		if self:NextPattern( " *: *" ) then 
+		-- 			self:AddToken( "operator" ) 
+		-- 			if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
+		-- 				self:AddUserDirective( nRow, self.sTokenData )
+		-- 				self:AddToken( "variable" ) 
+		-- 			end 
+		-- 		end 
 				
-				continue 
-			end 
-			self:AddToken( "notfound" )
+		-- 		continue 
+		-- 	end 
+		-- 	self:AddToken( "notfound" )
 		elseif self:NextPattern( "^0[xb][%x]+" ) then 
 			self:AddToken( "number" )
 		elseif self:NextPattern( "^[%d][%d%.e]*" ) then 
@@ -737,8 +734,8 @@ function Syntaxer:Parse( nRow )
 	return tOutput 
 end
 
-function EXPADV.Highlight2( Editor, nRow )
-	if not EXPADV.IsLoaded then return false end 
+function Syntaxer.Highlight( Editor, nRow )
+	-- if not EXPADV.IsLoaded then return false end 
 	-- if nRow < 15 or nRow > 16 then return {{Editor.Rows[nRow], Color(255,255,255)}} end 
 	-- print( "\n\n\nRow: " .. nRow )
 	Syntaxer.Editor = Editor 

@@ -34,6 +34,10 @@ function PANEL:Init( )
 		first = false 
 	end ]]
 	
+	for k, v in pairs( Golem.Syntaxer.ColorConvars ) do
+		syntaxColor:AddChoice( k, v, k=="variable" )
+	end
+	
 	function Mixer:ValueChanged( color )
 		-- RunConsoleCommand( "lemon_editor_color_" .. syntaxColor.Choices[currentIndex], color.r .. "_" .. color.g .. "_" .. color.b ) 
 		-- EXPADV.Syntaxer:UpdateSyntaxColors( ) 
