@@ -818,7 +818,7 @@ function PARSER.Statment_7(this)
 				return this:EndInstruction(inst, expressions);
 			end
 
-			if (this:Accept("aadd", "asub", "amul", "advi")) then
+			if (this:Accept("aadd", "asub", "amul", "adiv")) then
 				inst.__operator = this.__token;
 
 				inst.type = this.__token.type;
@@ -840,7 +840,7 @@ function PARSER.Statment_7(this)
 				return this:EndInstruction(inst, expressions);
 			end
 
-			this:Throw(inst.token "Variable can not be preceded by whitespace.");
+			this:Throw(inst.token, "Variable can not be preceded by whitespace.");
 		end
 	end
 
