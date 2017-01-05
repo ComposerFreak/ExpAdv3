@@ -3,9 +3,9 @@
 	"$model" "1"
 	"$baseTexture" "shadowscion/lemongate/gate_d"
 	"$bumpmap" "shadowscion/lemongate/gate_n"
-	
+
 	"$alphatest"   "1"
-	"$nocull"      "1" 
+	"$nocull"      "1"
 	"$halflambert" "1"
 
 	"$phong" "1"
