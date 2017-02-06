@@ -974,7 +974,7 @@ function COMPILER.Compile_ASUB(this, inst, token, expressions)
 			this:QueueInjectionAfter(inst, expr.final, ")" );
 		end	
 
-		this:AssignVariable(token, false, variable, r);
+		this:AssignVariable(token, false, token.data, op.result);
 	end
 end
 
@@ -1028,7 +1028,7 @@ function COMPILER.Compile_ADIV(this, inst, token, expressions)
 			this:QueueInjectionAfter(inst, expr.final, ")" );
 		end	
 
-		this:AssignVariable(token, false, variable, r);
+		this:AssignVariable(token, false, token.data, op.result);
 	end
 end
 
@@ -1080,7 +1080,7 @@ function COMPILER.Compile_AMUL(this, inst, token, expressions)
 			this:QueueInjectionAfter(inst, expr.final, ")" );
 		end	
 
-		this:AssignVariable(token, false, variable, r);
+		this:AssignVariable(token, false, token.data, op.result);
 	end
 end
 

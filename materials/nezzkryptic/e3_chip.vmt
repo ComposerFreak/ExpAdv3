@@ -1,0 +1,15 @@
+"VertexLitGeneric"
+{
+	"$model" "1"
+	"$baseTexture" "nezzkryptic/e3_chip"
+	"$surfaceprop" "Plastic"
+
+	"$nocull"      "1"
+	"$halflambert" "1"
+
+	"$phong" "1"
+	"$phongboost" "1"
+	"$phongexponent" "5"
+	"$phongtint" "[1 0.85 0.85]"
+	"$phongfresnelranges" "[.5 .85 30]"
+}
