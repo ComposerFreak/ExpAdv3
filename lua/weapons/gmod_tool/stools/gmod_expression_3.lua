@@ -12,8 +12,11 @@
 
 AddCSLuaFile();
 
-TOOL.Name						= "Expression 3";
-TOOL.Category					= "Expadv2";
+TOOL.Name						= "Expression 3 - Gate";
+TOOL.Category					= "Expression 3 - Tools";
+
+
+cleanup.Register("expression3");
 
 --[[
 ]]
@@ -32,12 +35,67 @@ end
 --[[
 ]]
 
-TOOL.ClientConVar.model = "models/lemongate/lemongate.mdl";
+TOOL.GateModels = {
+	"models/nezzkryptic/e3_chip.mdl",
+	"models/lemongate/lemongate.mdl",
+	"models/shadowscion/lemongate/gate.mdl",
+	"models/mandrac/wire/e3.mdl",
+};
+
+
+if WireLib then
+	table.insert( TOOL.GateModels, "models/bull/gates/processor.mdl" )
+	table.insert( TOOL.GateModels, "models/expression 2/cpu_controller.mdl" )
+	table.insert( TOOL.GateModels, "models/expression 2/cpu_expression.mdl" )
+	table.insert( TOOL.GateModels, "models/expression 2/cpu_interface.mdl" )
+	table.insert( TOOL.GateModels, "models/expression 2/cpu_microchip.mdl" )
+	table.insert( TOOL.GateModels, "models/expression 2/cpu_processor.mdl" )
+end
 
 --[[
 ]]
 
-cleanup.Register("expression3");
+TOOL.ClientConVar.name = "Generic";
+TOOL.ClientConVar.author = "Wire User";
+TOOL.ClientConVar.model = "models/nezzkryptic/e3_chip.mdl";
+
+TOOL.ClientConVar.weld = "0"
+TOOL.ClientConVar.parent = "1"
+TOOL.ClientConVar.world = "0"
+TOOL.ClientConVar.nocolide = "1"
+
+--[[
+	Welds or parents based on tool settings
+]]
+
+function TOOL:WeldOrParentEntity(ply, entity, trace, _undo)
+	local world = (self:GetClientNumber( "world" ) == 1);
+
+	if (!IsValid(trace.Entity) and !world) then
+		return false;
+	end
+
+	if (self:GetClientNumber( "parent" ) == 1) then
+		if (IsValid(trace.Entity) and (!trace.Entity:IsVehicle()) and (trace.Entity != entity)) then
+			entity:SetParent(trace.Entity);
+		end
+	elseif (self:GetClientNumber( "weld" ) == 1) then
+		local con = constraint.Weld( entity, trace.Entity, 0, trace.PhysicsBone, 0, 0, world );
+
+		if (_undo) then
+			undo.AddEntity(con);
+		end
+	end
+
+	if (self:GetClientNumber( "nocolide" ) == 1) then
+		local con = constraint.NoCollide( entity, trace.Entity, 0, trace.PhysicsBone, 0, 0, world );
+
+		if (_undo) then
+			undo.AddEntity(con);
+		end
+	end
+
+end
 
 --[[
 ]]
@@ -61,8 +119,13 @@ duplicator.RegisterEntityClass( "wire_expression3_base", MakeExpression3, "pos",
 --[[
 ]]
 
-function TOOL:LeftClick(trace)
+function TOOL:RequestUpload(ply, ent)
+	net.Start("Expression3.RequestUpload");
+		net.WriteEntity(ent);
+	net.Send(ply);
+end
 
+function TOOL:LeftClick(trace)
 	local hit = trace.Entity;
 
 	if (SERVER) then
@@ -72,9 +135,7 @@ function TOOL:LeftClick(trace)
 				return false;
 			end
 
-			net.Start("Expression3.RequestUpload");
-				net.WriteEntity(hit);
-			net.Send(self:GetOwner());
+			self:RequestUpload(self:GetOwner(), hit);
 		else
 			local model = self:GetClientInfo("model");
 
@@ -92,13 +153,13 @@ function TOOL:LeftClick(trace)
 
 				undo.SetPlayer(self:GetOwner());
 
+				self:WeldOrParentEntity(self:GetOwner(), ent, trace, true);
+
 				undo.Finish( );
 
 				self:GetOwner():AddCleanup("expression3", ent);
 
-				net.Start("Expression3.RequestUpload");
-					net.WriteEntity(ent);
-				net.Send(self:GetOwner());
+				self:RequestUpload(self:GetOwner(), ent);
 			end
 		end
 	end
@@ -115,5 +176,60 @@ function TOOL:RightClick( Trace )
 		local editor = Golem.GetInstance();
 		editor:SetVisible(true);
 		editor:MakePopup();]]);
+	end
+end
+
+/* --- ----------------------------------------------------------------------------------------------------------------------------------------------
+	@: Tool Panel
+   --- */
+
+if CLIENT then
+	local TOOL = TOOL;
+
+	function TOOL.BuildCPanel( CPanel )
+
+		local PropList = vgui.Create( "PropSelect" )
+
+		PropList:SetConVar( "gmod_expression_3_model" )
+
+		for _, Model in pairs( TOOL.GateModels ) do
+			PropList:AddModel( Model, false )
+		end
+
+		CPanel:AddItem( PropList )
+
+		CPanel:CheckBox( "Weld to base", "gmod_expression_3_weld" )
+		CPanel:CheckBox( "Parent to base", "gmod_expression_3_parent" )
+		CPanel:CheckBox( "No-colide with base.", "gmod_expression_3_nocolide" )
+		CPanel:CheckBox( "Constrain if base is world.", "gmod_expression_3_world" )
+	end
+end
+
+
+/* --- ----------------------------------------------------------------------------------------------------------------------------------------------
+	@: Ghost
+   --- */
+
+function TOOL:Think( )
+
+	if !IsValid( self.GhostEntity ) or self.GhostEntity:GetModel( ) != self:GetClientInfo( "model" ) then
+		return self:MakeGhostEntity( self:GetClientInfo( "model" ), Vector(0,0,0), Angle(0,0,0) )
+	end
+	
+	local Trace = util.TraceLine( util.GetPlayerTrace( self:GetOwner( ) ) )
+		
+	if Trace.Hit then
+		
+		if IsValid( Trace.Entity ) and (Trace.Entity.ExpAdv or Trace.Entity:IsPlayer( ) ) then
+			return self.GhostEntity:SetNoDraw( true )
+		end
+		
+		local Ang = Trace.HitNormal:Angle( )
+		Ang.pitch = Ang.pitch + 90
+		
+		self.GhostEntity:SetPos( Trace.HitPos - Trace.HitNormal * self.GhostEntity:OBBMins( ).z )
+		self.GhostEntity:SetAngles( Ang )
+		
+		self.GhostEntity:SetNoDraw( false )
 	end
 end
