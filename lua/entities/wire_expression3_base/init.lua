@@ -97,3 +97,18 @@ function ENT:HandelThrown(thrown)
 
 	self:SendToOwner(false, Color(255,0,0), "An expression3 gate has errored (see console).");
 end
+
+--[[
+	DUPE
+]]
+function ENT:BuildDupeInfo()
+  local info = self.BaseClass.BuildDupeInfo(self) or {}
+  info.script = self.script
+  return info
+end
+
+
+function ENT:ApplyDupeInfo(ply, ent, info, GetEntByID)
+  self.BaseClass.ApplyDupeInfo(self, ply, ent, info, GetEntByID)
+  self:SetCode( info.script )
+end
