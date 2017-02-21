@@ -101,6 +101,7 @@ end
 --[[
 	DUPE
 ]]
+
 function ENT:BuildDupeInfo()
   local info = self.BaseClass.BuildDupeInfo(self) or {}
   info.script = self.script
