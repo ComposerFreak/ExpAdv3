@@ -179,6 +179,16 @@ ext_core:RegisterFunction("system", "print", "...", "", 0, function(context, ...
 	end
 end);
 
+ext_core:RegisterFunction("system", "out", "...", "", 0, function(context, ...)
+	local values = {};
+
+	for _, v in pairs({...}) do
+		values[#values + 1] = func_tostring(context, v[1], v[2])
+	end
+
+	context.entity:SendToOwner(true, unpack(values));
+end);
+
 	--[[ 
 		::EXAMPLE - Compile time alterations for function call::
 			* You should never need this, but you can alter the compilers output here.
