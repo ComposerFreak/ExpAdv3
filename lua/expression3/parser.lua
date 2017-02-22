@@ -525,7 +525,7 @@ end
 
 function PARSER.Directive_NAME(this, token, directive)
 	this:Require("str", "String expected to follow directive @name");
-	
+
 	if (this.FirstStatment) then
 		this:Throw(token, "Directive @name must appear at top of your code");
 	elseif (this.__directives.name) then
@@ -533,6 +533,8 @@ function PARSER.Directive_NAME(this, token, directive)
 	end
 
 	this.__directives.name = this.__token.data;
+
+	this:QueueRemove({}, this.__token);
 end
 
 function PARSER.Directive_MODEL(this, token, directive)
@@ -545,6 +547,8 @@ function PARSER.Directive_MODEL(this, token, directive)
 	end
 
 	this.__directives.model = this.__token.data;
+	
+	this:QueueRemove({}, this.__token);
 end
 
 function PARSER.Directive_INPUT(this, token, directive)
@@ -716,6 +720,10 @@ function PARSER.Statment_0(this)
 
 		if (sep) then
 			this:QueueRemove({}, this.__token);
+		end
+
+		if (!this:HasTokens()) then
+			return;
 		end
 	end
 

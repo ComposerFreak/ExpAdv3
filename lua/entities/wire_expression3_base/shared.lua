@@ -25,12 +25,10 @@ ENT.Contact         = "";
 ENT.Expression3 	= true;
 
 --[[
-	Set Code
+	Validate / Set Code
 ]]
 
-function ENT:SetCode(script, run)
-	self.script = script;
-
+function ENT:Validate(script)
 	local Toker = EXPR_TOKENIZER.New();
 
 	Toker:Initalize("EXPADV", script);
@@ -52,6 +50,18 @@ function ENT:SetCode(script, run)
 			ok, res = Compiler:Run();
 		end
 	end
+
+	return ok, res;
+end
+
+function ENT:SetCode(script, run)
+	self.script = script;
+
+	local Toker = EXPR_TOKENIZER.New();
+
+	Toker:Initalize("EXPADV", script);
+
+	local ok, res = self:Validate(script);
 
 	if (not ok) then
 		self:HandelThrown(res);
@@ -133,10 +143,6 @@ function ENT:InitScript()
 			self.nativeScript,
 		"end",
 	}, "\n");
-
-	-- print("Native Lua");
-	-- print(native);
-	-- print("-----------------------------");
 
 	local main = CompileString(native, "Expression 3", false);
 

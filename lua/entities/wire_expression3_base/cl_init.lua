@@ -19,22 +19,26 @@ include("shared.lua");
 net.Receive("Expression3.RequestUpload", function(len)
 	local ent = net.ReadEntity();
 
-	print("Upload request recived:", ent, IsValid(ent), ent.SubmitToServer);
-
 	timer.Create("Expression3.SubmitToServer", 1, 1, function()
 		if (IsValid(ent) and ent.SubmitToServer) then
-			print("Submitting to server!");
-			ent:SubmitToServer(Golem.GetCode( ));
+			ent:SubmitToServer(Golem.GetCode());
 		end
 	end);
 end)
 
 function ENT:SubmitToServer(code)
 	if (code and code ~= "") then
-		net.Start("Expression3.SubmitToServer");
-			net.WriteEntity(self)
-			net.WriteString(code);
-		net.SendToServer();
+		local ok, res = self:Validate(code);
+
+		if (ok) then
+			net.Start("Expression3.SubmitToServer");
+				net.WriteEntity(self);
+				net.WriteString(code);
+			net.SendToServer();
+		else
+			self:HandelThrown(res);
+			chat.AddText("Failed to validate script (see console).");
+		end
 	end
 end
 
