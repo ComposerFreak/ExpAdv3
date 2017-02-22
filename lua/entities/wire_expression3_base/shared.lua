@@ -63,6 +63,10 @@ function ENT:SetCode(script, run)
 
 	self:BuildContext(res);
 
+	if (SERVER) then
+		self:BuildWiredPorts(res.directives.inport, res.directives.outport);
+	end
+
 	if (run) then
 		timer.Simple(1, function()
 			self:InitScript();
@@ -94,6 +98,8 @@ function ENT:BuildEnv(context, instance)
 	local env = instance.enviroment;
 
 	env.GLOBAL  = {};
+	env.INPUT = {};
+	env.OUTPUT = {};
 	env.SERVER = SERVER;
 	env.CLIENT = CLIENT;
 	env.CONTEXT = context;

@@ -26,11 +26,6 @@ net.Receive("Expression3.SubmitToServer", function(len, ply)
 end)
 
 function ENT:ReceiveFromClient(ply, script)
-	-- print("SERVER");
-	-- print("Reciveied:", self, ply);
-	-- print(script);
-	-- print("----------------------");
-
 	if (self:CanSetCode(ply)) then
 		timer.Simple(1, function()
 			if (IsValid(self)) then
@@ -99,6 +94,78 @@ function ENT:HandelThrown(thrown)
 end
 
 --[[
+]]
+
+local function SortPorts( PortA, PortB )
+	local TypeA = PortA[2] or "NORMAL"
+	local TypeB = PortB[2] or "NORMAL"
+
+	if TypeA ~= TypeB then
+		if TypeA == "NORMAL" then
+			return true
+		elseif TypeB == "NORMAL" then
+			return false
+		end
+
+		return TypeA < TypeB
+	else
+		return PortA[1] < PortB[1]
+	end
+end
+
+function ENT:BuildWiredPorts(sort_in, sort_out)
+	local names_in = {};
+	local types_in = {};
+
+	table.sort( sort_in, SortPorts );
+
+	for var, type in pairs(sort_in) do
+		names_in[#names_in + 1] = var;
+		types_in[#types_in + 1] = type;
+	end
+	
+	local old_inports = self.Inputs;
+
+	self.Inputs = WireLib.AdjustSpecialInputs( self, names_in, types_in );
+
+	-- for var, port in pairs(old_inports) do
+		-- TODO: Load existing wire values.
+	-- end
+
+	------------------------------------------------------------------------------
+
+	local names_out = {};
+	local types_out = {};
+	
+	table.sort( sort_out, SortPorts );
+
+	for var, type in pairs(sort_out) do
+		names_out[#names_out + 1] = var;
+		types_out[#types_out + 1] = type;
+	end
+
+	local old_outports = self.OutPorts;
+
+	self.OutPorts = WireLib.AdjustSpecialOutputs( self, names_out, types_out )
+
+	-------------------------------------------------------------------------------
+
+	if self.extended then
+		WireLib.CreateWirelinkOutput( self.player, self, { true } )
+	end 
+end
+
+--[[
+
+]]
+
+function ENT:Initialize()
+	self.BaseClass.Initialize(self);
+	self.Inputs = WireLib.CreateInputs( self, { } )
+	self.Outputs = WireLib.CreateOutputs( self, { } )
+end
+
+--[[
 	DUPE
 ]]
 
@@ -108,8 +175,8 @@ function ENT:BuildDupeInfo()
   return info
 end
 
-
 function ENT:ApplyDupeInfo(ply, ent, info, GetEntByID)
-  self.BaseClass.ApplyDupeInfo(self, ply, ent, info, GetEntByID)
   self:SetCode( info.script )
+  self.BaseClass.ApplyDupeInfo(self, ply, ent, info, GetEntByID)
 end
+

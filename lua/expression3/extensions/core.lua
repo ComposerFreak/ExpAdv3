@@ -69,6 +69,14 @@ local class_nil = ext_core:RegisterClass("cls", {"class"}, isstring, isnil);
 
 local class_bool = ext_core:RegisterClass("b", {"boolean", "bool"}, isbool, notnil);
 
+ext_core:RegisterWiredInport("b", "NORMAL", function(i)
+	return i ~= 0;
+end);
+
+ext_core:RegisterWiredOutport("b", "NORMAL", function(o)
+	return o and 1 or 0;
+end);
+
 ext_core:RegisterOperator("neq", "b,b", "b", 1);
 ext_core:RegisterOperator( "eq", "b,b", "b", 1);
 ext_core:RegisterOperator("and", "b,b", "b", 1);
@@ -81,6 +89,10 @@ ext_core:RegisterOperator("not", "b", "b", 1);
 ]]
 
 local class_num = ext_core:RegisterClass("n", {"number", "int", "integer", "double", "normal"}, isnumber, notnil);
+
+ext_core:RegisterWiredInport("n", "NORMAL");
+
+ext_core:RegisterWiredOutport("n", "NORMAL");
 
 ext_core:RegisterOperator("add", "n,n", "n", 1);
 ext_core:RegisterOperator("sub", "n,n", "n", 1);
@@ -111,6 +123,10 @@ ext_core:RegisterOperator("not", "n", "b", 1, function (context, number) return 
 ]]
 
 local class_str = ext_core:RegisterClass("s", {"string", "str"}, isstring, notnil);
+
+ext_core:RegisterWiredInport("s", "STRING");
+
+ext_core:RegisterWiredOutport("s", "STRING");
 
 ext_core:RegisterOperator("add", "s,n", "s", 1);
 ext_core:RegisterOperator("add", "n,s", "s", 1);

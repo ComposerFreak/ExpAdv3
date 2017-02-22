@@ -84,8 +84,9 @@ function ENT:GetCreatorName()
 	return owner:GetName();
 end
 
-function ENT:GetOverlayText()
-	return table.concat({
+-- function ENT:GetOverlayText()
+function ENT:GetOverlayData()
+	return {txt = table.concat({
 		"::Expression (adv) 3::",
 		self:GetCreatorName(),
 		"SV average: " .. self:GetServerAverageCPU(),
@@ -94,7 +95,7 @@ function ENT:GetOverlayText()
 		"CL average: " .. self:GetClientAverageCPU(),
 		"CL total:" .. self:GetClientTotalCPU(),
 		"CL warning:" .. tostring(self:GetClientWarning()),
-	}, "\n");
+	}, "\n")};
 end
 
 --[[

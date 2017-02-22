@@ -43,6 +43,7 @@ function COMPILER.Initalize(this, instance)
 	this.__tasks = instance.tasks;
 	this.__root = instance.instruction;
 	this.__script = instance.script;
+	this.__directives = instance.directives;
 
 	this.__scope = {};
 	this.__scopeID = 0;
@@ -96,6 +97,7 @@ function COMPILER._Run(this)
 	result.functions = this.__functions;
 	result.methods = this.__methods;
 	result.enviroment = this.__enviroment;
+	result.directives = this.__directives;
 	result.traceTbl = traceTbl;
 	
 	return result;
@@ -2770,6 +2772,53 @@ function COMPILER.Compile_FOR(this, inst, token, expressions)
 	this:Compile(inst.stmts);
 
 	this:PopScope();
+end
+
+--[[
+]]
+
+function COMPILER.Compile_INPORT(this, inst, token)
+	if (this:GetOption("state") ~= EXPR_SERVER) then
+		this:Throw(token, "Wired input('s) must be defined server side.");
+	end
+
+	for _, token in pairs(inst.variables) do
+		local var = token.data;
+
+		if (var[1] ~= string.upper(var[1])) then
+			this:Throw(token, "Invalid name for wired input %s, name must be cammel cased");
+		end
+
+		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0);
+
+		if (info) then
+			info.prefix = "INPUT";
+		end
+
+		this.__directives.inport[var] = inst.class;
+	end
+end
+
+function COMPILER.Compile_OUTPORT(this, inst, token)
+	if (this:GetOption("state") ~= EXPR_SERVER) then
+		this:Throw(token, "Wired output('s) must be defined server side.");
+	end
+
+	for _, token in pairs(inst.variables) do
+		local var = token.data;
+
+		if (var[1] ~= string.upper(var[1])) then
+			this:Throw(token, "Invalid name for wired output %s, name must be cammel cased");
+		end
+
+		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0);
+
+		if (info) then
+			info.prefix = "OUTPUT";
+		end
+
+		this.__directives.outport[var] = inst.class;
+	end
 end
 
 EXPR_COMPILER = COMPILER;

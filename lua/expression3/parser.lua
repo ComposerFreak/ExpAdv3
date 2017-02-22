@@ -101,8 +101,12 @@ function PARSER.Initalize(this, instance)
 	this.__script = instance.script;
 
 	this.__tasks = {};
-end
 
+	this.__directives = {};
+	this.__directives.inport = {};
+	this.__directives.outport = {};
+
+end
 
 function PARSER.Run(this)
 	--TODO: PcallX for stack traces on internal errors?
@@ -129,6 +133,8 @@ function PARSER._Run(this)
 	result.script = this.__script;
 	result.tasks = this.__tasks
 	result.tokens = this.__tokens;
+	result.directives = this.__directives;
+
 	return result;
 end
 
@@ -513,13 +519,120 @@ function PARSER.Block_1(this, _end, lcb)
 	end
 end
 
+--[[
+
+]]
+
+function PARSER.Directive_NAME(this, token, directive)
+	this:Require("str", "String expected to follow directive @name");
+	
+	if (this.FirstStatment) then
+		this:Throw(token, "Directive @name must appear at top of your code");
+	elseif (this.__directives.name) then
+		this:Throw(token, "Directive @name must not appear twice.");
+	end
+
+	this.__directives.name = this.__token.data;
+end
+
+function PARSER.Directive_MODEL(this, token, directive)
+	this:Require("str", "String expected to follow directive @model");
+
+	if (this.FirstStatment) then
+		this:Throw(token, "Directive @model must appear at top of your code");
+	elseif (this.__directives.model) then
+		this:Throw(token, "Directive @model must not appear twice.");
+	end
+
+	this.__directives.model = this.__token.data;
+end
+
+function PARSER.Directive_INPUT(this, token, directive)
+	this:Require("typ", "Class expected for inport type, after @input");
+
+	local inst = this:StartInstruction("inport", token);
+
+	inst.class = this.__token.data;
+
+	local class_obj = EXPR_LIB.GetClass(inst.class);
+
+	if (not class_obj.wire_in_class) then
+		this:Throw(token, "Invalid wired port, class %s can not be used for wired input.", class_obj.name);
+	end
+
+	this:QueueRemove(inst, this.__token);
+
+	local variables = {};
+
+	this:Require("var", "Variable('s) expected after class for inport name.");
+	
+	variables[1] = this.__token;
+
+	this:QueueRemove(inst, this.__token);
+
+	while (this:Accept("com")) do
+		this:QueueRemove(inst, this.__token);
+
+		this:Require("var", "Variable expected after comma (,).");
+
+		variables[#variables + 1] = this.__token;
+
+		this:QueueRemove(inst, this.__token);
+	end
+
+	inst.variables = variables;
+
+	return this:EndInstruction(inst, {});
+end
+
+function PARSER.Directive_OUTPUT(this, token, directive)
+	this:Require("typ", "Class expected for outport type, after @input");
+
+	local inst = this:StartInstruction("outport", token);
+
+	inst.class = this.__token.data;
+
+	local class_obj = EXPR_LIB.GetClass(inst.class);
+
+	if (not class_obj.wire_out_class) then
+		this:Throw(token, "Invalid wired port, class %s can not be used for wired output.", class_obj.name);
+	end
+
+	this:QueueRemove(inst, this.__token);
+
+	local variables = {};
+
+	this:Require("var", "Variable('s) expected after class for outport name.");
+	
+	variables[1] = this.__token;
+
+	this:QueueRemove(inst, this.__token);
+
+	while (this:Accept("com")) do
+		this:QueueRemove(inst, this.__token);
+
+		this:Require("var", "Variable expected after comma (,).");
+
+		variables[#variables + 1] = this.__token;
+
+		this:QueueRemove(inst, this.__token);
+	end
+
+	inst.variables = variables;
+
+	return this:EndInstruction(inst, {});
+end
+
+--[[
+]]
+
 function PARSER.Statments(this, block)
 	local sep = false;
 	local stmts = {};
 
 		while true do
 
-			local stmt = this:Statment_1();
+			local stmt = this:Statment_0();
 
 			stmts[#stmts + 1] = stmt;
 
@@ -561,6 +674,55 @@ end
 
 --[[
 ]]
+
+function PARSER.Statment_0(this)
+	local dirLine;
+
+	while this:Accept("dir") do
+		local token = this.__token;
+		dirLine = this.__token.line;
+
+		this:QueueRemove({}, token);
+
+		if (not this:Accept("var")) then
+			this:Throw(token, "Directive name exspected after @");
+		end
+
+		local directive = this.__token.data;
+
+		this:QueueRemove({}, this.__token);
+
+		local func = this["Directive_" .. string.upper(directive)]
+
+		if ( not func) then
+			this:Throw(token, "No such directive @%s", directive);
+		end
+
+		local instr = func(this, token, directive);
+
+		if (instr) then
+			return instr
+		end
+
+		sep = this:Accept("sep");
+
+		if (sep) then
+			this:QueueRemove({}, this.__token);
+		end
+	end
+
+	if (not this.FirstStatment) then
+		this.FirstStatment = this.__token;
+	end
+
+	local stmt = this:Statment_1();
+
+	if (dirLine and (not sep or direLine == stmt.line)) then
+		this:Throw(stmt.token, "Statements must be separated by semicolon (;) or newline")
+	end
+
+	return stmt;
+end;
 
 function PARSER.Statment_1(this)
 	if (this:Accept("if")) then
@@ -1840,7 +2002,7 @@ function PARSER.ExpressionErr(this)
 	--this:Exclude("try", "Try keyword (try) must be part of a try-statement");
 	--this:Exclude("cth", "Catch keyword (catch) must be part of an try-statement");
 	--this:Exclude("fnl", "Final keyword (final) must be part of an try-statement");
-	--this:Exclude("dir", "directive operator (@) must not appear inside an equation");
+	this:Exclude("dir", "directive operator (@) must not appear inside an equation");
 
 	this:Throw(this.__token, "Unexpected symbol found (%s)", this.__token.type);
 end
