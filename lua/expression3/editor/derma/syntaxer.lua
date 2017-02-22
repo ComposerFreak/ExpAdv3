@@ -61,15 +61,11 @@ function Syntaxer:BuildMethodsTable( )
 end
 
 function Syntaxer.Rebuild( )
-	if EXPADV.IsLoaded then
-		Syntaxer:BuildFunctionTable( )
-		Syntaxer:BuildMethodsTable( )
-		Syntaxer:BuildTokensTable( )
-		Syntaxer.UserFunctions = { } 
-		Syntaxer.Variables = { } 
-		-- Syntaxer.UserDirective = { } 
-		-- Syntaxer.MetaMethods = { }
-	end
+	Syntaxer:BuildFunctionTable( )
+	Syntaxer:BuildMethodsTable( )
+	Syntaxer:BuildTokensTable( )
+	Syntaxer.UserFunctions = { } 
+	Syntaxer.Variables = { } 
 end
 
 Syntaxer.Rebuild( ) -- For the editor reload command
