@@ -16,12 +16,6 @@ include("shared.lua");
 --[[
 ]]
 
-function ENT:Initialize( )
-end
-
---[[
-]]
-
 net.Receive("Expression3.RequestUpload", function(len)
 	local ent = net.ReadEntity();
 
@@ -75,25 +69,6 @@ end
 
 --[[
 ]]
-
-function ENT:DrawTranslucent()
-	self:Draw()
-end
-
-function ENT:Draw()
-	self:DrawModel( )
-end
-
---[[
-]]
-
-function ENT:BeingLookedAtByLocalPlayer()
-	if ( LocalPlayer():GetEyeTrace().Entity != self ) then return false end
-	if ( LocalPlayer():GetViewEntity() == LocalPlayer() && LocalPlayer():GetShootPos():Distance( self:GetPos() ) > 256 ) then return false end
-	if ( LocalPlayer():GetViewEntity() ~= LocalPlayer() && LocalPlayer():GetViewEntity():GetPos():Distance( self:GetPos() ) > 256 ) then return false end
-
-	return true
-end
 
 function ENT:GetCreatorName()
 	local owner = self:CPPIGetOwner();

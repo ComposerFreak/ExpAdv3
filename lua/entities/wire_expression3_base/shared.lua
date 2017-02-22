@@ -16,7 +16,7 @@ include("sh_cppi.lua");
 include("sh_context.lua");
 
 ENT.Type 			= "anim";
-ENT.Base 			= "base_gmodentity";
+ENT.Base 			= "base_wire_entity";
 
 ENT.PrintName       = "Expression 3";
 ENT.Author          = "Rusketh";
@@ -280,11 +280,11 @@ end
 function ENT:Think()
 	self:UpdateQuotaValues();
 
-	if (CLIENT and self:BeingLookedAtByLocalPlayer() and self:GetOverlayText() ~= "") then
+	--[[if (CLIENT and self:BeingLookedAtByLocalPlayer() and self:GetOverlayText() ~= "") then
 		AddWorldTip( self:EntIndex(), self:GetOverlayText(), 0.5, self:GetPos(), self.Entity );
 
 		halo.Add( { self }, Color( 255, 255, 255, 255 ), 1, 1, 1, true, true );
-	end
+	end]]
 
 	hook.Run("Expression3.Entity.Think", self, self.context);
 end
