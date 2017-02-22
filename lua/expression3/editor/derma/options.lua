@@ -24,23 +24,18 @@ function PANEL:Init( )
 	local currentIndex
 	function syntaxColor:OnSelect( index, value, data )
 		local r, g, b = string.match( data:GetString( ), "(%d+)_(%d+)_(%d+)" ) 
-		currentIndex = index
+		currentIndex = value
+		-- print(index,value,data)
 		Mixer:SetColor( Color( r, g, b ) ) 
 	end
-	
-	--[[local first = true 
-	for k, v in pairs( EXPADV.Syntaxer.ColorConvars ) do
-		syntaxColor:AddChoice( k, v, k=="variable" )
-		first = false 
-	end ]]
 	
 	for k, v in pairs( Golem.Syntaxer.ColorConvars ) do
 		syntaxColor:AddChoice( k, v, k=="variable" )
 	end
 	
 	function Mixer:ValueChanged( color )
-		-- RunConsoleCommand( "lemon_editor_color_" .. syntaxColor.Choices[currentIndex], color.r .. "_" .. color.g .. "_" .. color.b ) 
-		-- EXPADV.Syntaxer:UpdateSyntaxColors( ) 
+		RunConsoleCommand( "golem_editor_color_" .. currentIndex, color.r .. "_" .. color.g .. "_" .. color.b )
+		Golem.Syntaxer:UpdateSyntaxColors( )
 	end
 	
 	
@@ -48,26 +43,27 @@ function PANEL:Init( )
 		reset:SetText( "Reset color" ) 
 	
 	function reset:DoClick( )
-		-- RunConsoleCommand( "lemon_editor_resetcolors", syntaxColor.Choices[currentIndex] ) 
-		-- timer.Simple( 0, function() 
-		-- 	local r, g, b = string.match( EXPADV.Syntaxer.ColorConvars[syntaxColor.Choices[currentIndex]]:GetString( ), "(%d+)_(%d+)_(%d+)" ) 
-		-- 	Mixer:SetColor( Color( r, g, b ) ) 
-		-- end )
+		RunConsoleCommand( "golem_editor_resetcolors", currentIndex ) 
+		timer.Simple( 0, function() 
+			local r, g, b = string.match( Golem.Syntaxer.ColorConvars[currentIndex]:GetString( ), "(%d+)_(%d+)_(%d+)" ) 
+			Mixer:SetColor( Color( r, g, b ) ) 
+		end )
 	end
 	
 	local resetall = vgui.Create( "DButton" ) 
 		resetall:SetText( "Reset all colors" ) 
 	
 	function resetall:DoClick( )
-		-- RunConsoleCommand( "lemon_editor_resetcolors", "1" ) 
-		-- timer.Simple( 0, function() 
-		-- 	local r, g, b = string.match( EXPADV.Syntaxer.ColorConvars[syntaxColor.Choices[currentIndex]]:GetString( ), "(%d+)_(%d+)_(%d+)" ) 
-		-- 	Mixer:SetColor( Color( r, g, b ) ) 
-		-- end )
+		RunConsoleCommand( "golem_editor_resetcolors", "1" ) 
+		timer.Simple( 0, function() 
+			local r, g, b = string.match( Golem.Syntaxer.ColorConvars[currentIndex]:GetString( ), "(%d+)_(%d+)_(%d+)" ) 
+			Mixer:SetColor( Color( r, g, b ) ) 
+		end )
 	end
 	
 	
 	local ResetDivider = self:Add( "DHorizontalDivider" ) 
+	self.ResetDivider = ResetDivider
 	ResetDivider:Dock( TOP ) 
 	ResetDivider:DockMargin( 0, 5, 0, 0 ) 
 	ResetDivider:SetLeft( reset )
@@ -75,6 +71,7 @@ function PANEL:Init( )
 	ResetDivider:SetLeftWidth( 120 )
 	ResetDivider.StartGrab = function( ) end 
 	ResetDivider.m_DragBar:SetCursor( "" )
+	
 	
 	
 	local editorFont = self:Add( "DComboBox" ) 
@@ -110,6 +107,7 @@ function PANEL:Init( )
 	
 	
 	local FontDivider = self:Add( "DHorizontalDivider" ) 
+	self.FontDivider = FontDivider
 	FontDivider:Dock( TOP ) 
 	FontDivider:DockMargin( 0, 5, 0, 0 ) 
 	FontDivider:SetLeft( editorFont )
@@ -134,5 +132,10 @@ function PANEL:Paint( w, h )
 	surface.SetDrawColor( 30, 30, 30, 255 )
 	surface.DrawRect( 0, 0, w, h ) 
 end 
+
+function PANEL:PerformLayout( )
+	self.ResetDivider:SetLeftWidth( 120 )
+	self.FontDivider:SetLeftWidth( 200 )
+end
 
 vgui.Register( "GOLEM_Options", PANEL, "EditablePanel" )

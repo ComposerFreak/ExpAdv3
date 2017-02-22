@@ -947,7 +947,7 @@ function PANEL:OnValidateError( Goto, Thrown )
 	end
 
 	if Goto then
-		if Thrown and (Thrown.line < 1 or Thrown.char < 1) then 
+		if Thrown and (Thrown.line > 1 or Thrown.char > 1) then 
 			self.pnlTabHolder:GetActiveTab( ):GetPanel( ):SetCaret( Vector2( Thrown.line, Thrown.char ) )
 		end 
 	end

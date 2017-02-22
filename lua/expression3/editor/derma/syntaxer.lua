@@ -24,15 +24,19 @@ Build Syntaxer Tables
 ============================================================================================================================================*/
 function Syntaxer:BuildFunctionTable( )
 	local Functions = { }
+	local Libraries = { }
 	
 	for sName, tData in pairs( EXPR_LIBRARIES ) do
+		Libraries[sName] = { }
 		if tData._functions then 
 			for _, tFunc in pairs( tData._functions ) do
 				Functions[tFunc.name] = true
+				Libraries[sName][tFunc.name] = true 
 			end
 		end 
 	end
 	
+	self.Libraries = Libraries
 	self.Functions = Functions
 end
 
@@ -46,13 +50,24 @@ function Syntaxer:BuildTokensTable( )
 	self.Tokens = Tokens 
 end 
 
+function Syntaxer:BuildMethodsTable( )
+	local Methods = { } 
+	
+	for _, tData in pairs( EXPR_METHODS ) do
+		Methods[tData.name] = tData.class
+	end
+	
+	self.Methods = Methods 
+end
+
 function Syntaxer.Rebuild( )
 	if EXPADV.IsLoaded then
 		Syntaxer:BuildFunctionTable( )
+		Syntaxer:BuildMethodsTable( )
 		Syntaxer:BuildTokensTable( )
 		Syntaxer.UserFunctions = { } 
-		-- Syntaxer.UserDirective = { } 
 		Syntaxer.Variables = { } 
+		-- Syntaxer.UserDirective = { } 
 		-- Syntaxer.MetaMethods = { }
 	end
 end
@@ -78,12 +93,13 @@ function Syntaxer:ResetTokenizer( Row )
 	self.sTokenData = ""
 	self.bBlockComment = nil
 	self.bMultilineString = nil
-	local singlelinecomment = false
-	local singlelinestring = false 
+	local singlelinecomment = nil
+	local singlelinestring = nil 
 	
 	local tmp = self.Editor:ExpandAll( )
 	self.sLine = self.Editor.Rows[Row] //.. " "
-	local str = string_gsub( table_concat( self.Editor.Rows, "\n", self.Editor.Scroll.x, Row-1 ), "\r", "" )
+	local str = string_gsub( table_concat( self.Editor.Rows, "\n", 1, Row-1 ), "\r", "" )
+	-- print( self.Editor.Scroll.x, Row-1 )
 	self.Editor:FoldAll( tmp )
 	
 	for before, char, after in string_gmatch( str, "()([/'\"\n])()" ) do
@@ -100,6 +116,7 @@ function Syntaxer:ResetTokenizer( Row )
 				elseif after == "/" then 
 					singlelinecomment = true 
 				end 
+				-- print( Row, before=="\n" and "\\n" or before, after, singlelinecomment, self.bBlockComment )
 			end
 		elseif self.bMultilineString and before ~= "\\" then
 			self.bMultilineString = nil
@@ -108,9 +125,11 @@ function Syntaxer:ResetTokenizer( Row )
 		elseif self.bBlockComment and char == "/" and before == "*" then
 			self.bBlockComment = nil
 		elseif singlelinecomment and char == "\n" then
-			singlelinecomment = false
+			singlelinecomment = nil
 		end
 	end
+	
+	-- print( Row, self.bBlockComment, self.bMultilineString, singlelinecomment, singlelinestring, self.sLine )
 	
 	-- self.MetaMethods = { }
 	
@@ -224,6 +243,13 @@ local keywords = {
 	-- ["method"]   = { true, false },
 }
 
+local Directives = {
+	["name"]   = true,
+	["model"]  = true,
+	["input"]  = true,
+	["output"] = true,
+}
+
 -- fallback for nonexistant entries:
 setmetatable( keywords, { __index = function( tbl, index ) return { } end } )
 
@@ -264,6 +290,7 @@ local colors = {
 	-- ["event"]        = Color(  80, 160, 240 ), // TODO: Other color? 
 	-- ["exception"]    = Color(  80, 160, 240 ), // TODO: Other color? 
 	["function"]     = Color(  80, 160, 240 ), 
+	["librarie"]     = Color(  80, 240, 160 ), 
 	["keyword"]      = Color(   0, 120, 240 ), 
 	["notfound"]     = Color( 240, 160,   0 ), 
 	["number"]       = Color(   0, 200,   0 ), 
@@ -373,6 +400,11 @@ function Syntaxer:AddToken( sTokenName, sTokenData )
 	-- print( "ADDTOKEN", sTokenName, string.format( "%q", sTokenData ) )
 end
 
+function Syntaxer:SkipSpaces( )
+	self:NextPattern( " *" )
+	self:AddToken( "operator" )
+end
+
 function Syntaxer:InfProtect( nRow )
 	self.nLoops = self.nLoops + 1
 	if SysTime( ) > self.nExpire then 
@@ -436,7 +468,7 @@ function Syntaxer:Parse( nRow )
 			local word = self.sTokenData 
 			local keyword = ( self.sChar or "" ) != "(" 
 			
-			if word == "function" then 
+			if word == "function" or word == "delegate" then 
 				self:NextPattern( " *" ) 
 				
 				if self.sChar == "]" then 
@@ -479,9 +511,11 @@ function Syntaxer:Parse( nRow )
 					self:NextPattern( " *" )
 					self:AddToken( "operator" )
 					
-					self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" )
-					self.Variables[self.sTokenData] = nRow 
-					self:AddToken( "variable" ) 
+					if word == "function" then 
+						self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" )
+						self.Variables[self.sTokenData] = nRow 
+						self:AddToken( "variable" ) 
+					end 
 					
 					if not self:NextPattern( " *, *" ) then break end 
 					self:AddToken( "operator" ) 
@@ -490,110 +524,113 @@ function Syntaxer:Parse( nRow )
 				continue 
 			end 
 			
-			if istype( word ) and keyword then 
+			if istype( word ) then 
 				self:AddToken( "typename" )
-				self:NextPattern( " *" ) 
-				self:AddToken( "operator" )
+				self:SkipSpaces( ) 
 				
-				while self:NextPattern( "([a-zA-Z][a-zA-Z0-9_]*)" ) do 
-					self.Variables[self.sTokenData] = nRow 
-					self:AddToken( "variable" ) 
-					
-					if not self:NextPattern( " *, *" ) then break end 
-					self:AddToken( "operator" ) 
-				end
+				if keyword then 
+					while self:NextPattern( "([a-zA-Z][a-zA-Z0-9_]*)" ) do 
+						self.Variables[self.sTokenData] = nRow 
+						self:AddToken( "variable" ) 
+						
+						if not self:NextPattern( " *, *" ) then break end 
+						self:AddToken( "operator" ) 
+					end
+				end 
 				
 				continue 
 			end 
 			
-			-- if word == "event" then 
-			-- 	self:NextPattern( " *" ) 
-			-- 	self:AddToken( "keyword" )
+			/*
+			if word == "event" then 
+				self:NextPattern( " *" ) 
+				self:AddToken( "keyword" )
 				
-			-- 	self:NextPattern( "^[a-z][a-zA-Z0-9_]*" ) 
-			-- 	if self.Events[self.sTokenData] then 
-			-- 		self:AddToken( "event" )
-			-- 	else 
-			-- 		self:AddToken( "notfound" )
-			-- 	end 
+				self:NextPattern( "^[a-z][a-zA-Z0-9_]*" ) 
+				if self.Events[self.sTokenData] then 
+					self:AddToken( "event" )
+				else 
+					self:AddToken( "notfound" )
+				end 
 				
-			-- 	self:NextPattern( " *%( *" ) 
-			-- 	self:AddToken( "operator" )
+				self:NextPattern( " *%( *" ) 
+				self:AddToken( "operator" )
 				
-			-- 	while self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) do 
-			-- 		if istype( self.sTokenData ) then 
-			-- 			self:AddToken( "typename" )
-			-- 		else 
-			-- 			self:AddToken( "notfound" ) 
-			-- 		end 
+				while self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) do 
+					if istype( self.sTokenData ) then 
+						self:AddToken( "typename" )
+					else 
+						self:AddToken( "notfound" ) 
+					end 
 					
-			-- 		self:NextPattern( " *" )
-			-- 		self:AddToken( "operator" )
+					self:NextPattern( " *" )
+					self:AddToken( "operator" )
 					
-			-- 		self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" )
-			-- 		self.Variables[self.sTokenData] = nRow 
-			-- 		self:AddToken( "variable" )
+					self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" )
+					self.Variables[self.sTokenData] = nRow 
+					self:AddToken( "variable" )
 					
-			-- 		if not self:NextPattern( " *, *" ) then break end 
-			-- 		self:AddToken( "operator" )
-			-- 	end 
+					if not self:NextPattern( " *, *" ) then break end 
+					self:AddToken( "operator" )
+				end 
 				
-			-- 	continue 
-			-- end 
+				continue 
+			end 
 			
-			-- if word == "catch" then 
-			-- 	self:NextPattern( " *" ) 
-			-- 	self:AddToken( "keyword" )
+			if word == "catch" then 
+				self:NextPattern( " *" ) 
+				self:AddToken( "keyword" )
 				
-			-- 	if self:NextPattern( "%(" ) then 
-			-- 		self:NextPattern( " *" ) 
-			-- 		self:AddToken( "operator" )
+				if self:NextPattern( "%(" ) then 
+					self:NextPattern( " *" ) 
+					self:AddToken( "operator" )
 					
-			-- 		if self:NextPattern( "[a-z0-9]+" ) then 
-			-- 			local exception = self.sTokenData 
-			-- 			self:NextPattern( " *" ) 
+					if self:NextPattern( "[a-z0-9]+" ) then 
+						local exception = self.sTokenData 
+						self:NextPattern( " *" ) 
 						
-			-- 			if EXPADV.Exceptions[ exception ] then 
-			-- 				self:AddToken( "exception" )
-			-- 			else 
-			-- 				self:AddToken( "notfound" )
-			-- 			end 
+						if EXPADV.Exceptions[ exception ] then 
+							self:AddToken( "exception" )
+						else 
+							self:AddToken( "notfound" )
+						end 
 						
-			-- 			self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) 
-			-- 			self.Variables[self.sTokenData] = nRow 
-			-- 			self:AddToken( "variable" ) 
-			-- 		end 
-			-- 	end 
+						self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) 
+						self.Variables[self.sTokenData] = nRow 
+						self:AddToken( "variable" ) 
+					end 
+				end 
 				
-			-- 	continue 
-			-- end 
+				continue 
+			end 
 			
-			-- if word == "method" then 
-			-- 	self:NextPattern( " *" ) 
-			-- 	self:AddToken( "keyword" )
+			if word == "method" then 
+				self:NextPattern( " *" ) 
+				self:AddToken( "keyword" )
 				
-			-- 	if self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) then 
-			-- 		if isvar( self.sTokenData ) then 
-			-- 			local MethodVar = self.sTokenData 
-			-- 			self:AddToken( "variable" )
-			-- 			self:NextPattern( " *: *" ) 
-			-- 			self:AddToken( "operator" )
+				if self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) then 
+					if isvar( self.sTokenData ) then 
+						local MethodVar = self.sTokenData 
+						self:AddToken( "variable" )
+						self:NextPattern( " *: *" ) 
+						self:AddToken( "operator" )
 						
-			-- 			if self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) then 
-			-- 				if MetaMethods[string_match( self.sTokenData, "operator_(.*)" )] then 
-			-- 					self:AddToken( "metamethod" )
-			-- 				else 
-			-- 					self:AddToken( "userfunction" )
-			-- 					self:CreateMethodFunction( nRow, MethodVar, self.sTokenData )
-			-- 				end 
-			-- 			end 
-			-- 		else 
-			-- 			self:AddToken( "notfound" )
-			-- 		end 
-			-- 	end 
+						if self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) then 
+							if MetaMethods[string_match( self.sTokenData, "operator_(.*)" )] then 
+								self:AddToken( "metamethod" )
+							else 
+								self:AddToken( "userfunction" )
+								self:CreateMethodFunction( nRow, MethodVar, self.sTokenData )
+							end 
+						end 
+					else 
+						self:AddToken( "notfound" )
+					end 
+				end 
 				
-			-- 	continue
-			-- end 
+				continue
+			end 
+			*/
 			
 			if keywords[word][1] then 
 				if keywords[word][2] then 
@@ -605,8 +642,27 @@ function Syntaxer:Parse( nRow )
 				end 
 			end 
 			
-			if self.Functions[self.sTokenData] then 
+			/*if self.Functions[self.sTokenData] then 
 				self:AddToken( "function" )
+				continue 
+			end */
+			
+			if self.Libraries[self.sTokenData] then 
+				local lib = self.Libraries[self.sTokenData]
+				self:AddToken( "librarie" )
+				self:SkipSpaces( )
+				self:NextPattern( "^." ) 
+				self:AddToken( "operator" ) 
+				self:SkipSpaces( )
+				
+				if self:NextPattern( "^[a-z][a-zA-Z0-9]*" ) then 
+					if lib[self.sTokenData] then 
+						self:AddToken( "function" )
+					else 
+						self:AddToken( "notfound" )
+					end 
+				end 
+				
 				continue 
 			end 
 			
@@ -623,47 +679,49 @@ function Syntaxer:Parse( nRow )
 			if isvar( word ) then 
 				self:AddToken( "variable" )
 				
-				if self:NextPattern( " *%. *" ) then 
+				/*if self:NextPattern( " *%. *" ) then 
 					self:AddToken( "operator" )
 					
 					if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
-						self:AddToken( "function" )
-					end 
-				elseif self:NextPattern( " *: *" ) then 
-					self:AddToken( "operator" )
-					
-					if string_match( self.sLine, "^[a-zA-Z][a-zA-Z0-9_]*", self.nPosition ) then 
-						local func = string_match( self.sLine, "^[a-zA-Z][a-zA-Z0-9_]*", self.nPosition )
-						if self.MetaMethods[word] and self.MetaMethods[word][func] then 
-							self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" )
+						if self.Methods[self.sTokenData] then 
 							self:AddToken( "userfunction" )
+						else 
+							self:AddToken( "notfound" )
 						end 
 					end 
-				end
+				end*/
 				continue 
 			end 
 			
 			self:AddToken( "notfound" )
-			continue 
-		-- elseif self:NextPattern( "^@[a-zA-Z][a-zA-Z0-9_]*" ) then 
-		-- 	if EXPADV.Directives[string_sub( self.sTokenData, 2 )] then 
-		-- 		self:AddToken( "directive" )
-				
-		-- 		if self:NextPattern( " *: *" ) then 
-		-- 			self:AddToken( "operator" ) 
-		-- 			if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
-		-- 				self:AddUserDirective( nRow, self.sTokenData )
-		-- 				self:AddToken( "variable" ) 
-		-- 			end 
-		-- 		end 
-				
-		-- 		continue 
-		-- 	end 
-		-- 	self:AddToken( "notfound" )
+		elseif self:NextPattern( "^@[a-zA-Z][a-zA-Z0-9_]*" ) then 
+			-- if EXPADV.Directives[string_sub( self.sTokenData, 2 )] then 
+			local dir = string_sub( self.sTokenData, 2 )
+			if Directives[dir] then 
+				self:AddToken( "directive" )
+				self:SkipSpaces( ) 
+				continue 
+			end 
+			self:AddToken( "notfound" )
 		elseif self:NextPattern( "^0[xb][%x]+" ) then 
 			self:AddToken( "number" )
 		elseif self:NextPattern( "^[%d][%d%.e]*" ) then 
 			self:AddToken( "number" )
+		elseif self:NextPattern( "^%." ) then 
+			self:AddToken( "operator" )
+			self:SkipSpaces( ) 
+			
+			if self:NextPattern( "^[a-z][a-zA-Z0-9]*" ) then 
+				local s = self.sTokenData
+				if self.Functions[s] then 
+					self:AddToken( "function" )
+					continue
+				elseif self.Methods[s] then 
+					self:AddToken( "function" )
+					continue
+				end 
+				self:AddToken( "notfound" )
+			end 
 		elseif self.sChar == "'" then
 			self:NextCharacter( )
 			self.bMultilineString = true 
