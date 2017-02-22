@@ -331,11 +331,11 @@ function COMPILER.AssignVariable(this, token, declaired, varName, class, scope)
 
 	local c, s, var = this:GetVariable(varName, scope, declaired);
 
-	--Golem.Print("AssVar:", name, scope, declaired, var)
-
 	if (declaired) then
-		if (c) then
+		if (c and c == class) then
 			this:Throw(token, "Unable to declare variable %s, Variable already exists.", varName);
+		elseif (c) then
+			this:Throw(token, "Unable to initalize variable %s, %s expected got %s.", varName, name(c), name(class));
 		else
 			return this:SetVariable(varName, class, scope);
 		end
@@ -1982,6 +1982,10 @@ end
 
 function COMPILER.Compile_STR(this, inst, token, expressions)
 	return "s", 1
+end
+
+function COMPILER.Compile_PTRN(this, inst, token, expressions)
+	return "_ptr", 1
 end
 
 function COMPILER.Compile_CLS(this, inst, token, expressions)

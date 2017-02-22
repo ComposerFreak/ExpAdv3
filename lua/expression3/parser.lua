@@ -1665,6 +1665,10 @@ function PARSER.Expression_28(this)
 		local inst = this:StartInstruction("str", this.__token);
 		inst.value = this.__token.data;
 		return this:EndInstruction(inst, {});
+	elseif (this:Accept("ptr")) then
+		local inst = this:StartInstruction("ptrn", this.__token);
+		inst.value = this.__token.data;
+		return this:EndInstruction(inst, {});
 	elseif this:Accept("typ") then
 		local inst = this:StartInstruction("cls", this.__token);
 		inst.value = this.__token.data;

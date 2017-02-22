@@ -130,6 +130,12 @@ ext_core:RegisterOperator("not", "s", "b", 1, function (context, string) return 
 ext_core:RegisterOperator("len", "s", "n", 1, string.len, true);
 
 --[[
+	Class: STRING-PATTERN
+]]
+
+local class_ptr = ext_core:RegisterClass("ptr", {"patern"}, isstring, notnil);
+
+--[[
 	Class: FUNCTION
 ]]
 
@@ -167,7 +173,7 @@ ext_core:RegisterFunction("system", "print", "...", "", 0, function(context, ...
 	local values = {};
 
 	for _, v in pairs({...}) do
-		values[#values + 1] = func_tostring(context, v[1], v[2])
+		values[#values + 1] = func_tostring(context, v[1], v[2]);
 	end
 
 	if (SERVER) then
