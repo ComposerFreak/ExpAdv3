@@ -313,6 +313,40 @@ function EXPR_LIB.RegisterExtendedClass(id, name, base, isType, isValid)
 	return class;
 end
 
+function EXPR_LIB.RegisterWiredInport(class, wiretype, func)
+	local cls = EXPR_LIB.GetClass(class);
+
+	if (not cls) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register wired inport for none existing class %s", class);
+	end
+
+	if (SERVER) then
+		if (not WireLib.DT[wiretype]) then
+			EXPR_LIB.ThrowInternal(0, "Attempt to register wired inport for class %s, with invalid wire type %s", class, wiretype);
+		end
+	end
+
+	cls.wire_out_func = func;
+	cls.wire_out_class = wiretype;
+end
+
+function EXPR_LIB.RegisterWiredOutport(class, wiretype, func)
+	local cls = EXPR_LIB.GetClass(class);
+
+	if (not cls) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register wired outport for none existing class %s", class);
+	end
+
+	if (SERVER) then
+		if (not WireLib.DT[wiretype]) then
+			EXPR_LIB.ThrowInternal(0, "Attempt to register wired outport for class %s, with invalid wire type %s", class, wiretype);
+		end
+	end
+	
+	cls.wire_in_func = func;
+	cls.wire_in_class = wiretype;
+end
+
 local loadConstructors = false;
 
 function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeContext)
@@ -528,42 +562,7 @@ function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _funct
 end
 
 --[[
-local events;
-local loadEvents = false;
-
-function EXPR_LIB.RegisterEvent(name, parameter, type, count)
-	if (not loadEvents) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register event %s(%s) outside of Hook::Expression3.LoadEvents", name, parameter);
-	end
-
-	local state, signature = EXPR_LIB.SortArgs(parameter);
-
-	if (not state) then
-		EXPR_LIB.ThrowInternal(0, "%s for function %s.%s(%s)", signature, library, name, parameter);
-	end
-
-	local res = EXPR_LIB.GetClass(type);
-
-	if (not res) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) with none existing return class %s", library, name, parameter, type);
-	end
-
-	local evt = {};
-	evt.name = name;
-	op.state = STATE;
-	evt.parameter = signature;
-	evt.signature = string.format("%s(%s)", name, signature);
-	evt.result = res.id;
-	evt.rCount = count;
-
-	events[evt.signature] = evt;
-
-	return evt;
-end]]
-
---[[
 ]]
-
 
 function EXPR_LIB.GetClass(class)
 	if (class == "") then
@@ -670,6 +669,22 @@ function Extension.RegisterExtendedClass(this, id, name, base, isType, isValid)
 	this.classes[#this.classes + 1] = entry;
 end
 
+function Extension.RegisterWiredInport(this, class, wiretype, func)
+	hook.Add("Expression3.LoadConstructors", "Expression3.WireInput." .. class, function()
+		if this.enabled then
+			EXPR_LIB.RegisterWiredInport(class, wiretype, func);
+		end
+	end);
+end
+
+function Extension.RegisterWiredOutport(this, class, wiretype, func)
+	hook.Add("Expression3.LoadConstructors", "Expression3.WireOutput." .. class, function()
+		if (this.enabled) then
+			EXPR_LIB.RegisterWiredOutport(class, wiretype, func);
+		end
+	end);
+end
+
 function Extension.RegisterConstructor(this, class, parameter, constructor, excludeContext)
 	local entry = {class, parameter, constructor, excludeContext, this.state};
 	this.constructors[#this.constructors + 1] = entry;
@@ -699,11 +714,6 @@ function Extension.RegisterFunction(this, library, name, parameter, type, count,
 	local entry = {library, name, parameter, type, count, _function, excludeContext, this.state};
 	this.functions[#this.functions + 1] = entry;
 end
-
---[[function Extension.RegisterEvent(this, name, parameter, type, count)
-	local entry = {name, parameter, type, count, this.state};
-	this.events[#this.events + 1] = entry;
-end]]
 
 function Extension.CheckRegistration(this, _function, ...)
 	local state, err = pcall(_function, ...);
@@ -794,14 +804,6 @@ function Extension.EnableExtension(this)
 			functions[op.signature] = op;
 		end
 	end);
-
-	--[[hook.Add("Expression3.LoadEvents", "Expression3.Extension." .. this.name, function()
-		for _, v in pairs(this.events) do
-			STATE = v[5];
-			local op = this:CheckRegistration(EXPR_LIB.RegisterEvent, v[1], v[2], v[3], v[4]);
-			op.extension = this.name;
-		end
-	end);]]
 
 	hook.Add("Expression3.BuildExtensionData","Expression3.Extension." .. this.name, function()
 		this.classes = classes;
@@ -939,12 +941,6 @@ function EXPR_LIB.Initalize()
 	loadFunctions = true;
 	hook.Run("Expression3.LoadFunctions");
 	loadFunctions = false;
-
-	--[[events = {};
-	loadEvents = true;
-	hook.Run("Expression3.LoadEvents");
-	loadEvents = false;
-	EXPADV_EVENTS = events;]]
 
 	for id, class in pairs(classes) do
 		extendClass(id, class.base);

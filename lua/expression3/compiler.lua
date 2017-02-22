@@ -43,6 +43,7 @@ function COMPILER.Initalize(this, instance)
 	this.__tasks = instance.tasks;
 	this.__root = instance.instruction;
 	this.__script = instance.script;
+	this.__directives = instance.directives;
 
 	this.__scope = {};
 	this.__scopeID = 0;
@@ -96,6 +97,7 @@ function COMPILER._Run(this)
 	result.functions = this.__functions;
 	result.methods = this.__methods;
 	result.enviroment = this.__enviroment;
+	result.directives = this.__directives;
 	result.traceTbl = traceTbl;
 	
 	return result;
@@ -331,11 +333,11 @@ function COMPILER.AssignVariable(this, token, declaired, varName, class, scope)
 
 	local c, s, var = this:GetVariable(varName, scope, declaired);
 
-	--Golem.Print("AssVar:", name, scope, declaired, var)
-
 	if (declaired) then
-		if (c) then
+		if (c and c == class) then
 			this:Throw(token, "Unable to declare variable %s, Variable already exists.", varName);
+		elseif (c) then
+			this:Throw(token, "Unable to initalize variable %s, %s expected got %s.", varName, name(c), name(class));
 		else
 			return this:SetVariable(varName, class, scope);
 		end
@@ -1984,6 +1986,10 @@ function COMPILER.Compile_STR(this, inst, token, expressions)
 	return "s", 1
 end
 
+function COMPILER.Compile_PTRN(this, inst, token, expressions)
+	return "_ptr", 1
+end
+
 function COMPILER.Compile_CLS(this, inst, token, expressions)
 	this:QueueReplace(inst, token, "\"" .. token.data .. "\"");
 	return "_cls", 1
@@ -2766,6 +2772,53 @@ function COMPILER.Compile_FOR(this, inst, token, expressions)
 	this:Compile(inst.stmts);
 
 	this:PopScope();
+end
+
+--[[
+]]
+
+function COMPILER.Compile_INPORT(this, inst, token)
+	if (this:GetOption("state") ~= EXPR_SERVER) then
+		this:Throw(token, "Wired input('s) must be defined server side.");
+	end
+
+	for _, token in pairs(inst.variables) do
+		local var = token.data;
+
+		if (var[1] ~= string.upper(var[1])) then
+			this:Throw(token, "Invalid name for wired input %s, name must be cammel cased");
+		end
+
+		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0);
+
+		if (info) then
+			info.prefix = "INPUT";
+		end
+
+		this.__directives.inport[var] = {class = inst.class, wire = inst.wire_type, func = inst.wire_func};
+	end
+end
+
+function COMPILER.Compile_OUTPORT(this, inst, token)
+	if (this:GetOption("state") ~= EXPR_SERVER) then
+		this:Throw(token, "Wired output('s) must be defined server side.");
+	end
+
+	for _, token in pairs(inst.variables) do
+		local var = token.data;
+
+		if (var[1] ~= string.upper(var[1])) then
+			this:Throw(token, "Invalid name for wired output %s, name must be cammel cased");
+		end
+
+		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0);
+
+		if (info) then
+			info.prefix = "OUTPUT";
+		end
+
+		this.__directives.outport[var] = {class = inst.class, wire = inst.wire_type, func = inst.wire_func};
+	end
 end
 
 EXPR_COMPILER = COMPILER;

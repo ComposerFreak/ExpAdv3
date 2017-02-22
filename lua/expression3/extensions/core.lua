@@ -18,14 +18,11 @@
 		*VARIANT
 ]]
 
-local function isNil(o)
-	return o == nil;
-end
+--[[
+	Core Extention.
+]]
 
-local function isNotNil(o)
-	return o ~= nil;
-end
-
+local ext_core = EXPR_LIB.RegisterExtension("core");
 local function eqM(a, b, ...)
 	for k, v in pairs({b, ...}) do
 		if (a ~= v) then
@@ -51,141 +48,174 @@ local function neqM(a, b, ...)
 end
 
 --[[
-	::CLASSES::
+	Class: NIL
 ]]
 
-hook.Add("Expression3.LoadClasses", "Expression3.Core.Classes", function()
-	EXPR_LIB.RegisterClass("o", {"object"}, isNotNil, isNotNil);
-	EXPR_LIB.RegisterClass("nil", {"void"}, isnumber, isNil);
-	EXPR_LIB.RegisterClass("cls", {"class"}, isstring, isNil);
-	EXPR_LIB.RegisterClass("b", {"boolean", "bool"}, isbool, isNotNil);
-	EXPR_LIB.RegisterClass("n", {"number", "normal", "int", "math.number"}, isnumber, isNotNil);
-	EXPR_LIB.RegisterClass("s", {"string"}, isstring, isNotNil);
-	EXPR_LIB.RegisterClass("f", {"function"}, istable, isNotNil);
-	EXPR_LIB.RegisterClass("vr", {"variant"}, istable, isNotNil);
-end);
+local _nil = {} -- Future implimentation of nil.
+local isnil = function(obj) return obj == nil or obj == _nil end;
+local notnil = function(obj) return obj ~= nil and obj ~= _nil end;
 
-
-hook.Add("Expression3.LoadOperators", "Expression3.Core.Operators", function()
-		
-	-- ::BOOLEAN::
-	EXPR_LIB.RegisterOperator("neq", "b,b", "b", 1);
-	EXPR_LIB.RegisterOperator( "eq", "b,b", "b", 1);
-	EXPR_LIB.RegisterOperator("and", "b,b", "b", 1);
-	EXPR_LIB.RegisterOperator( "or", "b,b", "b", 1);
-	EXPR_LIB.RegisterOperator( "is", "b", "b", 1);
-	EXPR_LIB.RegisterOperator("not", "b", "b", 1); 
-
-	-- ::NUMBER::
-	EXPR_LIB.RegisterOperator("add", "n,n", "n", 1);
-	EXPR_LIB.RegisterOperator("sub", "n,n", "n", 1);
-	EXPR_LIB.RegisterOperator("div", "n,n", "n", 1);
-	EXPR_LIB.RegisterOperator("mul", "n,n", "n", 1);
-	EXPR_LIB.RegisterOperator("exp", "n,n", "n", 1);
-	EXPR_LIB.RegisterOperator("mod", "n,n", "n", 1);
-
-	EXPR_LIB.RegisterOperator("bxor", "n,n", "n", 1); -- Uses bit.bxor
-	EXPR_LIB.RegisterOperator("bor", "n,n", "n", 1);  -- Uses bit.bor
-	EXPR_LIB.RegisterOperator("band", "n,n", "n", 1); -- Uses bit.band
-	EXPR_LIB.RegisterOperator("bshl", "n,n", "n", 1); -- Uses bit.lshift
-	EXPR_LIB.RegisterOperator("bshr", "n,n", "n", 1); -- Uses bit.rshift
-
-	EXPR_LIB.RegisterOperator("neq", "n,n", "b", 1);
-	EXPR_LIB.RegisterOperator( "eq", "n,n", "b", 1); 
-	EXPR_LIB.RegisterOperator("lth", "n,n", "b", 1);
-	EXPR_LIB.RegisterOperator("leg", "n,n", "b", 1);
-	EXPR_LIB.RegisterOperator("gth", "n,n", "b", 1);
-	EXPR_LIB.RegisterOperator("geq", "n,n", "b", 1);
-
-	EXPR_LIB.RegisterOperator("eq*", "n,n", "b", 1, eqM, true);
-	EXPR_LIB.RegisterOperator("neq*", "n,n", "b", 1, neqM, true);
-	EXPR_LIB.RegisterOperator("call", "n,n", "n", 1, function(a, b) return a + b end);
-
-	local function notN(context, number)
-		return number == 0;
-	end
-
-	EXPR_LIB.RegisterOperator( "is", "n", "b", 1, tobool, true);
-	EXPR_LIB.RegisterOperator("neg", "n", "n", 1);
-	EXPR_LIB.RegisterOperator("not", "n", "b", 1, notN, true);
-
-	-- ::STRING::
-
-	EXPR_LIB.RegisterOperator("add", "s,n", "s", 1);
-	EXPR_LIB.RegisterOperator("add", "n,s", "s", 1);
-	EXPR_LIB.RegisterOperator("add", "s,s", "s", 1);
-
-	EXPR_LIB.RegisterOperator("neq", "s,s", "b", 1);
-	EXPR_LIB.RegisterOperator( "eq", "s,s", "b", 1); 
-	EXPR_LIB.RegisterOperator("lth", "s,s", "b", 1);
-	EXPR_LIB.RegisterOperator("leg", "s,s", "b", 1);
-	EXPR_LIB.RegisterOperator("gth", "s,s", "b", 1);
-	EXPR_LIB.RegisterOperator("geq", "s,s", "b", 1);
-
-	EXPR_LIB.RegisterOperator("eq*", "s,s", "b", 1, eqM, true);
-	EXPR_LIB.RegisterOperator("neq*", "s,s", "b", 1, neqM, true); 
-
-	EXPR_LIB.RegisterOperator("get", "s,n", "s", 1); 
-
-	local function isS(context, string)
-		return string and string ~= "";
-	end
-
-	local function notS(context, string)
-		return string and string ~= "";
-	end
-
-	EXPR_LIB.RegisterOperator( "is", "s", "b", 1, isS, true);
-	EXPR_LIB.RegisterOperator("not", "s", "b", 1, notS, true);
-	EXPR_LIB.RegisterOperator("len", "s", "n", 1, string.len, true);
-end);
-
-hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", function()
-	-- TODO: Load extensions here.
-	include("expression3/extensions/math.lua");
-	include("expression3/extensions/vector.lua");
-	include("expression3/extensions/angle.lua");
-	include("expression3/extensions/entity.lua");
-end);
+local class_nil = ext_core:RegisterClass("nil", {"void"}, isnumber, isnil);
 
 --[[
-	::SYSTEM LIBRARY::
+	Class: CLASS
 ]]
 
-EXPR_LIB.Invoke = function(context, result, count, func, ...)
+local class_nil = ext_core:RegisterClass("cls", {"class"}, isstring, isnil);
+
+--[[
+	Class: BOOLEAN
+]]
+
+local class_bool = ext_core:RegisterClass("b", {"boolean", "bool"}, isbool, notnil);
+
+ext_core:RegisterWiredInport("b", "NORMAL", function(i)
+	return i ~= 0;
+end);
+
+ext_core:RegisterWiredOutport("b", "NORMAL", function(o)
+	return o and 1 or 0;
+end);
+
+ext_core:RegisterOperator("neq", "b,b", "b", 1);
+ext_core:RegisterOperator( "eq", "b,b", "b", 1);
+ext_core:RegisterOperator("and", "b,b", "b", 1);
+ext_core:RegisterOperator( "or", "b,b", "b", 1);
+ext_core:RegisterOperator( "is", "b", "b", 1);
+ext_core:RegisterOperator("not", "b", "b", 1); 
+
+--[[
+	Class: NUMBER
+]]
+
+local class_num = ext_core:RegisterClass("n", {"number", "int", "integer", "double", "normal"}, isnumber, notnil);
+
+ext_core:RegisterWiredInport("n", "NORMAL");
+
+ext_core:RegisterWiredOutport("n", "NORMAL");
+
+ext_core:RegisterOperator("add", "n,n", "n", 1);
+ext_core:RegisterOperator("sub", "n,n", "n", 1);
+ext_core:RegisterOperator("div", "n,n", "n", 1);
+ext_core:RegisterOperator("mul", "n,n", "n", 1);
+ext_core:RegisterOperator("exp", "n,n", "n", 1);
+ext_core:RegisterOperator("mod", "n,n", "n", 1);
+ext_core:RegisterOperator("bxor", "n,n", "n", 1); -- Uses bit.bxor
+ext_core:RegisterOperator("bor", "n,n", "n", 1);  -- Uses bit.bor
+ext_core:RegisterOperator("band", "n,n", "n", 1); -- Uses bit.band
+ext_core:RegisterOperator("bshl", "n,n", "n", 1); -- Uses bit.lshift
+ext_core:RegisterOperator("bshr", "n,n", "n", 1); -- Uses bit.rshift
+ext_core:RegisterOperator("neq", "n,n", "b", 1);
+ext_core:RegisterOperator( "eq", "n,n", "b", 1); 
+ext_core:RegisterOperator("lth", "n,n", "b", 1);
+ext_core:RegisterOperator("leg", "n,n", "b", 1);
+ext_core:RegisterOperator("gth", "n,n", "b", 1);
+ext_core:RegisterOperator("geq", "n,n", "b", 1);
+ext_core:RegisterOperator("eq*", "n,n", "b", 1, eqM, true);
+ext_core:RegisterOperator("neq*", "n,n", "b", 1, neqM, true);
+
+ext_core:RegisterOperator( "is", "n", "b", 1, tobool, true);
+ext_core:RegisterOperator("neg", "n", "n", 1);
+ext_core:RegisterOperator("not", "n", "b", 1, function (context, number) return number == 0 end, true);
+
+--[[
+	Class: STRING
+]]
+
+local class_str = ext_core:RegisterClass("s", {"string", "str"}, isstring, notnil);
+
+ext_core:RegisterWiredInport("s", "STRING");
+
+ext_core:RegisterWiredOutport("s", "STRING");
+
+ext_core:RegisterOperator("add", "s,n", "s", 1);
+ext_core:RegisterOperator("add", "n,s", "s", 1);
+ext_core:RegisterOperator("add", "s,s", "s", 1);
+ext_core:RegisterOperator("neq", "s,s", "b", 1);
+ext_core:RegisterOperator( "eq", "s,s", "b", 1); 
+ext_core:RegisterOperator("lth", "s,s", "b", 1);
+ext_core:RegisterOperator("leg", "s,s", "b", 1);
+ext_core:RegisterOperator("gth", "s,s", "b", 1);
+ext_core:RegisterOperator("geq", "s,s", "b", 1);
+ext_core:RegisterOperator("eq*", "s,s", "b", 1, eqM, true);
+ext_core:RegisterOperator("neq*", "s,s", "b", 1, neqM, true); 
+ext_core:RegisterOperator("get", "s,n", "s", 1); 
+
+ext_core:RegisterOperator( "is", "s", "b", 1, function (context, string) return string and string ~= "" end, true);
+ext_core:RegisterOperator("not", "s", "b", 1, function (context, string) return string and string ~= "" end, true);
+ext_core:RegisterOperator("len", "s", "n", 1, string.len, true);
+
+--[[
+	Class: STRING-PATTERN
+]]
+
+local class_ptr = ext_core:RegisterClass("ptr", {"patern"}, isstring, notnil);
+
+--[[
+	Class: FUNCTION
+]]
+
+local class_function = ext_core:RegisterClass("f", {"function"}, istable, notnil);
+
+
+--[[
+	Class: OBJECT
+]]
+
+local class_object = ext_core:RegisterClass("vr", {"variant", "object"}, istable, notnil);
+	-- Yes this should known as an OBJECT, todo :D
+
+--[[
+	Library: SYSTEM
+]]
+
+local func_tostring = EXPR_LIB.ToString;
+
+local func_invoke = function(context, result, count, func, ...)
 	if (result ~= func.result or count ~= func.count) then
 		context:Throw("Invoked function returned unexpected results");
 	end
 
 	return func.op(...);
-end
+end; EXPR_LIB.Invoke = func_invoke;
 
-hook.Add("Expression3.LoadLibraries", "Expression3.Core.Extensions", function()
-	EXPR_LIB.RegisterLibrary("system")
+-- \/ Library \/
+
+ext_core:RegisterLibrary("system");
+
+ext_core:RegisterFunction("system", "invoke", "cls,n,f,...", "", 0, EXPR_LIB.Invoke);
+
+ext_core:RegisterFunction("system", "print", "...", "", 0, function(context, ...)
+	local values = {};
+
+	for _, v in pairs({...}) do
+		values[#values + 1] = func_tostring(context, v[1], v[2]);
+	end
+
+	if (SERVER) then
+		context.entity:SendToOwner(false, unpack(values));
+	end
+
+	if (CLIENT) then
+		chat.AddText(unpack(values));
+	end
 end);
 
-hook.Add("Expression3.LoadFunctions", "Expression3.Core.Extensions", function()
-	EXPR_LIB.RegisterFunction("system", "invoke", "cls,n,f,...", "", 0, EXPR_LIB.Invoke);
+ext_core:RegisterFunction("system", "out", "...", "", 0, function(context, ...)
+	local values = {};
 
-	EXPR_LIB.RegisterFunction("system", "print", "...", "", 0, function(context, ...)
-		local values = {};
+	for _, v in pairs({...}) do
+		values[#values + 1] = func_tostring(context, v[1], v[2])
+	end
 
-		for _, v in pairs({...}) do
-			values[#values + 1] = EXPR_LIB.ToString(context, v[1], v[2])
-		end
-
-		-- print("out->", table.concat(values, " "));
-		-- TODO: EXPR_LIB.PrintOutput(context, EXPR_CONSOLE, table.concat(values, " "));
-
-		if (SERVER) then
-			context.entity:SendToOwner(false, unpack(values));
-		end
-
-		if (CLIENT) then
-			chat.AddText(unpack(values));
-		end
-	end);
+	context.entity:SendToOwner(true, unpack(values));
 end);
+
+	--[[ 
+		::EXAMPLE - Compile time alterations for function call::
+			* You should never need this, but you can alter the compilers output here.
+			* When system.invoke is called, we take all peramaters and convert to variant.
+	]] 
 
 hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions", function(this, inst, token, expressions)
 	-- First all expressions passed to vararg need to be variants.
@@ -209,53 +239,122 @@ hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions",
 end);
 
 --[[
-	::EVENT LIBRARY::
+	Library: EVENT
 ]]
 
--- When calling this you must always make your varargs int variants e.g "examp" -> {"s", "examp"}
-function EXPR_LIB.CallEvent(result, count, name, ...)
+-- When calling this you must always make your varargs into variants e.g "examp" -> {"s", "examp"}
+local event_call = function(result, count, name, ...)
 	for _, context in pairs(EXPR_LIB.GetAll()) do
 		if (IsValid(context.entity)) then
 			context.entity:CallEvent(result, count, name, ...);
 		end
 	end
-end
+end; EXPR_LIB.CallEvent = event_call;
 
-hook.Add("Expression3.LoadLibraries", "Expression3.Core.Events", function()
-	EXPR_LIB.RegisterLibrary("event");
+ext_core:RegisterLibrary("event");
+
+ext_core:RegisterFunction("event", "add", "s,s,f", "", 0, function(context, event, id, udf)
+	local events = context.events[event];
+
+	if (not events) then
+		events = {};
+		context.events[event] = events;
+	end
+
+	events[id] = udf;
 end);
 
-hook.Add("Expression3.LoadFunctions", "Expression3.Core.Events", function()
-	EXPR_LIB.RegisterFunction("event", "add", "s,s,f", "", 0, function(context, event, id, udf)
-		local events = context.events[event];
+ext_core:RegisterFunction("event", "remove", "s,s", "", 0, function(context, event, id)
+	local events = context.events[event];
 
-		if (not events) then
-			events = {};
-			context.events[event] = events;
-		end
+	if (not events) then
+		return;
+	end
 
-		events[id] = udf;
-	end);
-
-	EXPR_LIB.RegisterFunction("event", "remove", "s,s", "", 0, function(context, event, id)
-		local events = context.events[event];
-
-		if (not events) then
-			return;
-		end
-
-		events[id] = nil;
-	end);
-
-	EXPR_LIB.RegisterFunction("event", "call", "_cls,n,s,...", "", 0, function(context, result, count, event, ...)
-		local status, result = context.ent:CallEvent(result, count, event, ...);
-
-		if (status) then
-			return unpack(result);
-		end
-	end);
+	events[id] = nil;
 end);
+
+ext_core:RegisterFunction("event", "call", "cls,n,s,...", "", 0, function(context, result, count, event, ...)
+	local status, result = context.ent:CallEvent(result, count, event, ...);
+
+	if (status) then
+		return unpack(result);
+	end
+end);
+
+--[[
+	Library: MATH
+]]
+
+local math_floor = math.floor
+
+ext_core:RegisterLibrary("math");
+
+ext_core:RegisterFunction("math", "abs", "n", "n", 1, "math.abs", true);
+ext_core:RegisterFunction("math", "acos", "n", "n", 1, "math.acos", true);
+ext_core:RegisterFunction("math", "asin", "n", "n", 1, "math.asin", true);
+ext_core:RegisterFunction("math", "atan", "n", "n", 1, "math.asin", true);
+ext_core:RegisterFunction("math", "ceil", "n", "n", 1, "math.ceil", true);
+ext_core:RegisterFunction("math", "cos", "n", "n", 1, "math.cos", true);
+ext_core:RegisterFunction("math", "deg", "n", "n", 1, "math.deg", true);
+ext_core:RegisterFunction("math", "exp", "n", "n", 1, "math.exp", true);
+ext_core:RegisterFunction("math", "floor", "n", "n", 1, "math.floor", true);
+ext_core:RegisterFunction("math", "fmod", "n", "n", 1, "math.asin", true);
+ext_core:RegisterFunction("math", "huge", "n", "n", 1, "math.asin", true);
+ext_core:RegisterFunction("math", "log", "n", "n", 1, "math.log", true);
+ext_core:RegisterFunction("math", "modf", "n", "n", 1, "math.modf", true);
+ext_core:RegisterFunction("math", "randomseed", "n", "n", 1, "math.randomseed", true);
+ext_core:RegisterFunction("math", "rad", "n", "n", 1, "math.rad", true);
+ext_core:RegisterFunction("math", "random", "", "n", 1, "math.random", true); -- math.random() with no arguments generates a real number between 0 and 1
+ext_core:RegisterFunction("math", "random", "n", "n", 1, "math.random", true); -- math.random(upper) generates integer numbers between 1 and upper
+ext_core:RegisterFunction("math", "random", "n,n", "n", 1, "math.random", true); -- math.random(lower, upper) generates integer numbers between lower and upper
+
+--[[
+	Library: STRING (including methods.)
+]]
+
+local string_char = string.char
+local string_byte = string.byte
+local string_len = string.len
+local utf8_char = utf8.char
+local utf8_byte = utf8.codepoint
+
+ext_core:RegisterLibrary("string");
+
+ext_core:RegisterFunction("string", "toNumber", "n", "s", 1, func, true);
+
+ext_core:RegisterMethod("s", "toNumber", "n", "n", 1, function(n, b) return tonumber(n, base) or 0; end, true);
+
+ext_core:RegisterFunction("string", "toChar", "n,", "s", 1, function(n)
+	return (n < 1 or n > 255) and "" or string_char(n);
+end, true);
+
+ext_core:RegisterFunction("string", "toByte", "s,", "n", 1, function(s)
+	return (s ~= "") and (string_byte(s) or -1) or -1;
+end, true);
+
+--[[
+	MISC
+]]
 
 hook.Add("Think", "Expression3.Event", function()
 	EXPR_LIB.CallEvent("", 0, "Think");
 end);
+
+--[[
+	Register Extentions
+]]
+
+hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", function()
+	ext_core:EnableExtension(); -- Core is registered first :P
+
+	include("expression3/extensions/math.lua");
+	include("expression3/extensions/string.lua");
+	include("expression3/extensions/vector.lua");
+	include("expression3/extensions/angle.lua");
+	include("expression3/extensions/entity.lua");
+
+	-- Custom will go here.
+end);
+
+

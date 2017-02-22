@@ -188,6 +188,13 @@ function TOKENIZER.NextChar(this)
 	this:SkipChar();
 end
 
+function TOKENIZER.PrevChar(this)
+	this.__dataEnd = this.__dataEnd - 2;
+	this.__pos = this.__pos - 2;
+	this.__data = string.sub(this.__data, 0, #this.__data - 2);
+	this:SkipChar();
+end
+
 function TOKENIZER.SkipChar(this)
 	if (this.__lengh < this.__pos) then
 		this.__char = nil;
@@ -421,6 +428,18 @@ function TOKENIZER.Loop(this)
 
 	-- Strings
 	
+	local pattern = false;
+
+	if (this.__char == "@") then
+		this:SkipChar();
+
+		if not (this.__char == '"' or this.__char == "'") then
+			this:PrevChar();
+		else
+			pattern = true;
+		end
+	end
+
 	if (this.__char == '"' or this.__char == "'") then
 		local strChar = this.__char;
 
@@ -490,7 +509,12 @@ function TOKENIZER.Loop(this)
 				this:Replace(str);
 			end
 
-			this:CreateToken("str", "string");
+			if (not pattern) then
+				this:CreateToken("str", "string");
+			else
+				this:CreateToken("ptr", "string pattern");
+			end
+
 			return true;
 		end
 
