@@ -97,8 +97,8 @@ end
 ]]
 
 local function SortPorts( PortA, PortB )
-	local TypeA = PortA[2] or "NORMAL"
-	local TypeB = PortB[2] or "NORMAL"
+	local TypeA = PortA.wire or "NORMAL"
+	local TypeB = PortB.wire or "NORMAL"
 
 	if TypeA ~= TypeB then
 		if TypeA == "NORMAL" then
@@ -119,9 +119,9 @@ function ENT:BuildWiredPorts(sort_in, sort_out)
 
 	table.sort( sort_in, SortPorts );
 
-	for var, type in pairs(sort_in) do
+	for var, port in pairs(sort_in) do
 		names_in[#names_in + 1] = var;
-		types_in[#types_in + 1] = type;
+		types_in[#types_in + 1] = port.wire;
 	end
 	
 	local old_inports = self.Inputs;
@@ -139,9 +139,9 @@ function ENT:BuildWiredPorts(sort_in, sort_out)
 	
 	table.sort( sort_out, SortPorts );
 
-	for var, type in pairs(sort_out) do
+	for var, port in pairs(sort_out) do
 		names_out[#names_out + 1] = var;
-		types_out[#types_out + 1] = type;
+		types_out[#types_out + 1] = port.wire;
 	end
 
 	local old_outports = self.OutPorts;

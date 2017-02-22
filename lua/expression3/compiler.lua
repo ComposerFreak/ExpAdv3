@@ -2795,7 +2795,7 @@ function COMPILER.Compile_INPORT(this, inst, token)
 			info.prefix = "INPUT";
 		end
 
-		this.__directives.inport[var] = inst.class;
+		this.__directives.inport[var] = {class = inst.class, wire = inst.wire_type, func = inst.wire_func};
 	end
 end
 
@@ -2817,7 +2817,7 @@ function COMPILER.Compile_OUTPORT(this, inst, token)
 			info.prefix = "OUTPUT";
 		end
 
-		this.__directives.outport[var] = inst.class;
+		this.__directives.outport[var] = {class = inst.class, wire = inst.wire_type, func = inst.wire_func};
 	end
 end
 
