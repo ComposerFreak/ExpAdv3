@@ -71,31 +71,16 @@ function ENT:PostInitScript()
 
 end
 
---[[
-]]
-
-function ENT:GetCreatorName()
-	local owner = self:CPPIGetOwner();
-
-	if (owner == nil) then
-		return "unowned/world";
-	end
-
-	if (not IsValid(owner)) then
-		return "Disconnected";
-	end
-
-	return owner:GetName();
-end
-
 -- function ENT:GetOverlayText()
 function ENT:GetOverlayData()
 	return {txt = table.concat({
-		"::Expression (adv) 3::",
-		self:GetCreatorName(),
+		"::Expression 3::",
+		self:GetPlayerName(),
+		"----------------------",
 		"SV average: " .. self:GetServerAverageCPU(),
 		"SV total:" .. self:GetServerTotalCPU(),
 		"SV warning:" .. tostring(self:GetServerWarning()),
+		"----------------------",
 		"CL average: " .. self:GetClientAverageCPU(),
 		"CL total:" .. self:GetClientTotalCPU(),
 		"CL warning:" .. tostring(self:GetClientWarning()),
@@ -106,10 +91,8 @@ end
 ]]
 
 function ENT:SendToOwner(bConsole, ...)
-	local owner = self:GetCreator();
+	local owner = self:GetPlayer();
 
-	print("SEND TO OWNER", self, owner);
-	
 	if (owner == LocalPlayer()) then
 		Golem.Print(...);
 	else

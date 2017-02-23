@@ -20,48 +20,48 @@ AddCSLuaFile();
 
 if (not CPPI) then
 	function ENT:CPPIGetOwner()
-		return self:GetCreator();
+		return self:GetPlayer();
 	end
 
 	if (SERVER) then
 		function ENT:CPPISetOwner(ply)
 			if (IsValid(ply) and ply:IsPlayer()) then
-				self:SetCreator(ply);
+				self:SetPlayer(ply);
 			end
 
 			return true
 		end
 
 		function ENT:CPPICanTool(ply, tool)
-			return ply == self:GetCreator();
+			return ply == self:GetPlayer();
 		end
 
 		function ENT:CPPICanPhysgun(ply)
-			return ply == self:GetCreator();
+			return ply == self:GetPlayer();
 		end
 
 		function ENT:CPPICanPickup(ply)
-			return ply == self:GetCreator();
+			return ply == self:GetPlayer();
 		end
 
 		function ENT:CPPICanPunt(ply)
-			return ply == self:GetCreator();
+			return ply == self:GetPlayer();
 		end
 
 		function ENT:CPPICanUse(ply)
-			return ply == self:GetCreator();
+			return ply == self:GetPlayer();
 		end
 
 		function ENT:CPPICanDamage(ply)
-			return ply == self:GetCreator();
+			return ply == self:GetPlayer();
 		end
 
 		function ENT:CPPICanProperty(ply, property)
-			return ply == self:GetCreator();
+			return ply == self:GetPlayer();
 		end
 
 		function ENT:CPPICanEditVariable(ply, key, val, editTbl)
-			return ply == self:GetCreator();
+			return ply == self:GetPlayer();
 		end
 	end
 end

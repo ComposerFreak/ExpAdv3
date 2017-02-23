@@ -75,22 +75,25 @@ function ENT:HandelThrown(thrown)
 	self:ShutDown();
 
 	if (not thrown) then
-		self:SendToOwner(true, Color(255,0,0), "An unkown error ocurred.");
+		self:SendToOwner(true, Color(255,0,0), "Suffered an unkown error (no reason given).");
 	end
 
 	if (isstring(thrown)) then
-		self:SendToOwner(true, Color(255,0,0), thrown);
+		self:SendToOwner(true,
+			Color(255,0,0), "Suffered a lua error has occured, Details:\n",
+			"    ", Color(0,255, 255), "Error: ", Color(255, 255, 255), thrown, "\n",
+			"\n");
 	end
 
 	if (istable(thrown)) then
-		--self:SendThrownError(thrown);
-		print("state:", thrown.state);
-		print("msg:", thrown.msg);
-		print("char:", thrown.char);
-		print("line:", thrown.line);
+		self:SendToOwner(true,
+			Color(255,0,0), "Suffered a ", thrown.state, " error has occured, Details:\n",
+			"    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), thrown.msg, "\n",
+			"    ", Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char,
+		"\n");
 	end
 
-	self:SendToOwner(false, Color(255,0,0), "An expression3 gate has errored (see console).");
+	self:SendToOwner(false, Color(255,0,0), "One of your Expression3 gate's has errored (see golem console).");
 end
 
 --[[
@@ -126,7 +129,7 @@ function ENT:TriggerInput(name, value, noTrig)
 
 				if (v ~= self.context.wire_in[name]) then
 					context.wire_in[name] = v;
-					self:CallEvent("", 0, "trigger", {"s", name}, {port.class, v});
+					self:CallEvent("", 0, "Trigger", {"s", name}, {port.class, v});
 				end
 			end
 		end
@@ -224,7 +227,9 @@ function ENT:BuildDupeInfo()
 end
 
 function ENT:ApplyDupeInfo(ply, ent, info, GetEntByID)
-  self:SetCode( info.script )
-  self.BaseClass.ApplyDupeInfo(self, ply, ent, info, GetEntByID)
+	ent.player = ply;
+	self:SetPlayer(ply);
+	self:SetCode(info.script);
+	self.BaseClass.ApplyDupeInfo(self, ply, ent, info, GetEntByID);
 end
 

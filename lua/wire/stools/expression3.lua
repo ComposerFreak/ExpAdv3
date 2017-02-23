@@ -42,9 +42,14 @@ WireToolSetup.BaseLang()
 duplicator.RegisterEntityClass( "wire_expression3_base", WireLib.MakeWireEnt, "Data", "code_str" )
 
 function TOOL:PostMake(ent)
+	local ply = self:GetOwner();
+
+	ent.player = ply;
+	ent:SetPlayer(ply);
+	
 	net.Start("Expression3.RequestUpload");
 		net.WriteEntity(ent);
-	net.Send(self:GetOwner());
+	net.Send(ply);
 end
 
 local GateModels = {

@@ -257,7 +257,6 @@ end
 ]]
 
 function ENT:SetupDataTables()
-	self:NetworkVar("Entity", 0, "Creator");
 	self:NetworkVar("Float", 0, "ServerAverageCPU");
 	self:NetworkVar("Float", 1, "ServerTotalCPU");
 	self:NetworkVar("Bool", 1, "ServerWarning");
@@ -297,6 +296,6 @@ function ENT:Think()
 	if (SERVER) then
 		self:TriggerOutputs();
 	end
-	
+
 	hook.Run("Expression3.Entity.Think", self, self.context);
 end

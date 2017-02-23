@@ -2367,7 +2367,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, expressions)
 		if (class ~= "_vr") then
 			injectNewLine = true;
 			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end", var, var, name(class), var));
-			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, name(class), name(class), var, var));
+			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, class, name(class), var, var));
 			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("%s = %s[2];", var, var));
 			injectNewLine = false;
 		end
