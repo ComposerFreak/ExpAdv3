@@ -126,13 +126,13 @@ function Golem.GetDirective( directive )
 							if string.match( line, "%*/" ) then 
 								local _, p = string.find( line, "%*/" )
 								line = string.Trim( string.sub( line, p+1 ) )
-								
 								break
 							end 
 							
 							line = string.Trim( lines[i] )
 							i = i + 1
 						end 
+						continue
 					end 
 				end 
 				
