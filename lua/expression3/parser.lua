@@ -483,11 +483,15 @@ function PARSER.Block_1(this, _end, lcb)
 			this:QueueReplace(seq, this.__token, lcb);
 		end
 
-		this.__scope = this.__scope + 1;
+		local stmts = {};
 
-		local stmts = this:Statments(true);
+		if (not this:CheckToken("rcb")) then
+			this.__scope = this.__scope + 1;
 
-		this.__scope = this.__scope - 1;
+			stmts = this:Statments(true);
+
+			this.__scope = this.__scope - 1;
+		end
 
 		if (not this:Accept("rcb")) then
 			this:Throw(this.__token, "Right curly bracket (}) missing, to close block");
@@ -632,6 +636,8 @@ function PARSER.Directive_OUTPUT(this, token, directive)
 
 	inst.wire_func = class_obj.wire_out_func;
 
+	inst.wire_func2 = class_obj.wire_in_func;
+
 	return this:EndInstruction(inst, {});
 end
 
@@ -712,14 +718,14 @@ function PARSER.Statment_0(this)
 
 		local instr = func(this, token, directive);
 
-		if (instr) then
-			return instr
-		end
-
 		sep = this:Accept("sep");
 
 		if (sep) then
 			this:QueueRemove({}, this.__token);
+		end
+
+		if (instr) then
+			return instr
 		end
 
 		if (!this:HasTokens()) then

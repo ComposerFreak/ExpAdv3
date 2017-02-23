@@ -130,6 +130,8 @@ function ENT:BuildEnv(context, instance)
 	end 
 
 	context.env = env;
+	context.wire_in = env.INPUT;
+	context.wire_out = env.OUTPUT;
 
 	hook.Run("Expression3.Entity.BuildSandbox", self, context, env);
 
@@ -292,11 +294,9 @@ end
 function ENT:Think()
 	self:UpdateQuotaValues();
 
-	--[[if (CLIENT and self:BeingLookedAtByLocalPlayer() and self:GetOverlayText() ~= "") then
-		AddWorldTip( self:EntIndex(), self:GetOverlayText(), 0.5, self:GetPos(), self.Entity );
-
-		halo.Add( { self }, Color( 255, 255, 255, 255 ), 1, 1, 1, true, true );
-	end]]
-
+	if (SERVER) then
+		self:TriggerOutputs();
+	end
+	
 	hook.Run("Expression3.Entity.Think", self, self.context);
 end

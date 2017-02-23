@@ -342,7 +342,7 @@ function EXPR_LIB.RegisterWiredOutport(class, wiretype, func)
 			EXPR_LIB.ThrowInternal(0, "Attempt to register wired outport for class %s, with invalid wire type %s", class, wiretype);
 		end
 	end
-	
+
 	cls.wire_in_func = func;
 	cls.wire_in_class = wiretype;
 end
@@ -563,6 +563,16 @@ end
 
 --[[
 ]]
+
+function EXPR_LIB.GetAllClasses()
+	local res = {};
+
+	for _, v in pairs(classes) do
+		res[v] = v;
+	end
+
+	return res;
+end
 
 function EXPR_LIB.GetClass(class)
 	if (class == "") then

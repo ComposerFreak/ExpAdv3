@@ -2817,7 +2817,7 @@ function COMPILER.Compile_OUTPORT(this, inst, token)
 			info.prefix = "OUTPUT";
 		end
 
-		this.__directives.outport[var] = {class = inst.class, wire = inst.wire_type, func = inst.wire_func};
+		this.__directives.outport[var] = {class = inst.class, wire = inst.wire_type, func = inst.wire_func, func_in = inst.wire_func2};
 	end
 end
 

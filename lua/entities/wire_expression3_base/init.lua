@@ -109,7 +109,46 @@ local function SortPorts( PortA, PortB )
 
 		return TypeA < TypeB
 	else
-		return PortA[1] < PortB[1]
+		return PortA.wire[1] < PortB.wire[1]
+	end
+end
+
+function ENT:TriggerInput(name, value, noTrig)
+	local context = self.context;
+
+	if (context) then
+		local port = self.wire_inport_tbl[name];
+		local wireport = self.Inputs[name];
+
+		if (port and wireport) then
+			if (port.wire == wireport.Type) then
+				local v = port.func and port.func(value) or value;
+
+				if (v ~= self.context.wire_in[name]) then
+					context.wire_in[name] = v;
+					self:CallEvent("", 0, "trigger", {"s", name}, {port.class, v});
+				end
+			end
+		end
+	end
+end
+
+function ENT:TriggerOutputs()
+	local context = self.context;
+
+	if (context) then
+		for name, wireport in pairs(self.OutPorts) do
+			local port = self.wire_outport_tbl[name];
+
+			if (port and port.wire == wireport.Type) then
+				local value = context.wire_out[name];
+				local v = port.func and port.func(value) or value;
+
+				if (v ~= wireport.Value) then
+					WireLib.TriggerOutput(self, name, v);
+				end
+			end
+		end
 	end
 end
 
@@ -117,36 +156,45 @@ function ENT:BuildWiredPorts(sort_in, sort_out)
 	local names_in = {};
 	local types_in = {};
 
-	table.sort( sort_in, SortPorts );
+	local context = self.context;
+
+	table.sort(sort_in, SortPorts);
 
 	for var, port in pairs(sort_in) do
 		names_in[#names_in + 1] = var;
 		types_in[#types_in + 1] = port.wire;
 	end
 	
-	local old_inports = self.Inputs;
+	self.wire_inport_tbl = sort_in;
+	self.Inputs = WireLib.AdjustSpecialInputs(self, names_in, types_in);
 
-	self.Inputs = WireLib.AdjustSpecialInputs( self, names_in, types_in );
-
-	-- for var, port in pairs(old_inports) do
-		-- TODO: Load existing wire values.
-	-- end
+	for name, wireport in pairs(self.Inputs) do
+		self:TriggerInput(name, wireport.Value);
+	end
 
 	------------------------------------------------------------------------------
 
 	local names_out = {};
 	local types_out = {};
 	
-	table.sort( sort_out, SortPorts );
+	table.sort(sort_out, SortPorts);
 
 	for var, port in pairs(sort_out) do
 		names_out[#names_out + 1] = var;
 		types_out[#types_out + 1] = port.wire;
 	end
 
-	local old_outports = self.OutPorts;
-
+	self.wire_outport_tbl = sort_out;
 	self.OutPorts = WireLib.AdjustSpecialOutputs( self, names_out, types_out )
+
+	for name, wireport in pairs(self.OutPorts) do
+		local port = self.wire_outport_tbl[name];
+
+		if (port and port.wire == wireport.Type) then
+			local value = wireport.Value;
+			context.wire_out[name] = port.func_in and port.func_in(value) or value;
+		end
+	end
 
 	-------------------------------------------------------------------------------
 
