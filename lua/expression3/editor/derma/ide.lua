@@ -306,25 +306,36 @@ function PANEL:Init( )
 	
 	if not self:OpenOldTabs( ) then 
 	
-		self:NewTab( "editor", [[
-/*******************************************
-	EXPRESSION THREE BETA
-*******************************************/
+self:NewTab( "editor", [[
+	/*-----------------------------
+		Expression 3 - Alpha
+	-----------------------------*/
+	@name "Generic - Expression 3";
 
-Here we go,
-This editor is a WIP,
-It does nothing...
-
-Except {
-	code, folding? {
-		Yes
-			Its
-				Awsome :D
+	function void first() {
+		//same as if first.
 	}
-}
 
-Much love to Oskar94,
-	This editor is his birth child :D
+	function void main() {
+		//same as run on tick.
+	}
+
+	first();
+	main();
+
+	//register main event for every think.
+	event.add("Think", "Main", main);
+
+	/*-----------------------------
+		Special Thanks
+	-------------------------------
+		Rusketh
+		Oskar94
+		Divran
+		Syranide
+		DaDamRival
+		The E3 Discord Group :P
+	-----------------------------*/
 ]] )
 	end 
 	
