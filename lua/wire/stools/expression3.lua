@@ -34,6 +34,7 @@ end
 
 TOOL.ClientConVar = {
 	model = "models/nezzkryptic/e3_chip.mdl",
+	script_model = "";
 }
 
 WireToolSetup.SetupMax(20)
@@ -65,6 +66,18 @@ local GateModels = {
 	"models/expression 2/cpu_processor.mdl",
 };
 
+function TOOL:GetModel()
+	local script_model = self:GetClientInfo("script_model");
+
+	if (script_model and script_model ~= "") then
+		if (self:CheckValidModel(script_model)) then
+			return script_model;
+		end
+	end
+
+	return WireToolObj.GetModel(self);
+end
+
 if CLIENT then
 	local TOOL = TOOL;
 
@@ -80,13 +93,21 @@ if CLIENT then
 
 		CPanel:AddItem( PropList )
 	end
+
+	hook.Add("Expression3.CloseGolem", "Expression3.Tool.ChooseModel", function()
+		local model = Golem.GetDirective("model") or "";
+		RunConsoleCommand( "wire_expression3_script_model", model);
+		MsgN("E3 - Closed editor got model ", model)
+	end)
 end
 
 function TOOL:RightClick( Trace )
 	if (SERVER) then
 		self:GetOwner():SendLua( [[
-		local editor = Golem.GetInstance();
-		editor:SetVisible(true);
-		editor:MakePopup();]]);
+		if (Golem) then
+			local editor = Golem.GetInstance();
+			editor:SetVisible(true);
+			editor:MakePopup();
+		end]]);
 	end
 end

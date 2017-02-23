@@ -99,3 +99,59 @@ function Golem.Print(...)
 		return Golem.Instance:AddPrintOut(...) 
 	end 
 end
+
+function Golem.GetDirective( directive )
+	if Golem.Instance then 
+		local code = Golem.Instance:GetCode( )
+		
+		if string.find( code, directive ) then 
+			code = string.Replace(code,";","\n")
+			local lines = string.Explode( "\n", code )
+			local i = 1
+			
+			while i < #lines do 
+				local line = string.Trim( lines[i] )
+				
+				if line == "" then
+					i = i + 1
+					continue
+				end
+				
+				if string.match( line, "^/[/%*]") then 
+					if line[2] == "/" then 
+						i = i + 1 
+						continue
+					else 
+						while i < #lines do 
+							if string.match( line, "%*/" ) then 
+								local _, p = string.find( line, "%*/" )
+								line = string.Trim( string.sub( line, p+1 ) )
+								
+								break
+							end 
+							
+							line = string.Trim( lines[i] )
+							i = i + 1
+						end 
+					end 
+				end 
+				
+				if line[1] == "@" then 
+					local dir = string.match( line, "@" .. directive .. [[ *(%b"")]] ) or string.match( line, "@" .. directive .. [[ *(%b'')]] )
+					
+					if dir then 
+						return string.sub( dir, 2, -2 ) 
+					end 
+					
+					i = i + 1
+					continue
+				end 
+				
+				return
+			end
+		end
+		
+		return
+	end 
+end
+

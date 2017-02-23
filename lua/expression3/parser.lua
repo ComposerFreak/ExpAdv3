@@ -2028,8 +2028,6 @@ function PARSER.ExpressionErr(this)
 
 	this:Throw(this.__token, "Unexpected symbol found (%s)", this.__token.type);
 end
---[[
-]]
 
 --[[
 ]]
