@@ -1946,6 +1946,7 @@ function PARSER.Expression_Trailing(this, expr)
 		elseif (this:Accept("lpa")) then
 			local inst = this:StartInstruction("call", expr.token);
 
+			this:QueueRemove(inst, this.__token);
 			local expressions = {};
  
 			expressions[1] = expr;

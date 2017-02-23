@@ -71,34 +71,6 @@ end
 --[[
 ]]
 
-function ENT:HandelThrown(thrown)
-	self:ShutDown();
-
-	if (not thrown) then
-		self:SendToOwner(true, Color(255,0,0), "Suffered an unkown error (no reason given).");
-	end
-
-	if (isstring(thrown)) then
-		self:SendToOwner(true,
-			Color(255,0,0), "Suffered a lua error has occured, Details:\n",
-			"    ", Color(0,255, 255), "Error: ", Color(255, 255, 255), thrown, "\n",
-			"\n");
-	end
-
-	if (istable(thrown)) then
-		self:SendToOwner(true,
-			Color(255,0,0), "Suffered a ", thrown.state, " error has occured, Details:\n",
-			"    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), thrown.msg, "\n",
-			"    ", Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char,
-		"\n");
-	end
-
-	self:SendToOwner(false, Color(255,0,0), "One of your Expression3 gate's has errored (see golem console).");
-end
-
---[[
-]]
-
 local function SortPorts( PortA, PortB )
 	local TypeA = PortA.wire or "NORMAL"
 	local TypeB = PortB.wire or "NORMAL"

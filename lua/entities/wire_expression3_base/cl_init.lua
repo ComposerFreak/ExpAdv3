@@ -76,6 +76,7 @@ function ENT:GetOverlayData()
 	return {txt = table.concat({
 		"::Expression 3::",
 		self:GetPlayerName(),
+		self:GetScriptName() or "generic",
 		"----------------------",
 		"SV average: " .. self:GetServerAverageCPU(),
 		"SV total:" .. self:GetServerTotalCPU(),
@@ -99,28 +100,4 @@ function ENT:SendToOwner(bConsole, ...)
 		local const = bConsole and EXPR_CONSOLE or EXPR_CHAT;
 		EXPR_LIB.SendToClient(owner, self, const, ...);
 	end
-end
---[[
-]]
-
-function ENT:HandelThrown(thrown)
-	self:ShutDown();
-
-	if (not thrown) then
-		self:SendToOwner(true, Color(255,0,0), "An unkown error ocurred.");
-	end
-
-	if (isstring(thrown)) then
-		self:SendToOwner(true, Color(255,0,0), thrown);
-	end
-
-	if (istable(thrown)) then
-		--self:SendThrownError(thrown);
-		print("state:", thrown.state);
-		print("msg:", thrown.msg);
-		print("char:", thrown.char);
-		print("line:", thrown.line);
-	end
-
-	self:SendToOwner(false, Color(255,0,0), "An expression3 gate has errored (see console).");
 end

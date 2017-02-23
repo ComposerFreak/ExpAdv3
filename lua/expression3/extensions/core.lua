@@ -173,7 +173,7 @@ local func_tostring = EXPR_LIB.ToString;
 
 local func_invoke = function(context, result, count, func, ...)
 	if (result ~= func.result or count ~= func.count) then
-		context:Throw("Invoked function returned unexpected results");
+		context:Throw("Invoked function with incorrect return type %s expected, got %s.", result, func.result);
 	end
 
 	return func.op(...);

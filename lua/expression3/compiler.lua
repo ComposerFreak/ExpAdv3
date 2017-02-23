@@ -2579,7 +2579,7 @@ function COMPILER.Compile_CALL(this, inst, token, expressions)
 
 			this:QueueReplace(inst, expr.token, "invoke");
 
-			this:QueueInjectionAfter(inst, token, "CONTEXT", ",\"" .. info.resultClass .. "\",", tostring(info.resultCount), ",");
+			this:QueueInjectionAfter(inst, token, "(", "CONTEXT", ",\"" .. info.resultClass .. "\",", tostring(info.resultCount), ",");
 
 			if (info.prefix) then
 				this:QueueInjectionAfter(inst, token, info.prefix .. "." .. expr.variable);

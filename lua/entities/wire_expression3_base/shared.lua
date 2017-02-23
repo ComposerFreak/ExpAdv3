@@ -74,6 +74,13 @@ function ENT:SetCode(script, run)
 	self:BuildContext(res);
 
 	if (SERVER) then
+		local name = "generic";
+
+		if (res.directives and res.directives.name) then
+			name = res.directives.name;
+		end
+
+		self:SetScriptName(name);
 		self:BuildWiredPorts(res.directives.inport, res.directives.outport);
 	end
 
@@ -201,13 +208,46 @@ end
 --[[
 ]]
 
+function ENT:HandelThrown(thrown)
+	self:ShutDown();
+
+	if (not thrown) then
+		self:SendToOwner(true, Color(255,0,0), "Suffered an unkown error (no reason given).");
+	end
+
+	if (isstring(thrown)) then
+		self:SendToOwner(true,
+			Color(255,0,0), "Suffered a lua error has occured, Details:\n",
+			"    ", Color(0,255, 255), "Error: ", Color(255, 255, 255), thrown, "\n",
+			"\n");
+	end
+
+	if (istable(thrown)) then
+		self:SendToOwner(true,
+			Color(255,0,0), "Suffered a ", thrown.state, " error has occured, Details:\n",
+			"    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), thrown.msg, "\n",
+			"    ", Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char,
+		"\n");
+	end
+
+	self:SendToOwner(false, Color(255,0,0), "One of your Expression3 gate's has errored (see golem console).");
+end
+
+--[[
+]]
+
 function ENT:Invoke(where, result, count, udf, ...)
 	if (self:IsRunning()) then
 
 		if (udf and udf.op) then
 
+			if (not result or result == "" or result == "_nil") then
+				result = "_nil";
+				count = -1;
+			end
+
 			if (result ~= udf.result or count ~= udf.count) then
-				self:HandelThrown("Invoked function returned unexpected results, " .. where);
+				self:HandelThrown("Invoked function with incorrect return type " .. result .. " expected, got " .. udf.result .. ".");
 			end
 
 			self.context:PreExecute();
@@ -257,10 +297,10 @@ end
 ]]
 
 function ENT:SetupDataTables()
+	self:NetworkVar("String", 0, "ScriptName");
 	self:NetworkVar("Float", 0, "ServerAverageCPU");
 	self:NetworkVar("Float", 1, "ServerTotalCPU");
-	self:NetworkVar("Bool", 1, "ServerWarning");
-end
+	self:NetworkVar("Bool", 1, "ServerWarning");end
 
 if (CLIENT) then
 	AccessorFunc(ENT, "cl_average_cpu", "ClientAverageCPU", FORCE_NUMBER);

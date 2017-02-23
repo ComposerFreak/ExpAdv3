@@ -326,16 +326,8 @@ self:NewTab( "editor", [[
 	//register main event for every think.
 	event.add("Think", "Main", main);
 
-	/*-----------------------------
-		Special Thanks
-	-------------------------------
-		Rusketh
-		Oskar94
-		Divran
-		Syranide
-		DaDamRival
-		The E3 Discord Group :P
-	-----------------------------*/
+	//For more on E3 and its development visit:
+	//https://github.com/Rusketh/ExpAdv3/
 ]] )
 	end 
 	
