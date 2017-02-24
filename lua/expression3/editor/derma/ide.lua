@@ -696,18 +696,21 @@ end
 function PANEL:GetCode( pTab )
 	pTab = pTab or self.pnlTabHolder:GetActiveTab( )
 	if not pTab then return end
+	if not ValidPanel( pTab ) then return end
 	return pTab:GetPanel( ):GetCode( ), pTab.FilePath, pTab:GetName( ) 
 end
 
 function PANEL:SetName( sName, pTab )
 	pTab = pTab or self.pnlTabHolder:GetActiveTab( )
 	if not pTab then return end
+	if not ValidPanel( pTab ) then return end
 	pTab:SetName( sName )
 end 
 
 function PANEL:GetName( pTab )
 	pTab = pTab or self.pnlTabHolder:GetActiveTab( )
 	if not pTab then return end
+	if not ValidPanel( pTab ) then return end
 	return pTab:GetName( )
 end
 
