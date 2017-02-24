@@ -2323,7 +2323,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		this:QueueInjectionAfter(inst, inst.__func, "_FUN[\"" .. signature .. "\"]");
 
 		if (op.context) then
-		    this:QueueInjectionAfter(inst, inst.__lpa, "CONTEXT");
+			this:QueueInjectionAfter(inst, inst.__lpa, "CONTEXT");
 
 		    if (total > 0) then
 				this:QueueInjectionAfter(inst, inst.__lpa, ",");

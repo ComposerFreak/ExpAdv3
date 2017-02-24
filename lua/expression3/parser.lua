@@ -1511,12 +1511,11 @@ function PARSER.Expression_13(this)
 end
 
 function PARSER.Expression_14(this)
-	local tkn = this.__token;
 
 	local expr = this:Expression_15();
 
 	while this:Accept("mul") do
-		local inst = this:StartInstruction("mul", tkn);
+		local inst = this:StartInstruction("mul", expr.token);
 
 		inst.__operator = this.__token;
 
