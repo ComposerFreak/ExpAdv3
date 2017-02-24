@@ -576,7 +576,7 @@ end
 
 function EXPR_LIB.GetClass(class)
 	if (class == "") then
-		return classIDs["_nil"];
+		class = "void";
 	end
 
 	if (classes[class]) then
