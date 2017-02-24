@@ -2384,9 +2384,8 @@ function COMPILER.Compile_LAMBDA(this, inst, token, expressions)
 	local count = this:GetOption("retunCount");
 
 	this:PopScope();
-	
 
-	if (result == "?" or count == "?") then
+	if (result == "?" or count == -1) then
 		result = "";
 		count = 0;
 	end

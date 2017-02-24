@@ -55,7 +55,7 @@ local _nil = {} -- Future implimentation of nil.
 local isnil = function(obj) return obj == nil or obj == _nil end;
 local notnil = function(obj) return obj ~= nil and obj ~= _nil end;
 
-local class_nil = ext_core:RegisterClass("nil", {"void"}, isnumber, isnil);
+local class_nil = ext_core:RegisterClass("", {"void"}, isnumber, isnil);
 
 --[[
 	Class: CLASS

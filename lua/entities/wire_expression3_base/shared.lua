@@ -241,11 +241,6 @@ function ENT:Invoke(where, result, count, udf, ...)
 
 		if (udf and udf.op) then
 
-			if (not result or result == "" or result == "_nil") then
-				result = "_nil";
-				count = -1;
-			end
-
 			if (result ~= udf.result or count ~= udf.count) then
 				self:HandelThrown("Invoked function with incorrect return type " .. result .. " expected, got " .. udf.result .. ".");
 			end
