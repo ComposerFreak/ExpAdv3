@@ -188,7 +188,7 @@ function ext_core.PostLoadClasses(this, classes)
 	for _, c in pairs(classes) do
 		local id = c.id;
 		
-		if (id ~= "_vr") then
+		if (id ~= "_vr" and id ~= "") then
 			ext_core:RegisterCastingOperator(id, "vr", function(obj)
 				return {id, obj};
 			end, true);
@@ -210,7 +210,7 @@ end
 
 local class_error = ext_core:RegisterClass("er", {"error"}, istable, notnil);
 
-ext_core:RegisterConstructor("er", "s", 1, function(context, msg)
+ext_core:RegisterConstructor("er", "s", function(context, msg)
 	local err = {};
 	err.state = "runtime";
 	err.char = 0;
@@ -436,6 +436,10 @@ hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", functi
 	include("expression3/extensions/angle.lua");
 	include("expression3/extensions/entity.lua");
 	include("expression3/extensions/table.lua");
+	include("expression3/extensions/network.lua");
+	include("expression3/extensions/color.lua");
+	include("expression3/extensions/player.lua");
+
 
 	-- Custom will go here.
 end);
