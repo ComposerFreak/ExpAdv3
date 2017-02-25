@@ -186,9 +186,7 @@ local keywords = {
 	["while"]    = { true, true }, 
 	["for"]      = { true, true }, 
 	["foreach"]  = { true, true }, 
-	-- ["try"]      = { true, true }, 
-	-- ["catch"]    = { true, true }, 
-	-- ["final"]    = { true, true }, 
+	["catch"]    = { true, true }, 
 	
 	-- keywords that cannot be followed by a "(":
 	["else"]     = { true, false },
@@ -203,6 +201,8 @@ local keywords = {
 	["new"]      = { true, false },
 	["client"]   = { true, false },
 	["server"]   = { true, false },
+	["try"]      = { true, false }, 
+	["final"]    = { true, false }, 
 }
 
 local Directives = {
@@ -466,7 +466,6 @@ function Syntaxer:Parse( nRow )
 				continue 
 			end 
 			
-			/*
 			if word == "catch" then 
 				self:AddToken( "keyword" )
 				self:SkipSpaces( ) 
@@ -474,17 +473,7 @@ function Syntaxer:Parse( nRow )
 				if self:NextPattern( "%(" ) then 
 					self:SkipSpaces( ) 
 					
-					if self:NextPattern( "[a-z0-9]+" ) then 
-						local exception = self.sTokenData 
-						self:NextPattern( " *" ) 
-						
-						if EXPADV.Exceptions[ exception ] then 
-							self:AddToken( "exception" )
-						else 
-							self:AddToken( "notfound" )
-						end 
-						
-						self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) 
+					if self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) then 
 						self.Variables[self.sTokenData] = nRow 
 						self:AddToken( "variable" ) 
 					end 
@@ -492,7 +481,6 @@ function Syntaxer:Parse( nRow )
 				
 				continue 
 			end 
-			*/
 			
 			if keywords[word][1] then 
 				if keywords[word][2] then 

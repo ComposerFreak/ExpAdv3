@@ -122,7 +122,7 @@ function Font:SetFont( sFont, nSize, bConVar )
 end
 
 function Font:ChangeFontSize( nInc, bAbs )
-	return self:SetFont( nil, bAbs and nInc or self.sFontSize + nInc )
+	return self:SetFont( nil, bAbs and nInc or GetConVarNumber( "golem_font_size" ) + nInc )
 end
 
 timer.Simple( 0, function( )
