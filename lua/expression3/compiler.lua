@@ -2829,6 +2829,39 @@ function COMPILER.Compile_FOR(this, inst, token, expressions)
 end
 
 --[[
+
+]]
+
+function COMPILER.Compile_TRY(this, inst, token, expressions)
+	this:QueueReplace(inst, token, "local");
+
+	this:QueueInjectionAfter(inst, token, "ok", ",", inst.__var.data, "=", "pcall(");
+
+	this:PushScope();
+
+	this:Compile(inst.protected);
+
+	this:PopScope();
+
+	this:QueueInjectionAfter(inst, inst.protected.final, ");", "if", "(", "not", "ok", "and", inst.__var.data, ".", "state", "==", "'runtime'", ")");
+
+	this:QueueRemove(inst, inst.__catch);
+	this:QueueRemove(inst, inst.__lpa);
+	this:QueueRemove(inst, inst.__var);
+	this:QueueRemove(inst, inst.__rpa);
+
+	this:PushScope();
+
+	this:AssignVariable(token, true, inst.__var.data, "_er", nil);
+
+	this:Compile(inst.catch);
+
+	this:PopScope();
+
+	this:QueueInjectionAfter(inst, inst.catch.final, "elseif (not ok) then error(", inst.__var.data, ", 0) end");
+end
+
+--[[
 ]]
 
 function COMPILER.Compile_INPORT(this, inst, token)

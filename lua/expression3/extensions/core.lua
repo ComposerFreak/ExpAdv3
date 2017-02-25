@@ -157,13 +157,18 @@ local class_ptr = ext_core:RegisterClass("ptr", {"patern"}, isstring, notnil);
 
 local class_function = ext_core:RegisterClass("f", {"function"}, istable, notnil);
 
-
 --[[
-	Class: OBJECT
+	Class: OBJECT (VARIANT)
 ]]
 
 local class_object = ext_core:RegisterClass("vr", {"variant", "object"}, istable, notnil);
 	-- Yes this should known as an OBJECT, todo :D
+
+--[[
+	Class: ERROR
+]]
+
+local class_error = ext_core:RegisterClass("er", {"error"}, istable, notnil);
 
 --[[
 	Library: SYSTEM
@@ -178,6 +183,16 @@ local func_invoke = function(context, result, count, func, ...)
 
 	return func.op(...);
 end; EXPR_LIB.Invoke = func_invoke;
+
+
+
+
+
+
+
+
+
+
 
 -- \/ Library \/
 

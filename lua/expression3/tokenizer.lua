@@ -32,6 +32,8 @@ local KEYWORDS = {
 		["server"] = {"sv", "server"},
 		["client"] = {"cl", "client"},
 		["new"] = {"new", "constructor"},
+		["try"] = {"try", "try"},
+		["catch"] = {"cth", "catch"},
 	}
 }
 

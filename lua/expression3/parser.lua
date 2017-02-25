@@ -28,15 +28,16 @@
 			Root ← Stmt1((";" / " ") Stmt1)* ε
 
 		:::Statments:::
-			Stmt1 ← ("if" Cond Block Stmt2)? Stmt4
-			Stmt2 ← ("elseif" Cond Block Stmt2)? Stmt3
-			Stmt3 ← ("else" Block)
-			Stmt4 ← ("for" "(" Type "=" Expr1 ")" Block)? Stmt5
-			Stmt5 ← (("server" / "client") Block)? Stmt6
-			Stmt6 ← "global"? (type (Var("," Var)* "="? (Expr1? ("," Expr1)*)))? Stmt7
-			Stmt7 ← (type (Var("," Var)* ("=" / "+=" / "-=" / "/=" / "*=")? (Expr1? ("," Expr1)*)))? Stmt8
-			Stmt8 ← ("delegate" "(" (Type ((",")?)*)?) ")" ("{")? "return" Num ("}")?)? Stmt9
-			Stmt9 ← ("return" (Expr1 ((","")?)*)?)?)?
+			Stmt1 ← ("try" Block "(" Var ")" Block)? Stmt2
+			Stmt2 ← ("if" Cond Block Stmt3)? Stmt5
+			Stmt3 ← ("elseif" Cond Block Stmt3)? Stmt4
+			Stmt4 ← ("else" Block)
+			Stmt5 ← ("for" "(" Type "=" Expr1 ")" Block)? Stmt6
+			Stmt6 ← (("server" / "client") Block)? Stmt7
+			Stmt7 ← "global"? (type (Var("," Var)* "="? (Expr1? ("," Expr1)*)))? Stmt8
+			Stmt8 ← (type (Var("," Var)* ("=" / "+=" / "-=" / "/=" / "*=")? (Expr1? ("," Expr1)*)))? Stmt9
+			Stmt9 ← ("delegate" "(" (Type ((",")?)*)?) ")" ("{")? "return" Num ("}")?)? Stmt10
+			Stmt10 ← ("return" (Expr1 ((","")?)*)?)?)?
 
 		:::Expressions:::
 			Expr1 ← (Expr1 "?" Expr1 ":" Expr1)? Expr2
@@ -746,7 +747,38 @@ function PARSER.Statment_0(this)
 	return stmt;
 end;
 
+--
 function PARSER.Statment_1(this)
+	if (this:Accept("try")) then
+		local inst = this:StartInstruction("try", this.__token);
+
+		inst.protected = this:Block_1(true, "function()");
+
+		this:Require("cth", "Catch expected after try statment, for try catch");
+
+		inst.__catch = this.__token;
+
+		this:Require("lpa", "Left parenthesis (( ) expected after catch.");
+
+		inst.__lpa = this.__token;
+
+		this:Require("var", "Variable expected for error object, catch(variable)");
+
+		inst.__var = this.__token;
+
+		this:Require("rpa", "Right parenthesis ( )) expected to end catch.");
+
+		inst.__rpa = this.__token;
+
+		inst.catch = this:Block_1(false, "then");
+
+		return this:EndInstruction(inst, {});
+	end
+
+	return this:Statment_2();
+end
+
+function PARSER.Statment_2(this)
 	if (this:Accept("if")) then
 		local inst = this:StartInstruction("if", this.__token);
 
@@ -754,17 +786,17 @@ function PARSER.Statment_1(this)
 		
 		inst.block = this:Block_1(false, "then");
 
-		inst._else = this:Statment_2();
+		inst._else = this:Statment_3();
 
 		this:QueueInjectionAfter(inst, this.__token, "end");
 
 		return this:EndInstruction(inst, {});
 	end
 
-	return this:Statment_4();
+	return this:Statment_5();
 end
 
-function PARSER.Statment_2(this)
+function PARSER.Statment_3(this)
 	if (this:Accept("eif")) then
 		local inst = this:StartInstruction("elseif", this.__token);
 
@@ -772,15 +804,15 @@ function PARSER.Statment_2(this)
 
 		inst.block = this:Block_1(false, "then");
 
-		inst._else = this:Statment_2();
+		inst._else = this:Statment_3();
 
 		return this:EndInstruction(inst, {});
 	end
 
-	return this:Statment_3();
+	return this:Statment_4();
 end
 
-function PARSER.Statment_3(this)
+function PARSER.Statment_4(this)
 	if (this:Accept("els")) then
 		local inst = this:StartInstruction("else", this.__token);
 
@@ -794,7 +826,7 @@ end
 ]]
 
 
-function PARSER.Statment_4(this)
+function PARSER.Statment_5(this)
 	if (this:Accept("for")) then
 		local inst = this:StartInstruction("for", this.__token);
 
@@ -845,10 +877,10 @@ function PARSER.Statment_4(this)
 		return this:EndInstruction(inst, expressions);
 	end
 
-	return this:Statment_5();
+	return this:Statment_6();
 end
 
-function PARSER.Statment_5(this)
+function PARSER.Statment_6(this)
 	if (this:Accept("sv")) then
 		local inst = this:StartInstruction("server", this.__token);
 
@@ -873,13 +905,13 @@ function PARSER.Statment_5(this)
 		return this:EndInstruction(inst, {});
 	end
 
-	return this:Statment_6();
+	return this:Statment_7();
 end
 
 --[[
 ]]
 
-function PARSER.Statment_6(this)
+function PARSER.Statment_7(this)
 	if (this:Accept("glo")) then
 		local inst = this:StartInstruction("global", this.__token);
 
@@ -930,7 +962,7 @@ function PARSER.Statment_6(this)
 
 		if (type == "f" and this:CheckToken("typ")) then
 			this:StepBackward(1);
-			return this:Statment_7()
+			return this:Statment_8()
 		end
 
 		this:QueueReplace(inst, this.__token, "local");
@@ -965,10 +997,10 @@ function PARSER.Statment_6(this)
 		return this:EndInstruction(inst, expressions);
 	end
 
-	return this:Statment_7()
+	return this:Statment_8()
 end
 
-function PARSER.Statment_7(this)
+function PARSER.Statment_8(this)
 	if (this:Accept("var")) then
 		
 		if (not this:CheckToken("com", "ass", "aadd", "asub", "adiv", "amul")) then
@@ -1028,7 +1060,7 @@ function PARSER.Statment_7(this)
 		end
 	end
 
-	return this:Statment_8();
+	return this:Statment_9();
 end
 
 function PARSER.Statment_8(this)
@@ -1108,10 +1140,10 @@ function PARSER.Statment_8(this)
 		return this:EndInstruction(inst, {});
 	end
 
-	return this:Statment_9();
+	return this:Statment_10();
 end
 
-function PARSER.Statment_9(this)
+function PARSER.Statment_10(this)
 	if (this:AcceptWithData("typ", "f")) then
 
 		local inst = this:StartInstruction("funct", this.__token);
@@ -1143,10 +1175,10 @@ function PARSER.Statment_9(this)
 		return this:EndInstruction(inst, {});
 	end
 
-	return this:Statment_10();
+	return this:Statment_11();
 end
 
-function PARSER.Statment_10(this)
+function PARSER.Statment_11(this)
 	if (this:Accept("ret")) then
 		local expressions = {};
 		local inst = this:StartInstruction("return", this.__token);
@@ -1173,13 +1205,13 @@ function PARSER.Statment_10(this)
 	local expr = this:Expression_1();
 
 	if (expr and this:CheckToken("lsb")) then
-		expr = this:Statment_11(expr);
+		expr = this:Statment_12(expr);
 	end
 
 	return expr;
 end
 
-function PARSER.Statment_11(this, expr)
+function PARSER.Statment_12(this, expr)
 	if (this:Accept("lsb")) then
 		local inst = this:StartInstruction("set", this.__token);
 
