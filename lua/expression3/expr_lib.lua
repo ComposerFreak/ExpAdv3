@@ -838,25 +838,6 @@ end
 function EXPR_LIB.GetEnabledExtensions()
 	return enabledExtentions or {};
 end
-
---[[
-]]
-
-function EXPR_LIB.ThrowIF(cnd, msg, fst, ...)
-	if (cnd) then
-		if (fst) then
-			msg = string.format(msg, fst, ...);
-		end
-		
-		local err = {};
-		err.state = "runtime";
-		err.char = 0;
-		err.line = 0;
-		err.msg = msg;
-
-		error(err, 0);
-	end
-end
 --[[
 	:::Hooks For Loading extensions:::
 	''''''''''''''''''''''''''''''''''

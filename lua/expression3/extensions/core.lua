@@ -23,6 +23,7 @@
 ]]
 
 local ext_core = EXPR_LIB.RegisterExtension("core");
+
 local function eqM(a, b, ...)
 	for k, v in pairs({b, ...}) do
 		if (a ~= v) then
@@ -46,6 +47,25 @@ local function neqM(a, b, ...)
 
 	return true;
 end
+
+--[[
+]]
+
+function throwif(cnd, msg, fst, ...)
+	if (cnd) then
+		if (fst) then
+			msg = string.format(msg, fst, ...);
+		end
+		
+		local err = {};
+		err.state = "runtime";
+		err.char = 0;
+		err.line = 0;
+		err.msg = msg;
+
+		error(err, 0);
+	end
+end; EXPR_LIB.ThrowIF = throwif;
 
 --[[
 	Class: NIL
@@ -164,11 +184,53 @@ local class_function = ext_core:RegisterClass("f", {"function"}, istable, notnil
 local class_object = ext_core:RegisterClass("vr", {"variant", "object"}, istable, notnil);
 	-- Yes this should known as an OBJECT, todo :D
 
+function ext_core.PostLoadClasses(this, classes)
+	for _, c in pairs(classes) do
+		local id = c.id;
+		
+		if (id ~= "_vr") then
+			ext_core:RegisterCastingOperator(id, "vr", function(obj)
+				return {id, obj};
+			end, true);
+
+			ext_core:RegisterCastingOperator("vr", id, function(vr)
+				throwif(not vr or not vr[1] or vr[2] == nil, "attempt to cast variant of type nil to " .. c.name);
+
+				throwif(vr[1] ~= id, "attempt to cast variant of type " .. vr[1] .. " to " .. c.name);
+
+				return vr[2];
+			end, true);
+		end
+	end
+end
+
 --[[
 	Class: ERROR
 ]]
 
 local class_error = ext_core:RegisterClass("er", {"error"}, istable, notnil);
+
+ext_core:RegisterConstructor("er", "s", 1, function(context, msg)
+	local err = {};
+	err.state = "runtime";
+	err.char = 0;
+	err.line = 0;
+	err.msg = msg;
+
+	return err;
+end, false);
+
+ext_core:RegisterMethod("er", "message", "", "s", 1, function(err)
+	return err and err.msg or "";
+end, false)
+
+ext_core:RegisterMethod("er", "char", "", "n", 1, function(err)
+	return err and err.char or 0;
+end, false)
+
+ext_core:RegisterMethod("er", "line", "", "n", 1, function(err)
+	return err and err.line or 0;
+end, false)
 
 --[[
 	Library: SYSTEM
@@ -183,16 +245,6 @@ local func_invoke = function(context, result, count, func, ...)
 
 	return func.op(...);
 end; EXPR_LIB.Invoke = func_invoke;
-
-
-
-
-
-
-
-
-
-
 
 -- \/ Library \/
 
@@ -252,6 +304,21 @@ hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions",
 	local count = expressions[2].token.data; -- Return count was arg 2.
 	return class, count;
 end);
+
+ext_core:RegisterFunction("system", "throw", "er", "", 0, function(err)
+	err.stack = context:Trace(1, 1);
+
+	if (stack) then
+		local trace = stack[1];
+		
+		if (trace) then
+			err.char = trace[1];
+			err.line = trace[2];
+		end
+	end
+
+	error(err, 0);
+end, flase);
 
 --[[
 	Library: EVENT
