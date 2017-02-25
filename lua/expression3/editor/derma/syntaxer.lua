@@ -80,7 +80,6 @@ end
 
 local function isvar( word, row )
 	return (Syntaxer.Variables[word] and (row and Syntaxer.Variables[word] <= row or true)) and true or false 
-	-- return Syntaxer.Variables[word] and true or false 
 end
 
 function Syntaxer:ResetTokenizer( Row )
@@ -93,9 +92,8 @@ function Syntaxer:ResetTokenizer( Row )
 	local singlelinestring = nil 
 	
 	local tmp = self.Editor:ExpandAll( )
-	self.sLine = self.Editor.Rows[Row] //.. " "
+	self.sLine = self.Editor.Rows[Row] 
 	local str = string_gsub( table_concat( self.Editor.Rows, "\n", 1, Row-1 ), "\r", "" )
-	-- print( self.Editor.Scroll.x, Row-1 )
 	self.Editor:FoldAll( tmp )
 	
 	for before, char, after in string_gmatch( str, "()([/'\"\n])()" ) do
@@ -112,7 +110,6 @@ function Syntaxer:ResetTokenizer( Row )
 				elseif after == "/" then 
 					singlelinecomment = true 
 				end 
-				-- print( Row, before=="\n" and "\\n" or before, after, singlelinecomment, self.bBlockComment )
 			end
 		elseif self.bMultilineString and before ~= "\\" then
 			self.bMultilineString = nil
@@ -125,21 +122,11 @@ function Syntaxer:ResetTokenizer( Row )
 		end
 	end
 	
-	-- print( Row, self.bBlockComment, self.bMultilineString, singlelinecomment, singlelinestring, self.sLine )
-	
-	-- self.MetaMethods = { }
-	
 	for Function, Line in pairs( self.UserFunctions ) do
 		if Line == Row then
 			self.UserFunctions[Function] = nil
 		end
 	end
-	
-	-- for Directive, Line in pairs( self.UserDirective ) do
-	-- 	if Line == Row then
-	-- 		self.UserDirective[Directive] = nil
-	-- 	end
-	-- end
 	
 	for Variables, Line in pairs( self.Variables ) do
 		if Line == Row then
@@ -162,7 +149,6 @@ function Syntaxer:NextCharacter( )
 
 	if self.nPosition <= #self.sLine then
 		self.sChar = self.sLine[self.nPosition]
-		-- PrintTableGrep{ ["NEXTCHAR"] = { Position = self.nPosition, Line = self.sLine, Char = self.sChar, Token = self.sTokenData } }
 	else
 		self.sChar = nil
 	end
@@ -174,7 +160,6 @@ function Syntaxer:NextPattern( sPattern, bSkip )
 	
 	if startpos ~= self.nPosition then return false end 
 	text = text or string_sub( self.sLine, startpos, endpos ) 
-	-- PrintTableGrep{ ["NEXTPATTERN"] = { Substr = self.sLine:sub(self.nPosition), Position = self.nPosition, Start = startpos, End = endpos, Pattern = sPattern, Line = self.sLine, Char = self.sChar, Token = self.sTokenData, Data = text } }
 	
 	if not bSkip then 
 		self.sTokenData = self.sTokenData .. text
@@ -193,20 +178,6 @@ end
 /*============================================================================================================================================
 Syntaxer Keywords
 ============================================================================================================================================*/
-
--- operator_<key>
--- local MetaMethods = {
--- 	["addition"] = true, 
--- 	["call"] = true, 
--- 	["division"] = true, 
--- 	["equal"] = true, 
--- 	["exponent"] = true, 
--- 	["greater"] = true, 
--- 	["modulus"] = true, 
--- 	["multiply"] = true, 
--- 	["subtraction"] = true, 
--- }
-
 
 local keywords = {
 	-- keywords that can be followed by a "(":
@@ -232,11 +203,6 @@ local keywords = {
 	["new"]      = { true, false },
 	["client"]   = { true, false },
 	["server"]   = { true, false },
-	-- ["static"]   = { true, false },
-	-- ["input"]    = { true, false },
-	-- ["output"]   = { true, false },
-	-- ["event"]    = { true, false },
-	-- ["method"]   = { true, false },
 }
 
 local Directives = {
@@ -250,30 +216,6 @@ local Directives = {
 setmetatable( keywords, { __index = function( tbl, index ) return { } end } )
 
 /*============================================================================================================================================
-Default Color Configeration
-============================================================================================================================================*/
-/*
-	"wire_expression2_editor_color_comment"			"128_128_128"
-	"wire_expression2_editor_color_constant"		"140_200_50"
-	"wire_expression2_editor_color_directive"		"100_200_255"
-	"wire_expression2_editor_color_function"		"80_160_240"
-	"wire_expression2_editor_color_keyword"			"0_120_240"
-	"wire_expression2_editor_color_notfound"		"240_160_0"
-	"wire_expression2_editor_color_number"			"0_200_0"
-	"wire_expression2_editor_color_operator"		"255_0_0"
-	"wire_expression2_editor_color_ppcommand"		"255_255_255"
-	"wire_expression2_editor_color_string"			"100_50_200"
-	"wire_expression2_editor_color_typename"		"80_160_240"
-	"wire_expression2_editor_color_userfunction"	"102_122_102"
-	"wire_expression2_editor_color_variable"		"0_180_80"
-
-
-	wire_expression2_editor_color_comment 128_128_128;wire_expression2_editor_color_constant 140_200_50;wire_expression2_editor_color_directive 100_200_255;wire_expression2_editor_color_function 80_160_240;wire_expression2_editor_color_keyword 0_120_240;
-	wire_expression2_editor_color_notfound 240_160_0;wire_expression2_editor_color_number 0_200_0;wire_expression2_editor_color_operator 255_0_0;wire_expression2_editor_color_ppcommand 255_255_255;wire_expression2_editor_color_string 100_50_200;
-	wire_expression2_editor_color_typename 80_160_240;wire_expression2_editor_color_userfunction 102_122_102;wire_expression2_editor_color_variable 0_180_80
-*/
-
-/*============================================================================================================================================
 Syntaxer Colors
 ============================================================================================================================================*/
 local colors = { 
@@ -283,7 +225,6 @@ local colors = {
 	*/
 	
 	["comment"]      = Color( 128, 128, 128 ), 
-	-- ["event"]        = Color(  80, 160, 240 ), // TODO: Other color? 
 	-- ["exception"]    = Color(  80, 160, 240 ), // TODO: Other color? 
 	["function"]     = Color(  80, 160, 240 ), 
 	["librarie"]     = Color(  80, 240, 160 ), 
@@ -392,8 +333,6 @@ function Syntaxer:AddToken( sTokenName, sTokenData )
 		tOutput[#tOutput + 1] = { sTokenData, color }
 		tLastColor = tOutput[#tOutput]
 	end
-	
-	-- print( "ADDTOKEN", sTokenName, string.format( "%q", sTokenData ) )
 end
 
 function Syntaxer:SkipSpaces( )
@@ -414,15 +353,6 @@ function Syntaxer:AddUserFunction( nRow, sName )
 	if self.Functions[sName] then return end  
 	self.UserFunctions[sName] = nRow
 end 
-
--- function Syntaxer:CreateMethodFunction( nRow, sVarName, sFunctionName ) 
--- 	self.MetaMethods[sVarName] = self.MetaMethods[sVarName] or {} 
--- 	self.MetaMethods[sVarName][sFunctionName] = true 
--- end 
-
--- function Syntaxer:AddUserDirective( nRow, sName ) 
--- 	self.UserDirective[sName] = nRow 
--- end 
 
 function Syntaxer:Parse( nRow )
 	tOutput, tLastColor = { }, nil 
@@ -465,7 +395,7 @@ function Syntaxer:Parse( nRow )
 			local keyword = ( self.sChar or "" ) != "(" 
 			
 			if word == "function" or word == "delegate" then 
-				self:NextPattern( " *" ) 
+				self:SkipSpaces( ) 
 				
 				if self.sChar == "]" then 
 					self:AddToken( "typename" ) 
@@ -504,8 +434,7 @@ function Syntaxer:Parse( nRow )
 						self:AddToken( "notfound" )
 					end 
 					
-					self:NextPattern( " *" )
-					self:AddToken( "operator" )
+					self:SkipSpaces( )
 					
 					if word == "function" then 
 						self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" )
@@ -538,48 +467,12 @@ function Syntaxer:Parse( nRow )
 			end 
 			
 			/*
-			if word == "event" then 
-				self:NextPattern( " *" ) 
-				self:AddToken( "keyword" )
-				
-				self:NextPattern( "^[a-z][a-zA-Z0-9_]*" ) 
-				if self.Events[self.sTokenData] then 
-					self:AddToken( "event" )
-				else 
-					self:AddToken( "notfound" )
-				end 
-				
-				self:NextPattern( " *%( *" ) 
-				self:AddToken( "operator" )
-				
-				while self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) do 
-					if istype( self.sTokenData ) then 
-						self:AddToken( "typename" )
-					else 
-						self:AddToken( "notfound" ) 
-					end 
-					
-					self:NextPattern( " *" )
-					self:AddToken( "operator" )
-					
-					self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" )
-					self.Variables[self.sTokenData] = nRow 
-					self:AddToken( "variable" )
-					
-					if not self:NextPattern( " *, *" ) then break end 
-					self:AddToken( "operator" )
-				end 
-				
-				continue 
-			end 
-			
 			if word == "catch" then 
-				self:NextPattern( " *" ) 
 				self:AddToken( "keyword" )
+				self:SkipSpaces( ) 
 				
 				if self:NextPattern( "%(" ) then 
-					self:NextPattern( " *" ) 
-					self:AddToken( "operator" )
+					self:SkipSpaces( ) 
 					
 					if self:NextPattern( "[a-z0-9]+" ) then 
 						local exception = self.sTokenData 
@@ -599,33 +492,6 @@ function Syntaxer:Parse( nRow )
 				
 				continue 
 			end 
-			
-			if word == "method" then 
-				self:NextPattern( " *" ) 
-				self:AddToken( "keyword" )
-				
-				if self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) then 
-					if isvar( self.sTokenData ) then 
-						local MethodVar = self.sTokenData 
-						self:AddToken( "variable" )
-						self:NextPattern( " *: *" ) 
-						self:AddToken( "operator" )
-						
-						if self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) then 
-							if MetaMethods[string_match( self.sTokenData, "operator_(.*)" )] then 
-								self:AddToken( "metamethod" )
-							else 
-								self:AddToken( "userfunction" )
-								self:CreateMethodFunction( nRow, MethodVar, self.sTokenData )
-							end 
-						end 
-					else 
-						self:AddToken( "notfound" )
-					end 
-				end 
-				
-				continue
-			end 
 			*/
 			
 			if keywords[word][1] then 
@@ -637,11 +503,6 @@ function Syntaxer:Parse( nRow )
 					continue 
 				end 
 			end 
-			
-			/*if self.Functions[self.sTokenData] then 
-				self:AddToken( "function" )
-				continue 
-			end */
 			
 			if self.Libraries[self.sTokenData] then 
 				local lib = self.Libraries[self.sTokenData]
@@ -667,31 +528,13 @@ function Syntaxer:Parse( nRow )
 				continue 
 			end 
 			
-			-- if self.UserDirective[self.sTokenData] and self.UserDirective[self.sTokenData] <= nRow then 
-			-- 	self:AddToken( "directive" ) 
-			-- 	continue 
-			-- end 
-			
 			if isvar( word ) then 
 				self:AddToken( "variable" )
-				
-				/*if self:NextPattern( " *%. *" ) then 
-					self:AddToken( "operator" )
-					
-					if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
-						if self.Methods[self.sTokenData] then 
-							self:AddToken( "userfunction" )
-						else 
-							self:AddToken( "notfound" )
-						end 
-					end 
-				end*/
 				continue 
 			end 
 			
 			self:AddToken( "notfound" )
 		elseif self:NextPattern( "^@[a-zA-Z][a-zA-Z0-9_]*" ) then 
-			-- if EXPADV.Directives[string_sub( self.sTokenData, 2 )] then 
 			local dir = string_sub( self.sTokenData, 2 )
 			if Directives[dir] then 
 				self:AddToken( "directive" )
@@ -772,7 +615,6 @@ function Syntaxer:Parse( nRow )
 			local b = false
 			for i = 1, #self.Tokens do 
 				if self:NextPattern( self.Tokens[i] ) then 
-					-- print( "TOKENLIST", self.Tokens[i] )
 					self:AddToken( "operator" ) 
 					b = true
 					break
@@ -789,9 +631,6 @@ function Syntaxer:Parse( nRow )
 end
 
 function Syntaxer.Highlight( Editor, nRow )
-	-- if not EXPADV.IsLoaded then return false end 
-	-- if nRow < 15 or nRow > 16 then return {{Editor.Rows[nRow], Color(255,255,255)}} end 
-	-- print( "\n\n\nRow: " .. nRow )
 	Syntaxer.Editor = Editor 
 	return Syntaxer:Parse( nRow )
 end
