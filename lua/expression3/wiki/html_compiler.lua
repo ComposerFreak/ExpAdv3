@@ -19,7 +19,7 @@ elseif colorSceme == "dark" then
 	}
 end
 
-local getType_ = {
+local types = {
 	["o"] = "object",
 	["nil"] = "void",
 	["cls"] = "class",
@@ -33,8 +33,13 @@ local getType_ = {
 	["a"] = "angle"
 }
 
+--TODO: Fix this
+--[[for k, v in pairs(EXPR_LIB.GetAllClasses()) do
+	types[v.id .. ""] = v.name
+end]]
+
 local function getType(t)
-	if getType_[t] then return getType_[t] end
+	if types[t] then return types[t] end
 	return "UnknownType"
 end
 

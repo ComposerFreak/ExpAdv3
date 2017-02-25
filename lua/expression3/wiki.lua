@@ -18,17 +18,19 @@ local constructors;
 local methods;
 local functions;
 local pages;
-local events;
 local operators;
+local events;
 
 --------------------------------
 
-function EXPR_WIKI.RegisterConstructor(library, html)
+function EXPR_WIKI.RegisterConstructor(library, name, html)
 	if not loadWiki then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor %s outside of Hook::Expression3.LoadWiki", library)
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor %s.%s outside of Hook::Expression3.LoadWiki", library, name)
 	end
 	
-	constructors[library] = html
+	constructors[library] = constructors[library] or {}
+	
+	constructors[library][name] = html
 end
 
 function EXPR_WIKI.RegisterMethod(library, name, html)
@@ -61,16 +63,6 @@ function EXPR_WIKI.RegisterPage(catagory, title, html)
 	pages[catagory][title] = html
 end
 
-function EXPR_WIKI.RegisterEvent(library, name, html)
-	if not loadWiki then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register Event %s.%s outside of Hook::Expression3.LoadWiki", library, name)
-	end
-	
-	events[library] = pages[library] or {}
-	
-	events[library][name] = html
-end
-
 function EXPR_WIKI.RegisterOperator(library, name, html)
 	if not loadWiki then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register Operator %s.%s outside of Hook::Expression3.LoadWiki", library, name)
@@ -81,6 +73,13 @@ function EXPR_WIKI.RegisterOperator(library, name, html)
 	operators[library][name] = html
 end
 
+function EXPR_WIKI.RegisterEvent(name, html)
+	if not loadWiki then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Event %s outside of Hook::Expression3.LoadWiki", name)
+	end
+	
+	events[name] = html
+end
 
 --------------------------------
 
@@ -91,8 +90,8 @@ hook.Add("Expression3.PostRegisterExtensions", "Expression3.Wiki", function()
 	methods = {}
 	functions = {}
 	pages = {}
-	events = {}
 	operators = {}
+	events = {}
 	
 	hook.Run("Expression3.LoadWiki")
 	
@@ -104,6 +103,6 @@ hook.Add("Expression3.PostRegisterExtensions", "Expression3.Wiki", function()
 	EXPR_WIKI.METHODS = methods
 	EXPR_WIKI.FUNCTIONS = functions
 	EXPR_WIKI.PAGES = pages
-	EXPR_WIKI.EVENTS = events
 	EXPR_WIKI.OPERATORS = operators
+	EXPR_WIKI.EVENTS = events
 end)

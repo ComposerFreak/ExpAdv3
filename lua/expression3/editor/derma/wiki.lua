@@ -151,21 +151,36 @@ function PANEL:Init()
 	
 	table.insert(derma, {name = "Constructors", panel = ButtonCons}) 
 	
-	for func, html in pairs(EXPR_WIKI.CONSTRUCTORS) do
+	for lib, data in pairs(EXPR_WIKI.CONSTRUCTORS) do
+		
 		offset = offset + 20
 		
-		local ButtonFunc = vgui.Create("DButton", Scrollbar)
-		ButtonFunc:SetPos(20, offset)
-		ButtonFunc:SetSize(500, 18)
-		ButtonFunc:SetText("")
-		ButtonFunc.DoClick = function()
-			Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
-		end
-		ButtonFunc.Paint = function(self, w, h)
-			draw.DrawText(func, "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
+		local ButtonLib = vgui.Create("DButton", Scrollbar)
+		ButtonLib:SetPos(20, offset)
+		ButtonLib:SetSize(500, 18)
+		ButtonLib:SetText("")
+		ButtonLib.Paint = function(self, w, h)
+			draw.DrawText(lib, "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
 		end
 		
-		table.insert(derma, {name = func, panel = ButtonFunc}) 
+		table.insert(derma, {name = lib, panel = ButtonLib}) 
+		
+		for func, html in pairs(data) do
+			offset = offset + 20
+			
+			local ButtonFunc = vgui.Create("DButton", Scrollbar)
+			ButtonFunc:SetPos(40, offset)
+			ButtonFunc:SetSize(500, 18)
+			ButtonFunc:SetText("")
+			ButtonFunc.DoClick = function()
+				Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
+			end
+			ButtonFunc.Paint = function(self, w, h)
+				draw.DrawText(func, "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
+			end
+			
+			table.insert(derma, {name = func, panel = ButtonFunc}) 
+		end
 	end
 	
 	offset = offset + 30
