@@ -33,7 +33,7 @@ function PANEL:Init( )
 	self.tMenuTypes = { }
 	
 	self.tMenuTabs = { }
-
+	
 	self.bVoice = false 
 	
 	self:DockPadding( 0, 25, 0, 0 )
@@ -54,7 +54,7 @@ function PANEL:Init( )
 	self.tbRight:Dock( RIGHT )
 	self.tbRight:DockMargin( 0, 5, 5, 5 )
 	self.tbRight:SetSize( 24, 24 ) 
-
+	
 	self.tbBottomHolder = vgui.Create( "DPanel", self ) 
 	self.tbBottomHolder:Dock( BOTTOM )
 	self.tbBottomHolder.Paint = function( pnl, w, h ) end 
@@ -89,7 +89,7 @@ function PANEL:Init( )
 		Menu:AddOption( "Copy to clipboard", function( )
 			SetClipboardText( self.btnValidate:GetText( ) )
 		end )
-
+		
 		Menu:AddOption( "Validate and debug.", function( )
 			self:DoValidate(true, nil, true)
 		end )
@@ -104,15 +104,15 @@ function PANEL:Init( )
 		frame:Center( )
 		frame:MakePopup( )
 		frame:SetTitle( "Open file" )
-
+		
 		local browser = vgui.Create( "DFileBrowser", frame )
 		browser:Dock( FILL )
-
+		
 		browser:SetPath( "data" ) 
 		browser:SetBaseFolder( "golem" )
 		browser:SetOpen( true )
 		browser:SetCurrentFolder( "golem" )
-
+		
 		browser.OnDoubleClick = function(pnl,path,panel)
 			self:LoadFile( path )
 			frame:Remove( ) 
@@ -122,28 +122,14 @@ function PANEL:Init( )
 	self.tbBottom:SetupButton( "Save As", "fugue/disks-black.png", RIGHT, function( ) self:SaveFile( true, true ) end )
 	self.tbBottom:SetupButton( "Save", 	"fugue/disk-black.png", RIGHT, function( ) self:SaveFile( true ) end )
 	
-	
-	
-	-- self.tbRight:SetupButton( "Increase font size.", "fugue/edit-size-up.png", TOP, function( ) end )
-	-- self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", TOP, function( ) end )
+	self.tbRight:SetupButton( "Increase font size.", "fugue/edit-size-up.png", TOP, function( ) Golem.Font:ChangeFontSize( 1 ) end )
+	self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", TOP, function( ) Golem.Font:ChangeFontSize( -1 ) end )
 	
 	self.tbRight:SetupButton( "Open user manual", "fugue/question.png", TOP, function( ) self:NewMenuTab( "wiki" ) end )
 	self.tbRight:SetupButton( "Options", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options" ) end )
 	
-	
-	
-	
-	-- self.tbRight:SetupButton( "New tab", 	"fugue/script--plus.png", 		TOP, function( ) end )
-	-- self.tbRight:SetupButton( "Close tab", 	"fugue/script--minus.png", 		TOP, function( ) end ) 
 	-- self.tbRight:SetupButton( "Visit the wiki", 	"fugue/home.png", 		BOTTOM, function( ) end )
 	
-	
-	-- self.pnlDivider = vgui.Create( "DHorizontalDivider", self )
-	-- self.pnlDivider:Dock( FILL )
-	-- self.pnlDivider:DockMargin( 5, 5, 5, 5 )
-	-- self.pnlDivider:SetLeftMin( 265 )
-	-- self.pnlDivider:SetRightMin( 400 )
-
 	self.pnlSideTabHolder = vgui.Create( "GOLEM_PropertySheet", self )
 	self.pnlSideTabHolder:Dock( LEFT )
 	self.pnlSideTabHolder:DockMargin( 5, 5, 0, 5 )
@@ -186,44 +172,39 @@ function PANEL:Init( )
 	self.pnlTabHolder:DockMargin( 0, 5, 5, 5 )
 	self.pnlTabHolder:SetPadding( 0 )
 	
-	-- self.pnlDivider:SetLeft( self.pnlSideTabHolder )
-	-- self.pnlDivider:SetRight( self.pnlTabHolder )
-	
 	self.tbConsoleHolder = vgui.Create( "DPanel", self ) 
 	self.tbConsoleHolder:Dock( BOTTOM )
 	self.tbConsoleHolder.Paint = function( pnl, w, h ) end 
 	self.tbConsoleHolder:DockMargin( 0, 0, 5, 5 )
 	self.tbConsoleHolder:SetTall( 22 ) 
-
+	
 	self.tbConsoleToggle = vgui.Create( "GOLEM_Button", self.tbConsoleHolder ) 
 	self.tbConsoleToggle:Dock( TOP )
 	self.tbConsoleToggle:SetTall( 22 )
 	self.tbConsoleToggle:SetFlat( true )
 	self.tbConsoleToggle:SetTextCentered( false )
 	self.tbConsoleToggle:SetText( "Toggle Console." )
-
+	
 	self.tbConsoleEditor = vgui.Create( "GOLEM_Editor", self.tbConsoleHolder )
 	self.tbConsoleEditor:Dock( BOTTOM )
 	self.tbConsoleEditor:SetTall( 125 )
-
-	-- self.tbConsoleEditor._OnKeyCodeTyped = function( ) end
-	-- self.tbConsoleEditor._OnTextChanged = function( ) end
+	
 	self.tbConsoleEditor.bEditable = false 
-
+	
 	self.bConsoleVisible = true
-
+	
 	self.tbConsoleRows = { }
-
+	
 	self.tbConsoleEditor.SyntaxColorLine = function(_, row)
 		if self.tbConsoleRows[row] then 
 			return self.tbConsoleRows[row]
 		end 
-
+		
 		return {self.tbConsoleRows[row], Color(255,255,255)}
 	end
-
+	
 	self:HideConsole( )
-
+	
 	self.tbConsoleToggle.DoClick = function( )
 		if self.bConsoleVisible then
 			self:HideConsole( )
@@ -231,9 +212,9 @@ function PANEL:Init( )
 			self:ShowConsole( )
 		end
 	end
-
+	
 	self:AddPrintOut( Color(255, 255, 0), "Expression 3 Console Initalized:" )
-
+	
 	hook.Run( "Expression3.AddGolemTabTypes", self )
 	
 	//self:AddCustomTab( bScope, sName, fCreate, fClose )
@@ -331,21 +312,7 @@ self:NewTab( "editor", [[
 ]] )
 	end 
 	
-	-- self.pnlTabHolder:AddSheet( "Test 1", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
-	-- self.pnlTabHolder:AddSheet( "Test 2", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
-	-- self.pnlTabHolder:AddSheet( "Test 3", vgui.Create("GOLEM_Editor"), "fugue/script.png" )
-	
-	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
-	-- self:NewTab( "editor", self:GetFileCode( "example 1" ) )
-	-- self:LoadFile( "example 1" ) 
-	
 	self:NewMenuTab( "options" )
-	
-	-- for i = 1, 30 do
-	-- 	self.pnlTabHolder:AddSheet( "Test " .. i, vgui.Create("GOLEM_Editor"), "fugue/script.png" )
-	-- end
-	
-	//print( utf8.codepoint( "Мёнём", 1, -1 ) )
 	
 	Golem.Font.OnFontChange = function( Font, sFontID )
 		for i = 1, #self.pnlTabHolder.Items do
@@ -392,7 +359,7 @@ end
 	local line = "";
 	local token = "";
 	local color = Color(255, 255, 255);
-
+	
 	for k, v in pairs({...}) do
 		if (istable(v)) then
 			row[#row + 1] = {token, color};
@@ -404,9 +371,9 @@ end
 			token = token .. v;
 		end
 	end
-
+	
 	row[#row + 1] = {token, color}
-
+	
 	self.tbConsoleRows[#self.tbConsoleRows + 1] = row
 	self.tbConsoleEditor:SetCaret(Vector2( #self.tbConsoleEditor.Rows, 1 ));
 	self.tbConsoleEditor:SetSelection(line .. "\n");
@@ -416,61 +383,61 @@ function PANEL:PrintLine(...)
 	local r = {};
 	local l = "";
 	local c = Color(255, 255, 255);
-
+	
 	for k, v in pairs({...}) do
-
+		
 		if (istable(v)) then
 			c = v;
 			continue;
 		end
 		
 		l = l .. v;
-
+		
 		r[#r + 1] = {v, c};
 	end
-
+	
 	self.tbConsoleRows[#self.tbConsoleRows + 1] = r
-
+	
 	self.tbConsoleEditor:SetCaret(Vector2( #self.tbConsoleEditor.Rows, 1 ));
-
+	
 	self.tbConsoleEditor:SetSelection(l .. "\n");
 end
 
 function PANEL:AddPrintOut(...)
 	local r = {};
 	local c = Color(255, 255, 255);
-
+	
 	for k, v in pairs({...}) do
 		if (istable(v)) then
 			c = v;
 			r[#r + 1] = v;
 			continue;
 		end
-
+		
 		if (not isstring(v)) then
 			v = tostring(v);
 		end
-
+		
 		local lines = string.Explode("\n", v);
-
+		
 		if (#lines == 1) then
 			r[#r + 1] = v;
 			continue;
 		end
-
+		
 		r[#r + 1] = lines[1];
-
+		
 		self:PrintLine(unpack(r));
-
+		
 		if (#lines > 2) then
 			for i = 2, #lines - 1 do
 				self:PrintLine(c, lines[i]);
 			end
 		end
-
+		
 		r = {c, lines[#lines]}
 	end
-
+	
 	self:PrintLine(unpack(r));
 end
 
@@ -617,55 +584,6 @@ function PANEL:CloseMenuTab( pTab )
 	
 	self.pnlSideTabHolder:CloseTab( pTab, true )
 end
-
-/*---------------------------------------------------------------------------
-Tab Management
----------------------------------------------------------------------------*/
-/*local function DoRightClick( self )
-	local Menu = DermaMenu( )
-	
-	Menu:AddOption( "Close", function( ) self.Editor:CloseTab( self, false ) end )
-	Menu:AddOption( "Close others", function( ) self.Editor:CloseAllBut( self ) end )
-	Menu:AddOption( "Close all tabs", function( ) self.Editor:CloseAll( )  end )
-	
-	Menu:AddSpacer( )
-	
-	Menu:AddOption( "Save", function( ) self.Editor:SaveFile( self.FilePath, false, self ) end )
-	-- Menu:AddOption( "Save As", function( ) end )
-	
-	Menu:AddSpacer( )
-	
-	Menu:AddOption( "New File", function( ) self.Editor:NewTab( "editor" ) end )
-	
-	Menu:Open( )
-end
-
-function PANEL:AddTabType( sName, fCreate, fClose )
-	self.tTabTypes[sName] = { NewTab = fCreate, CloseTab = fClose } 
-end
-
-function PANEL:NewTab( sType, ... )
-	if self.tTabTypes[sType] then 
-		local pPanel, pTab, tSheet = self.tTabTypes[sType].NewTab( self, ... ) 
-		pTab.__type = sType
-		
-		tSheet.Tab.DoRightClick = DoRightClick
-		tSheet.Tab.Editor = self
-		
-		return pPanel, pTab, tSheet 
-	else 
-		error( 2, "No such tab type!" ) 
-	end 
-end
-
-function PANEL:CloseTab( pTab, bSave ) 
-	if pTab == true then pTab = self.pnlTabHolder:GetActiveTab( ) end
-	if not ValidPanel( pTab ) then return end
-	
-	self.tTabTypes[pTab.__type].CloseTab( self, pTab, bSave )
-	
-	self.pnlTabHolder:CloseTab( pTab, true )
-end */
 
 function PANEL:CloseAll( )
 	for I = #self.pnlTabHolder.Items, 1, -1 do
@@ -942,11 +860,11 @@ function PANEL:DoValidate( Goto, Code, Debug )
 	end
 	
 	local t = EXPR_TOKENIZER.New();
-
+	
 	t:Initalize("EXPADV", Code);
-
+	
 	local ts, tr = t:Run();
-
+	
 	if (not ts) then
 		if (tr.state == "internal") then
 			self:OnValidateError( false, "Internal tokenizer error (see console)." )
@@ -954,16 +872,16 @@ function PANEL:DoValidate( Goto, Code, Debug )
 		else
 			self:OnValidateError( Goto, tr )
 		end
-
+		
 		return false;
 	end
-
+	
 	local p = EXPR_PARSER.New();
-
+	
 	p:Initalize(tr);
-
+	
 	local ps, pr = p:Run();
-
+	
 	if (not ps) then
 		if (pr.state == "internal") then
 			self:OnValidateError( false, "Internal parser error (see console)." )
@@ -971,16 +889,16 @@ function PANEL:DoValidate( Goto, Code, Debug )
 		else
 			self:OnValidateError( Goto, pr )
 		end
-
+		
 		return false;
 	end
-
+	
 	local c = EXPR_COMPILER.New();
-
+	
 	c:Initalize(pr);
-
+	
 	local cs, cr = c:Run();
-
+	
 	if (not cs) then
 		if (cr.state == "internal") then
 			self:OnValidateError( false, "Internal compiler error (see console)." )
@@ -988,32 +906,32 @@ function PANEL:DoValidate( Goto, Code, Debug )
 		else
 			self:OnValidateError( Goto, cr )
 		end
-
+		
 		return false;
 	end
 	
 	self.btnValidate:SetColor( Color( 50, 255, 50 ) )
 	self.btnValidate:SetText( "Validation Successful!" )
-
+	
 	self:AddPrintOut(Color(0,255,0), "Validation Successful!" )
 	
 	if (Debug) then
 		EXPR_LIB.ShowDebug(tr.tokens, pr.tasks);
 	end
-
+	
 	return true
 end
 
 function PANEL:OnValidateError( Goto, Thrown )
 	local Error;
-
+	
 	if (istable(Thrown)) then
 		Error = string.format("%s, at line %i char %i.", Thrown.msg, Thrown.line, Thrown.char);
 	else
 		Error = Thrown
 		Thrown = nil
 	end
-
+	
 	if Goto then
 		if Thrown and (Thrown.line > 1 or Thrown.char > 1) then 
 			self.pnlTabHolder:GetActiveTab( ):GetPanel( ):SetCaret( Vector2( Thrown.line, Thrown.char ) )
