@@ -86,7 +86,9 @@ function ENT:SetCode(script, run)
 
 	if (run) then
 		timer.Simple(1, function()
-			self:InitScript();
+			if (IsValid(self)) then
+				self:InitScript();
+			end
 		end);
 	end
 

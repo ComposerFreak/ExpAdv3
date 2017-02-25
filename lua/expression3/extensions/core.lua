@@ -353,6 +353,7 @@ hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", functi
 	include("expression3/extensions/vector.lua");
 	include("expression3/extensions/angle.lua");
 	include("expression3/extensions/entity.lua");
+	include("expression3/extensions/table.lua");
 
 	-- Custom will go here.
 end);

@@ -130,6 +130,8 @@ function COMPILER.BuildScript(this)
 			local prefixs = tasks.prefix;
 
 			if (prefixs) then
+				--for _ = #prefixs, 1, -1 do
+				--	local prefix = prefixs[_];
 				for _, prefix in pairs(prefixs) do
 					if (prefix.newLine) then
 						buffer[#buffer + 1] = "\n";
@@ -156,6 +158,8 @@ function COMPILER.BuildScript(this)
 			local postfixs = tasks.postfix;
 
 			if (postfixs) then
+				--for _ = #postfixs, 1, -1 do
+				--	local postfix = postfixs[_];
 				for _, postfix in pairs(postfixs) do
 					if (postfix.newLine) then
 						buffer[#buffer + 1] = "\n";
@@ -361,7 +365,7 @@ function COMPILER.GetOperator(this, operation, fst, ...)
 	end
 
 	local signature = string.format("%s(%s)", operation, table.concat({fst, ...},","));
-
+	
 	local Op = EXPR_OPERATORS[signature];
 
 	if (Op) then
@@ -2089,6 +2093,20 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 
 	this:CheckState(op.state, token, "Constructor 'new %s", signature);
 
+	if (vargs) then
+		if (#expressions >= 1) then
+			for i = vargs, #expressions do
+				local arg = expressions[i];
+
+				if (arg.result ~= "_vr") then
+					this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. arg.result .. "\"", ",");
+
+					this:QueueInjectionAfter(inst, arg.final, "}");
+				end
+			end
+		end
+	end
+
 	if (type(op.operator) == "function") then
 
 		this:QueueRemove(inst, inst.__new);
@@ -2653,6 +2671,7 @@ function COMPILER.Compile_GET(this, inst, token, expressions)
 	local iType = this:Compile(index);
 
 	local op;
+	local keepid = false;
 	local cls = inst.class;
 
 	if (not cls) then
@@ -2662,14 +2681,25 @@ function COMPILER.Compile_GET(this, inst, token, expressions)
 			this:Throw(token, "No such get operation %s[%s]", name(vType), name(iType));
 		end
 	else
-		op = this:GetOperator("get", vType, iType, cls);
+		op = this:GetOperator("get", vType, iType, cls.data);
 		
 		if (not op) then
+			keepid = true;
+
+			this:QueueReplace(inst, cls, "\'" .. cls.data .. "\'");
+
 			op = this:GetOperator("get", vType, iType, "_cls");
+
+			if (op) then
+				if (op.result == "") then
+					op.result = cls.data;
+					op.rCount = 1;
+				end
+			end
 		end
 
 		if (not op) then
-			this:Throw(token, "No such get operation %s[%s,%s]", name(vType), name(iType), name(cls));
+			this:Throw(token, "No such get operation %s[%s,%s]", name(vType), name(iType), name(cls.data));
 		end
 	end
 
@@ -2679,15 +2709,24 @@ function COMPILER.Compile_GET(this, inst, token, expressions)
 		return op.result, op.rCount;
 	end
 
-	this:QueueReplace(inst, token, "," );
-
-	this:QueueInjectionBefore(inst, value.token, "_OPS[\"" .. op.signature .. "\"](");
+	--This wont work because when translating to var arg it ends up in the wrong place.
+	--this:QueueInjectionBefore(inst, value.token, "_OPS[\"" .. op.signature .. "\"](");
+	-- I tried fixing var args but this is easier.
+	this:QueueReplace(inst, value.token, "_OPS[\"" .. op.signature .. "\"](" .. value.token.data);
 
 	if (op.context) then
 	   this:QueueInjectionBefore(inst, value.token, "CONTEXT", ",");
 	end
-			
+
+	if (not keepid) then
+		this:QueueRemove(inst, cls);
+	else
+		this:QueueReplace(inst, cls, "'" .. cls.data .. "'");
+	end
+
 	this:QueueReplace(inst, inst.__rsb, ")" );
+
+	this:QueueReplace(inst, inst.__lsb, "," );
 
 	this.__operators[op.signature] = op.operator;
 
@@ -2703,19 +2742,29 @@ function COMPILER.Compile_SET(this, inst, token, expressions)
 	local vExpr = this:Compile(expr);
 
 	local op;
+	local keepclass = false;
 	local cls = inst.class;
 
-	if (cls and vExpr ~= cls) then
+	if (cls and vExpr ~= cls.data) then
 		-- TODO: Cast
 	end
 
-	op = this:GetOperator("set", vType, iType, vExpr);
+	if (not cls) then
+		op = this:GetOperator("set", vType, iType, vExpr);
+	else
+		op = this:GetOperator("set", vType, iType, cls.data);
+
+		if (not op) then
+			keepclass = true;
+			op = this:GetOperator("set", vType, iType, "_cls", vExpr)
+		end
+	end
 
 	if (not op) then
 		if (not cls) then
 			this:Throw(token, "No such set operation %s[%s] = ", name(vType), name(iType), name(vExpr));
 		else
-			this:Throw(token, "No such set operation %s[%s, %s] = ", name(vType), name(iType), name(cls), name(vExpr));
+			this:Throw(token, "No such set operation %s[%s, %s] = ", name(vType), name(iType), name(cls.data), name(vExpr));
 		end
 	end
 
@@ -2733,6 +2782,12 @@ function COMPILER.Compile_SET(this, inst, token, expressions)
 	   this:QueueInjectionBefore(inst, value.token, "CONTEXT", ",");
 	end
 	
+	if (not keepclass) then
+		this:QueueRemove(isnt, cls);
+	else
+		this:QueueReplace(isnt, cls, ", '" .. cls.data .. "'");
+	end
+
 	this:QueueRemove(inst, inst.__ass, ",");
 
 	this:QueueReplace(inst, inst.__rsb, "," );

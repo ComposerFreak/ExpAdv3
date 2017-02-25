@@ -279,12 +279,12 @@ function PARSER.LastInStatment(this, token, type)
 
 	while (i <= this.__total) do
 		local tkn = this.__tokens[i];
-
+		
 		if (not tkn) then
 			break;
 		end
 
-		if (tkn.type == "sep" or tkn.newLine) then
+		if (tkn.type == "sep" or tkn.line ~= token.line) then
 			break;
 		end
 
@@ -1183,6 +1183,8 @@ function PARSER.Statment_11(this, expr)
 	if (this:Accept("lsb")) then
 		local inst = this:StartInstruction("set", this.__token);
 
+		inst.__lsb = this.__token;
+
 		local expressions = {};
 
 		expressions[1] = expr;
@@ -1194,9 +1196,7 @@ function PARSER.Statment_11(this, expr)
 
 			this:Require("typ", "Class expected for index operator, after coma (,).");
 
-			inst.class = this.__token.data;
-
-			this:QueueRemove(inst, this.__token);
+			inst.class = this.__token;
 		end
 
 		this:Require("rsb", "Right square bracket (]) expected to close index operator.");
@@ -1906,13 +1906,14 @@ function PARSER.Expression_Trailing(this, expr)
 
 			expr = this:EndInstruction(inst, expressions);
 		elseif (this:Accept("lsb")) then
-			
+			local lsb = this.__token;
+
 			-- Check for a set instruction and locate it,
 			-- If we are at our set indexer then we break.
 
 			if (this:StatmentContains(this.__token, "ass")) then
 				local excluded = this:LastInStatment(this.__token, "lsb");
-				
+
 				if (excluded and excluded.index == this.__token.index) then
 					this:StepBackward(1);
 					break;
@@ -1928,17 +1929,15 @@ function PARSER.Expression_Trailing(this, expr)
 			expressions[2] = this:Expression_1();
 
 			if (this:Accept("com")) then
-				this:QueueRemove(inst, this.__token);
 
 				this:Require("typ", "Class expected for index operator, after coma (,).");
 
-				inst.class = this.__token.data;
-
-				this:QueueRemove(inst, this.__token);
+				inst.class = this.__token;
 			end
 
 			this:Require("rsb", "Right square bracket (]) expected to close index operator.");
 
+			inst.__lsb = lsb;
 			inst.__rsb = this.__token;
 
 			expr = this:EndInstruction(inst, expressions);

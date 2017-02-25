@@ -567,8 +567,10 @@ end
 function EXPR_LIB.GetAllClasses()
 	local res = {};
 
-	for _, v in pairs(classes) do
-		res[v] = v;
+	if ( EXPR_CLASSES ) then
+		for _, v in pairs(EXPR_CLASSES) do
+			res[v] = v;
+		end
 	end
 
 	return res;
@@ -735,6 +737,9 @@ function Extension.CheckRegistration(this, _function, ...)
 	return err;
 end
 
+function Extension.PostLoadClasses()
+end
+
 local enabledExtentions = {};
 
 function Extension.EnableExtension(this)
@@ -767,8 +772,10 @@ function Extension.EnableExtension(this)
 			op.extension = this.name;
 			constructors[op.signature] = op;
 		end
-	end);
 
+		this:PostLoadClasses(EXPR_LIB.GetAllClasses());
+	end);
+	
 	local methods = {};
 
 	hook.Add("Expression3.LoadMethods", "Expression3.Extension." .. this.name, function()
@@ -832,6 +839,24 @@ function EXPR_LIB.GetEnabledExtensions()
 	return enabledExtentions or {};
 end
 
+--[[
+]]
+
+function EXPR_LIB.ThrowIF(cnd, msg, fst, ...)
+	if (cnd) then
+		if (fst) then
+			msg = string.format(msg, fst, ...);
+		end
+		
+		local err = {};
+		err.state = "runtime";
+		err.char = 0;
+		err.line = 0;
+		err.msg = msg;
+
+		error(err, 0);
+	end
+end
 --[[
 	:::Hooks For Loading extensions:::
 	''''''''''''''''''''''''''''''''''

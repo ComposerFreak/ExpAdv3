@@ -320,7 +320,8 @@ function TOKENIZER.CreateToken(this, type, name, data, origonal)
 		tkn.newLine = true;
 	end
 
-	this.__tokens[#this.__tokens + 1] = tkn;
+	tkn.index = #this.__tokens + 1;
+	this.__tokens[tkn.index] = tkn;
 end
 
 --[[
