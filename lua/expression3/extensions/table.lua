@@ -25,7 +25,7 @@ function eTable.get(ctx, tbl, key, type)
 	local vr = tbl[key];
 
 	if(not vr) then
-		ctx:Throw("Attempted to index feild %s a nil value.", tostring(key));
+		ctx:Throw("Attempted to index field %s a nil value.", tostring(key));
 	end
 
 	if (type == "_vr") then
@@ -33,7 +33,7 @@ function eTable.get(ctx, tbl, key, type)
 	end
 
 	if( vr[1] ~= type ) then
-		ctx:Throw( "Attempted to index feild %s, %s expected got %s.", tostring(key), type, vr[1]);
+		ctx:Throw( "Attempted to index field %s, %s expected got %s.", tostring(key), type, vr[1]);
 	end
 
 	return vr[2];

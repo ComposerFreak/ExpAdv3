@@ -481,7 +481,8 @@ function PARSER.Block_1(this, _end, lcb)
 		local seq = this:StartInstruction("seq", this.__token);
 
 		if (lcb) then
-			this:QueueReplace(seq, this.__token, lcb);
+			this:QueueRemove(seq, this.__token);
+			this:QueueInjectionAfter(seq, this.__token, lcb);
 		end
 
 		local stmts = {};
