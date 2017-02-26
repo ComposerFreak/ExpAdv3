@@ -51,32 +51,6 @@ end
 --[[
 ]]
 
-function throwif(ctx, cnd, msg, fst, ...)
-	if (cnd) then
-		if (fst) then
-			msg = string.format(msg, fst, ...);
-		end
-		
-		local err = {};
-		err.state = "runtime";
-		err.char = 0;
-		err.line = 0;
-		err.msg = msg;
-
-		err.stack = ctx:Trace(1, 15);
-
-		if (stack) then
-			local trace = stack[1];
-			
-			if (trace) then
-				err.char = trace[1];
-				err.line = trace[2];
-			end
-		end
-
-		error(err, 0);
-	end
-end; EXPR_LIB.ThrowIF = throwif;
 
 --[[
 	Class: NIL
@@ -205,9 +179,13 @@ function ext_core.PostLoadClasses(this, classes)
 			end);
 
 			ext_core:RegisterCastingOperator("vr", id, function(ctx, vr)
-				throwif(ctx, not vr or not vr[1] or vr[2] == nil, "attempt to cast variant of type nil to " .. c.name);
+				if (not vr or not vr[1] or vr[2] == nil) then
+					ctx:Throw("attempt to cast variant of type nil to " .. c.name);
+				end
 
-				throwif(ctx, vr[1] ~= id, "attempt to cast variant of type " .. vr[1] .. " to " .. c.name);
+				if (vr[1] ~= id) then
+					ctx:Throw("attempt to cast variant of type " .. vr[1] .. " to " .. c.name);
+				end
 
 				return vr[2];
 			end);

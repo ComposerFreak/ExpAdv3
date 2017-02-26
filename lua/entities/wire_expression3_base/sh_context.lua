@@ -44,22 +44,13 @@ function CONTEXT.Trace(this, level, max)
 end
 
 function CONTEXT.GetScriptPos(this, line, char)
-	local res;
-
 	for _, a in pairs(this.traceTable) do
-			
-		--if (a.native_char > char) then
-			--continue;
-		--end
-
-		if (a.native_line > line) then
-			break;
+		if (a.native_line >= line) then
+			return{a.e3_line, a.e3_char};
 		end
-
-		res = {a.e3_line, a.e3_char};
 	end
 
-	return res;
+	return nil;
 end
 
 function CONTEXT.Throw(this, msg, fst, ...)
@@ -75,12 +66,12 @@ function CONTEXT.Throw(this, msg, fst, ...)
 
 	err.stack = this:Trace(1, 15);
 
-	if (stack) then
-		local trace = stack[1];
+	if (err.stack) then
+		local trace = err.stack[1];
 		
 		if (trace) then
-			err.char = trace[1];
-			err.line = trace[2];
+			err.line = trace[1];
+			err.char = trace[2];
 		end
 	end
 

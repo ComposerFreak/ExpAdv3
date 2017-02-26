@@ -157,6 +157,8 @@ function ENT:InitScript()
 		"end",
 	}, "\n");
 
+	self.context.__native = native;
+
 	local main = CompileString(native, "Expression 3", false);
 
 	if (isstring(main)) then

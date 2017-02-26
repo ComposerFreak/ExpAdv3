@@ -1006,7 +1006,7 @@ if (SERVER) then
 			net.WriteInt(#t, 16);
 
 			for _, v in pairs(t) do
-				if (not istable(v)) then
+				if (not IsColor(v)) then
 					net.WriteBit(0);
 					net.WriteString(tostring(v));
 				else
@@ -1109,7 +1109,7 @@ if (CLIENT) then
 			net.WriteInt(#t, 16);
 
 			for _, v in pairs(t) do
-				if (not istable(v)) then
+				if (not IsColor(v)) then
 					net.WriteBit(0);
 					net.WriteString(tostring(v));
 				else

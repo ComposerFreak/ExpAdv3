@@ -18,13 +18,23 @@ local throwif = EXPR_LIB.ThrowIF;
 function eTable.get(ctx, tbl, key, type)
 	type = type or "_vr";
 
-	throwif(ctx, not tbl, "Attempted to index a nil value.")
+	if(not tbl) then
+		ctx:Throw("Attempted to index a nil value.")
+	end
 
-	local vr = tbl[key]
-	throwif(ctx, not vr, "Attempted to index feild %s a nil value.", tostring(key));
-	if (type == "_vr") then return vr end
+	local vr = tbl[key];
 
-	throwif(ctx, vr[1] ~= type, "Attempted to index feild %s, %s expected got %s.", tostring(key), type, vr[1]);
+	if(not vr) then
+		ctx:Throw("Attempted to index feild %s a nil value.", tostring(key));
+	end
+
+	if (type == "_vr") then
+		return vr
+	end
+
+	if( vr[1] ~= type ) then
+		ctx:Throw( "Attempted to index feild %s, %s expected got %s.", tostring(key), type, vr[1]);
+	end
 
 	return vr[2];
 end
@@ -32,7 +42,9 @@ end
 function eTable.set(ctx, tbl, key, type, value)
 	type = type or "_vr";
 
-	throwif(ctx, not tbl, "Attempted to index a nil value.")
+	if(not tbl) then
+		ctx:Throw("Attempted to index a nil value.")
+	end
 
 	if (value == nil) then
 		tbl[key] = nil; return;

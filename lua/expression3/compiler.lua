@@ -110,7 +110,7 @@ function COMPILER.BuildScript(this)
 	local alltasks = this.__tasks;
 
 	local char = 0;
-	local line = 1;
+	local line = 3;
 	local traceTable = {};
 
 	for k, v in pairs(this.__tokens) do
@@ -175,7 +175,7 @@ function COMPILER.BuildScript(this)
 				
 			end
 		else
-			traceTable[line][char] = {v.line, v.char};
+			traceTable[#traceTable + 1] = {e3_line = v.line, e3_char = v.char, native_line = line, native_char = char};
 			buffer[#buffer + 1] = data;
 			char = char + #data + 1;
 		end
