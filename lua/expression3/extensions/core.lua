@@ -51,7 +51,7 @@ end
 --[[
 ]]
 
-function throwif(cnd, msg, fst, ...)
+function throwif(ctx, cnd, msg, fst, ...)
 	if (cnd) then
 		if (fst) then
 			msg = string.format(msg, fst, ...);
@@ -62,6 +62,17 @@ function throwif(cnd, msg, fst, ...)
 		err.char = 0;
 		err.line = 0;
 		err.msg = msg;
+
+		err.stack = ctx:Trace(1, 15);
+
+		if (stack) then
+			local trace = stack[1];
+			
+			if (trace) then
+				err.char = trace[1];
+				err.line = trace[2];
+			end
+		end
 
 		error(err, 0);
 	end
@@ -189,17 +200,17 @@ function ext_core.PostLoadClasses(this, classes)
 		local id = c.id;
 		
 		if (id ~= "_vr" and id ~= "") then
-			ext_core:RegisterCastingOperator(id, "vr", function(obj)
+			ext_core:RegisterCastingOperator(id, "vr", function(ctx, obj)
 				return {id, obj};
-			end, true);
+			end);
 
-			ext_core:RegisterCastingOperator("vr", id, function(vr)
-				throwif(not vr or not vr[1] or vr[2] == nil, "attempt to cast variant of type nil to " .. c.name);
+			ext_core:RegisterCastingOperator("vr", id, function(ctx, vr)
+				throwif(ctx, not vr or not vr[1] or vr[2] == nil, "attempt to cast variant of type nil to " .. c.name);
 
-				throwif(vr[1] ~= id, "attempt to cast variant of type " .. vr[1] .. " to " .. c.name);
+				throwif(ctx, vr[1] ~= id, "attempt to cast variant of type " .. vr[1] .. " to " .. c.name);
 
 				return vr[2];
-			end, true);
+			end);
 		end
 	end
 end

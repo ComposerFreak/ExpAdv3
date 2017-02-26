@@ -15,24 +15,24 @@
 local eTable = {};
 local throwif = EXPR_LIB.ThrowIF;
 
-function eTable.get(tbl, key, type)
+function eTable.get(ctx, tbl, key, type)
 	type = type or "_vr";
 
-	throwif(not tbl, "Attempted to index a nil value.")
+	throwif(ctx, not tbl, "Attempted to index a nil value.")
 
 	local vr = tbl[key]
-	throwif(not vr, "Attempted to index feild %s a nil value.", tostring(key));
+	throwif(ctx, not vr, "Attempted to index feild %s a nil value.", tostring(key));
 	if (type == "_vr") then return vr end
 
-	throwif(vr[1] ~= type, "Attempted to index feild %s, %s expected got %s.", tostring(key), type, vr[1]);
+	throwif(ctx, vr[1] ~= type, "Attempted to index feild %s, %s expected got %s.", tostring(key), type, vr[1]);
 
 	return vr[2];
 end
 
-function eTable.set(tbl, key, type, value)
+function eTable.set(ctx, tbl, key, type, value)
 	type = type or "_vr";
 
-	throwif(not tbl, "Attempted to index a nil value.")
+	throwif(ctx, not tbl, "Attempted to index a nil value.")
 
 	if (value == nil) then
 		tbl[key] = nil; return;

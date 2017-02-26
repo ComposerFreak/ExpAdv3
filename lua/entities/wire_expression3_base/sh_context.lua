@@ -44,20 +44,22 @@ function CONTEXT.Trace(this, level, max)
 end
 
 function CONTEXT.GetScriptPos(this, line, char)
-	for e3line, a in pairs(this.traceTable) do
-		for e3char, b in pairs(a) do
-			local nline = b[1];
-			local nchar = b[2];
-			if (nline >= line and nchar >= char) then
-				print("Script:", line, char);
-				print("Lua:", nline, nchar);
-				print("E3:", e3line, e3char);
-				return {e3line, e3char};
-			end
+	local res;
+
+	for _, a in pairs(this.traceTable) do
+			
+		--if (a.native_char > char) then
+			--continue;
+		--end
+
+		if (a.native_line > line) then
+			break;
 		end
+
+		res = {a.e3_line, a.e3_char};
 	end
 
-	return nil;
+	return res;
 end
 
 function CONTEXT.Throw(this, msg, fst, ...)
@@ -81,7 +83,6 @@ function CONTEXT.Throw(this, msg, fst, ...)
 			err.line = trace[2];
 		end
 	end
-
 
 	error(err, 0);
 end

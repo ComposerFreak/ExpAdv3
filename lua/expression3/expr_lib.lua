@@ -457,6 +457,7 @@ function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator, 
 	op.result = res.id;
 	op.rCount = count;
 	op.operator = operator;
+	op.context = not excludeContext;
 
 	operators[op.signature] = op;
 

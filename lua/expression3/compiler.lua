@@ -111,7 +111,7 @@ function COMPILER.BuildScript(this)
 
 	local char = 0;
 	local line = 1;
-	local traceTable = {{}};
+	local traceTable = {};
 
 	for k, v in pairs(this.__tokens) do
 		local data = tostring(v.data);
@@ -119,7 +119,6 @@ function COMPILER.BuildScript(this)
 		if (v.newLine) then
 			char = 1;
 			line = line + 1;
-			traceTable[line] = {};
 			buffer[#buffer + 1] = "\n";
 		end
 
@@ -136,11 +135,9 @@ function COMPILER.BuildScript(this)
 					if (prefix.newLine) then
 						char = 1;
 						line = line + 1;
-						traceTable[line] = {};
 						buffer[#buffer + 1] = "\n";
 					end
 
-					traceTable[line][char] = {v.line, v.char};
 					buffer[#buffer + 1] = prefix.str;
 					char = char + #prefix.str + 1;
 				end
@@ -148,14 +145,14 @@ function COMPILER.BuildScript(this)
 
 			if (not tasks.remove) then
 				if (tasks.replace) then
-					traceTable[line][char] = {v.line, v.char};
 					buffer[#buffer + 1] = tasks.replace.str;
 					char = char + #tasks.replace;
 				else
-					traceTable[line][char] = {v.line, v.char};
 					buffer[#buffer + 1] = data;
 					char = char + #data + 1;
 				end
+
+				traceTable[#traceTable + 1] = {e3_line = v.line, e3_char = v.char, native_line = line, native_char = char};
 			end
 
 			local postfixs = tasks.postfix;
@@ -167,18 +164,15 @@ function COMPILER.BuildScript(this)
 					if (postfix.newLine) then
 						char = 1;
 						line = line + 1;
-						traceTable[line] = {};
 						buffer[#buffer + 1] = "\n";
 					end
-
-					traceTable[line][char] = {v.line, v.char};
 					char = char + #postfix.str + 1;
 					buffer[#buffer + 1] = postfix.str;
 				end
 			end
 
 			if (tasks.instruction) then
-				traceTable[line][char][3] = tasks.instruction.type;
+				
 			end
 		else
 			traceTable[line][char] = {v.line, v.char};
@@ -2731,10 +2725,7 @@ function COMPILER.Compile_GET(this, inst, token, expressions)
 		return op.result, op.rCount;
 	end
 
-	--This wont work because when translating to var arg it ends up in the wrong place.
-	--this:QueueInjectionBefore(inst, value.token, "_OPS[\"" .. op.signature .. "\"](");
-	-- I tried fixing var args but this is easier.
-	this:QueueReplace(inst, value.token, "_OPS[\"" .. op.signature .. "\"](" .. value.token.data);
+	this:QueueInjectionBefore(inst, value.token, "_OPS[\"" .. op.signature .. "\"](");
 
 	if (op.context) then
 	   this:QueueInjectionBefore(inst, value.token, "CONTEXT", ",");
