@@ -1685,15 +1685,16 @@ end
 
 function PARSER.Expression_23(this)
 	if (this:CheckToken("var")) then
+		local token = this.__token;
 		local library = this.__next.data;
 		local lib = EXPR_LIBRARIES[library];
 
 		if (lib) then
 			this:Next();
 
-			local inst = this:StartInstruction("func", this.__token);
+			local inst = this:StartInstruction("func", token);
 
-			inst.library = this.__token.data;
+			inst.library = this.__token;
 
 			if (not this:Accept("prd")) then
 				this:StepBackward(1);
@@ -1762,6 +1763,8 @@ function PARSER.Expression_25(this)
 		inst.__const = this.__token; -- this:QueueRemove(inst, this.__token);
 		
 		this:Require("lpa", "Left parenthesis (( ) expected to open constructor parameters.")
+		
+		inst.__lpa = this.__token;
 
 		local expressions = {};
 

@@ -24,13 +24,13 @@ function CONTEXT.Trace(this, level, max)
 	local stack = {};
 
 	for i = level + 1, level + max do
-		local info = debug.getinfo( level, "Sln" );
+		local info = debug.getinfo( i, "Sln" );
 		
 		if (not info) then
-			break;
+			continue;
 		end
 
-		if (info.short_src == "Expresion 3") then
+		if (info.short_src == "Expression 3") then
 			local trace = this:GetScriptPos(info.currentline, 0);
 
 			if (trace) then
@@ -44,12 +44,15 @@ function CONTEXT.Trace(this, level, max)
 end
 
 function CONTEXT.GetScriptPos(this, line, char)
-	for l, row in pairs(this.traceTable) do
-		if (l >= line) then
-			for c, trace in pairs(row) do
-				if (c >= char) then
-					return trace;
-				end
+	for e3line, a in pairs(this.traceTable) do
+		for e3char, b in pairs(a) do
+			local nline = b[1];
+			local nchar = b[2];
+			if (nline >= line and nchar >= char) then
+				print("Script:", line, char);
+				print("Lua:", nline, nchar);
+				print("E3:", e3line, e3char);
+				return {e3line, e3char};
 			end
 		end
 	end
@@ -68,7 +71,7 @@ function CONTEXT.Throw(this, msg, fst, ...)
 	err.line = 0;
 	err.msg = msg;
 
-	err.stack = this:Trace(1, 1);
+	err.stack = this:Trace(1, 15);
 
 	if (stack) then
 		local trace = stack[1];

@@ -117,7 +117,7 @@ function COMPILER.BuildScript(this)
 		local data = tostring(v.data);
 
 		if (v.newLine) then
-			char = 0;
+			char = 1;
 			line = line + 1;
 			traceTable[line] = {};
 			buffer[#buffer + 1] = "\n";
@@ -134,6 +134,9 @@ function COMPILER.BuildScript(this)
 				--	local prefix = prefixs[_];
 				for _, prefix in pairs(prefixs) do
 					if (prefix.newLine) then
+						char = 1;
+						line = line + 1;
+						traceTable[line] = {};
 						buffer[#buffer + 1] = "\n";
 					end
 
@@ -162,6 +165,9 @@ function COMPILER.BuildScript(this)
 				--	local postfix = postfixs[_];
 				for _, postfix in pairs(postfixs) do
 					if (postfix.newLine) then
+						char = 1;
+						line = line + 1;
+						traceTable[line] = {};
 						buffer[#buffer + 1] = "\n";
 					end
 
@@ -197,6 +203,17 @@ function COMPILER.Throw(this, token, msg, fst, ...)
 	err.msg = msg;
 
 	error(err,0);
+end
+
+--[[
+]]
+
+function COMPILER.OffsetToken(this, token, offset)
+	local pos = token.index + offset;
+
+	local token = this.__tokens[pos];
+
+	return token;
 end
 
 --[[
@@ -2093,26 +2110,13 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 
 	this:CheckState(op.state, token, "Constructor 'new %s", signature);
 
-	if (vargs) then
-		if (#expressions >= 1) then
-			for i = vargs, #expressions do
-				local arg = expressions[i];
-
-				if (arg.result ~= "_vr") then
-					this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. arg.result .. "\"", ",");
-
-					this:QueueInjectionAfter(inst, arg.final, "}");
-				end
-			end
-		end
-	end
-
 	if (type(op.operator) == "function") then
 
 		this:QueueRemove(inst, inst.__new);
 		this:QueueRemove(inst, inst.__const);
+		this:QueueRemove(inst, inst.__lpa);
 
-		this:QueueInjectionBefore(inst, inst.__const, "_CONST[\"" .. op.signature .. "\"]");
+		this:QueueInjectionBefore(inst, inst.__const, "_CONST[\"" .. op.signature .. "\"](");
 
 		if (op.context) then
 		    this:QueueInjectionBefore(inst, inst.__const, "CONTEXT");
@@ -2130,6 +2134,20 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 	else
 		local signature = string.format("%s.", inst.library, op.signature);
 		error("Attempt to inject " .. op.signature .. " but operator was incorrect " .. type(op.operator) .. ".");
+	end
+
+	if (vargs) then
+		if (#expressions >= 1) then
+			for i = vargs, #expressions do
+				local arg = expressions[i];
+
+				if (arg.result ~= "_vr") then
+					this:QueueInjectionBefore(inst, this:OffsetToken(arg.token, -1), "{", "\"" .. arg.result .. "\"", ",");
+
+					this:QueueInjectionAfter(inst, arg.final, "}");
+				end
+			end
+		end
 	end
 
 	return op.result, op.rCount;
@@ -2206,19 +2224,6 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 
 	this:CheckState(op.state, token, "Method %s.%s(%s)", name(mClass), inst.method, names(ids));
 
-	if (vargs) then
-		if (#expressions > 1) then
-			for i = vargs, #expressions do
-				local arg = expressions[i];
-
-				if (arg.result ~= "_vr") then
-					this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. arg.result .. "\"", ",");
-
-					this:QueueInjectionAfter(inst, arg.final, "}");
-				end
-			end
-		end
-	end
 
 	if (type(op.operator) == "function") then
 		this:QueueRemove(inst, inst.__operator);
@@ -2245,15 +2250,29 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 		error("Attempt to inject " .. op.signature .. " but operator was incorrect, got " .. type(op.operator));
 	end
 
+	if (vargs) then
+		if (#expressions > 1) then
+			for i = vargs, #expressions do
+				local arg = expressions[i];
+
+				if (arg.result ~= "_vr") then
+					this:QueueInjectionBefore(inst, this:OffsetToken(arg.token, -1), "{", "\"" .. arg.result .. "\"", ",");
+
+					this:QueueInjectionAfter(inst, arg.final, "}");
+				end
+			end
+		end
+	end
+
 	return op.result, op.rCount;
 end
 
 function COMPILER.Compile_FUNC(this, inst, token, expressions)
-	local lib = EXPR_LIBRARIES[inst.library];
+	local lib = EXPR_LIBRARIES[inst.library.data];
 
 	if (not lib) then
 		-- Please note this should be impossible.
-		this:Throw(token, "Library %s does not exist.", inst.library);
+		this:Throw(token, "Library %s does not exist.", inst.library.data);
 	end
 
 	local op;
@@ -2312,29 +2331,16 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 	end
 
 	if (not op) then
-		this:Throw(token, "No such function %s.%s(%s).", inst.library, inst.name, names(ids, ","));
+		this:Throw(token, "No such function %s.%s(%s).", inst.library.data, inst.name, names(ids, ","));
 	end
 
-	this:CheckState(op.state, token, "Function %s.%s(%s).", inst.library, inst.name, names(ids, ","));
-
-	if (vargs) then
-		if (#expressions >= 1) then
-			for i = vargs, #expressions do
-				local arg = expressions[i];
-
-				if (arg.result ~= "_vr") then
-					this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. arg.result .. "\"", ",");
-
-					this:QueueInjectionAfter(inst, arg.final, "}");
-				end
-			end
-		end
-	end
+	this:CheckState(op.state, token, "Function %s.%s(%s).", inst.library.data, inst.name, names(ids, ","));
 
 	if (type(op.operator) == "function") then
-		local signature = string.format("%s.%s", inst.library, op.signature);
+		local signature = string.format("%s.%s", inst.library.data, op.signature);
 
 		this:QueueRemove(inst, token);
+		this:QueueRemove(inst, inst.library);
 		this:QueueRemove(inst, inst.__operator);
 		this:QueueRemove(inst, inst.__func);
 
@@ -2351,12 +2357,28 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		this.__functions[signature] = op.operator;
 	elseif (type(op.operator) == "string") then
 		this:QueueRemove(inst, token);
+		this:QueueRemove(inst, inst.library);
 		this:QueueRemove(inst, inst.__operator);
 		this:QueueReplace(inst, inst.__func, op.operator); -- This is error.
 		this:Import(op.operator);
 	else
 		local signature = string.format("%s.", inst.library, op.signature);
 		error("Attempt to inject " .. signature .. " but operator was incorrect " .. type(op.operator) .. ".");
+	end
+
+
+	if (vargs) then
+		if (#expressions >= 1) then
+			for i = vargs, #expressions do
+				local arg = expressions[i];
+
+				if (arg.result ~= "_vr") then
+					this:QueueInjectionAfter(inst, this:OffsetToken(arg.token, -1), "{", "\"" .. arg.result .. "\"", ",");
+
+					this:QueueInjectionAfter(inst, arg.final, "}");
+				end
+			end
+		end
 	end
 
 	if (inst.library == "system") then

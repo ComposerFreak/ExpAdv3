@@ -74,12 +74,15 @@ extension:RegisterOperator("!=", "t,t", "b", 1);
 function extension.PostLoadClasses(this, classes)
 	for _, c in pairs(classes) do
 		local i = c.id;
-		extension:RegisterOperator("get", "t," .. i, "vr", 1, eTable.get);
-		extension:RegisterOperator("get", string.format("t,%s,cls", i), "", 1, eTable.get);
-		
-		for _, _c in pairs(classes) do
-			local v = _c.id;
-			extension:RegisterOperator("set", string.format("t,%s,cls,%s", i, v), "", 1, eTable.set);
+
+		if (id ~= "") then
+			extension:RegisterOperator("get", "t," .. i, "vr", 1, eTable.get);
+			extension:RegisterOperator("get", string.format("t,%s,cls", i), "", 1, eTable.get);
+			
+			for _, _c in pairs(classes) do
+				local v = _c.id;
+				extension:RegisterOperator("set", string.format("t,%s,cls,%s", i, v), "", 1, eTable.set);
+			end
 		end
 	end
 end

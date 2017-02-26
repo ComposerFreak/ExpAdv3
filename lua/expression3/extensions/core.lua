@@ -210,7 +210,7 @@ end
 
 local class_error = ext_core:RegisterClass("er", {"error"}, istable, notnil);
 
-ext_core:RegisterConstructor("er", "s", function(context, msg)
+ext_core:RegisterConstructor("er", "s", function(msg)
 	local err = {};
 	err.state = "runtime";
 	err.char = 0;
@@ -218,19 +218,19 @@ ext_core:RegisterConstructor("er", "s", function(context, msg)
 	err.msg = msg;
 
 	return err;
-end, false);
+end, true);
 
 ext_core:RegisterMethod("er", "message", "", "s", 1, function(err)
-	return err and err.msg or "";
-end, false)
+	return err and err.msg or "n/a";
+end, true)
 
 ext_core:RegisterMethod("er", "char", "", "n", 1, function(err)
 	return err and err.char or 0;
-end, false)
+end, true)
 
 ext_core:RegisterMethod("er", "line", "", "n", 1, function(err)
 	return err and err.line or 0;
-end, false)
+end, true)
 
 --[[
 	Library: SYSTEM
@@ -305,20 +305,23 @@ hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions",
 	return class, count;
 end);
 
-ext_core:RegisterFunction("system", "throw", "er", "", 0, function(err)
-	err.stack = context:Trace(1, 1);
+ext_core:RegisterFunction("system", "throw", "er", "", 0, function(context, err)
+	err.stack = context:Trace(1, 15);
 
-	if (stack) then
-		local trace = stack[1];
+	print("Throw:")
+	PrintTable(err.stack)
+
+	if (err.stack) then
+		local trace = err.stack[1];
 		
 		if (trace) then
-			err.char = trace[1];
-			err.line = trace[2];
+			err.char = trace[2];
+			err.line = trace[1];
 		end
 	end
 
 	error(err, 0);
-end, flase);
+end, false);
 
 --[[
 	Library: EVENT
