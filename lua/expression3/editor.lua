@@ -102,7 +102,7 @@ end
 
 function Golem.GetDirective( directive )
 	if Golem.Instance then 
-		local code = Golem.Instance:GetCode( )
+		local code = Golem.Instance:GetCode( ) or ""
 		
 		if string.find( code, directive ) then 
 			code = string.Replace(code,";","\n")

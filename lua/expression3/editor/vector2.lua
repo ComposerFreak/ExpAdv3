@@ -84,6 +84,7 @@ function meta:Dot( other )
 end 
 
 function meta:Normalize( ) 
+	local Len = self:Length( ) or 1
 	return Vector2( self.x / Len, self.y / Len ) 
 end 
 

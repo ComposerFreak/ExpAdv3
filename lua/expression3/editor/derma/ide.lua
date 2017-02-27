@@ -15,6 +15,29 @@ local SetSize = debug.getregistry( ).Panel.SetSize
 
 local PANEL = { }
 
+local sDefaultScript = [[/*-----------------------------
+	Expression 3 - Alpha
+-----------------------------*/
+@name "Generic - Expression 3";
+
+function void first() {
+	//same as if first.
+}
+
+function void main() {
+	//same as run on tick.
+}
+
+first();
+main();
+
+//register main event for every think.
+event.add("Think", "Main", main);
+
+//For more on E3 and its development visit:
+//https://github.com/Rusketh/ExpAdv3/
+]]
+
 AccessorFunc( PANEL, "m_sText", 		"Text", FORCE_STRING ) 
 AccessorFunc( PANEL, "m_bSizable", 		"Sizable", FORCE_BOOL ) 
 AccessorFunc( PANEL, "m_bCanMaximize", 	"CanMaximize", FORCE_BOOL ) 
@@ -172,6 +195,11 @@ function PANEL:Init( )
 	self.pnlTabHolder:DockMargin( 0, 5, 5, 5 )
 	self.pnlTabHolder:SetPadding( 0 )
 	
+	self.pnlTabHolder.btnNewTab.DoClick = function( btn ) 
+		self:NewTab( "editor", sDefaultScript, nil, "generic" )
+	end
+	
+	
 	self.tbConsoleHolder = vgui.Create( "DPanel", self ) 
 	self.tbConsoleHolder:Dock( BOTTOM )
 	self.tbConsoleHolder.Paint = function( pnl, w, h ) end 
@@ -286,30 +314,7 @@ function PANEL:Init( )
 	-- end);
 	
 	if not self:OpenOldTabs( ) then 
-	
-self:NewTab( "editor", [[
-	/*-----------------------------
-		Expression 3 - Alpha
-	-----------------------------*/
-	@name "Generic - Expression 3";
-
-	function void first() {
-		//same as if first.
-	}
-
-	function void main() {
-		//same as run on tick.
-	}
-
-	first();
-	main();
-
-	//register main event for every think.
-	event.add("Think", "Main", main);
-
-	//For more on E3 and its development visit:
-	//https://github.com/Rusketh/ExpAdv3/
-]] )
+		self:NewTab( "editor", sDefaultScript )
 	end 
 	
 	self:NewMenuTab( "options" )
