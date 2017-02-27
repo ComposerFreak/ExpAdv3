@@ -18,11 +18,11 @@ local throwif = EXPR_LIB.ThrowIF;
 function eTable.get(ctx, tbl, key, type)
 	type = type or "_vr";
 
-	if(not tbl) then
+	if(not tbl or not tbl.tbl) then
 		ctx:Throw("Attempted to index a nil value.")
 	end
 
-	local vr = tbl[key];
+	local vr = tbl.tbl[key];
 
 	if(not vr) then
 		ctx:Throw("Attempted to index field %s a nil value.", tostring(key));
@@ -42,20 +42,47 @@ end
 function eTable.set(ctx, tbl, key, type, value)
 	type = type or "_vr";
 
-	if(not tbl) then
+	if(not tbl or not tbl.tbl) then
 		ctx:Throw("Attempted to index a nil value.")
 	end
 
-	if (value == nil) then
-		tbl[key] = nil; return;
+	local old = tbl.tbl[key];
+	local oldweight = (old == nil and 0 or 1);
+	if (old and old[1] == "t" and old[2] ~= nil) then
+		oldweight = old.size;
 	end
 
-	if (type == "_vr") then
-		tbl[key] = value; return;
+	local newweight = tbl.size - oldweight;
+	neweight = neweight + (value == nil and 0 or 1);
+
+	if (value ~= nil) then
+		if (type == "_vr") then
+			type = value[1];
+			value = value[2];
+		end
+
+		if (type == "t") then
+			neweight = neweight + value.size;
+		end
 	end
 
-	tbl[key] = {type, value};
+	if (newweight > 512) then
+		ctx:Throw("Table size limit reached.");
+	end
+
+	if (type == "" or value == nil) then
+		tbl.tbl[key] = nil;
+		tbl.size = newweight;
+		return;
+	end
+
+	tbl.tbl[key] = {type, value};
+	tbl.size = newweight;
 end
+
+--[[
+]]
+
 
 --[[
 ]]
@@ -65,11 +92,12 @@ local extension = EXPR_LIB.RegisterExtension("table");
 local class_bool = extension:RegisterClass("t", {"table", "array"}, istable, notnil);
 
 extension:RegisterConstructor("t", "...", function(...)
-	return {...}; -- May I just say, that was easy :D
+	local t = {...};
+	return {tbl = t, size = #t};
 end, true)
 
 extension:RegisterConstructor("t", "", function(...)
-	return {};
+	return {tbl = {}, size = 0};
 end, true)
 
 --[[
@@ -98,6 +126,15 @@ function extension.PostLoadClasses(this, classes)
 		end
 	end
 end
+
+--[[
+]]
+
+--[[ext_core:RegisterMethod("t", "insert", "", "s", 1, function(err)
+	return err and err.msg or "n/a";
+end, true)]]
+
+
 
 extension:EnableExtension();
 

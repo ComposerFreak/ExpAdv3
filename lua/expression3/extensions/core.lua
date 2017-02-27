@@ -297,9 +297,6 @@ end);
 ext_core:RegisterFunction("system", "throw", "er", "", 0, function(context, err)
 	err.stack = context:Trace(1, 15);
 
-	print("Throw:")
-	PrintTable(err.stack)
-
 	if (err.stack) then
 		local trace = err.stack[1];
 		
