@@ -50,6 +50,8 @@ function eTable.set(ctx, tbl, key, type, value)
 	local oldweight = (old == nil and 0 or 1);
 	if (old and old[1] == "t" and old[2] ~= nil) then
 		oldweight = old.size;
+		tbl.children[old[2]] = nil;
+		old[2].parents[tbl] = nil;
 	end
 
 	local newweight = tbl.size - oldweight;
@@ -63,6 +65,11 @@ function eTable.set(ctx, tbl, key, type, value)
 
 		if (type == "t") then
 			neweight = neweight + value.size;
+			tbl.children[value] = [value];
+
+			if (value ~= nil) then
+				value.parents[tbl] = tbl;
+			end
 		end
 	end
 
@@ -72,12 +79,20 @@ function eTable.set(ctx, tbl, key, type, value)
 
 	if (type == "" or value == nil) then
 		tbl.tbl[key] = nil;
-		tbl.size = newweight;
-		return;
+	else
+		tbl.tbl[key] = {type, value};
 	end
 
-	tbl.tbl[key] = {type, value};
 	tbl.size = newweight;
+	eTable.updateChildren(tbl, oldweight, newweight)
+end
+
+function eTable.updateChildren(tbl, oldweight, newweight)
+	for _, child in pairs(tbl.children) do
+		local weight = child.size;
+		child.size = (child.size - oldweight) + newweight;
+		eTable.updateChildren(tbl, weight, child.size);
+	end
 end
 
 --[[
@@ -93,11 +108,11 @@ local class_bool = extension:RegisterClass("t", {"table", "array"}, istable, not
 
 extension:RegisterConstructor("t", "...", function(...)
 	local t = {...};
-	return {tbl = t, size = #t};
+	return {tbl = t, children, parents, size = #t};
 end, true)
 
 extension:RegisterConstructor("t", "", function(...)
-	return {tbl = {}, size = 0};
+	return {tbl = {}, children, parents, size = 0};
 end, true)
 
 --[[
