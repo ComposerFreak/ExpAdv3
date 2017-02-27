@@ -395,8 +395,6 @@ function Syntaxer:Parse( nRow )
 			local keyword = ( self.sChar or "" ) != "(" 
 			
 			if word == "function" or word == "delegate" then 
-				self:SkipSpaces( ) 
-				
 				if self.sChar == "]" then 
 					self:AddToken( "typename" ) 
 					continue 
@@ -404,6 +402,9 @@ function Syntaxer:Parse( nRow )
 					self:AddToken( "keyword" ) 
 					continue 
 				end 
+				
+				self:AddToken( "keyword" ) 
+				self:SkipSpaces( ) 
 				
 				if string_match( self.sLine, "^[a-zA-Z][a-zA-Z0-9_]* *=", self.nPosition ) then 
 					self:AddToken( "typename" ) 
@@ -496,7 +497,7 @@ function Syntaxer:Parse( nRow )
 				local lib = self.Libraries[self.sTokenData]
 				self:AddToken( "librarie" )
 				self:SkipSpaces( )
-				self:NextPattern( "^." ) 
+				self:NextPattern( "^%." ) 
 				self:AddToken( "operator" ) 
 				self:SkipSpaces( )
 				

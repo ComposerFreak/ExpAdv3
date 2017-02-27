@@ -1,15 +1,13 @@
 /*============================================================================================================================================
-	Expression-Advanced Derma
-==============================================================================================================================================
-	Name: EA_FileMenu
-	Author: Rusketh
+	Name: GOLEM_FileMenu
+	Author: Rusketh & Oskar
 ============================================================================================================================================*/
-PANEL = { }
+local PANEL = { }
 
 function PANEL:Init( )
 	self:DockPadding( 0, 26, 0, 0 )
 	
-	self.CurrentPath = cookie.GetString( "eafilebrowser_cpath", "expadv2" )
+	self.CurrentPath = cookie.GetString( "gfilebrowser_cpath", "expadv2" )
 	
 	self.RightPanel = vgui.Create( "DPanel" )
 	self:BuildPathBar( self.RightPanel )
@@ -28,23 +26,23 @@ function PANEL:Init( )
 	self.Divider:SetRightMin( 250 )
 	self.Divider:SetLeft( self.LeftPanel )
 	self.Divider:SetRight( self.RightPanel )
-	self.Divider:SetLeftWidth( cookie.GetNumber( "eafilebrowser_dwidth", 150 ) )
+	self.Divider:SetLeftWidth( cookie.GetNumber( "gfilebrowser_dwidth", 150 ) )
 	
 	self:SetSizable( true )
 	self:SetMinWidth( 500 )
 	self:SetMinHeight( 300 )
 	
-	self:SetSize( cookie.GetNumber( "eafilebrowser_w", 500 ), cookie.GetNumber( "eafilebrowser_h", 300 ) ) 
-	self:SetPos( cookie.GetNumber( "eafilebrowser_x", ScrW( ) / 2 - self:GetWide( ) / 2 ), cookie.GetNumber( "eafilebrowser_y", ScrH( ) / 2 - self:GetTall( ) / 2 ) ) 
+	self:SetSize( cookie.GetNumber( "gfilebrowser_w", 500 ), cookie.GetNumber( "gfilebrowser_h", 300 ) ) 
+	self:SetPos( cookie.GetNumber( "gfilebrowser_x", ScrW( ) / 2 - self:GetWide( ) / 2 ), cookie.GetNumber( "gfilebrowser_y", ScrH( ) / 2 - self:GetTall( ) / 2 ) ) 
 end
 
 function PANEL:Close( )
-	cookie.Set( "eafilebrowser_x", self.x ) 
-	cookie.Set( "eafilebrowser_y", self.y ) 
-	cookie.Set( "eafilebrowser_w", self:GetWide( ) ) 
-	cookie.Set( "eafilebrowser_h", self:GetTall( ) ) 
-	cookie.Set( "eafilebrowser_cpath", self.CurrentPath ) 
-	cookie.Set( "eafilebrowser_dwidth", self.Divider:GetLeftWidth( ) ) 
+	cookie.Set( "gfilebrowser_x", self.x ) 
+	cookie.Set( "gfilebrowser_y", self.y ) 
+	cookie.Set( "gfilebrowser_w", self:GetWide( ) ) 
+	cookie.Set( "gfilebrowser_h", self:GetTall( ) ) 
+	cookie.Set( "gfilebrowser_cpath", self.CurrentPath ) 
+	cookie.Set( "gfilebrowser_dwidth", self.Divider:GetLeftWidth( ) ) 
 	self:Remove( ) 
 end
 
@@ -58,11 +56,11 @@ end
 function PANEL:RefreshBrowser( )
 	self.Browser:Clear( )
 	
-	self.BrowserNode = self.Browser:AddNode( "Expression Advanced" )
+	self.BrowserNode = self.Browser:AddNode( "Golem" )
 	
-	self:AddFolderToBrowser( self.BrowserNode, "expadv2" )
+	self:AddFolderToBrowser( self.BrowserNode, "golem" )
 	
-	self:SetUpBrowserNode( self.BrowserNode, "expadv2" )
+	self:SetUpBrowserNode( self.BrowserNode, "golem" )
 	
 	self:ExpandAll( true )
 end
@@ -84,11 +82,11 @@ function PANEL:SetUpBrowserNode( Node, Path, UpDir )
 	Node.Icon:SetImage( "fugue/blue-folder-horizontal.png" )
 	
 	Node.Expander.DoClick = function( )
-		local Expanded = !Node.m_bExpanded
+		local Expanded = not Node.m_bExpanded
 		
 		Node:SetExpanded( Expanded )
 		
-		if !Expanded then
+		if not Expanded then
 			Node.Icon:SetImage( "fugue/blue-folder-horizontal.png" )
 		else
 			Node.Icon:SetImage( "fugue/blue-folder-horizontal-open.png" )
@@ -105,14 +103,14 @@ function PANEL:BuildToolBar( Parent )
 	self.ToolBar:Dock( TOP )
 	self.ToolBar:SetTall( 20 )
 	
-	local Refresh = vgui.Create( "EA_ImageButton", self.ToolBar )
+	local Refresh = vgui.Create( "GOLEM_ImageButton", self.ToolBar )
 	Refresh:Dock( RIGHT ) 
 	Refresh:SetPadding( 5 )
 	Refresh:SetTooltip( "Refresh" ) 
 	Refresh:SetMaterial( Material( "fugue/arrow-retweet.png" ) )
 	self.ToolBar.Refresh = Refresh
 	
-	local Expand = vgui.Create( "EA_ImageButton", self.ToolBar )
+	local Expand = vgui.Create( "GOLEM_ImageButton", self.ToolBar )
 	Expand:Dock( LEFT ) 
 	Expand:SetPadding( 5 )
 	Expand:SetTooltip( "Expand Nodes" ) 
@@ -121,7 +119,7 @@ function PANEL:BuildToolBar( Parent )
 	self.ExpandedNodes = false
 	
 	function Expand.DoClick( )
-		self:ExpandAll( !self.ExpandedNodes )
+		self:ExpandAll( not self.ExpandedNodes )
 	end
 	
 	function Refresh.DoClick( )
@@ -135,9 +133,7 @@ function PANEL:BuildToolBar( Parent )
 	return self.ToolBar
 end
 
-local Expand
-
-function Expand( Node, Bool )
+local function Expand( Node, Bool )
 	Node:SetExpanded( Bool )
 	
 	if IsValid( Node.ChildNodes ) then
@@ -154,7 +150,7 @@ function PANEL:ExpandAll( Bool )
 	
 	local Panel = self.ToolBar.Expand
 	
-	if !Bool then
+	if not Bool then
 		Panel:SetTooltip( "Expand Nodes" ) 
 		Panel:SetMaterial( Material( "fugue/node-insert-child.png" ) )
 	else
@@ -208,7 +204,7 @@ function PANEL:BuildFileList( Parent )
 			end 
 			
 			if a.IsFolder ~= b.IsFolder then 
-				return a.IsFolder and !Desc
+				return a.IsFolder and not Desc
 			end 
 			
 			return string.lower( a:GetColumnText( ColumnID ) ) < string.lower( b:GetColumnText( ColumnID ) )
@@ -218,7 +214,7 @@ function PANEL:BuildFileList( Parent )
 		self:InvalidateLayout()
 	end
 	
-	self:OpenFolder( "expadv2" )
+	self:OpenFolder( "golem" )
 	
 	return self.FileList
 end
@@ -292,7 +288,7 @@ function PANEL:AddFile( Name, Path, Icon )
 	self:SetFileIcon( Line, Icon )
 	
 	function Line.OnRightClick( )
-		if !file.IsDir( NewPath, "DATA" ) then
+		if not file.IsDir( NewPath, "DATA" ) then
 			-- file.Delete can not delete folder?
 			
 			local Menu = DermaMenu( )
@@ -325,7 +321,7 @@ function PANEL:AddFile( Name, Path, Icon )
 end
 
 function PANEL:ToBytes( Bytes )
-	if !Bytes or Bytes == 0 then
+	if not Bytes or Bytes == 0 then
 		return ""
 	elseif Bytes < 1024 then
 		return Bytes .. "B"
@@ -382,14 +378,14 @@ function PANEL:BuildPathBar( Parent )
 			Path = Path:sub( 1, #Path - 1 )
 		end
 		
-		if Path:Left( 9 ) == "expadv2" then
+		if string.StartWith( Path, "golem" ) then
 			if file.IsDir( Path, "DATA" ) then
 				self:OpenFolder( Path )
 			end
 		end
 	end
 	
-	self.Search = vgui.Create( "EA_ImageButton", self.PathPanel )
+	self.Search = vgui.Create( "GOLEM_ImageButton", self.PathPanel )
 	self.Search:Dock( RIGHT ) 
 	self.Search:SetPadding( 5 )
 	self.Search:SetTooltip( "Search (wild:*)" ) 
@@ -474,7 +470,7 @@ function PANEL:BuildOpenSave( Parent )
 	self.SavePath = vgui.Create( "DTextEntry", self.OpenSave )
 	self.SavePath:Dock( FILL ) 
 	
-	self.NewDir = vgui.Create( "EA_ImageButton", self.OpenSave )
+	self.NewDir = vgui.Create( "GOLEM_ImageButton", self.OpenSave )
 	self.NewDir:Dock( RIGHT ) 
 	self.NewDir:SetPadding( 5 )
 	self.NewDir:SetTooltip( "New Folder" ) 
@@ -485,7 +481,7 @@ function PANEL:BuildOpenSave( Parent )
 	self.NewDir:SetTextCentered( false )
 	self.NewDir:DrawButton( false )
 	
-	self.SaveOrLoad = vgui.Create( "EA_ImageButton", self.OpenSave )
+	self.SaveOrLoad = vgui.Create( "GOLEM_ImageButton", self.OpenSave )
 	self.SaveOrLoad:Dock( RIGHT ) 
 	self.SaveOrLoad:SetPadding( 5 )
 	
@@ -556,4 +552,4 @@ function PANEL:DoLoadFile( Path, FileName )
 end
 
 
-vgui.Register( "GOLEM_FileMenu", PANEL, "DPanel" )
+vgui.Register( "GOLEM_FileMenu", PANEL, "GOLEM_Frame" )

@@ -121,36 +121,31 @@ function PANEL:Init( )
 	
 	
 	self.tbBottom:SetupButton( "Open", 	"fugue/blue-folder-horizontal-open.png", RIGHT, function( ) 
-		local frame = vgui.Create( "DFrame" )
-		frame:SetSize( 500, 250 )
-		frame:SetSizable( true )
-		frame:Center( )
-		frame:MakePopup( )
-		frame:SetTitle( "Open file" )
+		local FileMenu = vgui.Create( "GOLEM_FileMenu" )
+		FileMenu:SetLoadFile( )
 		
-		local browser = vgui.Create( "DFileBrowser", frame )
-		browser:Dock( FILL )
-		
-		browser:SetPath( "data" ) 
-		browser:SetBaseFolder( "golem" )
-		browser:SetOpen( true )
-		browser:SetCurrentFolder( "golem" )
-		
-		browser.OnDoubleClick = function(pnl,path,panel)
-			self:LoadFile( path )
-			frame:Remove( ) 
+		function FileMenu.DoLoadFile( _, Path, FileName )
+			if not FileName:EndsWith( ".txt" ) then
+				FileName = FileName .. ".txt"
+			end
+				
+			self:LoadFile( Path .. "/" .. FileName )
+			
+			return true
 		end
+		
+		FileMenu:MakePopup( )
 	end )
 	
 	self.tbBottom:SetupButton( "Save As", "fugue/disks-black.png", RIGHT, function( ) self:SaveFile( true, true ) end )
 	self.tbBottom:SetupButton( "Save", 	"fugue/disk-black.png", RIGHT, function( ) self:SaveFile( true ) end )
 	
-	self.tbRight:SetupButton( "Increase font size.", "fugue/edit-size-up.png", TOP, function( ) Golem.Font:ChangeFontSize( 1 ) end )
-	self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", TOP, function( ) Golem.Font:ChangeFontSize( -1 ) end )
+	self.tbRight:SetupButton( "Increase font size.", "fugue/edit-size-up.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( 1 ) end )
+	self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( -1 ) end )
 	
 	self.tbRight:SetupButton( "Open user manual", "fugue/question.png", TOP, function( ) self:NewMenuTab( "wiki" ) end )
 	self.tbRight:SetupButton( "Options", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options" ) end )
-	
+		
 	-- self.tbRight:SetupButton( "Visit the wiki", 	"fugue/home.png", 		BOTTOM, function( ) end )
 	
 	self.pnlSideTabHolder = vgui.Create( "GOLEM_PropertySheet", self )
@@ -282,37 +277,7 @@ function PANEL:Init( )
 	end, function( self )
 		self.Wiki = nil
 	end )
-	
-	
-	/*self:AddTabType( "Save", function( self, dir, name ) 
-		if self.SavePnl then 
-			self.pnlSideTabHolder:SetActiveTab( self.SavePnl.Tab )
-			self.SavePnl.Panel:RequestFocus( )
-			return self.SavePnl.Panel, self.SavePnl.Tab, self.SavePnl
-		end 
 		
-		local Panel = vgui.Create(" GOLEM_FileMenu" )
-		--Panel:SetSaveFile( "filename", dir )
-		
-		local Sheet = self.pnlSideTabHolder:AddSheet( "", Panel, "fugue/gear.png" )
-		self.pnlSideTabHolder:SetActiveTab( Sheet.Tab )
-		self.SavePnl = Sheet
-		Sheet.Panel:RequestFocus( )
-		
-		Panel.Paint = function( p, w, h )
-			surface.SetDrawColor( 30, 30, 30, 255 )
-			surface.DrawRect( 0, 0, w, h ) 
-		end
-		
-		return Panel, Sheet.Tab, Sheet
-	end, function( self, pTab, bSave ) 
-		self.SavePnl = nil
-	end )*/
-	
-	-- self.tbRight:SetupButton("Save", "fugue/blue-folder-horizontal-open.png", BOTTOM, function()
-	-- 	self:NewTab("Save");
-	-- end);
-	
 	if not self:OpenOldTabs( ) then 
 		self:NewTab( "editor", sDefaultScript )
 	end 
@@ -479,13 +444,13 @@ function PANEL:NewTab( sType, ... )
 		if sPath and not string.EndsWith( sPath, ".txt" ) then sPath = sPath .. ".txt" end 
 		if sPath and not string.StartWith( sPath, "golem/" ) then sPath = "golem/" .. sPath end
 		if sPath and self.FileList[sPath] then 
-			self.pnlTabHolder:SetActiveTab( self.FileList[Path] )
-			self.FileList[Path]:GetPanel( ):RequestFocus( )
-			return self.FileList[Path].Sheet
+			self.pnlTabHolder:SetActiveTab( self.FileList[sPath] )
+			self.FileList[sPath]:GetPanel( ):RequestFocus( )
+			return self.FileList[sPath].Sheet
 		end 
 		
 		if not sName or sName == "" then
-			sName = Path and string.match( Path, "/([^%./]+)%.txt$" ) or "generic"
+			sName = sPath and string.match( sPath, "/([^%./]+)%.txt$" ) or "generic"
 		end
 		
 		local Editor = vgui.Create( "GOLEM_Editor" ) 
@@ -681,9 +646,7 @@ function PANEL:SaveFile( sPath, bSaveAs, pTab, bNoSound )
 	if pTab.__type ~= "editor" then return end 
 	
 	if bSaveAs or not sPath then
-		// TODO: Actually make this
-		
-		/*local FileMenu = vgui.Create( "EA_FileMenu" )
+		local FileMenu = vgui.Create( "GOLEM_FileMenu" )
 		FileMenu:SetSaveFile( pTab:GetText( ) )
 		
 		function FileMenu.DoSaveFile( _, sPath, sFileName )
@@ -698,12 +661,7 @@ function PANEL:SaveFile( sPath, bSaveAs, pTab, bNoSound )
 		end
 		
 		FileMenu:Center( )
-		FileMenu:MakePopup( )*/
-		
-		local Window = Derma_StringRequest( "Save", "Save file", "generic", function( sFileName )
-			sFileName = string.gsub( sFileName, ".", invalid_filename_chars )
-			self:SaveFile( sFileName, nil, pTab, bNoSound )
-		end )
+		FileMenu:MakePopup( )
 		
 		return true
 	end
