@@ -65,7 +65,7 @@ function eTable.set(ctx, tbl, key, type, value)
 
 		if (type == "t") then
 			neweight = neweight + value.size;
-			tbl.children[value] = [value];
+			tbl.children[value] = value;
 
 			if (value ~= nil) then
 				value.parents[tbl] = tbl;
@@ -84,14 +84,17 @@ function eTable.set(ctx, tbl, key, type, value)
 	end
 
 	tbl.size = newweight;
-	eTable.updateChildren(tbl, oldweight, newweight)
+	eTable.updateChildren(tbl, oldweight, newweight, {})
 end
 
-function eTable.updateChildren(tbl, oldweight, newweight)
+function eTable.updateChildren(tbl, oldweight, newweight, updated)
 	for _, child in pairs(tbl.children) do
-		local weight = child.size;
-		child.size = (child.size - oldweight) + newweight;
-		eTable.updateChildren(tbl, weight, child.size);
+		if (not updated[child]) then 
+			local weight = child.size;
+			child.size = (child.size - oldweight) + newweight;
+			eTable.updateChildren(tbl, weight, child.size);
+			updated[child] = true;
+		end
 	end
 end
 
