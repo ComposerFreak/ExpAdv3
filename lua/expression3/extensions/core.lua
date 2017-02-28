@@ -66,7 +66,7 @@ local class_nil = ext_core:RegisterClass("", {"void"}, isnumber, isnil);
 	Class: CLASS
 ]]
 
-local class_nil = ext_core:RegisterClass("cls", {"class"}, isstring, isnil);
+local class_nil = ext_core:RegisterClass("cls", {"type"}, isstring, isnil);
 
 --[[
 	Class: BOOLEAN

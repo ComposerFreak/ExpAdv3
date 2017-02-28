@@ -646,13 +646,15 @@ end
 --[[
 ]]
 
-function PARSER.Statments(this, block)
+function PARSER.Statments(this, block, call)
 	local sep = false;
 	local stmts = {};
 
+	call = call or this.Statment_0;
+
 		while true do
 
-			local stmt = this:Statment_0();
+			local stmt = call(this);
 
 			stmts[#stmts + 1] = stmt;
 
@@ -737,6 +739,10 @@ function PARSER.Statment_0(this)
 
 	if (not this.FirstStatment) then
 		this.FirstStatment = this.__token;
+	end
+
+	if (this:CheckToken("cls")) then
+		return this:ClassStatment_0();
 	end
 
 	local stmt = this:Statment_1();
@@ -2062,6 +2068,80 @@ function PARSER.ExpressionErr(this)
 	this:Exclude("dir", "directive operator (@) must not appear inside an equation");
 
 	this:Throw(this.__token, "Unexpected symbol found (%s)", this.__token.type);
+end
+
+--[[
+]]
+
+function PARSER.ClassStatment_0(this)
+	if (this:Accept("cls")) then
+		local inst = this:StartInstruction("class", this.__token);
+
+		this:Require("var", "Class anme expected after class");
+		inst.__classname = this.__token;
+	
+		this:Require("lcb", "Left curly bracket ({}}) expected, to open class");
+		inst.__lcb = this.__token;
+		
+		local stmts = {};
+
+		if (not this:CheckToken("rcb")) then
+			this.__scope = this.__scope + 1;
+
+			stmts = this:Statments(true, this.ClassStatment_1);
+
+			this.__scope = this.__scope - 1;
+		end
+
+		this:Require("rcb", "Right curly bracket (}) missing, to close class");
+		inst.__rcb = this.__token;
+
+		return this:EndInstruction(inst, stmts);
+	end
+end
+
+function PARSER.ClassStatment_1(this)
+	if (this:Accept("typ")) then
+		local inst = this:StartInstruction("def_feild", this.__token);
+		
+		local type = this.__token.data;
+
+		if (type == "f" and this:CheckToken("typ")) then
+			this:StepBackward(1);
+			return this:Statment_8()
+		end
+
+		this:QueueRemove(inst, this.__token);
+
+		inst.class = type;
+		
+		local variables = {};
+
+		this:Require("var", "Variable('s) expected after class for variable.");
+		variables[1] = this.__token;
+
+		while (this:Accept("com")) do
+			this:Require("var", "Variable expected after comma (,).");
+			variables[#variables + 1] = this.__token;
+		end
+		
+		local expressions = {};
+
+		if (this:Accept("ass")) then
+			this:ExcludeWhiteSpace( "Assignment operator (=), must not be preceded by whitespace." );
+			
+			expressions[1] = this:Expression_1();
+
+			while (this:Accept("com")) do
+				this:ExcludeWhiteSpace( "comma (,) must not be preceded by whitespace." );
+				expressions[#expressions + 1] = this:Expression_1();
+			end
+		end
+
+		inst.variables = variables;
+
+		return this:EndInstruction(inst, expressions);
+	end
 end
 
 --[[

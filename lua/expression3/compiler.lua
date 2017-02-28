@@ -51,6 +51,7 @@ function COMPILER.Initalize(this, instance)
 	this.__scopeData[0] = this.__scope;
 
 	this.__scope.memory = {};
+	this.__scope.classes = {};
 	this.__scope.server = true;
 	this.__scope.client = true;
 
@@ -248,6 +249,7 @@ end
 function COMPILER.PushScope(this)
 	this.__scope = {};
 	this.__scope.memory = {};
+	this.__scope.classes = {};
 	this.__scopeID = this.__scopeID + 1;
 	this.__scopeData[this.__scopeID] = this.__scope;
 end
@@ -2919,6 +2921,139 @@ function COMPILER.Compile_OUTPORT(this, inst, token)
 
 		this.__directives.outport[var] = {class = inst.class, wire = inst.wire_type, func = inst.wire_func, func_in = inst.wire_func2};
 	end
+end
+
+
+--[[
+]]
+
+function COMPILER.StartClass(this, name, scope)
+	if (not scope) then
+		scope = this.__scopeID;
+	end
+
+	local classes = this.__scopeData[scope].classes;
+
+	local newclass = {name = name; memory = {}};
+
+	classes[name] = newclass;
+
+	return newclass;
+end
+
+function COMPILER.GetUserClass(this, name, scope, nonDeep)
+	if (not scope) then
+		scope = this.__scopeID;
+	end
+
+	local v = this.__scopeData[scope].classes[name];
+
+	if (v) then
+		return v.class, v.scope, v;
+	end
+
+	if (not nonDeep) then
+		for i = scope, 0, -1 do
+			local v = this.__scopeData[i].classes[name];
+
+			if (v) then
+				return v.class, v.scope, v;
+			end
+		end
+	end
+end
+
+function COMPILER.AssToClass(token, declaired, varName, class, scope)
+	local class, scope, info = this:AssignVariable(token, declaired, varName, class, scope);
+	if (declaired) then
+		local userclass = this:GetOption("userclass");
+		userclass.memory[varName] = info;
+		inf.prefix = "this.vars";
+	end
+end
+
+
+
+function COMPILER.Compile_CLASS(this, inst, token, stmts)
+	this:PushScope();
+		local class = this:StartClass(inst.__classname.data);
+		
+		this:SetOption("userclass", class);
+
+		for i = 1, #stmts do
+			this:Compile(stmts[i]);
+		end
+
+	this:PopScope();
+
+	-- inst.__classname
+	this:QueueReplace(inst, token, "local");
+	this:QueueRemove(inst, inst.__lcb);
+	this:QueueInjectionAfter(inst, inst.__lcb, " =",  "{", "vars", "=", "{", "}", "}");
+	this:QueueRemove(inst, inst.__rcb);
+
+	return "", 0;
+end
+
+
+
+function COMPILER.Compile_DEF_FEILD(this, inst, token, expressions)
+	local tArgs = #expressions;
+	local userclass = this:GetOption("userclass");
+
+	local tArgs = #expressions;
+
+	local results = {};
+
+	for i = 1, tArgs do
+		local arg = expressions[i];
+		local r, c = this:Compile(arg);
+
+		if (not inst.variables[i]) then
+			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
+		elseif (i < tArgs) then
+			results[#results + 1] = {r, arg, true};
+		else
+			for j = 1, c do
+				results[#results + 1] = {r, arg, j == 1};
+			end
+		end
+	end
+
+	for i = 1, #inst.variables do
+		local result = results[i];
+		local token = inst.variables[i];
+		local var = token.data;
+
+		if (not result) then
+			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
+		end
+
+		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0);
+
+		if (info) then
+			this:QueueReplace(inst, token, userclass.name .. ".vars." .. var);
+		end
+
+		this.__defined[var] = true;
+
+		if (result[1] ~= inst.class) then
+			local casted = false;
+			local arg = result[2];
+
+			if (result[3]) then
+				-- TODO: CAST
+			end
+
+			if (not casted) then
+				this:AssignVariable(arg.token, true, var, result[1], 0);
+			end
+		end
+	end
+
+	this.__defined = {};
+
+	return "", 0;
 end
 
 EXPR_COMPILER = COMPILER;

@@ -34,6 +34,7 @@ local KEYWORDS = {
 		["new"] = {"new", "constructor"},
 		["try"] = {"try", "try"},
 		["catch"] = {"cth", "catch"},
+		["class"] = {"cls", "class"}
 	}
 }
 
