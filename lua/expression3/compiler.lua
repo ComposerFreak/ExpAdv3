@@ -11,7 +11,8 @@
 ]]
 
 local function name(id)
-	return EXPR_LIB.GetClass(id).name
+	local obj = EXPR_LIB.GetClass(id);
+	return obj and obj.name or id;
 end
 
 local function names(ids)
@@ -22,7 +23,8 @@ local function names(ids)
 	local names = {};
 
 	for i, id in pairs(ids) do
-		names[i] = EXPR_LIB.GetClass(id).name;
+		local obj = EXPR_LIB.GetClass(id);
+		names[i] =  obj and obj.name or id;
 	end
 
 	return table.concat(names,", ")
@@ -2050,12 +2052,19 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 	local ids = {};
 	local total = #expressions;
 
-	local cls = EXPR_LIB.GetClass(inst.class);
-	local constructors = cls.constructors;
+	local userclass = this:GetUserClass(inst.class);
 
-	if (total == 0) then
-		op = constructors[inst.class .. "()"];
+	print("User Class ", userclass, inst.class)
+
+	if (userclass) then
+		error("No user classes yet.")
+	elseif (total == 0) then
+		local cls = EXPR_LIB.GetClass(inst.class);
+		op = cls.constructors[inst.class .. "()"];
 	else
+		local cls = EXPR_LIB.GetClass(inst.class);
+		local constructors = cls.constructors;
+
 		for k, expr in pairs(expressions) do
 			local r, c = this:Compile(expr);
 			ids[#ids + 1] = r;
@@ -2307,7 +2316,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 
 				op = lib._functions[signature];
 
-				if (op) thenw
+				if (op) then
 					vargs = i;
 				end
 			end
@@ -2926,12 +2935,8 @@ end
 --[[
 ]]
 
-function COMPILER.StartClass(this, name, scope)
-	if (not scope) then
-		scope = this.__scopeID;
-	end
-
-	local classes = this.__scopeData[scope].classes;
+function COMPILER.StartClass(this, name)
+	local classes = this.__scope.classes;
 
 	local newclass = {name = name; memory = {}};
 
@@ -2954,7 +2959,6 @@ function COMPILER.GetUserClass(this, name, scope, nonDeep)
 	if (not nonDeep) then
 		for i = scope, 0, -1 do
 			local v = this.__scopeData[i].classes[name];
-
 			if (v) then
 				return v.class, v.scope, v;
 			end
@@ -2974,8 +2978,9 @@ end
 
 
 function COMPILER.Compile_CLASS(this, inst, token, stmts)
+	local class = this:StartClass(inst.__classname.data);
+
 	this:PushScope();
-		local class = this:StartClass(inst.__classname.data);
 		
 		this:SetOption("userclass", class);
 
@@ -3069,6 +3074,32 @@ function COMPILER.Compile_DEF_FEILD(this, inst, token, expressions)
 	this.__defined = {};
 
 	return "", 0;
+end
+
+--[[
+]]
+
+function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
+	this:PushScope();
+
+	for _, peram in pairs(inst.perams) do
+		local var = peram[2];
+		local class = peram[1];
+
+		this:AssignVariable(token, true, var, class);
+
+		if (class ~= "_vr") then
+			injectNewLine = true;
+			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end", var, var, name(class), var));
+			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, class, name(class), var, var));
+			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("%s = %s[2];", var, var));
+			injectNewLine = false;
+		end
+	end
+
+	this:Compile(inst.stmts);
+
+	this:PopScope();
 end
 
 EXPR_COMPILER = COMPILER;
