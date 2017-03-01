@@ -2995,7 +2995,23 @@ function COMPILER.Compile_CLASS(this, inst, token, stmts)
 	return "", 0;
 end
 
+function COMPILER.Compile_FEILD(this, inst, token, expressions)
+	local expr = expressions[1];
+	local type = this:Compile(expr);
+	local userclass = this:GetUserClass(type);
 
+	if (not userclass) then
+		this:Throw(token, "Unable to refrence feild %s.%s here", name(type), inst.__feild.data);
+	end
+
+	local info = userclass.vars[inst.__feild.data];
+
+	if (not info) then
+		this:Throw(token, "No sutch feild %s.%s", type, inst.__feild.data);
+	end
+
+	return info.result, 1;
+end
 
 function COMPILER.Compile_DEF_FEILD(this, inst, token, expressions)
 	local tArgs = #expressions;

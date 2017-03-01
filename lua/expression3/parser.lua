@@ -1913,40 +1913,52 @@ function PARSER.Expression_Trailing(this, expr)
 
 		-- Methods
 		if (this:Accept("prd")) then
+			this.__prd = this.__token;
+
 			local inst = this:StartInstruction("meth", expr.token);
 
 			inst.__operator = this.__token;
 
 			this:Require("var", "method name expected after method operator (.)");
 
-			inst.__method = this.__token;
+			local varToken = this.__token;
 
-			inst.method = this.__token.data;
+			--this:Require("lpa", "Left parenthesis (( ) expected to open method parameters.")
 
-			this:Require("lpa", "Left parenthesis (( ) expected to open method parameters.")
+			if (this:Accept("lpa")) then
+				inst.__lpa = this.__token;
 
-			inst.__lpa = this.__token;
+				local expressions = {};
+	 
+				expressions[1] = expr;
 
-			local expressions = {};
- 
-			expressions[1] = expr;
+				if (not this:CheckToken("rpa")) then
+					expressions[2] = this:Expression_1();
 
-			if (not this:CheckToken("rpa")) then
-				expressions[2] = this:Expression_1();
+					while(this:Accept("com")) do
+						this:Exclude("rpa", "Expression or value expected after comma (,).");
 
-				while(this:Accept("com")) do
-					this:Exclude("rpa", "Expression or value expected after comma (,).");
+						expressions[#expressions + 1] = this:Expression_1();
+					end
 
-					expressions[#expressions + 1] = this:Expression_1();
-				end
+				end  
 
-			end  
+				this:Require("rpa", "Right parenthesis ( )) expected to close method parameters.");
 
-			this:Require("rpa", "Right parenthesis ( )) expected to close method parameters.")
+				inst.__rpa = this.__token;
+				inst.__method = varToken;
+				inst.method = varToken.data;
 
-			inst.__rpa = this.__token;
+				expr = this:EndInstruction(inst, {expr});
+			else
+				inst.type = "feild";
 
-			expr = this:EndInstruction(inst, expressions);
+				inst.method = nil;
+				inst.__method = nil;
+				inst.__feild = varToken;
+
+				expr = this:EndInstruction(inst, {expr});
+			end
 		elseif (this:Accept("lsb")) then
 			local lsb = this.__token;
 
@@ -2080,7 +2092,7 @@ function PARSER.ClassStatment_0(this)
 		this:Require("var", "Class anme expected after class");
 		inst.__classname = this.__token;
 	
-		this:Require("lcb", "Left curly bracket ({}}) expected, to open class");
+		this:Require("lcb", "Left curly bracket (}) expected, to open class");
 		inst.__lcb = this.__token;
 		
 		local stmts = {};
