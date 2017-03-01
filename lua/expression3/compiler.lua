@@ -2307,7 +2307,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 
 				op = lib._functions[signature];
 
-				if (op) then
+				if (op) thenw
 					vargs = i;
 				end
 			end
@@ -2361,8 +2361,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		local signature = string.format("%s.", inst.library, op.signature);
 		error("Attempt to inject " .. signature .. " but operator was incorrect " .. type(op.operator) .. ".");
 	end
-
-
+	
 	if (vargs) then
 		if (#expressions >= 1) then
 			for i = vargs, #expressions do

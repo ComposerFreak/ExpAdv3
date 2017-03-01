@@ -93,6 +93,8 @@ function PARSER.Initalize(this, instance)
 	this.__pos = 0;
 	this.__depth = 0;
 	this.__scope = 0;
+	this.__scopes = {[0] = {classes = {}}};
+
 	this.__instructions = {};
 
 	this.__token = instance.tokens[0];
@@ -174,7 +176,7 @@ function PARSER.HasTokens(this)
 	return this.__next ~= nil;
 end
 
-function PARSER.CheckToken(this, type, ...)
+--[[function PARSER.CheckToken(this, type, ...)
 	if (this.__pos < this.__total) then
 		local tkn = this.__next;
 
@@ -186,7 +188,33 @@ function PARSER.CheckToken(this, type, ...)
 	end
 
 	return false;
+end]]
+
+function PARSER.CheckToken(this, type, ...)
+	if (this.__pos < this.__total) then
+		local tkn = this.__next;
+
+		print("Scope Table:")
+		PrintTable(this.__scopes);
+
+		for _, t in pairs({type, ...}) do
+			local tokenType = tkn.type;
+
+			if (tokenType == "var" and this:IsUserClass(tkn.data)) then
+				tokenType = "typ";
+			end
+
+			print("Check Token: ", tkn.type, tokenType, tkn.data);
+
+			if (tokenType == t) then
+				return true;
+			end
+		end
+	end
+
+	return false;
 end
+
 
 function PARSER.Accept(this, type, ...)
 	if (this:CheckToken(type, ...)) then
@@ -488,11 +516,11 @@ function PARSER.Block_1(this, _end, lcb)
 		local stmts = {};
 
 		if (not this:CheckToken("rcb")) then
-			this.__scope = this.__scope + 1;
+			this:PushScope()
 
 			stmts = this:Statments(true);
 
-			this.__scope = this.__scope - 1;
+			this:PopScope();
 		end
 
 		if (not this:Accept("rcb")) then
@@ -511,11 +539,11 @@ function PARSER.Block_1(this, _end, lcb)
 			this:QueueInjectionAfter(seq, this.__token, lcb);
 		end
 
-		this.__scope = this.__scope + 1;
+		this:PushScope()
 
 		local stmt = this:Statment_1();
 
-		this.__scope = this.__scope - 1;
+		this:PopScope()
 
 		if (_end) then
 			this:QueueInjectionAfter(seq, stmt.final, "end");
@@ -523,6 +551,26 @@ function PARSER.Block_1(this, _end, lcb)
 
 		return this:EndInstruction(seq, { stmt });
 	end
+end
+
+--[[
+
+]]
+
+function PARSER.PushScope(this)
+	local s = {classes = {}};
+	local i = this.__scope + 1;
+
+	this.__scope = i;
+	this.__scopes[i] = s;
+
+	return s;
+end
+
+function PARSER.PopScope(this)
+	local i = this.__scope - 1;
+	this.__scope = i;
+	this.__scopes[i] = nil;
 end
 
 --[[
@@ -2085,24 +2133,44 @@ end
 --[[
 ]]
 
+function PARSER.IsUserClass(this, name)
+	for i = this.__scope, 0, -1 do
+		local scope = this.__scopes[i];
+
+		if (scope and scope.classes[name]) then
+			if (accept) then this:Next() end
+			return true;
+		end
+	end
+
+	return false;
+end
+
 function PARSER.ClassStatment_0(this)
 	if (this:Accept("cls")) then
 		local inst = this:StartInstruction("class", this.__token);
 
-		this:Require("var", "Class anme expected after class");
+		this:Require("var", "Class name expected after class");
 		inst.__classname = this.__token;
-	
+		
+		local scopeID = this.__scope;
+		local scopeData = this.__scopes[scopeID];
+		scopeData.classes[this.__token.data] = true;
+
+		print("NAME:", this.__token.data)
+		PrintTable(scopeData.classes);
+		
 		this:Require("lcb", "Left curly bracket (}) expected, to open class");
 		inst.__lcb = this.__token;
 		
 		local stmts = {};
 
 		if (not this:CheckToken("rcb")) then
-			this.__scope = this.__scope + 1;
+			this:PushScope()
 
 			stmts = this:Statments(true, this.ClassStatment_1);
 
-			this.__scope = this.__scope - 1;
+			this:PopScope()
 		end
 
 		this:Require("rcb", "Right curly bracket (}) missing, to close class");
