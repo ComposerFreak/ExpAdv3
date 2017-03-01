@@ -2301,15 +2301,17 @@ function PARSER.ClassStatment_2(this)
 			this:Throw(this.__token, "Invalid constructor, %s expected", class)
 		end
 
+		inst.__name = this.__token;
+
 		local perams, signature = this:InputPeramaters(inst);
 
 		inst.perams = perams;
 		
 		inst.signature = signature;
 
-		inst.stmts = this:Block_1(true, " ");
+		inst.__postBlock = this.__token;
 
-		this:QueueInjectionAfter(inst, this.__token, ", signature = \"" .. signature .. "\"");
+		inst.stmts = this:Block_1(true, " ");
 		
 		inst.__end = this.__token;
 

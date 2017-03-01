@@ -2052,17 +2052,16 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 	local ids = {};
 	local total = #expressions;
 
+	local cls = EXPR_LIB.GetClass(inst.class);
 	local userclass = this:GetUserClass(inst.class);
 
-	print("User Class ", userclass, inst.class)
+	if (not cls and userclass) then
+		cls = userclass;
+	end
 
-	if (userclass) then
-		error("No user classes yet.")
-	elseif (total == 0) then
-		local cls = EXPR_LIB.GetClass(inst.class);
+	if (total == 0) then
 		op = cls.constructors[inst.class .. "()"];
 	else
-		local cls = EXPR_LIB.GetClass(inst.class);
 		local constructors = cls.constructors;
 
 		for k, expr in pairs(expressions) do
@@ -2108,6 +2107,13 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 	end
 
 	local signature = string.format("%s(%s)", name(inst.class), names(ids));
+
+	if (op and userclass) then
+		this:QueueRemove(inst, inst.__new);
+		this:QueueInjectionAfter(inst, inst.__const, "['",  signature ,"']");
+
+		return userclass.name, 1;
+	end
 
 	if (not op) then
 		this:Throw(token, "No such constructor, new %s", signature);
@@ -2938,7 +2944,7 @@ end
 function COMPILER.StartClass(this, name)
 	local classes = this.__scope.classes;
 
-	local newclass = {name = name, memory = {}};
+	local newclass = {name = name, constructors = {}, memory = {}};
 
 	classes[name] = newclass;
 
@@ -2953,26 +2959,29 @@ function COMPILER.GetUserClass(this, name, scope, nonDeep)
 	local v = this.__scopeData[scope].classes[name];
 
 	if (v) then
-		return v.class, v.scope, v;
+		return v, v.scope;
 	end
 
 	if (not nonDeep) then
 		for i = scope, 0, -1 do
 			local v = this.__scopeData[i].classes[name];
+
 			if (v) then
-				return v.class, v.scope, v;
+				return v, v.scope;
 			end
 		end
 	end
 end
 
-function COMPILER.AssToClass(token, declaired, varName, class, scope)
+function COMPILER.AssToClass(this, token, declaired, varName, class, scope)
 	local class, scope, info = this:AssignVariable(token, declaired, varName, class, scope);
 	if (declaired) then
 		local userclass = this:GetOption("userclass");
 		userclass.memory[varName] = info;
-		inf.prefix = "this.vars";
+		info.prefix = "this.vars";
 	end
+
+	return class, scope, info;
 end
 
 
@@ -3008,7 +3017,7 @@ function COMPILER.Compile_FEILD(this, inst, token, expressions)
 		this:Throw(token, "Unable to refrence feild %s.%s here", name(type), inst.__feild.data);
 	end
 
-	local info = userclass.vars[inst.__feild.data];
+	local info = userclass.memory[inst.__feild.data];
 
 	if (not info) then
 		this:Throw(token, "No sutch feild %s.%s", type, inst.__feild.data);
@@ -3049,7 +3058,7 @@ function COMPILER.Compile_DEF_FEILD(this, inst, token, expressions)
 			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
 		end
 
-		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0);
+		local class, scope, info = this:AssToClass(token, true, var, inst.class);
 
 		if (info) then
 			this:QueueReplace(inst, token, userclass.name .. ".vars." .. var);
@@ -3066,7 +3075,7 @@ function COMPILER.Compile_DEF_FEILD(this, inst, token, expressions)
 			end
 
 			if (not casted) then
-				this:AssignVariable(arg.token, true, var, result[1], 0);
+				this:AssToClass(arg.token, true, var, result[1]);
 			end
 		end
 	end
@@ -3074,6 +3083,21 @@ function COMPILER.Compile_DEF_FEILD(this, inst, token, expressions)
 	this.__defined = {};
 
 	return "", 0;
+end
+
+function COMPILER.Compile_SET_FEILD(this, inst, token, expr)
+	--inst.__feild
+	--inst.__ass
+
+	local r, c = this:Compile(expr);
+
+	local class, scope, info = this:AssToClass(token, false, inst.__feild.data, r);
+
+	if (not info) then
+		this:Throw(token, "No such feild %s.%s", name(r), inst.__feild.data);
+	end
+
+	this:QueueReplace(inst, inst.__feild, "vars.", inst.__feild.data);
 end
 
 --[[
@@ -3090,16 +3114,28 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
 
 		if (class ~= "_vr") then
 			injectNewLine = true;
-			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end", var, var, name(class), var));
-			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, class, name(class), var, var));
-			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("%s = %s[2];", var, var));
+			-- this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, class, name(class), var, var));
+			-- this:QueueInjectionBefore(inst, inst.stmts.token, string.format("%s = %s[2];", var, var));
 			injectNewLine = false;
 		end
 	end
 
+	local userclass = this:GetOption("userclass");
+	local signature = string.format("%s(%s)", userclass.name, inst.signature);
+
+	userclass.constructors[signature] = true;
+	
 	this:Compile(inst.stmts);
 
 	this:PopScope();
+
+	this:QueueRemove(inst, token);
+
+	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function")
+	
+	injectNewLine = true;
+	this:QueueInjectionAfter(inst, inst.__postBlock, "\n", "local this = setmetatable({vars = {}},", userclass.name, ")");
+	injectNewLine = false;
 end
 
 EXPR_COMPILER = COMPILER;
