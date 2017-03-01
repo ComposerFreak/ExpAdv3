@@ -92,8 +92,9 @@ end
 function PARSER.Initalize(this, instance)
 	this.__pos = 0;
 	this.__depth = 0;
-	this.__scope = 0;
-	this.__scopes = {[0] = {classes = {}}};
+	this.__scopeID = 0;
+	this.__scope = {[0] = {classes = {}}};
+	this.__scopeData = this.__scope;
 
 	this.__instructions = {};
 
@@ -159,6 +160,91 @@ end
 --[[
 ]]
 
+
+function PARSER.PushScope(this)
+	this.__scope = {};
+	this.__scope.classes = {};
+	this.__scopeID = this.__scopeID + 1;
+	this.__scopeData[this.__scopeID] = this.__scope;
+end
+
+function PARSER.PopScope(this)
+	this.__scopeData[this.__scopeID] = nil;
+	this.__scopeID = this.__scopeID - 1;
+	this.__scope = this.__scopeData[this.__scopeID];
+end
+
+function PARSER.SetOption(this, option, value, deep)
+	if (not deep) then
+		this.__scope[option] = value;
+	else
+		for i = this.__scopeID, 0, -1 do
+			local v = this.__scopeData[i][option];
+
+			if (v) then
+				this.__scopeData[i][option] = value;
+				break;
+			end
+		end
+	end
+end
+
+--[[
+]]
+
+function PARSER.GetOption(this, option, nonDeep)
+	if (this.__scope[option]) then
+		return this.__scope[option];
+	end
+
+	if (not nonDeep) then
+		for i = this.__scopeID, 0, -1 do
+			local v = this.__scopeData[i][option];
+
+			if (v) then
+				return v;
+			end
+		end
+	end
+end
+
+function PARSER.SetUserObject(this, name, scope)
+	if (not scope) then
+		scope = this.__scopeID;
+	end
+
+	local class = {};
+	class.name = name;
+	class.scope = scope;
+	this.__scopeData[scope].classes[name] = class;
+
+	return scope, class;
+end
+
+function PARSER.GetUserObject(this, name, scope, nonDeep)
+	if (not scope) then
+		scope = this.__scopeID;
+	end
+
+	local v = this.__scopeData[scope].classes[name];
+
+	if (v) then
+		return v.scope, v;
+	end
+
+	if (not nonDeep) then
+		for i = scope, 0, -1 do
+			local v = this.__scopeData[i].classes[name];
+
+			if (v) then
+				return v.scope, v;
+			end
+		end
+	end
+end
+
+--[[
+]]
 function PARSER.Next(this)
 	this.__pos = this.__pos + 1;
 	
@@ -176,35 +262,16 @@ function PARSER.HasTokens(this)
 	return this.__next ~= nil;
 end
 
---[[function PARSER.CheckToken(this, type, ...)
-	if (this.__pos < this.__total) then
-		local tkn = this.__next;
-
-		for _, t in pairs({type, ...}) do
-			if (t == tkn.type) then
-				return true;
-			end
-		end
-	end
-
-	return false;
-end]]
-
 function PARSER.CheckToken(this, type, ...)
 	if (this.__pos < this.__total) then
 		local tkn = this.__next;
 
-		print("Scope Table:")
-		PrintTable(this.__scopes);
-
 		for _, t in pairs({type, ...}) do
 			local tokenType = tkn.type;
 
-			if (tokenType == "var" and this:IsUserClass(tkn.data)) then
+			if (tokenType == "var" and this:GetUserObject(tkn.data)) then
 				tokenType = "typ";
 			end
-
-			print("Check Token: ", tkn.type, tokenType, tkn.data);
 
 			if (tokenType == t) then
 				return true;
@@ -352,12 +419,16 @@ end
 ]]
 
 function PARSER.StartInstruction(this, _type, token)
-	if (not type(_type) == "string") then
+	
+	if (not istable(token)) then
 		debug.Trace();
-		error("PARSER:StartInstruction got bad instruction type.", _type);
+		error("PARSER:StartInstruction got bad token type " .. tostring(token));
+	elseif (not type(_type) == "string") then
+		debug.Trace();
+		error("PARSER:StartInstruction got bad instruction type " .. tostring(_type));
 	elseif (not type(token) == "table") then
 		debug.Trace();
-		error("PARSER:StartInstruction got bad instruction token.", token);
+		error("PARSER:StartInstruction got bad instruction token " .. tostring(token));
 	end
 
 	local inst = {};
@@ -551,26 +622,6 @@ function PARSER.Block_1(this, _end, lcb)
 
 		return this:EndInstruction(seq, { stmt });
 	end
-end
-
---[[
-
-]]
-
-function PARSER.PushScope(this)
-	local s = {classes = {}};
-	local i = this.__scope + 1;
-
-	this.__scope = i;
-	this.__scopes[i] = s;
-
-	return s;
-end
-
-function PARSER.PopScope(this)
-	local i = this.__scope - 1;
-	this.__scope = i;
-	this.__scopes[i] = nil;
 end
 
 --[[
@@ -1261,6 +1312,8 @@ function PARSER.Statment_11(this)
 
 	if (expr and this:CheckToken("lsb")) then
 		expr = this:Statment_12(expr);
+	elseif (expr and this:CheckToken("prd")) then
+		expr = this:Statment_13(expr);
 	end
 
 	return expr;
@@ -1268,7 +1321,7 @@ end
 
 function PARSER.Statment_12(this, expr)
 	if (this:Accept("lsb")) then
-		local inst = this:StartInstruction("set", this.__token);
+		local inst = this:StartInstruction("set", expr.token);
 
 		inst.__lsb = this.__token;
 
@@ -1297,6 +1350,21 @@ function PARSER.Statment_12(this, expr)
 		expressions[3] = this:Expression_1();
 
 		return this:EndInstruction(inst, expressions);
+	end
+end
+
+function PARSER.Statment_13(this, expr)
+	if (this:Accept("prd")) then
+		local inst = this:StartInstruction("set_feild", expr.token);
+		inst.__prd = this.__token;
+
+		this:Require("var", "Atribute expected after (.)");
+		inst.__feild = this.__token;
+
+		this:Require("ass", "Assigment operator (=) expected after index operator.");
+		inst.__ass = this.__token;
+
+		return this:EndInstruction(inst, this:Expression_1()); 
 	end
 end
 
@@ -1953,8 +2021,6 @@ function PARSER.Expression_Trailing(this, expr)
 
 	while this:CheckToken("prd", "lsb", "lpa") do
 		
-		local excluded;
-
 		if (this:StatmentContains(this.__token, "ass")) then
 			excluded = this:LastInStatment(this.__token, "lsb");
 		end
@@ -1999,6 +2065,18 @@ function PARSER.Expression_Trailing(this, expr)
 
 				expr = this:EndInstruction(inst, {expr});
 			else
+				-- Check for an ass instruction and locate it,
+				-- If we are at our set atribute then we break.
+
+				if (this:StatmentContains(varToken, "ass")) then
+					local excluded = this:LastInStatment(this.__prd, "prd");
+
+					if (excluded and excluded.index == this.__prd.index) then
+						this:StepBackward(2);
+						break;
+					end
+				end
+
 				inst.type = "feild";
 
 				inst.method = nil;
@@ -2133,19 +2211,6 @@ end
 --[[
 ]]
 
-function PARSER.IsUserClass(this, name)
-	for i = this.__scope, 0, -1 do
-		local scope = this.__scopes[i];
-
-		if (scope and scope.classes[name]) then
-			if (accept) then this:Next() end
-			return true;
-		end
-	end
-
-	return false;
-end
-
 function PARSER.ClassStatment_0(this)
 	if (this:Accept("cls")) then
 		local inst = this:StartInstruction("class", this.__token);
@@ -2153,12 +2218,7 @@ function PARSER.ClassStatment_0(this)
 		this:Require("var", "Class name expected after class");
 		inst.__classname = this.__token;
 		
-		local scopeID = this.__scope;
-		local scopeData = this.__scopes[scopeID];
-		scopeData.classes[this.__token.data] = true;
-
-		print("NAME:", this.__token.data)
-		PrintTable(scopeData.classes);
+		this:SetUserObject(inst.__classname.data);
 		
 		this:Require("lcb", "Left curly bracket (}) expected, to open class");
 		inst.__lcb = this.__token;
@@ -2168,6 +2228,7 @@ function PARSER.ClassStatment_0(this)
 		if (not this:CheckToken("rcb")) then
 			this:PushScope()
 
+			this:SetOption("curclass", inst.__classname.data);
 			stmts = this:Statments(true, this.ClassStatment_1);
 
 			this:PopScope()
@@ -2178,6 +2239,8 @@ function PARSER.ClassStatment_0(this)
 
 		return this:EndInstruction(inst, stmts);
 	end
+
+	return this:ClassStatment_1();
 end
 
 function PARSER.ClassStatment_1(this)
@@ -2188,7 +2251,7 @@ function PARSER.ClassStatment_1(this)
 
 		if (type == "f" and this:CheckToken("typ")) then
 			this:StepBackward(1);
-			return this:Statment_8()
+			return this:Statment_8();
 		end
 
 		this:QueueRemove(inst, this.__token);
@@ -2198,6 +2261,7 @@ function PARSER.ClassStatment_1(this)
 		local variables = {};
 
 		this:Require("var", "Variable('s) expected after class for variable.");
+
 		variables[1] = this.__token;
 
 		while (this:Accept("com")) do
@@ -2221,6 +2285,35 @@ function PARSER.ClassStatment_1(this)
 		inst.variables = variables;
 
 		return this:EndInstruction(inst, expressions);
+	end
+
+	return this:ClassStatment_2();
+end
+
+function PARSER.ClassStatment_2(this)
+	if (this:Accept("cstr")) then
+		local inst = this:StartInstruction("constclass", this.__token);
+		inst.__cstr = this.__token;
+
+		local class = this:GetOption("curclass");
+
+		if (not this:AcceptWithData("typ", class)) then
+			this:Throw(this.__token, "Invalid constructor, %s expected", class)
+		end
+
+		local perams, signature = this:InputPeramaters(inst);
+
+		inst.perams = perams;
+		
+		inst.signature = signature;
+
+		inst.stmts = this:Block_1(true, " ");
+
+		this:QueueInjectionAfter(inst, this.__token, ", signature = \"" .. signature .. "\"");
+		
+		inst.__end = this.__token;
+
+		return this:EndInstruction(inst, {});
 	end
 end
 
