@@ -64,8 +64,11 @@ function Syntaxer.Rebuild( )
 	Syntaxer:BuildFunctionTable( )
 	Syntaxer:BuildMethodsTable( )
 	Syntaxer:BuildTokensTable( )
-	Syntaxer.UserFunctions = { } 
 	Syntaxer.Variables = { } 
+	Syntaxer.VariableTypes = { } 
+	Syntaxer.UserClasses = { }
+	Syntaxer.UserFunctions = { } 
+	Syntaxer.UserClassMethods = { }
 end
 
 Syntaxer.Rebuild( ) -- For the editor reload command
@@ -74,13 +77,25 @@ hook.Add( "Expression3.LoadGolem", "Expression3", Syntaxer.Rebuild )
 /*============================================================================================================================================
 Syntaxer Functions
 ============================================================================================================================================*/
-local function istype( word )
-	return EXPR_LIB.GetClass( word ) and true or false
+local function istype( word, row )
+	local base = EXPR_LIB.GetClass( word )
+	if base and base.id ~= word then 
+		return base and true or false 
+	end 
+	if not base then 
+		return (Syntaxer.UserClasses[word] and (row and Syntaxer.UserClasses[word] <= row or true)) or false 
+	end 
+	return false 
 end
 
 local function isvar( word, row )
-	return (Syntaxer.Variables[word] and (row and Syntaxer.Variables[word] <= row or true)) and true or false 
+	return (Syntaxer.Variables[word] and (row and Syntaxer.Variables[word] <= row or true)) or false 
 end
+
+local function fixtype( word ) 
+	local base = EXPR_LIB.GetClass( word or "" )
+	return base and base.name or word
+end 
 
 function Syntaxer:ResetTokenizer( Row )
 	self.nPosition = 0
@@ -88,57 +103,93 @@ function Syntaxer:ResetTokenizer( Row )
 	self.sTokenData = ""
 	self.bBlockComment = nil
 	self.bMultilineString = nil
-	local singlelinecomment = nil
-	local singlelinestring = nil 
+	
+	self.Variables = { } 
+	self.VariableTypes = { } 
+	self.UserClasses = { }
+	self.UserFunctions = { } 
+	self.UserClassMethods = { } 
 	
 	local tmp = self.Editor:ExpandAll( )
+	local tRows = self.Editor.Rows
 	self.sLine = self.Editor.Rows[Row] 
-	local str = string_gsub( table_concat( self.Editor.Rows, "\n", 1, Row-1 ), "\r", "" )
 	self.Editor:FoldAll( tmp )
 	
-	for before, char, after in string_gmatch( str, "()([/'\"\n])()" ) do
-		local before = string_sub( str, before - 1, before - 1  )
-		local after = string_sub( str, after, after )
-		if not self.bBlockComment and not self.bMultilineString and not singlelinecomment and not singlelinestring then
-			if char == "'" and before ~= "\\" then 
-				self.bMultilineString = true 
-			elseif char == "\"" and before ~= "\\" then 
-				singlelinestring = true 
-			elseif char == "/" then 
-				if after == "*" then
-					self.bBlockComment = true
-				elseif after == "/" then 
-					singlelinecomment = true 
+	local bComment = nil
+	local bString = nil
+	
+	for i, sLine in ipairs( tRows ) do
+		if i >= Row then break end 
+		
+		local tLine = string.Split( sLine, "" )
+		local skip = { }
+		
+		for n = 1, #tLine do
+			if not bComment and not bString then 
+				if tLine[n] == "/" then 
+					if tLine[n+1] == "/" then // Single line comment
+						sLine = string_sub( sLine, 0, n-1 )
+						break 
+					elseif tLine[n+1] == "*" then // Multi line comment
+						bComment = true 
+						skip[#skip+1] = {n, #tLine}
+					end 
+				elseif tLine[n] == "\"" and tLine[n-1] ~= "\\" then // Single line string
+					bString = "\""
+					skip[#skip+1] = {n, #tLine}
+				elseif tLine[n] == "'" and tLine[n-1] ~= "\\" then // Multi line string
+					bString = "'"
+					skip[#skip+1] = {n, #tLine}
 				end 
-			end
-		elseif self.bMultilineString and before ~= "\\" then
-			self.bMultilineString = nil
-		elseif singlelinestring and before ~= "\\" then
-			singlelinestring = nil
-		elseif self.bBlockComment and char == "/" and before == "*" then
-			self.bBlockComment = nil
-		elseif singlelinecomment and char == "\n" then
-			singlelinecomment = nil
+			elseif bComment and tLine[n] == "/" and tLine[n-1] == "*" then // End multi line comment
+				if skip[#skip] then 
+					skip[#skip][2] = n
+				else 
+					skip[#skip+1] = {1, n}
+				end 
+				bComment = nil 
+			elseif bString and tLine[n] == bString and tLine[n-1] ~= "\\" then // End string
+				if bString == "\"" then 
+					skip[#skip][2] = n
+				else // Multi line string
+					if skip[#skip] then 
+						skip[#skip][2] = n
+					else 
+						skip[#skip+1] = {1, n}
+					end 
+				end 
+				bString = nil 
+			end 
 		end
-	end
-	
-	for Function, Line in pairs( self.UserFunctions ) do
-		if Line == Row then
-			self.UserFunctions[Function] = nil
+		
+		if bComment or bString then continue end 
+		
+		for i2 = #skip, 1, -1 do
+			sLine = string_sub( sLine, 1, skip[i2][1]-1 ) .. string_sub( sLine, skip[i2][2]+1 )
 		end
-	end
-	
-	for Variables, Line in pairs( self.Variables ) do
-		if Line == Row then
-			self.Variables[Variables] = nil
-		end
-	end
-	
-	for sType, sVar in string_gmatch( str, "([a-zA-Z][a-zA-Z0-9_]*) +([a-zA-Z][a-zA-Z0-9_]*)" ) do 
-		if istype( sType ) then 
-			self.Variables[sVar] = 0
+		
+		for sClass in string_gmatch( sLine, "class +([a-zA-Z][a-zA-Z0-9_]*)" ) do 
+			self.UserClasses[sClass] = i
 		end 
-	end 
+		
+		for sType, sName in string_gmatch( sLine, "function +([a-zA-Z][a-zA-Z0-9_]*) +([a-zA-Z][a-zA-Z0-9_]*)" ) do 
+			self:AddUserFunction( i, sName )
+		end 
+		
+		for sType, sVar in string_gmatch( sLine, "([a-zA-Z][a-zA-Z0-9_]*) +([a-zA-Z][a-zA-Z0-9_]*)" ) do 
+			if istype( sType, i ) then 
+				self.Variables[sVar] = i
+				self.VariableTypes[sVar] = fixtype( sType )
+			end 
+		end 
+		
+		/* TODO: 
+			custom class methods
+		*/
+	end
+	
+	self.bBlockComment = bComment
+	self.bMultilineString = bString == "'"
 end
 
 function Syntaxer:NextCharacter( )
@@ -178,38 +229,41 @@ end
 /*============================================================================================================================================
 Syntaxer Keywords
 ============================================================================================================================================*/
-
 local keywords = {
 	-- keywords that can be followed by a "(":
-	["if"]       = { true, true }, 
-	["elseif"]   = { true, true }, 
-	["while"]    = { true, true }, 
-	["for"]      = { true, true }, 
-	["foreach"]  = { true, true }, 
-	["catch"]    = { true, true }, 
+	["if"] 				= { true, true }, 
+	["elseif"] 			= { true, true }, 
+	["while"] 			= { true, true }, 
+	["for"] 			= { true, true }, 
+	["foreach"] 		= { true, true }, 
+	["catch"] 			= { true, true }, 
 	
 	-- keywords that cannot be followed by a "(":
-	["else"]     = { true, false },
-	["delegate"] = { true, false },
-	["break"]    = { true, false },
-	["continue"] = { true, false },
-	["return"]   = { true, false },
-	["global"]   = { true, false },
-	["true"]     = { true, false },
-	["false"]    = { true, false },
-	["void"]     = { true, false },
-	["new"]      = { true, false },
-	["client"]   = { true, false },
-	["server"]   = { true, false },
-	["try"]      = { true, false }, 
-	["final"]    = { true, false }, 
+	["else"] 			= { true, false },
+	["delegate"] 		= { true, false },
+	["break"] 			= { true, false },
+	["continue"] 		= { true, false },
+	["return"] 			= { true, false },
+	["global"] 			= { true, false },
+	["true"] 			= { true, false },
+	["false"] 			= { true, false },
+	["void"] 			= { true, false },
+	["new"] 			= { true, false },
+	["client"] 			= { true, false },
+	["server"] 			= { true, false },
+	["try"] 			= { true, false }, 
+	["final"] 			= { true, false }, 
+	["class"] 			= { true, false }, 
+	["constructor"] 	= { true, false }, 
+	["operator"] 		= { true, false }, 
+	["method"] 			= { true, false }, 
 }
 
 local Directives = {
-	["name"]   = true,
-	["model"]  = true,
-	["input"]  = true,
-	["output"] = true,
+	["name"] 			= true,
+	["model"] 			= true,
+	["input"] 			= true,
+	["output"] 			= true,
 }
 
 -- fallback for nonexistant entries:
@@ -227,7 +281,7 @@ local colors = {
 	["comment"]      = Color( 128, 128, 128 ), 
 	-- ["exception"]    = Color(  80, 160, 240 ), // TODO: Other color? 
 	["function"]     = Color(  80, 160, 240 ), 
-	["librarie"]     = Color(  80, 240, 160 ), 
+	["librarie"]     = Color(  80, 160, 240 ), 
 	["keyword"]      = Color(   0, 120, 240 ), 
 	["notfound"]     = Color( 240, 160,   0 ), 
 	["number"]       = Color(   0, 200,   0 ), 
@@ -394,13 +448,16 @@ function Syntaxer:Parse( nRow )
 			local word = self.sTokenData 
 			local keyword = ( self.sChar or "" ) != "(" 
 			
+			// Special keywords that needs extra work
 			if word == "function" or word == "delegate" then 
-				if self.sChar == "]" then 
-					self:AddToken( "typename" ) 
-					continue 
-				elseif self.sChar == "(" then 
-					self:AddToken( "keyword" ) 
-					continue 
+				if word == "function" then 
+					if self.sChar == "]" then 
+						self:AddToken( "typename" ) 
+						continue 
+					elseif self.sChar == "(" then 
+						self:AddToken( "keyword" ) 
+						continue 
+					end 
 				end 
 				
 				self:AddToken( "keyword" ) 
@@ -414,12 +471,16 @@ function Syntaxer:Parse( nRow )
 					continue 
 				end 
 				
-				self:AddToken( "keyword" ) 
-				
-				if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]* *" ) then 
-					self:AddToken( "typename" ) 
+				if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
+					if istype( self.sTokenData ) then 
+						self:AddToken( "typename" )
+					else 
+						self:AddToken( "notfound" )
+					end 
 				end 
 				
+				self:SkipSpaces( )
+								
 				if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
 					self:AddUserFunction( nRow, self.sTokenData )
 					self:AddToken( "userfunction" ) 
@@ -429,7 +490,9 @@ function Syntaxer:Parse( nRow )
 				self:AddToken( "operator" )
 				
 				while self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) do 
+					local sType = ""
 					if istype( self.sTokenData ) then 
+						sType = fixtype( self.sTokenData )
 						self:AddToken( "typename" )
 					else 
 						self:AddToken( "notfound" )
@@ -440,6 +503,7 @@ function Syntaxer:Parse( nRow )
 					if word == "function" then 
 						self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" )
 						self.Variables[self.sTokenData] = nRow 
+						self.VariableTypes[self.sTokenData] = sType
 						self:AddToken( "variable" ) 
 					end 
 					
@@ -450,21 +514,48 @@ function Syntaxer:Parse( nRow )
 				continue 
 			end 
 			
-			if istype( word ) then 
-				self:AddToken( "typename" )
+			if word == "constructor" then 
+				self:AddToken( "keyword" ) 
 				self:SkipSpaces( ) 
 				
-				if keyword then 
-					while self:NextPattern( "([a-zA-Z][a-zA-Z0-9_]*)" ) do 
-						self.Variables[self.sTokenData] = nRow 
-						self:AddToken( "variable" ) 
+				self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" )
+				self:AddToken( "function" )
+				
+				self:NextPattern( " *%( *" ) 
+				self:AddToken( "operator" )
+				
+				while self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) do 
+					local sType = ""
+					if istype( self.sTokenData ) then 
+						sType = fixtype( self.sTokenData )
+						self:AddToken( "typename" )
+					else 
+						self:AddToken( "notfound" )
+					end 
+					
+					self:SkipSpaces( )
+					self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" )
+					self.Variables[self.sTokenData] = nRow 
+					self.VariableTypes[self.sTokenData] = sType
+					self:AddToken( "variable" ) 
 						
-						if not self:NextPattern( " *, *" ) then break end 
-						self:AddToken( "operator" ) 
-					end
+					if not self:NextPattern( " *, *" ) then break end 
+					self:AddToken( "operator" ) 
 				end 
 				
 				continue 
+			end 
+			
+			if word == "class" then 
+				self:AddToken( "keyword" ) 
+				self:SkipSpaces( )
+				
+				if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
+					self.UserClasses[self.sTokenData] = nRow 
+					self:AddToken( "typename" )
+				end 
+				
+				continue
 			end 
 			
 			if word == "catch" then 
@@ -476,6 +567,7 @@ function Syntaxer:Parse( nRow )
 					
 					if self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) then 
 						self.Variables[self.sTokenData] = nRow 
+						self.VariableTypes[self.sTokenData] = "error"
 						self:AddToken( "variable" ) 
 					end 
 				end 
@@ -483,6 +575,12 @@ function Syntaxer:Parse( nRow )
 				continue 
 			end 
 			
+			if word == "this" then 
+				self:AddToken( "keyword" )
+				continue
+			end 
+			
+			// All other keywords
 			if keywords[word][1] then 
 				if keywords[word][2] then 
 					self:AddToken( "keyword" ) 
@@ -491,6 +589,24 @@ function Syntaxer:Parse( nRow )
 					self:AddToken( "keyword" ) 
 					continue 
 				end 
+			end 
+			
+			if istype( word, nRow ) then 
+				self:AddToken( "typename" )
+				self:SkipSpaces( ) 
+				
+				if keyword then 
+					while self:NextPattern( "([a-zA-Z][a-zA-Z0-9_]*)" ) do 
+						self.Variables[self.sTokenData] = nRow 
+						self.VariableTypes[self.sTokenData] = fixtype( word )
+						self:AddToken( "variable" ) 
+						
+						if not self:NextPattern( " *, *" ) then break end 
+						self:AddToken( "operator" ) 
+					end
+				end 
+				
+				continue 
 			end 
 			
 			if self.Libraries[self.sTokenData] then 
@@ -512,13 +628,30 @@ function Syntaxer:Parse( nRow )
 				continue 
 			end 
 			
-			if self.UserFunctions[self.sTokenData] and self.UserFunctions[self.sTokenData] <= nRow then 
-				self:AddToken( "userfunction" ) 
+			if isvar( word, nRow ) then 
+				self:AddToken( "variable" ) 
+				self:SkipSpaces( ) 
+				
+				if self:NextPattern( "^%." ) then 
+					self:AddToken( "operator" )
+					self:SkipSpaces( ) 
+					
+					if self:NextPattern( "^[a-z][a-zA-Z0-9]*" ) then 
+						local s = self.sTokenData 
+						if fixtype( self.Methods[s] ) == fixtype(self.VariableTypes[word]) then 
+							self:AddToken( "function" ) 
+						elseif self.UserClassMethods[s] then 
+							self:AddToken( "function" ) 
+						end 
+					end 
+				end 
+				
+				self:AddToken( "notfound" )
 				continue 
 			end 
 			
-			if isvar( word ) then 
-				self:AddToken( "variable" )
+			if self.UserFunctions[self.sTokenData] and self.UserFunctions[self.sTokenData] <= nRow then 
+				self:AddToken( "userfunction" ) 
 				continue 
 			end 
 			
@@ -535,21 +668,6 @@ function Syntaxer:Parse( nRow )
 			self:AddToken( "number" )
 		elseif self:NextPattern( "^[%d][%d%.e]*" ) then 
 			self:AddToken( "number" )
-		elseif self:NextPattern( "^%." ) then 
-			self:AddToken( "operator" )
-			self:SkipSpaces( ) 
-			
-			if self:NextPattern( "^[a-z][a-zA-Z0-9]*" ) then 
-				local s = self.sTokenData
-				if self.Functions[s] then 
-					self:AddToken( "function" )
-					continue
-				elseif self.Methods[s] then 
-					self:AddToken( "function" )
-					continue
-				end 
-				self:AddToken( "notfound" )
-			end 
 		elseif self.sChar == "'" then
 			self:NextCharacter( )
 			self.bMultilineString = true 
