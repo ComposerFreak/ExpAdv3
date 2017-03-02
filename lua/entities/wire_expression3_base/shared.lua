@@ -127,6 +127,7 @@ function ENT:BuildEnv(context, instance)
 	env._METH	= instance.methods;
 	env._FUN	= instance.functions;
 	env.invoke  = EXPR_LIB.Invoke;
+	env.setmetatable = setmetatable;
 	env.error   = error;
 	env.pcall   = pcall;
 

@@ -412,6 +412,11 @@ function COMPILER.QueueReplace(this, inst, token, str)
 end
 
 function COMPILER.QueueRemove(this, inst, token)
+
+	if (token.type == "ass") then
+		debug.Trace()
+	end
+
 	local op = {};
 
 	op.token = token;
@@ -2110,7 +2115,7 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 
 	if (op and userclass) then
 		this:QueueRemove(inst, inst.__new);
-		this:QueueInjectionAfter(inst, inst.__const, "['",  signature ,"']");
+		this:QueueInjectionAfter(inst, inst.__const, "['" ..  op .. "']");
 
 		return userclass.name, 1;
 	end
@@ -2367,7 +2372,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 
 		this.__functions[signature] = op.operator;
 	elseif (type(op.operator) == "string") then
-		this:QueueRemove(inst, token);
+		--this:QueueRemove(inst, token);
 		this:QueueRemove(inst, inst.library);
 		this:QueueRemove(inst, inst.__operator);
 		this:QueueReplace(inst, inst.__func, op.operator); -- This is error.
@@ -2978,7 +2983,7 @@ function COMPILER.AssToClass(this, token, declaired, varName, class, scope)
 	if (declaired) then
 		local userclass = this:GetOption("userclass");
 		userclass.memory[varName] = info;
-		info.prefix = "this.vars";
+		info.prefix = "vars";
 	end
 
 	return class, scope, info;
@@ -3023,7 +3028,11 @@ function COMPILER.Compile_FEILD(this, inst, token, expressions)
 		this:Throw(token, "No sutch feild %s.%s", type, inst.__feild.data);
 	end
 
-	return info.result, 1;
+	if (info) then
+		this:QueueReplace(inst, inst.__feild, info.prefix .. "." .. inst.__feild.data);
+	end
+
+	return info.class, 1;
 end
 
 function COMPILER.Compile_DEF_FEILD(this, inst, token, expressions)
@@ -3097,7 +3106,7 @@ function COMPILER.Compile_SET_FEILD(this, inst, token, expr)
 		this:Throw(token, "No such feild %s.%s", name(r), inst.__feild.data);
 	end
 
-	this:QueueReplace(inst, inst.__feild, "vars.", inst.__feild.data);
+	this:QueueReplace(inst, inst.__feild, "vars." .. inst.__feild.data);
 end
 
 --[[
@@ -3123,7 +3132,7 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
 	local userclass = this:GetOption("userclass");
 	local signature = string.format("%s(%s)", userclass.name, inst.signature);
 
-	userclass.constructors[signature] = true;
+	userclass.constructors[signature] = signature;
 	
 	this:Compile(inst.stmts);
 
@@ -3134,7 +3143,8 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
 	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function")
 	
 	injectNewLine = true;
-	this:QueueInjectionAfter(inst, inst.__postBlock, "\n", "local this = setmetatable({vars = {}},", userclass.name, ")");
+	this:QueueInjectionAfter(inst, inst.__postBlock, "local this = setmetatable({vars = {}, conts = {}},", userclass.name, ")");
+	this:QueueInjectionBefore(inst, inst.final, "return this;");
 	injectNewLine = false;
 end
 
