@@ -2949,7 +2949,7 @@ end
 function COMPILER.StartClass(this, name)
 	local classes = this.__scope.classes;
 
-	local newclass = {name = name, constructors = {}, memory = {}};
+	local newclass = {name = name, constructors = {}, methods = {}, memory = {}};
 
 	classes[name] = newclass;
 
@@ -3115,21 +3115,17 @@ end
 function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
 	this:PushScope();
 
+	local userclass = this:GetOption("userclass");
+
+	this:AssignVariable(token, true, "this", userclass.name);
+
 	for _, peram in pairs(inst.perams) do
 		local var = peram[2];
 		local class = peram[1];
 
 		this:AssignVariable(token, true, var, class);
-
-		if (class ~= "_vr") then
-			injectNewLine = true;
-			-- this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, class, name(class), var, var));
-			-- this:QueueInjectionBefore(inst, inst.stmts.token, string.format("%s = %s[2];", var, var));
-			injectNewLine = false;
-		end
 	end
 
-	local userclass = this:GetOption("userclass");
 	local signature = string.format("%s(%s)", userclass.name, inst.signature);
 
 	userclass.constructors[signature] = signature;
@@ -3147,5 +3143,60 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
 	this:QueueInjectionBefore(inst, inst.final, "return this;");
 	injectNewLine = false;
 end
+
+function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
+	this:PushScope();
+
+	local userclass = this:GetOption("userclass");
+
+	this:AssignVariable(token, true, "this", userclass.name);
+
+	for _, peram in pairs(inst.perams) do
+		local var = peram[2];
+		local class = peram[1];
+
+		this:AssignVariable(token, true, var, class);
+	end
+
+	local signature = string.format("@%s(%s)", inst.__name.data, inst.signature);
+
+	local meth = {};
+	meth.sig = signature;
+	meth.name = inst.__name.data;
+	meth.result = inst.__typ.data;
+
+	userclass.methods[signature] = meth;
+
+	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
+	this:SetOption("retunClass", meth.result);
+	this:SetOption("retunCount", meth.result ~= "" and -1 or 0);
+
+	this:Compile(inst.stmts);
+
+	local count = this:GetOption("retunCount");
+
+	this:PopScope();
+
+	if (count == -1) then
+		count = 0;
+	end
+
+	meth.count = count;
+
+	this:QueueReplace(inst, token, userclass.name);
+	this:QueueRemove(inst, inst.__name)
+	this:QueueRemove(inst, inst.__typ)
+	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function")
+end
+
+--[[inst.__meth
+inst.__typ
+inst.__name
+inst.perams
+inst.signature
+inst.__postBlock
+inst.stmts
+inst.__end
+]]
 
 EXPR_COMPILER = COMPILER;

@@ -82,6 +82,14 @@
 
 ]]
 
+local function name(id)
+	local obj = EXPR_LIB.GetClass(id);
+	return obj and obj.name or id;
+end
+
+--[[
+]]
+
 local PARSER = {};
 PARSER.__index = PARSER;
 
@@ -311,6 +319,14 @@ function PARSER.GetToken(this, pos)
 	end
 end
 
+function PARSER.OffsetToken(this, token, offset)
+	local pos = token.index + offset;
+
+	local token = this.__tokens[pos];
+
+	return token;
+end
+
 function PARSER.StepBackward(this, steps)
 	
 	if (not steps) then
@@ -369,7 +385,7 @@ function PARSER.StatmentContains(this, token, type)
 	end
 end
 
-function PARSER.LastInStatment(this, token, type)
+function PARSER.LastInStatment(this, token, type, endType)
 	local last;
 	local i = token.index;
 
@@ -386,6 +402,8 @@ function PARSER.LastInStatment(this, token, type)
 
 		if (tkn.type == type) then
 			last = tkn;
+		elseif (endType and tkn.type == endType) then
+			break;
 		end
 
 		i = i + 1;
@@ -2021,10 +2039,6 @@ function PARSER.Expression_Trailing(this, expr)
 
 	while this:CheckToken("prd", "lsb", "lpa") do
 		
-		if (this:StatmentContains(this.__token, "ass")) then
-			excluded = this:LastInStatment(this.__token, "lsb");
-		end
-
 		-- Methods
 		if (this:Accept("prd")) then
 			this.__prd = this.__token;
@@ -2069,7 +2083,7 @@ function PARSER.Expression_Trailing(this, expr)
 				-- If we are at our set atribute then we break.
 
 				if (this:StatmentContains(varToken, "ass")) then
-					local excluded = this:LastInStatment(this.__prd, "prd");
+					local excluded = this:LastInStatment(this:OffsetToken(this.__prd, -1), "prd", "ass");
 
 					if (excluded and excluded.index == this.__prd.index) then
 						this:StepBackward(2);
@@ -2092,7 +2106,7 @@ function PARSER.Expression_Trailing(this, expr)
 			-- If we are at our set indexer then we break.
 
 			if (this:StatmentContains(this.__token, "ass")) then
-				local excluded = this:LastInStatment(this.__token, "lsb");
+				local excluded = this:LastInStatment(this.__token, "lsb", "ass");
 
 				if (excluded and excluded.index == this.__token.index) then
 					this:StepBackward(1);
@@ -2317,8 +2331,39 @@ function PARSER.ClassStatment_2(this)
 
 		return this:EndInstruction(inst, {});
 	end
+
+	return this:ClassStatment_3();
 end
 
+function PARSER.ClassStatment_3(this)
+	if (this:Accept("meth")) then
+		local inst = this:StartInstruction("def_method", this.__token);
+		inst.__meth = this.__token;
+
+		this:Require("typ", "Return type expected for method, after method.");
+		inst.__typ = this.__token;
+
+		this:Require("var", "Name expected for method, after %s", name(inst.__typ.data));
+		inst.__name = this.__token;
+
+		local perams, signature = this:InputPeramaters(inst);
+
+		inst.perams = perams;
+		
+		inst.signature = signature;
+
+		inst.__postBlock = this.__token;
+
+		inst.stmts = this:Block_1(true, " ");
+		
+		inst.__end = this.__token;
+
+
+		return this:EndInstruction(inst, {});
+	end
+
+	this:Throw(this.__token, "Right curly bracket (}) expected, to close class.");
+end
 --[[
 ]]
 
