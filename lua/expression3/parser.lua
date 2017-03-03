@@ -2077,7 +2077,7 @@ function PARSER.Expression_Trailing(this, expr)
 				inst.__method = varToken;
 				inst.method = varToken.data;
 
-				expr = this:EndInstruction(inst, {expr});
+				expr = this:EndInstruction(inst, expressions);
 			else
 				-- Check for an ass instruction and locate it,
 				-- If we are at our set atribute then we break.

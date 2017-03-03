@@ -2169,6 +2169,18 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
+local function getMethod(mClass, userclass, method, ...)
+	local prams = table.concat({...}, ",");
+
+	if (userclass) then
+		local sig = string.format("@%s(%s)", method, prams);
+		return userclass.methods[sig]
+	end
+	
+	local sig = string.format("%s.%s(%s)", mClass, method, prams);
+	return EXPR_METHODS[sig];
+end
+
 function COMPILER.Compile_METH(this, inst, token, expressions)
 	local expr = expressions[1];
 	local mClass, mCount = this:Compile(expr);
@@ -2177,10 +2189,11 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 	local vargs;
 	local ids = {};
 	local total = #expressions;
+	
+	local userclass = this:GetUserClass(mClass);
 
 	if (total == 1) then
-		op = EXPR_METHODS[string.format("%s.%s()", mClass, inst.method)];
-		--print("method->", string.format("%s.%s()", mClass, inst.method), op)
+		op = getMethod(mClass, userclass, inst.method);
 	else
 		for k, expr in pairs(expressions) do
 			if (k > 1) then
@@ -2201,18 +2214,12 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 		for i = #ids, 1, -1 do
 			local args = table.concat(ids,",", 1, i);
 
-			if (i <= total) then
-				local signature = string.format("%s.%s(%s)", mClass, inst.method, args);
-
-				op = EXPR_METHODS[signature];
-				--print("method->", signature, op)
+			if (i == total -  1) then
+				op = getMethod(mClass, userclass, inst.method, args);
 			end
 
 			if (not op) then
-				local signature = string.format("%s.%s(%s,...)", mClass, inst.method, args);
-
-				op = EXPR_METHODS[signature];
-				--print("method->", signature, op)
+				op = getMethod(mClass, userclass, inst.method, args, "...");
 
 				if (op) then
 					vargs = i;
@@ -2225,8 +2232,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 		end
 
 		if (not op) then
-			op = EXPR_METHODS[string.format("%s.%s(...)", mClass, inst.method)];
-				--print("method->", string.format("%s.%s(...)", mClass, inst.method), op)
+			op = getMethod(mClass, userclass, inst.method, "...");
 
 			if (op) then
 				vargs = 1;
@@ -2238,8 +2244,11 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 		this:Throw(token, "No such method %s.%s(%s).", name(mClass), inst.method, names(ids));
 	end
 
-	this:CheckState(op.state, token, "Method %s.%s(%s)", name(mClass), inst.method, names(ids));
+	if (userclass) then
+		return op.result, op.count;
+	end
 
+	this:CheckState(op.state, token, "Method %s.%s(%s)", name(mClass), inst.method, names(ids));
 
 	if (type(op.operator) == "function") then
 		this:QueueRemove(inst, inst.__operator);
@@ -3159,7 +3168,7 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 	end
 
 	local signature = string.format("@%s(%s)", inst.__name.data, inst.signature);
-
+	
 	local meth = {};
 	meth.sig = signature;
 	meth.name = inst.__name.data;
@@ -3188,15 +3197,5 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 	this:QueueRemove(inst, inst.__typ)
 	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function")
 end
-
---[[inst.__meth
-inst.__typ
-inst.__name
-inst.perams
-inst.signature
-inst.__postBlock
-inst.stmts
-inst.__end
-]]
 
 EXPR_COMPILER = COMPILER;
