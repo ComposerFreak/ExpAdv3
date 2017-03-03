@@ -1958,6 +1958,8 @@ end
 
 function PARSER.InputPeramaters(this, inst)
 	this:Require("lpa", "Left parenthesis (() ) expected to open function parameters.");
+	
+	inst.__lpa = this.__token;
 
 	local signature = {};
 

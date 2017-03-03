@@ -2245,6 +2245,10 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 	end
 
 	if (userclass) then
+		this:QueueRemove(inst, inst.__lpa);
+		this:QueueInjectionBefore(inst, expr.token, userclass.name, "['".. op.sig.. "'](");
+		this:QueueReplace(inst, inst.__operator, total >= 1 and "," or "");
+		this:QueueRemove(inst, inst.__method);
 		return op.result, op.count;
 	end
 
@@ -3016,7 +3020,7 @@ function COMPILER.Compile_CLASS(this, inst, token, stmts)
 	-- inst.__classname
 	this:QueueReplace(inst, token, "local");
 	this:QueueRemove(inst, inst.__lcb);
-	this:QueueInjectionAfter(inst, inst.__lcb, " =",  "{", "vars", "=", "{", "}", "}");
+	this:QueueInjectionAfter(inst, inst.__lcb, " =",  "{", "vars", "=", "{", "}", "}",";", class.name, ".", "__index", "=", class.name);
 	this:QueueRemove(inst, inst.__rcb);
 
 	return "", 0;
@@ -3148,7 +3152,7 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
 	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function")
 	
 	injectNewLine = true;
-	this:QueueInjectionAfter(inst, inst.__postBlock, "local this = setmetatable({vars = {}, conts = {}},", userclass.name, ")");
+	this:QueueInjectionAfter(inst, inst.__postBlock, "local this = setmetatable({vars = {}, conts = {},__index = ", userclass.name, "},", userclass.name, ")");
 	this:QueueInjectionBefore(inst, inst.final, "return this;");
 	injectNewLine = false;
 end
@@ -3195,7 +3199,12 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 	this:QueueReplace(inst, token, userclass.name);
 	this:QueueRemove(inst, inst.__name)
 	this:QueueRemove(inst, inst.__typ)
-	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function")
+	this:QueueRemove(inst, inst.__lpa)
+	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function(this")
+
+	if (#inst.perams >= 1) then
+		this:QueueInjectionAfter(inst, inst.__name, ",")
+	end
 end
 
 EXPR_COMPILER = COMPILER;
