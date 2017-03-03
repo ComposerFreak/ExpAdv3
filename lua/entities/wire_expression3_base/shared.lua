@@ -151,7 +151,7 @@ function ENT:BuildEnv(context, instance)
 end
 
 function ENT:InitScript()
-	local native = table.concat({
+	--[[local native = table.concat({
 		"return function(env)",
 		"	setfenv(1, env);",
 			self.nativeScript,
@@ -160,7 +160,9 @@ function ENT:InitScript()
 
 	self.context.__native = native;
 
-	local main = CompileString(native, "Expression 3", false);
+	local main = CompileString(native, "Expression 3", false);]]
+	
+	local main = CompileString(self.nativeScript, "Expression 3", false);
 
 	if (isstring(main)) then
 		self:HandelThrown(main);

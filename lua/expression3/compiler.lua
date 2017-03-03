@@ -116,6 +116,7 @@ function COMPILER.BuildScript(this)
 	local line = 3;
 	local traceTable = {};
 
+
 	for k, v in pairs(this.__tokens) do
 		local data = tostring(v.data);
 
@@ -573,6 +574,24 @@ end
 
 --[[
 ]]
+
+function COMPILER.Compile_ROOT(this, inst, token, stmts)
+	injectNewLine = true;
+		this:QueueInjectionBefore(inst, token, "return", "function", "(", "env", ")");
+		this:QueueInjectionBefore(inst, token, "setfenv", "(", "1", ",", "env", ")");
+		this:QueueInjectionBefore(inst, token, "");
+	injectNewLine = false;
+
+	for i = 1, #stmts do
+		this:Compile(stmts[i]);
+	end
+
+	injectNewLine = true;
+		this:QueueInjectionAfter(inst, inst.final, "end");
+	injectNewLine = false;
+
+	return "", 0;
+end
 
 function COMPILER.Compile_SEQ(this, inst, token, stmts)
 	for i = 1, #stmts do
@@ -3022,6 +3041,11 @@ function COMPILER.Compile_CLASS(this, inst, token, stmts)
 	this:QueueRemove(inst, inst.__lcb);
 	this:QueueInjectionAfter(inst, inst.__lcb, " =",  "{", "vars", "=", "{", "}", "}",";", class.name, ".", "__index", "=", class.name);
 	this:QueueRemove(inst, inst.__rcb);
+	
+	injectNewLine = true;
+	this:QueueInjectionAfter(inst, inst.__lcb, class.name, ".", "vars", ".", "__index", "=", class.name, ".", "vars");
+	injectNewLine = false;
+
 
 	return "", 0;
 end
@@ -3152,7 +3176,8 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
 	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function")
 	
 	injectNewLine = true;
-	this:QueueInjectionAfter(inst, inst.__postBlock, "local this = setmetatable({vars = {}, conts = {},__index = ", userclass.name, "},", userclass.name, ")");
+	local class_line = string.format("local this = setmetatable({vars = setmetatable({}, %s.vars)}, %s)", userclass.name, userclass.name);
+	this:QueueInjectionAfter(inst, inst.__postBlock, class_line);
 	this:QueueInjectionBefore(inst, inst.final, "return this;");
 	injectNewLine = false;
 end
@@ -3205,6 +3230,27 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 	if (#inst.perams >= 1) then
 		this:QueueInjectionAfter(inst, inst.__name, ",")
 	end
+end
+
+function COMPILER.Compile_TOSTR(this, inst, token, expressions)
+	local userclass = this:GetOption("userclass");
+
+	this:PushScope();
+
+	this:AssignVariable(token, true, "this", userclass.name);
+
+	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
+	this:SetOption("retunClass", "s");
+	this:SetOption("retunCount", 1);
+
+	this:Compile(inst.stmts);
+
+	this:PopScope();
+
+	this:QueueInjectionBefore(inst, inst.__var, userclass.name, ".")
+	this:QueueReplace(inst, inst.__var, "__tostring");
+	this:QueueInjectionAfter(inst, inst.__var, "=", "function")
+	this:QueueInjectionAfter(inst, this:OffsetToken(inst.__var, 1), "this")
 end
 
 EXPR_COMPILER = COMPILER;

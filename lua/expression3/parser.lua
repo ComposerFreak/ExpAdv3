@@ -583,7 +583,7 @@ end
 ]]
 
 function PARSER.Root(this)
-	local seq = this:StartInstruction("seq", this.__tokens[1]);
+	local seq = this:StartInstruction("root", this.__tokens[1]);
 
 	local stmts = this:Statments(false);
 
@@ -2358,13 +2358,39 @@ function PARSER.ClassStatment_3(this)
 
 		inst.stmts = this:Block_1(true, " ");
 		
-		inst.__end = this.__token;
-
+		inst.__end = this.__token
 
 		return this:EndInstruction(inst, {});
 	end
 
-	this:Throw(this.__token, "Right curly bracket (}) expected, to close class.");
+	return this:ClassStatment_4()
+end
+
+function PARSER.ClassStatment_4(this)
+	if (this:AcceptWithData("var", "tostring")) then
+		local inst = this:StartInstruction("tostr", this.__token);
+		inst.__var = this.__token;
+
+		local perams, signature = this:InputPeramaters(inst);
+
+		if (#perams > 0) then
+			this:Throw(inst.__var, "The tostring operation does not take any parameters.");
+		end
+
+		inst.perams = perams;
+		
+		inst.signature = signature;
+
+		inst.__postBlock = this.__token;
+
+		inst.stmts = this:Block_1(true, " ");
+		
+		inst.__end = this.__token
+
+		return this:EndInstruction(inst, {});
+	end
+
+	this:Throw(inst.__var, "Right curly bracket (}) expected, to close class.");
 end
 --[[
 ]]
