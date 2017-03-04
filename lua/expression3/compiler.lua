@@ -2003,7 +2003,8 @@ function COMPILER.Compile_VAR(this, inst, token, expressions)
 	local c, s, var = this:GetVariable(inst.variable)
 
 	if (var and var.prefix) then
-		this:QueueReplace(inst, token, var.prefix .. "." .. token.data);
+		local prefix = var.atribute and ("this." .. var.prefix) or var.prefix;
+		this:QueueReplace(inst, token, prefix .. "." .. token.data);
 	end
 
 	if (not c) then
@@ -3015,6 +3016,7 @@ function COMPILER.AssToClass(this, token, declaired, varName, class, scope)
 	if (declaired) then
 		local userclass = this:GetOption("userclass");
 		userclass.memory[varName] = info;
+		info.atribute = true;
 		info.prefix = "vars";
 	end
 

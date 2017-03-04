@@ -134,6 +134,7 @@ function ENT:BuildEnv(context, instance)
 	local meta = {};
 
 	meta.__index = function(_, v)
+		debug.Trace();
 		error("Attempt to reach Lua environment " .. v, 1);
 	end
 
