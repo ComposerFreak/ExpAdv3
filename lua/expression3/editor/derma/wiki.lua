@@ -5,24 +5,34 @@
 local PANEL = {}
 
 function PANEL:Init()
-	local offset = 50
-	
+	local allExpanded = false
 	local searchNumber = 1
 	local oldSearch = ""
 	local searchResults = {}
+	local searchResultsParents = {}
 	
-	local folding = {funcsFold = false}
 	local derma = {}
 	
 	self:DockPadding(5, 5, 5, 5)
 	
-	local Scrollbar = self:Add("DScrollPanel")
-	Scrollbar:Dock(FILL)
-	Scrollbar:MoveToBack()
+	local Tree = self:Add("DTree")
+	Tree:DockMargin(0, 50, 0, 0)
+	Tree:Dock(FILL)
+	Tree:MoveToBack()
 	
-	local Highlight = vgui.Create("DPanel", Scrollbar)
-	Highlight.Paint = function(self, w, h)
-		draw.RoundedBox(0, 0, 0, 0, 0, Color(255, 0, 0, 0))
+	--------Expand all--------
+	local ExpandAll = self:Add("DCheckBoxLabel")
+	ExpandAll:SetPos(5, 50)
+	ExpandAll:SetValue(allExpanded)
+	ExpandAll:SetText("Expand All")
+	function ExpandAll:OnChange(val)
+		allExpanded = val
+		
+		for k, data in pairs(derma) do
+			if table.Count(data.parents) < 2 then
+				data.panel:SetExpanded(allExpanded)
+			end
+		end
 	end
 	
 	--------Search--------
@@ -44,13 +54,12 @@ function PANEL:Init()
 		if txt == "" then
 			searchNumber = 1
 			
-			Highlight.Paint = function(self, w, h)
-				draw.RoundedBox(0, 0, 0, 0, 0, Color(255, 0, 0, 0))
-			end
+			Tree:SetSelectedItem()
 		end
 		
 		if txt != "" then
 			searchResults = {}
+			searchResultsParents = {}
 			
 			for k, data in pairs(derma) do
 				local panel = data.panel
@@ -58,6 +67,7 @@ function PANEL:Init()
 				
 				if name:lower():find(txt:lower()) then
 					table.insert(searchResults, panel)
+					table.insert(searchResultsParents, data.parents)
 				end
 			end
 			
@@ -68,26 +78,23 @@ function PANEL:Init()
 			if table.Count(searchResults) > 0 then
 				local panel = searchResults[searchNumber]
 				
-				Highlight:SetPos(panel:GetPos())
-				Highlight:SetSize(panel:GetSize())
-				Highlight.Paint = function(self, w, h)
-					local w, h = panel:GetSize()
-					draw.RoundedBox(0, 0, 0, w, h, Color(255, 0, 0, 100))
-				end
+				Tree:SetSelectedItem(panel)
 				
-				Scrollbar:ScrollToChild(panel)
+				for k, parent in pairs(searchResultsParents[searchNumber]) do
+					parent:SetExpanded(true)
+				end
 			end
 		end
 	end
 	
 	local MoveSelect = self:Add("DPanel")
 	MoveSelect:SetPos(5, 30)
-	MoveSelect:SetSize(60, 15)
+	MoveSelect:SetSize(90, 15)
 	MoveSelect.Paint = function(self, w, h)
 		local ind = math.Clamp(searchNumber, 0, table.Count(searchResults))
 		
-		draw.RoundedBox(0, 0, 0, 60, 15, Color(50, 50, 50, 255))
-		draw.DrawText(ind.."/"..table.Count(searchResults), "DermaDefault", 30, 1, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER)
+		draw.RoundedBox(0, 0, 0, 90, 15, Color(50, 50, 50, 255))
+		draw.DrawText(ind.."/"..table.Count(searchResults), "DermaDefault", 45, 1, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER)
 	end
 	
 	local MoveSelectLeft = vgui.Create("DButton", MoveSelect)
@@ -104,19 +111,16 @@ function PANEL:Init()
 		if table.Count(searchResults) > 0 then
 			local panel = searchResults[searchNumber]
 			
-			Highlight:SetPos(panel:GetPos())
-			Highlight:SetSize(panel:GetSize())
-			Highlight.Paint = function(self, w, h)
-				local w, h = panel:GetSize()
-				draw.RoundedBox(0, 0, 0, w, h, Color(255, 0, 0, 100))
-			end
+			Tree:SetSelectedItem(panel)
 			
-			Scrollbar:ScrollToChild(panel)
+			for k, parent in pairs(searchResultsParents[searchNumber]) do
+				parent:SetExpanded(true)
+			end
 		end
 	end
 	
 	local MoveSelectRight = vgui.Create("DButton", MoveSelect)
-	MoveSelectRight:SetPos(45, 0)
+	MoveSelectRight:SetPos(75, 0)
 	MoveSelectRight:SetSize(15, 15)
 	MoveSelectRight:SetText(">")
 	MoveSelectRight.DoClick = function()
@@ -129,234 +133,142 @@ function PANEL:Init()
 		if table.Count(searchResults) > 0 then
 			local panel = searchResults[searchNumber]
 			
-			Highlight:SetPos(panel:GetPos())
-			Highlight:SetSize(panel:GetSize())
-			Highlight.Paint = function(self, w, h)
-				local w, h = panel:GetSize()
-				draw.RoundedBox(0, 0, 0, w, h, Color(255, 0, 0, 100))
-			end
+			Tree:SetSelectedItem(panel)
 			
-			Scrollbar:ScrollToChild(panel)
+			for k, parent in pairs(searchResultsParents[searchNumber]) do
+				parent:SetExpanded(true)
+			end
 		end
+	end
+	
+	--------Examples--------
+	local NodeExam = Tree:AddNode("Examples")
+	NodeExam.Icon:SetImage("fugue/blue-folder-horizontal.png")
+	
+	table.insert(derma, {name = "Examples", panel = NodeExam, parents = {}})
+	
+	for name, file in pairs(EXPR_WIKI.EXAMPLES) do
+		local NodeFile = NodeExam:AddNode(name)
+		NodeFile.Icon:SetImage("fugue/script.png")
+		NodeFile.DoClick = function()
+			Golem.GetInstance():NewTab("editor", file, "Example - "..name, "Example - "..name)
+		end
+		
+		table.insert(derma, {name = name, panel = NodeFile, parents = {NodeExam}})
 	end
 	
 	--------Constructors--------
-	local ButtonCons = vgui.Create("DButton", Scrollbar)
-	ButtonCons:SetPos(0, offset)
-	ButtonCons:SetSize(500, 18)
-	ButtonCons:SetText("")
-	ButtonCons.Paint = function(self, w, h)
-		draw.DrawText("Constructors", "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-	end
+	local NodeCons = Tree:AddNode("Constructors")
+	NodeCons.Icon:SetImage("fugue/blue-folder-horizontal.png")
 	
-	table.insert(derma, {name = "Constructors", panel = ButtonCons}) 
+	table.insert(derma, {name = "Constructors", panel = NodeCons, parents = {}})
 	
 	for lib, data in pairs(EXPR_WIKI.CONSTRUCTORS) do
+		local NodeLib = NodeCons:AddNode(lib)
+		NodeLib.Icon:SetImage("fugue/blue-folder-horizontal.png")
 		
-		offset = offset + 20
-		
-		local ButtonLib = vgui.Create("DButton", Scrollbar)
-		ButtonLib:SetPos(20, offset)
-		ButtonLib:SetSize(500, 18)
-		ButtonLib:SetText("")
-		ButtonLib.Paint = function(self, w, h)
-			draw.DrawText(lib, "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-		end
-		
-		table.insert(derma, {name = lib, panel = ButtonLib}) 
+		table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeCons}})
 		
 		for func, html in pairs(data) do
-			offset = offset + 20
-			
-			local ButtonFunc = vgui.Create("DButton", Scrollbar)
-			ButtonFunc:SetPos(40, offset)
-			ButtonFunc:SetSize(500, 18)
-			ButtonFunc:SetText("")
-			ButtonFunc.DoClick = function()
+			local NodeFunc = NodeLib:AddNode(func)
+			NodeFunc.Icon:SetImage("fugue/script-text.png")
+			NodeFunc.DoClick = function()
 				Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
 			end
-			ButtonFunc.Paint = function(self, w, h)
-				draw.DrawText(func, "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-			end
 			
-			table.insert(derma, {name = func, panel = ButtonFunc}) 
+			table.insert(derma, {name = func, panel = NodeFunc, parents = {NodeCons, NodeLib}})
 		end
 	end
-	
-	offset = offset + 30
 	
 	--------Methods--------
-	local ButtonMeths = vgui.Create("DButton", Scrollbar)
-	ButtonMeths:SetPos(0, offset)
-	ButtonMeths:SetSize(500, 18)
-	ButtonMeths:SetText("")
-	ButtonMeths.Paint = function(self, w, h)
-		draw.DrawText("Methods", "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-	end
+	local NodeMeths = Tree:AddNode("Methods")
+	NodeMeths.Icon:SetImage("fugue/blue-folder-horizontal.png")
 	
-	table.insert(derma, {name = "Methods", panel = ButtonMeths}) 
+	table.insert(derma, {name = "Methods", panel = NodeMeths, parents = {}})
 	
 	for lib, data in pairs(EXPR_WIKI.METHODS) do
+		local NodeLib = NodeMeths:AddNode(lib)
+		NodeLib.Icon:SetImage("fugue/blue-folder-horizontal.png")
 		
-		offset = offset + 20
-		
-		local ButtonLib = vgui.Create("DButton", Scrollbar)
-		ButtonLib:SetPos(20, offset)
-		ButtonLib:SetSize(500, 18)
-		ButtonLib:SetText("")
-		ButtonLib.Paint = function(self, w, h)
-			draw.DrawText(lib, "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-		end
-		
-		table.insert(derma, {name = lib, panel = ButtonLib}) 
+		table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeMeths}})
 		
 		for func, html in pairs(data) do
-			offset = offset + 20
-			
-			local ButtonFunc = vgui.Create("DButton", Scrollbar)
-			ButtonFunc:SetPos(40, offset)
-			ButtonFunc:SetSize(500, 18)
-			ButtonFunc:SetText("")
-			ButtonFunc.DoClick = function()
+			local NodeFunc = NodeLib:AddNode(func)
+			NodeFunc.Icon:SetImage("fugue/script-text.png")
+			NodeFunc.DoClick = function()
 				Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
 			end
-			ButtonFunc.Paint = function(self, w, h)
-				draw.DrawText(func, "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-			end
 			
-			table.insert(derma, {name = func, panel = ButtonFunc}) 
+			table.insert(derma, {name = func, panel = NodeFunc, parents = {NodeMeths, NodeLib}})
 		end
 	end
-	
-	offset = offset + 30
 	
 	--------Functions--------
-	local ButtonFuncs = vgui.Create("DButton", Scrollbar)
-	ButtonFuncs:SetPos(0, offset)
-	ButtonFuncs:SetSize(500, 18)
-	ButtonFuncs:SetText("")
-	ButtonFuncs.Paint = function(self, w, h)
-		draw.DrawText("Functions", "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-	end
+	local NodeFuncs = Tree:AddNode("Functions")
+	NodeFuncs.Icon:SetImage("fugue/blue-folder-horizontal.png")
 	
-	table.insert(derma, {name = "Functions", panel = ButtonFuncs}) 
+	table.insert(derma, {name = "Functions", panel = NodeFuncs, parents = {}})
 	
 	for lib, data in pairs(EXPR_WIKI.FUNCTIONS) do
-		offset = offset + 20
+		local NodeLib = NodeFuncs:AddNode(lib)
+		NodeLib.Icon:SetImage("fugue/blue-folder-horizontal.png")
 		
-		local ButtonLib = vgui.Create("DButton", Scrollbar)
-		ButtonLib:SetPos(20, offset)
-		ButtonLib:SetSize(500, 18)
-		ButtonLib:SetText("")
-		ButtonLib.Paint = function(self, w, h)
-			draw.DrawText(lib, "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-		end
-		
-		table.insert(derma, {name = lib, panel = ButtonLib}) 
+		table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeFuncs}})
 		
 		for func, html in pairs(data) do
-			offset = offset + 20
-			
-			local ButtonFunc = vgui.Create("DButton", Scrollbar)
-			ButtonFunc:SetPos(40, offset)
-			ButtonFunc:SetSize(500, 18)
-			ButtonFunc:SetText("")
-			ButtonFunc.DoClick = function()
+			local NodeFunc = NodeLib:AddNode(func)
+			NodeFunc.Icon:SetImage("fugue/script-text.png")
+			NodeFunc.DoClick = function()
 				Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
 			end
-			ButtonFunc.Paint = function(self, w, h)
-				draw.DrawText(func, "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-			end
 			
-			table.insert(derma, {name = func, panel = ButtonFunc}) 
+			table.insert(derma, {name = func, panel = NodeFunc, parents = {NodeFuncs, NodeLib}})
 		end
 	end
-	
-	offset = offset + 30
 	
 	--------Events--------
-	local ButtonEvents = vgui.Create("DButton", Scrollbar)
-	ButtonEvents:SetPos(0, offset)
-	ButtonEvents:SetSize(500, 18)
-	ButtonEvents:SetText("")
-	ButtonEvents.Paint = function(self, w, h)
-		draw.DrawText("Events", "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-	end
+	local NodeEvents = Tree:AddNode("Events")
+	NodeEvents.Icon:SetImage("fugue/blue-folder-horizontal.png")
 	
-	table.insert(derma, {name = "Events", panel = ButtonEvents}) 
+	table.insert(derma, {name = "Events", panel = NodeEvents, parents = {}})
 	
 	for lib, data in pairs(EXPR_WIKI.EVENTS) do
-		offset = offset + 20
+		local NodeLib = NodeEvents:AddNode(lib)
+		NodeLib.Icon:SetImage("fugue/blue-folder-horizontal.png")
 		
-		local ButtonLib = vgui.Create("DButton", Scrollbar)
-		ButtonLib:SetPos(20, offset)
-		ButtonLib:SetSize(500, 18)
-		ButtonLib:SetText("")
-		ButtonLib.Paint = function(self, w, h)
-			draw.DrawText(lib, "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-		end
-		
-		table.insert(derma, {name = lib, panel = ButtonLib}) 
+		table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeEvents}})
 		
 		for func, html in pairs(data) do
-			offset = offset + 20
-			
-			local ButtonFunc = vgui.Create("DButton", Scrollbar)
-			ButtonFunc:SetPos(40, offset)
-			ButtonFunc:SetSize(500, 18)
-			ButtonFunc:SetText("")
-			ButtonFunc.DoClick = function()
+			local NodeFunc = NodeLib:AddNode(func)
+			NodeFunc.Icon:SetImage("fugue/script-text.png")
+			NodeFunc.DoClick = function()
 				Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
 			end
-			ButtonFunc.Paint = function(self, w, h)
-				draw.DrawText(func, "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-			end
 			
-			table.insert(derma, {name = func, panel = ButtonFunc}) 
+			table.insert(derma, {name = func, panel = NodeFunc, parents = {NodeEvents, NodeLib}})
 		end
 	end
-	
-	offset = offset + 30
 	
 	--------Operators--------
-	local ButtonOpers = vgui.Create("DButton", Scrollbar)
-	ButtonOpers:SetPos(0, offset)
-	ButtonOpers:SetSize(500, 18)
-	ButtonOpers:SetText("")
-	ButtonOpers.Paint = function(self, w, h)
-		draw.DrawText("Operators", "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-	end
+	local NodeOpers = Tree:AddNode("Operators")
+	NodeOpers.Icon:SetImage("fugue/blue-folder-horizontal.png")
 	
-	table.insert(derma, {name = "Operators", panel = ButtonOpers}) 
+	table.insert(derma, {name = "Operators", panel = NodeOpers, parents = {}})
 	
 	for lib, data in pairs(EXPR_WIKI.OPERATORS) do
-		offset = offset + 20
+		local NodeLib = NodeOpers:AddNode(lib)
+		NodeLib.Icon:SetImage("fugue/blue-folder-horizontal.png")
 		
-		local ButtonLib = vgui.Create("DButton", Scrollbar)
-		ButtonLib:SetPos(20, offset)
-		ButtonLib:SetSize(500, 18)
-		ButtonLib:SetText("")
-		ButtonLib.Paint = function(self, w, h)
-			draw.DrawText(lib, "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-		end
-		
-		table.insert(derma, {name = lib, panel = ButtonLib}) 
+		table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeOpers}})
 		
 		for func, html in pairs(data) do
-			offset = offset + 20
-			
-			local ButtonFunc = vgui.Create("DButton", Scrollbar)
-			ButtonFunc:SetPos(40, offset)
-			ButtonFunc:SetSize(500, 18)
-			ButtonFunc:SetText("")
-			ButtonFunc.DoClick = function()
+			local NodeFunc = NodeLib:AddNode(func)
+			NodeFunc.Icon:SetImage("fugue/script-text.png")
+			NodeFunc.DoClick = function()
 				Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
 			end
-			ButtonFunc.Paint = function(self, w, h)
-				draw.DrawText(func, "DermaDefault", 2, 0, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
-			end
 			
-			table.insert(derma, {name = func, panel = ButtonFunc}) 
+			table.insert(derma, {name = func, panel = NodeFunc, parents = {NodeOpers, NodeLib}})
 		end
 	end
 end

@@ -7,9 +7,11 @@ if SERVER then
 	
 	AddCSLuaFile("wiki/html_compiler.lua")
 	AddCSLuaFile("wiki/inits/autogen.lua")
+	AddCSLuaFile("wiki/inits/examples.lua")
 else
 	include("wiki/html_compiler.lua")
 	include("wiki/inits/autogen.lua")
+	include("wiki/inits/examples.lua")
 	
 	hook.Add("Expression3.AddGolemTabTypes", "Expression3.AddGolemTabTypes.wiki", function(self)
 		self:AddCustomTab(true, "html", function(self, html, name, w, h)

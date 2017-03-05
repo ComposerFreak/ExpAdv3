@@ -14,6 +14,7 @@
 EXPR_WIKI = {};
 
 local loadWiki = false;
+local examples;
 local constructors;
 local methods;
 local functions;
@@ -22,6 +23,13 @@ local operators;
 local events;
 
 --------------------------------
+function EXPR_WIKI.RegisterExample(name, code)
+	if not loadWiki then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Example %s outside of Hook::Expression3.LoadWiki", name)
+	end
+	
+	examples[name] = code
+end
 
 function EXPR_WIKI.RegisterConstructor(library, name, html)
 	if not loadWiki then
@@ -86,6 +94,7 @@ end
 hook.Add("Expression3.PostRegisterExtensions", "Expression3.Wiki", function()
 	loadWiki = true;
 	
+	examples = {}
 	constructors = {}
 	methods = {}
 	functions = {}
@@ -99,6 +108,7 @@ hook.Add("Expression3.PostRegisterExtensions", "Expression3.Wiki", function()
 	
 	loadWiki = false
 	
+	EXPR_WIKI.EXAMPLES = examples
 	EXPR_WIKI.CONSTRUCTORS = constructors
 	EXPR_WIKI.METHODS = methods
 	EXPR_WIKI.FUNCTIONS = functions
