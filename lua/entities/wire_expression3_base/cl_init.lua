@@ -68,7 +68,9 @@ function ENT:ReceiveFromServer(ply, script)
 end
 
 function ENT:PostInitScript()
-
+	net.Start("Expression3.InitalizedClient");
+		net.WriteEntity(self);
+	net.SendToServer();
 end
 
 -- function ENT:GetOverlayText()

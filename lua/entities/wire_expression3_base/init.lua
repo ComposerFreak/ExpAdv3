@@ -36,13 +36,20 @@ function ENT:ReceiveFromClient(ply, script)
 end
 
 function ENT:PostInitScript()
-	print("Broadcasting to clients:");
 	net.Start("Expression3.SendToClient")
 		net.WriteEntity(self);
 		net.WriteEntity(self.context.player);
 		net.WriteString(self.script);
 	net.Broadcast();
 end
+
+net.Receive("Expression3.InitalizedClient", function(len, ply)
+	local ent = net.ReadEntity();
+
+	if (IsValid(ent) and ent.CallEvent) then
+		ent:CallEvent("", 0, "InitalizedClient", {"p", ply});
+	end	
+end)
 
 --[[
 ]]

@@ -996,6 +996,7 @@ EXPR_CONSOLE = 1
 if (SERVER) then
 	util.AddNetworkString("Expression3.Print");
 	util.AddNetworkString("Expression3.RelayToClient");
+	util.AddNetworkString("Expression3.InitalizedClient");
 
 	function EXPR_LIB.SendToPlayer(ply, ent, const, ...)
 		local t = {...};

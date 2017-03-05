@@ -139,6 +139,7 @@ function ENT:BuildEnv(context, instance)
 	end
 
 	meta.__newindex = function(_, v)
+		debug.Trace();
 		error("Attempt to write to lua environment " .. v, 1);
 	end 
 
@@ -152,17 +153,6 @@ function ENT:BuildEnv(context, instance)
 end
 
 function ENT:InitScript()
-	--[[local native = table.concat({
-		"return function(env)",
-		"	setfenv(1, env);",
-			self.nativeScript,
-		"end",
-	}, "\n");
-
-	self.context.__native = native;
-
-	local main = CompileString(native, "Expression 3", false);]]
-	
 	local main = CompileString(self.nativeScript, "Expression 3", false);
 
 	if (isstring(main)) then
