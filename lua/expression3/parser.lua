@@ -1517,7 +1517,7 @@ function PARSER.Expression_7(this)
 
 				expr = this:EndInstruction(ist, expressions);
 			else
-				local inst = this:StartInstruction("eq", this.__token);
+				local inst = this:StartInstruction("eq", expr.token);
 
 				inst.__operator = this.__token;
 
@@ -1547,7 +1547,7 @@ function PARSER.Expression_7(this)
 
 				expr = this:EndInstruction(inst, expressions);
 			else
-				local inst = this:StartInstruction("neq", this.__token);
+				local inst = this:StartInstruction("neq", expr.__token);
 
 				inst.__operator = this.__token;
 
@@ -1826,22 +1826,22 @@ end
 
 function PARSER.Expression_23(this)
 	if (this:CheckToken("var")) then
-		local token = this.__token;
+		local token = this.__next;
 		local library = this.__next.data;
 		local lib = EXPR_LIBRARIES[library];
 
 		if (lib) then
 			this:Next();
 
-			local inst = this:StartInstruction("func", token);
-
-			inst.library = this.__token;
+			local library = this.__token;
 
 			if (not this:Accept("prd")) then
 				this:StepBackward(1);
 				return this:Expression_24();
 			end
 
+			local inst = this:StartInstruction("func", token);
+			inst.library = library;
 			inst.__operator = this.__token;
 
 			this:Require("var", "function expected after library name");
