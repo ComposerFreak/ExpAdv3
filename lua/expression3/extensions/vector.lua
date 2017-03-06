@@ -28,59 +28,59 @@ extension:RegisterConstructor("v", "n,n,n", Vector, true) -- E3 new vector(n,n,n
 	Operators
 ]]
 
-extension:RegisterOperator("==", "v,v", "b", 1, function(a, b)
+extension:RegisterOperator("eq", "v,v", "b", 1, function(a, b)
 	return (a.x == b.x) and (a.y == b.y) and (a.z == b.z);
 end, true);
 
-extension:RegisterOperator("!=", "v,v", "b", 1, function(a, b)
+extension:RegisterOperator("neq", "v,v", "b", 1, function(a, b)
 	return (a.x ~= b.x) and (a.y ~= b.y) and (a.z ~= b.z);
 end, true);
 
-extension:RegisterOperator("<", "v,v", "b", 1, function(a, b)
+extension:RegisterOperator("lth", "v,v", "b", 1, function(a, b)
 	return (a.x < b.x) and (a.y < b.y) and (a.z < b.z);
 end, true);
 
-extension:RegisterOperator("<=", "v,v", "b", 1, function(a, b)
+extension:RegisterOperator("leg", "v,v", "b", 1, function(a, b)
 	return (a.x <= b.x) and (a.y <= b.y) and (a.z <= b.z);
 end, true);
 
-extension:RegisterOperator(">", "v,v", "b", 1, function(a, b)
+extension:RegisterOperator("gth", "v,v", "b", 1, function(a, b)
 	return (a.x > b.x) and (a.y > b.y) and (a.z > b.z);
 end, true);
 
-extension:RegisterOperator(">=", "v,v", "b", 1, function(a, b)
+extension:RegisterOperator("geq", "v,v", "b", 1, function(a, b)
 	return (a.x >= b.x) and (a.y >= b.y) and (a.z >= b.z);
 end, true);
 
 --[[
 ]]
 
-extension:RegisterOperator("+", "v,v", "v", 1, nil, nil);
+extension:RegisterOperator("add", "v,v", "v", 1, nil, nil);
 
-extension:RegisterOperator("-", "v,v", "v", 1, nil, nil);
+extension:RegisterOperator("sub", "v,v", "v", 1, nil, nil);
 
-extension:RegisterOperator("*", "v,v", "v", 1, nil, nil);
+extension:RegisterOperator("mul", "v,v", "v", 1, nil, nil);
 
-extension:RegisterOperator("/", "v,v", "v", 1, function(a, b)
+extension:RegisterOperator("div", "v,v", "v", 1, function(a, b)
 	return Vector((a.x / b.x), (a.y / b.y), (a.z / b.z));
 end, true);
 
 --[[
 ]]
 
-extension:RegisterOperator("+", "v,n", "v", 1, function(a, b)
+extension:RegisterOperator("add", "v,n", "v", 1, function(a, b)
 	return Vector((a.x + b), (a.y + b), (a.z + b));
 end, true);
 
-extension:RegisterOperator("-", "v,n", "v", 1, function(a, b)
+extension:RegisterOperator("sub", "v,n", "v", 1, function(a, b)
 	return Vector((a.x - b), (a.y - b), (a.z - b));
 end, true);
 
-extension:RegisterOperator("*", "v,n", "v", 1, function(a, b)
+extension:RegisterOperator("mul", "v,n", "v", 1, function(a, b)
 	return Vector((a.x * b), (a.y * b), (a.z * b));
 end, true);
 
-extension:RegisterOperator("/", "v,n", "v", 1, function(a, b)
+extension:RegisterOperator("div", "v,n", "v", 1, function(a, b)
 	return Vector((a.x / b), (a.y / b), (a.z / b));
 end, true);
 
@@ -159,6 +159,7 @@ end, true);
 ]]
 
 extension:RegisterMethod("v", "toAngle", "", "a", 1, Angle);
+--extension:RegisterMethod("v", "toColor", "", "c", 1, ToColor);
 
 --[[
 ]]

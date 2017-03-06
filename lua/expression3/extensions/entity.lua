@@ -12,6 +12,8 @@
 
 local extension = EXPR_LIB.RegisterExtension("entity")
 
+extension:RegisterLibrary("ent");
+
 --[[
 	CLASS
 ]]
@@ -24,7 +26,8 @@ extension:RegisterConstructor("e", "n", Entity, true)
 	Operators
 ]]
 
-extension:RegisterOperator("==", "e,e", "b", 1, nil)
+extension:RegisterOperator("eq", "e,e", "b", 1, function(a, b) return a == b end, true)
+extension:RegisterOperator("neq", "e,e", "b", 1, function(a, b) return a != b end, true)
 
 --[[
 	Methods
@@ -56,6 +59,21 @@ extension:RegisterMethod("e", "getSubMaterial", "n", "s", 1, "GetSubMaterial")
 extension:RegisterMethod("e", "setSubMaterial", "n,s", "", 0, "SetSubMaterial")
 extension:RegisterMethod("e", "resetSubMaterials", "", "", 0, "SetSubMaterial")
 
+--extension:RegisterMethod("e", "getColor", "", "c", 1, "GetColor")
+--extension:RegisterMethod("e", "setColor", "c", "", 0, "SetColor")
+
+extension:RegisterMethod("e", "getGravity", "", "n", 1, "GetGravity")
+extension:RegisterMethod("e", "setGravity", "n", "", 0, "SetGravity")
+
+extension:RegisterMethod("e", "ignite", "n", "", 0, "Ignite")
+extension:RegisterMethod("e", "extinguish", "", "", 0, "Extinguish")
+extension:RegisterMethod("e", "isOnFire", "", "b", 1, "IsOnFire")
+
+extension:RegisterMethod("e", "onGround", "", "b", 1, "OnGround")
+extension:RegisterMethod("e", "getGroundEntity", "", "e", 1, "GetGroundEntity")
+
+extension:RegisterMethod("e", "remove", "", "", 0, "Remove")
+
 extension:RegisterMethod("e", "getMass", "", "n", 1, function(e)
 	local phys = e:GetPhysicsObject()
 	return IsValid(phys) and phys:GetMass() or -1
@@ -65,6 +83,12 @@ extension:RegisterMethod("e", "getMassCenter", "", "v", 1, function(e)
 	local phys = e:GetPhysicsObject()
 	return IsValid(phys) and phys:GetMassCenter() or Vector()
 end, true)
+
+--[[
+	Functions
+]]
+
+extension:RegisterFunction("ent", "chip", "", "e", 1, function(context) return context.entity end, false)
 
 --[[
 ]]
