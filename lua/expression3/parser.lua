@@ -1547,7 +1547,7 @@ function PARSER.Expression_7(this)
 
 				expr = this:EndInstruction(inst, expressions);
 			else
-				local inst = this:StartInstruction("neq", expr.__token);
+				local inst = this:StartInstruction("neq", expr.token);
 
 				inst.__operator = this.__token;
 
