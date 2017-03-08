@@ -4,7 +4,7 @@ hook.Add("Expression3.LoadWiki", "Expression3.Wiki.RegisterExamples", function()
     int x = 0;
     int y = 0;
     int z = 0;
-    constructor vec(int x, int y, int z) {
+    vec(int x, int y, int z) {
         this.x = x;
         this.y = y;
         this.z = z;
