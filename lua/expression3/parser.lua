@@ -2261,6 +2261,12 @@ end
 
 function PARSER.ClassStatment_1(this)
 	if (this:Accept("typ")) then
+		
+		if (this.__token.data == this:GetOption("curclass") and this:CheckToken("lpa")) then
+			this:StepBackward(1);
+			return this:ClassStatment_2();
+		end
+
 		local inst = this:StartInstruction("def_feild", this.__token);
 		
 		local type = this.__token.data;
@@ -2307,15 +2313,10 @@ function PARSER.ClassStatment_1(this)
 end
 
 function PARSER.ClassStatment_2(this)
-	if (this:Accept("cstr")) then
+	local class = this:GetOption("curclass");
+
+	if (this:AcceptWithData("typ", class)) then
 		local inst = this:StartInstruction("constclass", this.__token);
-		inst.__cstr = this.__token;
-
-		local class = this:GetOption("curclass");
-
-		if (not this:AcceptWithData("typ", class)) then
-			this:Throw(this.__token, "Invalid constructor, %s expected", class)
-		end
 
 		inst.__name = this.__token;
 
@@ -2390,7 +2391,7 @@ function PARSER.ClassStatment_4(this)
 		return this:EndInstruction(inst, {});
 	end
 
-	this:Throw(inst.__var, "Right curly bracket (}) expected, to close class.");
+	this:Throw(this.__token, "Right curly bracket (}) expected, to close class.");
 end
 --[[
 ]]

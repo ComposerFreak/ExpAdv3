@@ -3173,8 +3173,6 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
 
 	this:PopScope();
 
-	this:QueueRemove(inst, token);
-
 	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function")
 	
 	injectNewLine = true;
