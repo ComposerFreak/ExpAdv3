@@ -717,7 +717,7 @@ function PARSER.Directive_INPUT(this, token, directive)
 end
 
 function PARSER.Directive_OUTPUT(this, token, directive)
-	this:Require("typ", "Class expected for outport type, after @input");
+	this:Require("typ", "Class expected for outport type, after @output");
 
 	local inst = this:StartInstruction("outport", token);
 
@@ -733,7 +733,7 @@ function PARSER.Directive_OUTPUT(this, token, directive)
 
 	local variables = {};
 
-	this:Require("var", "Variable('s) expected after class for outport name.");
+	this:Require("var", "Variable('s) expected after class for output name.");
 	
 	variables[1] = this.__token;
 
@@ -1126,7 +1126,6 @@ end
 
 function PARSER.Statment_8(this)
 	if (this:Accept("var")) then
-		
 		if (not this:CheckToken("com", "ass", "aadd", "asub", "adiv", "amul")) then
 			this:StepBackward(1);
 		else
@@ -1187,7 +1186,7 @@ function PARSER.Statment_8(this)
 	return this:Statment_9();
 end
 
-function PARSER.Statment_8(this)
+function PARSER.Statment_9(this)
 	if (this:Accept("del")) then
 		local inst = this:StartInstruction("delegate", this.__token);
 
@@ -1350,8 +1349,8 @@ function PARSER.Statment_12(this, expr)
 		expressions[2] = this:Expression_1();
 
 		if (this:Accept("com")) then
-			this:QueueRemove(inst, this.__token);
-
+			--this:QueueRemove(inst, this.__token);
+			inst.__com = this.__token;
 			this:Require("typ", "Class expected for index operator, after coma (,).");
 
 			inst.class = this.__token;

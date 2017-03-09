@@ -116,10 +116,8 @@ function COMPILER.BuildScript(this)
 	local line = 3;
 	local traceTable = {};
 
-
 	for k, v in pairs(this.__tokens) do
 		local data = tostring(v.data);
-
 		if (v.newLine) then
 			char = 1;
 			line = line + 1;
@@ -129,10 +127,10 @@ function COMPILER.BuildScript(this)
 		local tasks = alltasks[v.pos];
 
 		if (tasks) then
-			
 			local prefixs = tasks.prefix;
 
 			if (prefixs) then
+
 				--for _ = #prefixs, 1, -1 do
 				--	local prefix = prefixs[_];
 				for _, prefix in pairs(prefixs) do
@@ -2429,7 +2427,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		end
 	end
 
-	if (inst.library == "system") then
+	if (inst.library.data == "system") then
 		local res, count = hook.Run("Expression3.PostCompile.System." .. inst.name, this, inst, token, expressions);
 		
 		if (res and count) then
@@ -2841,21 +2839,27 @@ function COMPILER.Compile_SET(this, inst, token, expressions)
 		return op.result, op.rCount;
 	end
 
+	this:QueueRemove(inst, inst.__lsb);
+
 	this:QueueReplace(inst, token, "," );
 
 	this:QueueInjectionBefore(inst, value.token, "_OPS[\"" .. op.signature .. "\"](");
 
 	if (op.context) then
-	   this:QueueInjectionBefore(inst, value.token, "CONTEXT", ",");
+	   this:QueueInjectionBefore(inst, value.token, "CONTEXT");
 	end
 	
+	if (inst.__com) then
+		this:QueueRemove(inst, inst.__com)
+	end
+
 	if (not keepclass) then
 		this:QueueRemove(isnt, cls);
 	else
 		this:QueueReplace(isnt, cls, ", '" .. cls.data .. "'");
 	end
 
-	this:QueueRemove(inst, inst.__ass, ",");
+	this:QueueRemove(inst, inst.__ass);
 
 	this:QueueReplace(inst, inst.__rsb, "," );
 	  

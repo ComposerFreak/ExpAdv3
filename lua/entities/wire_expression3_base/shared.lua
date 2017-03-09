@@ -209,8 +209,6 @@ end
 ]]
 
 function ENT:HandelThrown(thrown)
-	self:ShutDown();
-
 	if (not thrown) then
 		self:SendToOwner(true, Color(255,0,0), "Suffered an unkown error (no reason given).");
 	end
@@ -223,14 +221,45 @@ function ENT:HandelThrown(thrown)
 	end
 
 	if (istable(thrown)) then
-		self:SendToOwner(true,
-			Color(255,0,0), "Suffered a ", thrown.state, " error has occured, Details:\n",
-			"    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), thrown.msg, "\n",
-			"    ", Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char,
-		"\n");
+		
+		if (thrown.exe) then
+			if (thrown.exe ~= self.context) then
+				self:SendToOwner(true,
+					Color(255,0,0), "Suffered a ", thrown.state, " error has occured, Details:\n",
+					"    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), "Remotly executed function threw an error", "\n",
+					"    ", Color(0,255, 255), "Thrown error: ", Color(255, 255, 255), thrown.msg, "\n",
+					"    ", Color(0,255, 255), "External Trace: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char,
+				"\n");
+
+				if (IsValid(thrown.exe.entity)) then
+					thrown.exe.entity:SendToOwner(true,
+						Color(255,0,0), "Suffered a ", thrown.state, " error has occured, Details:\n",
+						"    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), "A function executed from a remote source threw an error.", "\n",
+						"    ", Color(0,255, 255), "Thrown error: ", Color(255, 255, 255), thrown.msg, "\n",
+						"    ", Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char,
+					"\n");
+				end
+
+				self:SendToOwner(false, Color(255,0,0), "One of your Expression3 gate's has errored (see golem console).");
+				self:ShutDown();
+
+				thrown.exe.entity:SendToOwner(false, Color(255,0,0), "One of your Expression3 gate's has errored (see golem console).");
+				thrown.exe.entity:ShutDown();
+
+				return;
+			end
+
+			self:SendToOwner(true,
+				Color(255,0,0), "Suffered a ", thrown.state, " error has occured, Details:\n",
+				"    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), thrown.msg, "\n",
+				"    ", Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char,
+			"\n");
+		end
 	end
 
 	self:SendToOwner(false, Color(255,0,0), "One of your Expression3 gate's has errored (see golem console).");
+
+	self:ShutDown();
 end
 
 --[[

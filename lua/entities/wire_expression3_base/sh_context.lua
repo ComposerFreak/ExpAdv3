@@ -17,6 +17,15 @@ local CONTEXT = {};
 CONTEXT.__index = CONTEXT;
 
 --[[
+]]
+
+local __exe;
+
+function EXPR_LIB.GetExecuting()
+	return __exe;
+end
+
+--[[
 	Error messages and tracing.
 ]]
 
@@ -63,7 +72,7 @@ function CONTEXT.Throw(this, msg, fst, ...)
 	err.char = 0;
 	err.line = 0;
 	err.msg = msg;
-
+	err.ctx = this;
 	err.stack = this:Trace(1, 15);
 
 	if (err.stack) then
@@ -241,6 +250,8 @@ function CONTEXT:PreExecute()
 		cpuMarker = SysTime();
 	end
 
+	__exe = self;
+
 	bJit = jit.status();
 
 	jit.off();
@@ -256,6 +267,8 @@ function CONTEXT:PostExecute()
 	if (bJit) then
 		jit.on();
 	end
+
+	__exe = nil;
 end
 
 

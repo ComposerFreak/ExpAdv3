@@ -199,15 +199,15 @@ end
 
 local class_error = ext_core:RegisterClass("er", {"error"}, istable, notnil);
 
-ext_core:RegisterConstructor("er", "s", function(msg)
+ext_core:RegisterConstructor("er", "s", function(ctx, msg)
 	local err = {};
 	err.state = "runtime";
 	err.char = 0;
 	err.line = 0;
 	err.msg = msg;
-
+	err.ctx = ctx;
 	return err;
-end, true);
+end);
 
 ext_core:RegisterMethod("er", "message", "", "s", 1, function(err)
 	return err and err.msg or "n/a";
@@ -291,6 +291,7 @@ hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions",
 	-- Secondly we need to instruct the compiler what this actualy returns.
 	local class = expressions[1].token.data; -- Return class was arg 1.
 	local count = expressions[2].token.data; -- Return count was arg 2.
+
 	return class, count;
 end);
 

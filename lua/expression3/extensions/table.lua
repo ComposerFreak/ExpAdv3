@@ -11,7 +11,6 @@
 		There is no good way to do this.
 ]]
 
-
 local eTable = {};
 local throwif = EXPR_LIB.ThrowIF;
 
@@ -107,7 +106,22 @@ end
 
 local extension = EXPR_LIB.RegisterExtension("table");
 
-local class_bool = extension:RegisterClass("t", {"table", "array"}, istable, notnil);
+local class_table = extension:RegisterClass("t", {"table", "array"}, istable, notnil);
+
+--[[
+]]
+
+if (SERVER) then
+	WireLib.DT.SMART_TABLE = {
+		Zero = {tbl = {}, children, parents, size = 0};
+	}
+end
+
+extension:RegisterWiredInport("t", "SMART_TABLE");
+extension:RegisterWiredOutport("t", "SMART_TABLE");
+
+--[[
+]]
 
 extension:RegisterConstructor("t", "...", function(...)
 	local t = {...};
