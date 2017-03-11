@@ -54,7 +54,7 @@ function eTable.set(ctx, tbl, key, type, value)
 	end
 
 	local newweight = tbl.size - oldweight;
-	neweight = neweight + (value == nil and 0 or 1);
+	newweight = newweight + (value == nil and 0 or 1);
 
 	if (value ~= nil) then
 		if (type == "_vr") then
@@ -63,7 +63,7 @@ function eTable.set(ctx, tbl, key, type, value)
 		end
 
 		if (type == "t") then
-			neweight = neweight + value.size;
+			newweight = newweight + value.size;
 			tbl.children[value] = value;
 
 			if (value ~= nil) then
@@ -113,7 +113,7 @@ local class_table = extension:RegisterClass("t", {"table", "array"}, istable, no
 
 if (SERVER) then
 	WireLib.DT.SMART_TABLE = {
-		Zero = {tbl = {}, children, parents, size = 0};
+		Zero = {tbl = {}, children = {}, parents = {}, size = 0};
 	}
 end
 
@@ -125,11 +125,11 @@ extension:RegisterWiredOutport("t", "SMART_TABLE");
 
 extension:RegisterConstructor("t", "...", function(...)
 	local t = {...};
-	return {tbl = t, children, parents, size = #t};
+	return {tbl = t, children = {}, parents = {}, size = #t};
 end, true)
 
 extension:RegisterConstructor("t", "", function(...)
-	return {tbl = {}, children, parents, size = 0};
+	return {tbl = {}, children = {}, parents = {}, size = 0};
 end, true)
 
 --[[

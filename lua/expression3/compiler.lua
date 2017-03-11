@@ -393,6 +393,7 @@ end
 ]]
 
 function COMPILER.QueueReplace(this, inst, token, str)
+	
 	local op = {};
 	op.token = token;
 	op.str = str;
@@ -411,10 +412,6 @@ function COMPILER.QueueReplace(this, inst, token, str)
 end
 
 function COMPILER.QueueRemove(this, inst, token)
-
-	if (token.type == "ass") then
-		debug.Trace()
-	end
 
 	local op = {};
 
@@ -2841,12 +2838,12 @@ function COMPILER.Compile_SET(this, inst, token, expressions)
 
 	this:QueueRemove(inst, inst.__lsb);
 
-	this:QueueReplace(inst, token, "," );
+	this:QueueInjectionAfter(inst, token, "," );
 
 	this:QueueInjectionBefore(inst, value.token, "_OPS[\"" .. op.signature .. "\"](");
 
 	if (op.context) then
-	   this:QueueInjectionBefore(inst, value.token, "CONTEXT");
+	   this:QueueInjectionBefore(inst, value.token, "CONTEXT,");
 	end
 	
 	if (inst.__com) then
