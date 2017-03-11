@@ -193,28 +193,22 @@ function PANEL:Init( )
 	self.pnlTabHolder.btnNewTab.DoClick = function( btn ) 
 		self:NewTab( "editor", sDefaultScript, nil, "generic" )
 	end
-	
-	
+
 	self.tbConsoleHolder = vgui.Create( "DPanel", self ) 
-	self.tbConsoleHolder:Dock( BOTTOM )
-	self.tbConsoleHolder.Paint = function( pnl, w, h ) end 
-	self.tbConsoleHolder:DockMargin( 0, 0, 5, 5 )
-	self.tbConsoleHolder:SetTall( 22 ) 
-	
-	self.tbConsoleToggle = vgui.Create( "GOLEM_Button", self.tbConsoleHolder ) 
-	self.tbConsoleToggle:Dock( TOP )
-	self.tbConsoleToggle:SetTall( 22 )
-	self.tbConsoleToggle:SetFlat( true )
-	self.tbConsoleToggle:SetTextCentered( false )
-	self.tbConsoleToggle:SetText( "Toggle Console." )
+	self.tbConsoleHolder.Paint = function( pnl, w, h ) end
 	
 	self.tbConsoleEditor = vgui.Create( "GOLEM_Editor", self.tbConsoleHolder )
 	self.tbConsoleEditor:Dock( BOTTOM )
 	self.tbConsoleEditor:SetTall( 125 )
-	
-	self.tbConsoleEditor.bEditable = false 
-	
+	self.tbConsoleEditor.bEditable = false
 	self.bConsoleVisible = true
+
+	self.pnlConsoleDivider = vgui.Create("DVerticalDivider", self)
+	self.pnlConsoleDivider:SetTop(self.pnlTabHolder);
+	self.pnlConsoleDivider:SetBottom(self.tbConsoleEditor)
+	self.pnlConsoleDivider:Dock(FILL)
+	self.pnlConsoleDivider:SetTopMin( 200 )
+	self.pnlConsoleDivider:SetBottomMin(50)
 	
 	self.tbConsoleRows = { }
 	
@@ -224,16 +218,6 @@ function PANEL:Init( )
 		end 
 		
 		return {self.tbConsoleRows[row], Color(255,255,255)}
-	end
-	
-	self:HideConsole( )
-	
-	self.tbConsoleToggle.DoClick = function( )
-		if self.bConsoleVisible then
-			self:HideConsole( )
-		else
-			self:ShowConsole( )
-		end
 	end
 	
 	self:AddPrintOut( Color(255, 255, 0), "Expression 3 Console Initalized:" )
@@ -302,6 +286,9 @@ function PANEL:Init( )
 	
 	self:SetSize( w, h )
 	self:SetPos( x, y )
+
+	local c = cookie.GetNumber( "golem_c", h - 50);
+	self.pnlConsoleDivider:SetTopHeight(c)
 end
 
 /*---------------------------------------------------------------------------
@@ -309,16 +296,16 @@ Console
 ---------------------------------------------------------------------------*/
 function PANEL:HideConsole()
 	if (self.bConsoleVisible) then
-		self.tbConsoleHolder:SetTall( 22 )
-		self.tbConsoleEditor:SetVisible(false)
+		--self.tbConsoleHolder:SetTall( 22 )
+		--self.tbConsoleEditor:SetVisible(false)
 		self.bConsoleVisible = false
 	end
 end
 
 function PANEL:ShowConsole()
 	if (not self.bConsoleVisible) then
-		self.tbConsoleHolder:SetTall( 150 )
-		self.tbConsoleEditor:SetVisible(true)
+		--self.tbConsoleHolder:SetTall( 150 )
+		--self.tbConsoleEditor:SetVisible(true)
 		self.bConsoleVisible = true;
 	end
 end
@@ -1276,6 +1263,7 @@ function PANEL:SaveCoords( )
 	cookie.Set( "golem_y", self.y )
 	cookie.Set( "golem_w", self:GetWide( ) )
 	cookie.Set( "golem_h", self:GetTall( ) )
+	cookie.Set( "golem_c", self.pnlConsoleDivider:GetTopHeight() )
 end
 
 function PANEL:ShowCloseButton( Bool )

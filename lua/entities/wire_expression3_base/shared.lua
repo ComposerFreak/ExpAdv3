@@ -174,7 +174,7 @@ end
 ]]
 
 function ENT:Execute(func, ...)
-	self.context:PreExecute();
+	self.context:PreExecute(); -- This is the stable working one.
 
 	local results = {pcall(func, ...)};
 
@@ -184,6 +184,41 @@ function ENT:Execute(func, ...)
 		self.context.update = true;
 	else
 		self:HandelThrown(results[2]);
+	end
+
+	return unpack(results);
+end
+
+function ENT:Execute(func, ...) -- This is the new one.
+	local tb, es = {};
+	local cb = function(err)
+		es = err;
+		local i = 1;
+
+		while true do
+
+			local info = debug.getinfo(i, "Sln");
+			
+			if ( !info ) then
+				break;
+			end
+
+			tb[i] = info;
+
+			i = i + 1;
+		end
+	end;
+
+	self.context:PreExecute();
+
+	local results = {xpcall(func, cb,  ...)};
+
+	self.context:PostExecute();
+
+	if (results[1]) then
+		self.context.update = true;
+	else
+		self:HandelThrown(results[2] or es, tb);
 	end
 
 	return unpack(results);
@@ -208,36 +243,68 @@ end
 --[[
 ]]
 
-function ENT:HandelThrown(thrown)
+function ENT:WriteToLogger(...)
+	local log, logger = {...}, self.Logger;
+	
+	if (not logger) then
+		self.Logger = log;
+		return;
+	end
+
+	for i = 1, #log do
+		logger[#logger + 1] = log[i];
+	end
+end
+
+function ENT:FlushLogger()
+	if (self.Logger and #self.Logger > 0) then
+		self:SendToOwner(true, unpack(self.Logger));
+		self.Logger = nil;
+	end
+end
+
+function ENT:PrintStackTrace(stackTrace)
+if (stackTrace and #stackTrace > 0) then
+		self:WriteToLogger("{\n");
+		for level, info in pairs(stackTrace) do
+			if (info.what == "C") then
+				self:WriteToLogger(string.format( "\t%i: C function\t\"%s\"\n", level, info.name));
+			else
+				self:WriteToLogger(string.format("\t%i: Line %d\t\"%s\"\t\t%s\n", level, info.currentline, info.name, info.short_src));
+			end
+		end
+		self:WriteToLogger("}\n");
+	end
+end
+
+function ENT:HandelThrown(thrown, stackTrace)
 	if (not thrown) then
-		self:SendToOwner(true, Color(255,0,0), "Suffered an unkown error (no reason given).");
+		self:WriteToLogger(Color(255,0,0), "Suffered an unkown error (no reason given).");
+		self:PrintStackTrace(stackTrace)
 	end
 
 	if (isstring(thrown)) then
-		self:SendToOwner(true,
-			Color(255,0,0), "Suffered a lua error has occured, Details:\n",
-			"    ", Color(0,255, 255), "Error: ", Color(255, 255, 255), thrown, "\n",
-			"\n");
+		self:WriteToLogger(Color(255,0,0), "Suffered a lua error has occured, Details:\n");
+		self:WriteToLogger("    ", Color(0,255, 255), "Error: ", Color(255, 255, 255), thrown);
+		self:PrintStackTrace(stackTrace);
 	end
 
 	if (istable(thrown)) then
-		
 		if (thrown.exe) then
 			if (thrown.exe ~= self.context) then
-				self:SendToOwner(true,
-					Color(255,0,0), "Suffered a ", thrown.state, " error has occured, Details:\n",
-					"    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), "Remotly executed function threw an error", "\n",
-					"    ", Color(0,255, 255), "Thrown error: ", Color(255, 255, 255), thrown.msg, "\n",
-					"    ", Color(0,255, 255), "External Trace: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char,
-				"\n");
+				self:WriteToLogger(Color(255,0,0), "Suffered a ", thrown.state, " error has occured, Details:\n");
+				self:WriteToLogger("    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), "Remotly executed function threw an error", "\n");
+				self:WriteToLogger("    ", Color(0,255, 255), "Thrown error: ", Color(255, 255, 255), thrown.msg, "\n");
+				self:WriteToLogger("    ", Color(0,255, 255), "External Trace: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char);
+				self:PrintStackTrace(stackTrace);
+				self:FlushLogger();
 
 				if (IsValid(thrown.exe.entity)) then
-					thrown.exe.entity:SendToOwner(true,
-						Color(255,0,0), "Suffered a ", thrown.state, " error has occured, Details:\n",
-						"    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), "A function executed from a remote source threw an error.", "\n",
-						"    ", Color(0,255, 255), "Thrown error: ", Color(255, 255, 255), thrown.msg, "\n",
-						"    ", Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char,
-					"\n");
+					thrown.exe.entity:WriteToLogger(Color(255,0,0), "Suffered a ", thrown.state, " error has occured, Details:\n")
+					thrown.exe.entity:WriteToLogger("    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), "A function executed from a remote source threw an error.", "\n")
+					thrown.exe.entity:WriteToLogger("    ", Color(0,255, 255), "Thrown error: ", Color(255, 255, 255), thrown.msg, "\n")
+					thrown.exe.entity:WriteToLogger("    ", Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char)
+					thrown.exe.entity:PrintStackTrace(stackTrace)
 				end
 
 				self:SendToOwner(false, Color(255,0,0), "One of your Expression3 gate's has errored (see golem console).");
@@ -249,11 +316,9 @@ function ENT:HandelThrown(thrown)
 				return;
 			end
 
-			self:SendToOwner(true,
-				Color(255,0,0), "Suffered a ", thrown.state, " error has occured, Details:\n",
-				"    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), thrown.msg, "\n",
-				"    ", Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char,
-			"\n");
+			self:WriteToLogger(Color(255,0,0), "Suffered a ", thrown.state, " error has occured, Details:\n")
+			self:WriteToLogger("    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), thrown.msg, "\n")
+			self:WriteToLogger("    ", Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char)
 		end
 	end
 
@@ -355,6 +420,8 @@ function ENT:UpdateQuotaValues()
 end
 
 function ENT:Think()
+	self:FlushLogger();
+
 	self:UpdateQuotaValues();
 
 	if (SERVER) then
