@@ -18,7 +18,7 @@ NOTE:
 
 5.1) If your getting either a tokenizer, parser, compiler or interla error, please proivde that below.
     
-5.2) Please provide your a gist](gist.github.com) link to your code.
+5.2) Please provide your a [gist](gist.github.com) link to your code.
     
 5.3) Please run the validation debugger and provide screenshots of the output tab. You can do this by right clicking the validation bar and selecting "Validate and debug".
 
