@@ -127,7 +127,7 @@ ext_core:RegisterOperator("not", "n", "b", 1, function (context, number) return 
 	Class: STRING
 ]]
 
-local class_str = ext_core:RegisterClass("s", {"string", "str"}, isstring, notnil);
+local class_str = ext_core:RegisterClass("s", {"string"}, isstring, notnil);
 
 ext_core:RegisterWiredInport("s", "STRING");
 
@@ -161,6 +161,15 @@ local class_ptr = ext_core:RegisterClass("ptr", {"patern"}, isstring, notnil);
 ]]
 
 local class_function = ext_core:RegisterClass("f", {"function"}, istable, notnil);
+
+if (SERVER) then
+	WireLib.DT.E3_API = {
+		op = function() end; signature = ""; result = ""; count = 0
+	}
+end
+
+ext_core:RegisterWiredInport("f", "E3_API");
+ext_core:RegisterWiredOutport("f", "E3_API");
 
 --[[
 	Class: OBJECT (VARIANT)

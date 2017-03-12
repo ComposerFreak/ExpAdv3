@@ -277,7 +277,7 @@ function COMPILER.SetOption(this, option, value, deep)
 end
 
 function COMPILER.GetOption(this, option, nonDeep)
-	if (this.__scope[option]) then
+	if (this.__scope[option] ~= nil) then
 		return this.__scope[option];
 	end
 
@@ -285,7 +285,7 @@ function COMPILER.GetOption(this, option, nonDeep)
 		for i = this.__scopeID, 0, -1 do
 			local v = this.__scopeData[i][option];
 
-			if (v) then
+			if (v ~= nil) then
 				return v;
 			end
 		end
@@ -2544,6 +2544,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, expressions)
 
 	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
 
+	this:SetOption("canReturn", true);
 	this:SetOption("retunClass", "?"); -- Indicate we do not know this yet.
 	this:SetOption("retunCount", -1); -- Indicate we do not know this yet.
 
@@ -2571,6 +2572,10 @@ end
 ]]
 
 function COMPILER.Compile_RETURN(this, inst, token, expressions)
+	if (not this:GetOption("canReturn", false)) then
+		this:Throw(token, "A return statment can not appear here.");
+	end
+
 	local result = this:GetOption("retunClass");
 	local count = this:GetOption("retunCount");
 
@@ -2666,6 +2671,7 @@ function COMPILER.Compile_FUNCT(this, inst, token, expressions)
 
 	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
 
+	this:SetOption("canReturn", true);
 	this:SetOption("retunClass", inst.resultClass);
 	this:SetOption("retunCount", -1); -- Indicate we do not know this yet.
 
@@ -2993,6 +2999,7 @@ function COMPILER.Compile_TRY(this, inst, token, expressions)
 	this:QueueInjectionAfter(inst, token, "ok", ",", inst.__var.data, "=", "pcall(");
 
 	this:PushScope();
+		this:SetOption("canReturn", false);
 
 	this:Compile(inst.protected);
 
@@ -3294,6 +3301,7 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 	userclass.methods[signature] = meth;
 
 	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
+	this:SetOption("canReturn", true);
 	this:SetOption("retunClass", meth.result);
 	this:SetOption("retunCount", meth.result ~= "" and -1 or 0);
 
@@ -3328,6 +3336,7 @@ function COMPILER.Compile_TOSTR(this, inst, token, expressions)
 	this:AssignVariable(token, true, "this", userclass.name);
 
 	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
+	this:SetOption("canReturn", true);
 	this:SetOption("retunClass", "s");
 	this:SetOption("retunCount", 1);
 

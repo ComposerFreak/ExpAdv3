@@ -116,6 +116,11 @@ function PANEL:Init( )
 		Menu:AddOption( "Validate and debug.", function( )
 			self:DoValidate(true, nil, true)
 		end )
+		
+		Menu:AddOption( "Debug native output.", function( )
+			self:DoValidate(true, nil, true, true)
+		end )
+
 		Menu:Open( ) 
 	end
 	
@@ -197,7 +202,7 @@ function PANEL:Init( )
 	self.tbConsoleHolder = vgui.Create( "DPanel", self ) 
 	self.tbConsoleHolder.Paint = function( pnl, w, h ) end
 	
-	self.tbConsoleEditor = vgui.Create( "GOLEM_Editor", self.tbConsoleHolder )
+	self.tbConsoleEditor = vgui.Create( "GOLEM_Console", self.tbConsoleHolder )
 	self.tbConsoleEditor:Dock( BOTTOM )
 	self.tbConsoleEditor:SetTall( 125 )
 	self.tbConsoleEditor.bEditable = false
@@ -801,7 +806,7 @@ end
 /*---------------------------------------------------------------------------
 Code Validation
 ---------------------------------------------------------------------------*/
-function PANEL:DoValidate( Goto, Code, Debug )
+function PANEL:DoValidate( Goto, Code, Debug, Native )
 	Code = Code or self:GetCode( )
 	
 	if not Code or Code == "" then
@@ -866,7 +871,7 @@ function PANEL:DoValidate( Goto, Code, Debug )
 	self:AddPrintOut(Color(0,255,0), "Validation Successful!" )
 	
 	if (Debug) then
-		EXPR_LIB.ShowDebug(tr.tokens, pr.tasks);
+		EXPR_LIB.ShowDebug(tr.tokens, pr.tasks, Native);
 	end
 	
 	return true

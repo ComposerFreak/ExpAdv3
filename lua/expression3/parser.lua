@@ -1323,6 +1323,8 @@ function PARSER.Statment_11(this)
 			end
 		end
 
+		this:Accept("sep");
+
 		return this:EndInstruction(inst, expressions);
 	end
 
@@ -1968,15 +1970,11 @@ function PARSER.Expression_27(this)
 
 		this:QueueReplace(inst, this.__token, "function");
 
-		local perams, signature = this:InputPeramaters(inst);
-
-		inst.perams = perams;
-		
-		inst.signature = signature;
+		inst.perams, inst.signature = this:InputPeramaters(inst);
 
 		inst.stmts = this:Block_1(true, " ");
 
-		this:QueueInjectionAfter(inst, this.__token, ", signature = \"" .. signature .. "\"");
+		this:QueueInjectionAfter(inst, this.__token, ", signature = \"" .. inst.signature .. "\"");
 		
 		inst.__end = this.__token;
 		-- We inject the } in the compiler.
@@ -1989,7 +1987,7 @@ function PARSER.Expression_27(this)
 end
 
 function PARSER.InputPeramaters(this, inst)
-	this:Require("lpa", "Left parenthesis (() ) expected to open function parameters.");
+	this:Require("lpa", "Left parenthesis (( ) expected to open function parameters.");
 	
 	inst.__lpa = this.__token;
 
@@ -1997,6 +1995,7 @@ function PARSER.InputPeramaters(this, inst)
 
 	local perams = {};
 
+	--[[
 	if (not this:CheckToken("rpa")) then
 		while (true) do
 			this:Require("typ", "Class expected for new peramater.");
@@ -2019,12 +2018,30 @@ function PARSER.InputPeramaters(this, inst)
 				break;
 			end
 
-			this:Require("com", "Right parenthesis ( )) expected to close function parameters.");
+			this:Require("com", "!Right parenthesis ( )) expected to close function parameters.");
 			-- May not look logical, but it is :D
+		end
+	end]]
+
+	if (this:Accept("typ")) then
+		this:QueueRemove(inst, this.__token);
+
+		local class = this.__token.data;
+		signature[1] = class;
+		this:Require("var", "Peramater expected after %s.", class);
+		perams[1] = {class, this.__token.data}
+
+		while(this:Accept("com")) do
+			this:Require("typ", "Class expected for new peramater.");
+			local class = this.__token.data;
+			signature[#signature + 1] = class;
+			this:QueueRemove(inst, this.__token);
+			this:Require("var", "Peramater expected after %s.", class);
+			perams[#perams + 1] = {class, this.__token.data}
 		end
 	end
 
-	this:Require("rpa", "Right parenthesis ( )) expected to close function parameters.");
+	this:Require("rpa", "Right parenthesis ( )) expected to close function parameters. %s", this.__next.data);
 
 	return perams, table.concat(signature, ",");
 end

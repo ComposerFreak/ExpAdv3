@@ -10,3 +10,60 @@
 	::Advanced String Extension::
 ]]
 
+local extention = EXPR_LIB.RegisterExtension("string");
+
+extention:RegisterMethod("s", "char", "s", "n", 1, "string.char", true);
+
+extention:RegisterMethod("s", "comma", "n", "s", 1, "string.Comma", true);
+
+extention:RegisterMethod("s", "endsWith", "s,s", "b", 1, "string.EndsWith", true);
+
+extention:RegisterMethod("s", "find", "s,s", "n", 2, function(a, b)
+	local s, e = string.find(a, b, 1, true); -- No patterns
+end, true);
+
+extention:RegisterMethod("s", "find", "s,s,n", "n", 2, function(a, b, c)
+	local s, e = string.find(a, b, c, true); -- No patterns
+end, true);
+
+extention:RegisterMethod("s", "find", "s,ptr", "n", 2, function(a, b)
+	local s, e = string.find(a, b, 1); -- No patterns
+end, true);
+
+extention:RegisterMethod("s", "find", "s,ptr,n", "n", 2, function(a, b, c)
+	local s, e = string.find(a, b, c); -- No patterns
+end, true);
+
+-- GetChar
+-- GetExtensionFromFilename
+-- gfind
+-- 
+-- gmatch
+-- gsub
+-- Implode
+-- JavascriptSafe
+-- Left
+-- len
+-- lower
+-- match
+-- NiceSize
+-- NiceTime
+-- PatternSafe
+-- rep
+-- Replace
+-- reverse
+-- Right
+-- 
+-- SetChar
+-- Split
+-- StartWith
+-- StripExtension
+-- sub
+-- ToColor
+-- ToMinutesSeconds
+-- ToMinutesSecondsMilliseconds
+-- ToTable
+-- Trim
+-- TrimLeft
+-- TrimRight
+-- upper

@@ -18,7 +18,7 @@ COLORS.Replaced = Color(150, 150, 0);
 COLORS.Before = Color(0, 150, 100);
 COLORS.After = Color(0, 100, 150);
 
-local function ProcessLines(tokens, alltasks)
+local function ProcessLines(tokens, alltasks, native)
 	local off = "";
 	local row = {};
 	local rows = {};
@@ -63,7 +63,7 @@ local function ProcessLines(tokens, alltasks)
 				else
 					row[#row + 1] = {data .. " ", COLORS.Generic}
 				end
-			else
+			elseif (not native) then
 				row[#row + 1] = {data .. " ", COLORS.Removed}
 			end
 
@@ -96,11 +96,11 @@ local function ProcessLines(tokens, alltasks)
 	return rows, table.concat(allTokens, "");
 end
 
-EXPR_LIB.ShowDebug = function(tokens, tasks)
+EXPR_LIB.ShowDebug = function(tokens, tasks, native)
 	if (Golem) then
 		local inst = Golem:GetInstance();
 		
-		local rows, text = ProcessLines(tokens, tasks);
+		local rows, text = ProcessLines(tokens, tasks, native);
 		
 		local sheet = inst:NewTab("editor", text, nil, "Debug");
 		

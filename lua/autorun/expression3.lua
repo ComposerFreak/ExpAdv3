@@ -51,6 +51,8 @@ if (SERVER) then
 
 	AddCSLuaFile( "expression3/editor/derma/editor.lua" );
 
+	AddCSLuaFile( "expression3/editor/derma/console.lua" );
+
 	AddCSLuaFile( "expression3/editor/derma/dhtml.lua" );
 
 	AddCSLuaFile( "expression3/editor/derma/filebrowser.lua" );
