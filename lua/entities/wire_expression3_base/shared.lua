@@ -112,44 +112,92 @@ function ENT:BuildContext(instance)
 	EXPR_LIB.RegisterContext(self.context);
 end
 
+local env_meta = {
+	_index = function(_, v)
+		error("Attempt to reach Lua environment " .. v, 1);
+	end;
+
+	__newindex = function(_, v)
+		error("Attempt to write to lua environment " .. v, 1);
+	end
+}
+
 function ENT:BuildEnv(context, instance)
 
-	local env = instance.enviroment;
+	context.env = instance.enviroment;
 
-	env.GLOBAL  = {};
-	env.INPUT = {};
-	env.OUTPUT = {};
-	env.SERVER = SERVER;
-	env.CLIENT = CLIENT;
-	env.CONTEXT = context;
-	env._OPS	= instance.operators;
-	env._CONST	= instance.constructors;
-	env._METH	= instance.methods;
-	env._FUN	= instance.functions;
-	env.invoke  = EXPR_LIB.Invoke;
-	env.setmetatable = setmetatable;
-	env.error   = error;
-	env.pcall   = pcall;
+	local env = context.env;
 
-	local meta = {};
+	-- Enviroment Values
+		env.GLOBAL  = {};
+		env.DELTA = {};
+		env.INPUT = {}
+		env.OUTPUT = {};
+		env.SERVER = SERVER;
+		env.CLIENT = CLIENT;
+		env.CONTEXT = context;
 
-	meta.__index = function(_, v)
-		debug.Trace();
-		error("Attempt to reach Lua environment " .. v, 1);
-	end
+	-- Main Operations
+		env._OPS	= instance.operators;
+		env._CONST	= instance.constructors;
+		env._METH	= instance.methods;
+		env._FUN	= instance.functions;
+	
+	-- Fucntions we need
+		env.invoke  = EXPR_LIB.Invoke;
+		env.setmetatable = setmetatable;
+		env.error   = error;
+		env.pcall   = pcall;
 
-	meta.__newindex = function(_, v)
-		debug.Trace();
-		error("Attempt to write to lua environment " .. v, 1);
-	end 
+	-- Store previous value for delta and changed.
+		local glob = {};
+		local delta = {};
 
-	context.env = env;
-	context.wire_in = env.INPUT;
-	context.wire_out = env.OUTPUT;
+		setmetatable(env.GLOBAL, {
+			__index = function(t, k)
+				return glob[k];
+			end;
+
+			__newindex = function(t, k, v)
+				delta[k] = glob[k];
+				glob[k] = v;
+			end;
+		});
+
+		setmetatable(env.DELTA, {
+			__index = function(t, k)
+				local v = delta[k];
+				delta[k] = glob[k];
+				return v;
+			end;
+
+			__newindex = function(t, k, v)
+				delta[k] = v;
+			end;
+		});
+
+	-- Get wire changes
+		local out_changed = {};
+		local out_values = {};
+
+		context.wire_in = env.INPUT;
+		context.wire_out = env.OUTPUT;
+		context.wire_clk = out_changed;
+
+		setmetatable(env.OUTPUT, {
+			__index = function(t, k)
+				return out_values[k];
+			end;
+
+			__newindex = function(t, k, v)
+				out_changed[k] = out_changed[k] or (out_values[k] ~= v);
+				out_values[k] = v;
+			end;
+		});
 
 	hook.Run("Expression3.Entity.BuildSandbox", self, context, env);
 
-	return setmetatable(env, meta);
+	return setmetatable(env, env_meta);
 end
 
 function ENT:InitScript()

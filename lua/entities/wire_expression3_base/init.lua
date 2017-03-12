@@ -118,14 +118,13 @@ end
 function ENT:TriggerOutputs()
 	local context = self.context;
 
-	if (context) then
+	if (context and context.status) then
 		for name, wireport in pairs(self.OutPorts) do
 			local port = self.wire_outport_tbl[name];
 
 			if (port and port.wire == wireport.Type) then
 				local value = context.wire_out[name];
 				local v = port.func and port.func(value) or value;
-
 				if (v ~= wireport.Value) then
 					WireLib.TriggerOutput(self, name, v);
 				end

@@ -74,7 +74,7 @@ local TOKENS = {
 		{ ",", "com", "comma" },
 		{ "$", "dlt", "delta" },
 		{ "#", "len", "length" },
-		--{ "~", "cng", "changed" },
+		{ "~", "cng", "changed" },
 		--{ "->", "wc", "connect" },
 		{ ".", "prd", "period" },
 		{ "(", "lpa", "left parenthesis" },

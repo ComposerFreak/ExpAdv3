@@ -750,6 +750,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0);
 
 		if (info) then
+			info.global = true;
 			info.prefix = "GLOBAL";
 			this:QueueReplace(inst, token, info.prefix .. "." .. var);
 		end
@@ -1908,6 +1909,98 @@ function COMPILER.Compile_LEN(this, inst, token, expressions)
 	end
 
 	this:CheckState(op.state, token, "Length operator (#A) '#%s'", name(r1));
+
+	return op.result, op.rCount;
+end
+
+function COMPILER.Compile_DELTA(this, inst, token, expressions)
+	local var = inst.__var.data;
+
+	if (this.__defined[var]) then
+		this:Throw(token, "Variable %s is defined here and can not be used as part of an expression.", var);
+	end
+
+	local c, s, info = this:GetVariable(var);
+
+	if (not c) then
+		this:Throw(token, "Variable %s does not exist.", var);
+	end
+
+	if (not info.global) then
+		this:Throw(token, "Delta operator ($) can not be used on none global variable %s.", var);
+	end
+
+	if (info and info.prefix) then
+		this:QueueReplace(inst, inst.__var, info.prefix .. "." .. var);
+	end
+
+	local op = this:GetOperator("sub", c, c);
+
+	if (not op) then
+		this:Throw(token, "Delta operator ($) does not support '$%s'", name(c));
+	elseif (not op.operation) then
+		this:QueueRemove(inst, inst.__operator);
+		this:QueueInjectionBefore(inst, inst.__var, "DELTA", ".", var, "-");
+	else
+		this:QueueRemove(inst, inst.__operator);
+		this:QueueInjectionBefore(inst, inst.__var, "_OPS[\"" .. op.signature .. "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, inst.__var, "CONTEXT", ",", "DELTA", ".", var, ",");
+		end
+		
+		this:QueueInjectionAfter(inst, inst.__var, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	this:CheckState(op.state, token, "Delta operator ($) '$%s'", name(c));
+
+	return op.result, op.rCount;
+end
+
+function COMPILER.Compile_CHANGED(this, inst, token, expressions)
+	local var = inst.__var.data;
+
+	if (this.__defined[var]) then
+		this:Throw(token, "Variable %s is defined here and can not be used as part of an expression.", var);
+	end
+
+	local c, s, info = this:GetVariable(var);
+
+	if (not c) then
+		this:Throw(token, "Variable %s does not exist.", var);
+	end
+
+	if (not info.global) then
+		this:Throw(token, "Changed operator (~) can not be used on none global variable %s.", var);
+	end
+
+	if (info and info.prefix) then
+		this:QueueReplace(inst, inst.__var, info.prefix .. "." .. var);
+	end
+
+	local op = this:GetOperator("neq", c, c);
+
+	if (not op) then
+		this:Throw(token, "Changed operator (~) does not support '~%s'", name(c));
+	elseif (not op.operation) then
+		this:QueueRemove(inst, inst.__operator);
+		this:QueueInjectionBefore(inst, inst.__var, "DELTA", ".", var, "~=");
+	else
+		this:QueueRemove(inst, inst.__operator);
+		this:QueueInjectionBefore(inst, inst.__var, "_OPS[\"" .. op.signature .. "\"](");
+
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, inst.__var, "CONTEXT", ",", "DELTA", ".", var, ",");
+		end
+		
+		this:QueueInjectionAfter(inst, inst.__var, ")" );
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	this:CheckState(op.state, token, "Changed operator (~) '~%s'", name(c));
 
 	return op.result, op.rCount;
 end

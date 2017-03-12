@@ -56,18 +56,19 @@
 			Expr14 ← (Epxr15 "*" Expr15)? Expr15
 			Expr15 ← (Epxr16 "^" Expr16)? Expr16
 			Expr16 ← (Epxr17 "%" Expr17)? Expr17
-			Expr17 ← ("+" Expr22)? Exp18
-			Expr18 ← ("-" Expr22)? Exp19
-			Expr19 ← ("!" Expr22)? Expr20
-			Expr20 ← ("#" Expr22)? Expr21
-			Expr21 ← ("("type")" Expr1)? Expr22
-			Expr22 ← ("(" Expr1 ")" (Trailing)?)? Expr23
-			Expr23 ← (Library "." Function  "(" (Expr1 ((",")?)*)?) ")")? Expr24
-			Expr24 ← (Var (Trailing)?)? Expr25
-			Expr25 ← ("new" Type "(" (Expr1 ((","")?)*)?) ")")? Expr25
-			Expr26 ← ("Function" Perams Block1)? Expr27
-			Expr27 ← Expr28? Error
-			Expr28 ← (String / Number / "true" / "false", "void")?
+			Expr17 ← ("+" Expr24)? Exp18
+			Expr18 ← ("-" Expr24)? Exp19
+			Expr19 ← ("!" Expr24)? Expr20
+			Expr20 ← ("#" Expr24)? Expr21
+			Expr21 ← (("$" / "~") Var)? Expr22
+			Expr22 ← ("("type")" Expr1)? Expr23
+			Expr23 ← ("(" Expr1 ")" (Trailing)?)? Expr24
+			Expr24 ← (Library "." Function  "(" (Expr1 ((",")?)*)?) ")")? Expr25
+			Expr25 ← (Var (Trailing)?)? Expr26
+			Expr26 ← ("new" Type "(" (Expr1 ((","")?)*)?) ")")? Expr27
+			Expr27 ← ("Function" Perams Block1)? Expr28
+			Expr28 ← Expr29? Error
+			Expr29 ← (String / Number / "true" / "false", "void")?
 
 		:::Syntax:::
 			Cond 		← "(" Expr1 ")"
@@ -1755,7 +1756,7 @@ function PARSER.Expression_18(this)
 
 		this:ExcludeWhiteSpace("Negation operator (-) must not be succeeded by whitespace");
 
-		local expr = this:Expression_23();
+		local expr = this:Expression_1();
 
 		return this:EndInstruction(inst, {expr});
 	end
@@ -1764,14 +1765,14 @@ function PARSER.Expression_18(this)
 end
 
 function PARSER.Expression_19(this)
-	if (this:Accept("neg")) then
-		local inst = this:StartInstruction("not", expr.token);
+	if (this:Accept("not")) then
+		local inst = this:StartInstruction("not", this.__token);
 
 		inst.__operator = this.__token;
 
 		this:ExcludeWhiteSpace("Not operator (!) must not be succeeded by whitespace");
 
-		local expr = this:Expression_23();
+		local expr = this:Expression_1();
 
 		return this:EndInstruction(inst, {expr});
 	end
@@ -1781,13 +1782,13 @@ end
 
 function PARSER.Expression_20(this)
 	if (this:Accept("len")) then
-		local inst = this:StartInstruction("len", expr.token);
+		local inst = this:StartInstruction("len", this.__token);
 
 		inst.__operator = this.__token;
 
 		this:ExcludeWhiteSpace("Length operator (#) must not be succeeded by whitespace");
 
-		local expr = this:Expression_23();
+		local expr = this:Expression_1();
 
 		return this:EndInstruction(inst, {expr});
 	end
@@ -1796,8 +1797,40 @@ function PARSER.Expression_20(this)
 end
 
 function PARSER.Expression_21(this)
+	if (this:Accept("dlt")) then
+		local inst = this:StartInstruction("delta", this.__token);
+
+		inst.__operator = this.__token;
+
+		this:ExcludeWhiteSpace("Delta operator (#) must not be succeeded by whitespace");
+
+		this:Require("var", "Gobal variable expected after delta operator ($)")
+
+		inst.__var = this.__token;
+
+		return this:EndInstruction(inst);
+	end
+
+	if (this:Accept("cng")) then
+		local inst = this:StartInstruction("changed", this.__token);
+
+		inst.__operator = this.__token;
+
+		this:ExcludeWhiteSpace("Changed operator (~) must not be succeeded by whitespace");
+
+		this:Require("var", "Gobal variable expected after changed operator (~)")
+
+		inst.__var = this.__token;
+
+		return this:EndInstruction(inst);
+	end
+
+	return this:Expression_22();
+end
+
+function PARSER.Expression_22(this)
 	if (this:Accept("cst")) then
-		local inst = this:StartInstruction("cast", expr.token);
+		local inst = this:StartInstruction("cast", this.__token);
 		
 		inst.class = this.__token.data;
 
@@ -1808,10 +1841,10 @@ function PARSER.Expression_21(this)
 		return this:EndInstruction(inst, {expr});
 	end
 
-	return this:Expression_22();
+	return this:Expression_23();
 end
 
-function PARSER.Expression_22(this)
+function PARSER.Expression_23(this)
 	if (this:Accept("lpa")) then
 		local expr = this:Expression_1();
 
@@ -1820,10 +1853,10 @@ function PARSER.Expression_22(this)
 		return expr;
 	end
 
-	return this:Expression_23();
+	return this:Expression_24();
 end
 
-function PARSER.Expression_23(this)
+function PARSER.Expression_24(this)
 	if (this:CheckToken("var")) then
 		local token = this.__next;
 		local library = this.__next.data;
@@ -1836,7 +1869,7 @@ function PARSER.Expression_23(this)
 
 			if (not this:Accept("prd")) then
 				this:StepBackward(1);
-				return this:Expression_24();
+				return this:Expression_25();
 			end
 
 			local inst = this:StartInstruction("func", token);
@@ -1872,10 +1905,10 @@ function PARSER.Expression_23(this)
 		end
 	end
 
-	return this:Expression_24();
+	return this:Expression_25();
 end
 
-function PARSER.Expression_24(this)
+function PARSER.Expression_25(this)
 	if (this:Accept("var")) then
 		local inst = this:StartInstruction("var", this.__token);
 
@@ -1886,10 +1919,10 @@ function PARSER.Expression_24(this)
 		return this:Expression_Trailing(inst);
 	end
 
-	return this:Expression_25()
+	return this:Expression_26()
 end
 
-function PARSER.Expression_25(this)
+function PARSER.Expression_26(this)
 
 	if (this:Accept("new")) then
 		local inst = this:StartInstruction("new", this.__token);
@@ -1924,10 +1957,10 @@ function PARSER.Expression_25(this)
 		return this:EndInstruction(inst, expressions);
 	end
 
-	return this:Expression_26();
+	return this:Expression_27();
 end
 
-function PARSER.Expression_26(this)
+function PARSER.Expression_27(this)
 	if (this:AcceptWithData("typ", "f")) then
 		local inst = this:StartInstruction("lambda", this.__token);
 
@@ -1952,7 +1985,7 @@ function PARSER.Expression_26(this)
 		return this:EndInstruction(inst, {});
 	end
 
-	return this:Expression_27();
+	return this:Expression_28();
 end
 
 function PARSER.InputPeramaters(this, inst)
@@ -1996,8 +2029,8 @@ function PARSER.InputPeramaters(this, inst)
 	return perams, table.concat(signature, ",");
 end
 
-function PARSER.Expression_27(this)
-	expr = this:Expression_28();
+function PARSER.Expression_28(this)
+	expr = this:Expression_29();
 
 	if (expr) then
 		return expr;
@@ -2006,7 +2039,7 @@ function PARSER.Expression_27(this)
 	this:ExpressionErr();
 end
 
-function PARSER.Expression_28(this)
+function PARSER.Expression_29(this)
 	if (this:Accept("tre", "fls")) then
 		local inst = this:StartInstruction("bool", this.__token);
 		inst.value = this.__token.data;
