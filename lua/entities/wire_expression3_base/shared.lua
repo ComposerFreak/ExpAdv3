@@ -101,7 +101,6 @@ end
 
 function ENT:BuildContext(instance)
 	self.context = EXPR_CONTEXT.New();
-	print("NEW CONTEXT:", self.context)
 	self.context.events = {};
 	self.context.entity = self;
 	self.context.player = self.player;

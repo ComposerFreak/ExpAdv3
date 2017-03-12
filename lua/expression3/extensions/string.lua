@@ -12,11 +12,45 @@
 
 local extention = EXPR_LIB.RegisterExtension("string");
 
-extention:RegisterMethod("s", "char", "s", "n", 1, "string.char", true);
+extention:RegisterMethod("s", "char", "", "n", 1, "string.char", true);
 
-extention:RegisterMethod("s", "comma", "n", "s", 1, "string.Comma", true);
+extention:RegisterMethod("s", "endsWith", "s", "b", 1, "string.EndsWith", true);
 
-extention:RegisterMethod("s", "endsWith", "s,s", "b", 1, "string.EndsWith", true);
+extention:RegisterMethod("s", "replace", "ptr,s,n", "s", 1, "string.gsub", true);
+
+extention:RegisterMethod("s", "lower", "", "s", 1, "string.lower", true);
+
+extention:RegisterMethod("s", "PatternSafe", "", "s", 1, "string.PatternSafe", true);
+
+extention:RegisterMethod("s", "rep", "n", "s", 1, "string.rep", true);
+
+extention:RegisterMethod("s", "rep", "n,s", "s", 1, "string.rep", true);
+
+extention:RegisterMethod("s", "Replace", "", "s", 1, "string.", true);
+
+extention:RegisterMethod("s", "reverse", "", "s", 1, "string.reverse", true);
+
+extention:RegisterMethod("s", "Right", "n", "s", 1, "string.Right", true);
+
+extention:RegisterMethod("s", "SetChar", "n,s", "s", 1, "string.SetChar", true);
+
+extention:RegisterMethod("s", "Split", "s", "s", 1, "string.Split", true);
+
+extention:RegisterMethod("s", "StartWith", "s", "s", 1, "string.StartWith", true);
+
+extention:RegisterMethod("s", "sub", "n,n", "s", 1, "string.sub", true);
+
+extention:RegisterMethod("s", "Trim", "s", "s", 1, "string.Trim", true);
+
+extention:RegisterMethod("s", "TrimLeft", "s", "s", 1, "string.TrimLeft", true);
+
+extention:RegisterMethod("s", "TrimRight", "s", "s", 1, "string.TrimRight", true);
+
+extention:RegisterMethod("s", "upper", "", "s", 1, "string.upper", true);
+
+--[[
+	FIND
+]]
 
 extention:RegisterMethod("s", "find", "s,s", "n", 2, function(a, b)
 	local s, e = string.find(a, b, 1, true); -- No patterns
@@ -34,36 +68,18 @@ extention:RegisterMethod("s", "find", "s,ptr,n", "n", 2, function(a, b, c)
 	local s, e = string.find(a, b, c); -- No patterns
 end, true);
 
--- GetChar
--- GetExtensionFromFilename
--- gfind
--- 
--- gmatch
--- gsub
--- Implode
--- JavascriptSafe
--- Left
--- len
--- lower
--- match
--- NiceSize
--- NiceTime
--- PatternSafe
--- rep
--- Replace
--- reverse
--- Right
--- 
--- SetChar
--- Split
--- StartWith
--- StripExtension
--- sub
--- ToColor
--- ToMinutesSeconds
--- ToMinutesSecondsMilliseconds
--- ToTable
--- Trim
--- TrimLeft
--- TrimRight
--- upper
+--[[
+	GMATCH
+]]
+
+local invoke = EXPR_LIB.Invoke;
+
+extention:RegisterMethod("s", "gmatch", "s,ptr,f", "s", 1, function(context, str, ptr, fun)
+	for w in string.gmatch( str, ptr ) do
+		invoke(context, "s", 1, func, {"s", w})
+	end
+end);
+
+extention:RegisterMethod("s", "match", "s,ptr,n", "s", 1, "string.match", true);
+
+extention:EnableExtension();
