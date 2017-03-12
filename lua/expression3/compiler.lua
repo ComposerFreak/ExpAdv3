@@ -2201,8 +2201,8 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 
 			if (not op) then
 				local signature = string.format("%s(%s,...)", inst.class, args);
-
 				op = constructors[signature];
+				if (op) then vargs = i + 1; end
 			end
 
 			if (op) then
@@ -2212,10 +2212,7 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 
 		if (not op) then
 			op = constructors[inst.class .. "(...)"];
-			
-			if (op) then
-				vargs = 1;
-			end
+			if (op) then vargs = 1; end
 		end
 	end
 
@@ -2448,9 +2445,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 
 				op = lib._functions[signature];
 
-				if (op) then
-					vargs = i;
-				end
+				if (op) then vargs = i + 1 end
 			end
 
 			if (op) then
@@ -2461,9 +2456,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		if (not op) then
 			op = lib._functions[inst.name .. "(...)"];
 			
-			if (op) then
-				vargs = 1;
-			end
+			if (op) then vargs = 1 end
 		end
 	end
 
@@ -2568,6 +2561,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, expressions)
 
 	this:QueueInjectionAfter(inst, inst.__end, ", result = \"" .. result .. "\"");
 	this:QueueInjectionAfter(inst, inst.__end, ", count = " .. count);
+	this:QueueInjectionAfter(inst, inst.__end, ", scr = CONTEXT");
 	this:QueueInjectionAfter(inst, inst.__end, "}");
 
 	return "f", 1;

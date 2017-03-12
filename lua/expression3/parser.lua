@@ -1009,9 +1009,9 @@ function PARSER.Statment_6(this)
 	if (this:Accept("sv")) then
 		local inst = this:StartInstruction("server", this.__token);
 
-		this:QueueInjectionBefore(inst, this.__token, "if");
+		--this:QueueInjectionBefore(inst, this.__token, "if");
 
-		this:QueueReplace(inst, this.__token, "(SERVER)");
+		this:QueueReplace(inst, this.__token, "if (SERVER)");
 
 		inst.block = this:Block_1(true, "then");
 
@@ -1021,9 +1021,9 @@ function PARSER.Statment_6(this)
 	if (this:Accept("cl")) then
 		local inst = this:StartInstruction("client", this.__token);
 
-		this:QueueInjectionBefore(inst, this.__token, "if");
+		--this:QueueInjectionBefore(inst, this.__token, "if");
 
-		this:QueueReplace(inst, this.__token, "(CLIENT)");
+		this:QueueReplace(inst, this.__token, "if (CLIENT)");
 
 		inst.block = this:Block_1(true, "then");
 

@@ -229,6 +229,7 @@ local func_tostring = EXPR_LIB.ToString;
 
 local func_invoke = function(context, result, count, func, ...)
 	if (result ~= func.result or count ~= func.count) then
+		if (func.scr) then context = func.scr end
 		context:Throw("Invoked function with incorrect return type %s expected, got %s.", result, func.result);
 	end
 
@@ -274,21 +275,8 @@ end);
 	]] 
 
 hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions", function(this, inst, token, expressions)
-	-- First all expressions passed to vararg need to be variants.
-
-	if (#expressions > 3) then
-		for i = 4, #expressions do
-			local arg = expressions[i];
-
-			if (arg.result ~= "_vr") then
-				this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. arg.result .. "\"", ",");
-
-				this:QueueInjectionAfter(inst, arg.final, "}");
-			end
-		end
-	end
-
-	-- Secondly we need to instruct the compiler what this actualy returns.
+	
+	-- We need to instruct the compiler what this actualy returns.
 	local class = expressions[1].token.data; -- Return class was arg 1.
 	local count = expressions[2].token.data; -- Return count was arg 2.
 
@@ -404,6 +392,7 @@ end, true);
 ext_core:RegisterFunction("string", "toByte", "s,", "n", 1, function(s)
 	return (s ~= "") and (string_byte(s) or -1) or -1;
 end, true);
+
 
 --[[
 	MISC
