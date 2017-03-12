@@ -246,6 +246,19 @@ end
 
 --[[
 ]]
+function COMPILER.CRC(this, start, final)
+	local i, tokens = 0, {};
+
+	for j = start.index, final.index do
+		i = i + 1;
+		tokens[i] = this.__tokens[j].data;
+	end
+
+	return util.CRC(table.concat(tokens, " "));
+end
+
+--[[
+]]
 
 function COMPILER.PushScope(this)
 	this.__scope = {};
@@ -3133,10 +3146,11 @@ function COMPILER.Compile_CLASS(this, inst, token, stmts)
 
 	this:PopScope();
 
-	-- inst.__classname
+	local hash = this:CRC(token, inst.__rcb);
+
 	this:QueueReplace(inst, token, "local");
 	this:QueueRemove(inst, inst.__lcb);
-	this:QueueInjectionAfter(inst, inst.__lcb, " =",  "{", "vars", "=", "{", "}", "}",";", class.name, ".", "__index", "=", class.name);
+	this:QueueInjectionAfter(inst, inst.__lcb, " =",  "{", "vars", "=", "{", "}", ",", "hash", "=", "'" .. hash .. "'", "}",";", class.name, ".", "__index", "=", class.name);
 	this:QueueRemove(inst, inst.__rcb);
 	
 	injectNewLine = true;
@@ -3322,6 +3336,11 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 	this:QueueRemove(inst, inst.__typ)
 	this:QueueRemove(inst, inst.__lpa)
 	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function(this")
+	
+	injectNewLine = true;
+	local error = string.format("Attempt to call user method '%s.%s(%s)' using alien class of the same name.", userclass.name, inst.__name.data, inst.signature);
+	this:QueueInjectionAfter(inst, inst.__preBlock, string.format("if(this.hash ~= %s.hash) then CONTEXT:Throw(%q); end", userclass.name, error))
+	injectNewLine = false;
 
 	if (#inst.perams >= 1) then
 		this:QueueInjectionAfter(inst, inst.__name, ",")
@@ -3348,6 +3367,11 @@ function COMPILER.Compile_TOSTR(this, inst, token, expressions)
 	this:QueueReplace(inst, inst.__var, "__tostring");
 	this:QueueInjectionAfter(inst, inst.__var, "=", "function")
 	this:QueueInjectionAfter(inst, this:OffsetToken(inst.__var, 1), "this")
+
+	injectNewLine = true;
+	local error = string.format("Attempt to call user operation '%s.tostring()' using alien class of the same name.", userclass.name);
+	this:QueueInjectionAfter(inst, inst.__preBlock, string.format("if(this.hash ~= %s.hash) then CONTEXT:Throw(%q); end", userclass.name, error))
+	injectNewLine = false;
 end
 
 EXPR_COMPILER = COMPILER;

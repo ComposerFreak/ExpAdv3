@@ -2404,7 +2404,7 @@ function PARSER.ClassStatment_3(this)
 		
 		inst.signature = signature;
 
-		inst.__postBlock = this.__token;
+		inst.__preBlock = this.__token;
 
 		inst.stmts = this:Block_1(true, " ");
 		
@@ -2431,7 +2431,7 @@ function PARSER.ClassStatment_4(this)
 		
 		inst.signature = signature;
 
-		inst.__postBlock = this.__token;
+		inst.__preBlock = this.__token;
 
 		inst.stmts = this:Block_1(true, " ");
 		
