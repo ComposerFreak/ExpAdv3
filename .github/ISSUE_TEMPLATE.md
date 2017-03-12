@@ -14,12 +14,13 @@ NOTE:
 
 3) Please describe in brief the issue you are experiencing:
 
-4) Do you get an error messages: 
+4) If your getting any errors from you game console, please provide them below.
 
-5) If yes, does the error message come from your game console or editor: 
-
-6) Do you get any errors in your game console: 
-    If yes please provide a [gist](gist.github.com) of your console log: 
+5.1) If your getting either a tokenizer, parser, compiler or interla error, please proivde that below.
+    
+5.2) Please provide your a [gist](gist.github.com) link to your code.
+    
+5.3) Please run the validation debugger and provide screenshots of the output tab. You can do this by right clicking the validation bar and selecting "Validate and debug".
 
 7) Is this issue linked to a specific code your trying to execute:
     If yes please provide a [gist](gist.github.com) of your code:
