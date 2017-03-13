@@ -83,6 +83,9 @@
 			Registers a method with expression 3 on class;
 			if operator is a string then it will use the method str on object with out context as a parameter.
 
+		EXPR_LIB.RegisterAtribute(class, str name, str type, string native feild)
+			Adds an atribute to a class, this does not take an operator or a function.
+				-> E3)Var.Atribute = Value :: Lua)Var.Feild = Value
 
 		EXPR_LIB.RegisterOperator(str operation, str parameters, str type, number amount of values returned, obj = function(ctx*, ...) operator*, boolean exclude context)
 			Registers an operator with expression 3;
@@ -153,7 +156,10 @@
 
 		Extension:RegisterMethod(class, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) method) / string*, boolean exclude context)
 			Calls EXPR_LIB.RegisterMethod(...) at the correct time with all given valid parameters.
-
+		
+		Extension:RegisterAtribute(class, str name, str type, string native feild)
+			Calls EXPR_LIB.RegisterAtribute(...) at the correct time with all given valid parameters.
+		
 		Extension:RegisterOperator(str operation, str parameters, str type, number amount of values returned, obj = function(ctx*, ...) operator*, boolean exclude context)
 			Calls EXPR_LIB.RegisterOperator(...) at the correct time with all given valid parameters.
 
@@ -285,6 +291,7 @@ function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 	class.isType = isType;
 	class.isValid = isValid;
 	
+	class.atributes = {};
 	class.constructors = {};
 
 	classIDs[class.id] = class;
@@ -427,6 +434,37 @@ function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method, ex
 	return meth;
 end
 
+local loadAtributes;
+
+function EXPR_LIB.RegisterAtribute(class, atribute, type, native)
+	native = native or atribute;
+
+	if (not loadAtributes) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register atribute %s.%s outside of Hook::Expression3.loadAtributes", class, atribute);
+	end
+
+	local cls = EXPR_LIB.GetClass(class);
+
+	if (not cls) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register atribute %s.%s for none existing class %s", class,atribute, class);
+	end
+
+	local typ = EXPR_LIB.GetClass(class);
+
+	if (not typ) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register atribute %s.%s of none existing class %s", class,atribute, class);
+	end
+
+	local atr = {};
+	atr.feild = feild;
+	atr.type = typ.id;
+	atr.atribute = atribute;
+
+	cls.atributes[atribute] = atr;
+
+	return atr;
+end
+	
 local operators;
 local loadOperators = false;
 
@@ -647,6 +685,7 @@ function EXPR_LIB.RegisterExtension(name)
 	ext.state = EXPR_SHARED;
 	ext.constructors = {};
 	ext.methods = {};
+	ext.atributes = {};
 	ext.operators = {};
 	ext.castOperators = {};
 	ext.libraries = {};
@@ -706,6 +745,11 @@ end
 function Extension.RegisterMethod(this, class, name, parameter, type, count, method, excludeContext)
 	local entry = {class, name, parameter, type, count, method, excludeContext, this.state};
 	this.methods[#this.methods + 1] = entry;
+end
+
+function Extension.RegisterAtribute(this, class, atribute, type, native)
+	local entry = {class, atribute, type, native, this.state};
+	this.atributes[#this.atributes + 1] = entry;
 end
 
 function Extension.RegisterOperator(this, operation, parameter, type, count, operator, excludeContext)
@@ -788,6 +832,17 @@ function Extension.EnableExtension(this)
 		end
 	end);
 
+	local atributes = {};
+
+	hook.Add("Expression3.LoadAtributes", "Expression3.Extension." .. this.name, function()
+		for _, v in pairs(this.atributes) do
+			STATE = v[5];
+			local atr = this:CheckRegistration(EXPR_LIB.RegisterAtribute, v[1], v[2], v[3], v[4]);
+			atr.extension = this.name;
+			atributes[atr.atribute] = atr;
+		end
+	end);
+
 	local operators = {};
 
 	hook.Add("Expression3.LoadOperators", "Expression3.Extension." .. this.name, function()
@@ -829,6 +884,7 @@ function Extension.EnableExtension(this)
 		this.methods = methods;
 		this.operators = operators;
 		this.functions = functions;
+		this.atributes = atributes;
 		enabledExtentions[this.name] = this;
 
 		MsgN("Registered extention: ", this.name);
@@ -939,6 +995,10 @@ function EXPR_LIB.Initalize()
 	hook.Run("Expression3.LoadMethods");
 	loadMethods = false;
 	EXPR_METHODS = methods;
+
+	loadAtributes = true;
+	hook.Run("Expression3.loadAtributes");
+	loadAtributes = false;
 
 	operators = {};
 	castOperators = {};

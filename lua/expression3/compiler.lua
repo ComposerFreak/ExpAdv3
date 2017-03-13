@@ -3167,7 +3167,20 @@ function COMPILER.Compile_FEILD(this, inst, token, expressions)
 	local userclass = this:GetUserClass(type);
 
 	if (not userclass) then
-		this:Throw(token, "Unable to refrence feild %s.%s here", name(type), inst.__feild.data);
+		-- this:Throw(token, "Unable to refrence feild %s.%s here", name(type), inst.__feild.data);
+
+		local cls = EXPR_LIB.GetClass(type);
+		local info = cls.atributes[inst.__feild.data];
+
+		if (not info) then
+			this:Throw(token, "No sutch feild %s.%s", name(type), inst.__feild.data);
+		end
+
+		if (info) then
+			this:QueueReplace(inst, inst.__feild, info.feild);
+		end
+
+		return info.type, 1;
 	end
 
 	local info = userclass.memory[inst.__feild.data];
