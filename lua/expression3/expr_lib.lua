@@ -19,7 +19,8 @@
 		Expression3.LoadClasses							-> Classes must be registered inside this hook.
 		Expression3.LoadConstructors					-> Constructors must be registered inside this hook.
 		Expression3.LoadMethods							-> Methods must be registered inside this hook.
-		Expression3.LoadOperators						-> Operators must be registered inside this hook.
+		Expression3.LoadMethods							-> Methods must be registered inside this hook.
+		Expression3.LoadAtributes						-> Atributes must be registered inside this hook.
 		Expression3.LoadLibraries						-> Libraries must be registered inside this hook.
 		Expression3.LoadFunctions						-> Functions must be registered inside this hook.
 		REMOVED: Expression3.LoadEvents					-> Events must be registered inside this hook.
