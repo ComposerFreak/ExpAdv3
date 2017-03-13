@@ -82,6 +82,97 @@ function Parser:Block_1( startToken, endToken )
 	end
 end
 
+-- Method:	Parser.GetStatments( string, boolean )
+-- Description: Gets a block of statments.
+
+function Parser:GetStatments( block, first )
+	first = first or self.GetStatment;
+	local seperator, statments = false, { };
+
+	while true do
+		local statment = first( self );
+		statments[#statments + 1] = statment;
+
+		local seperated = this:AcceptToken( 0, "sep" );
+		if not statment then break end
+		
+
+		if block and this:CheckToken( 0, "rcb" ) then break end
+		if not this:HasTokens() then break end
+
+		local previous = statments[#statments - 1];
+
+		if previous and (previous.line == statment.line and not sep) then
+			self:Throw( statment.token, "Statements must be separated by semicolon (;) or newline" );
+		end
+
+		if statment.type == "RETURN" then
+			this:Throw( statment.final, "Statement can not appear after return." );
+		elseif statment.type == "CONTINUE" then
+			this:Throw( statment.final, "Statement can not appear after continue." );
+		elseif statment.type == "BREAK" then
+			this:Throw( statment.final, "Statement can not appear after break." );
+		end
+
+		seperator = seperated;
+	end
+
+ 	return statments;
+end
+
+function Parser:GetStatment( )
+	local directive_token, seperator_token;
+
+	while self:CheckTokenSequence( "dir", "var" ) do
+		self:Next( );
+		local instruction_token = this:GetToken( );
+		
+		-- this:QueueRemove({}, token); -- TODO
+
+		self:Next( );
+		directive_token = self:GetToken( );
+
+		-- this:QueueRemove({}, this.__token); -- TODO
+
+		local func = this["Directive_" .. string.upper(directive_token.data)]
+
+		if not func then
+			self:Throw( instruction_token, "No such directive @%s", directive_token.data);
+		end
+
+		local instruction = func( self, instruction_token, directive_token.data );
+
+		if this:AcceptToken( 0, "sep" ) then
+			seperator_token = this:GetToken( );
+			-- this:QueueRemove({}, this.__token); -- TODO
+		end
+
+		if instruction then return instruction end
+
+		if not self:HasTokens( ) then return end
+	end
+
+	if not self.FirstStatment then
+		self.FirstStatment = self:GetToken( );
+	end
+
+	if self:CheckToken( 0, "cls" ) then
+		--return this:ClassStatment_0(); -- TODO
+	end
+
+	local statment = self:Statment_1( ); -- TODO
+
+	if directive_token and (not seperator_token or directive_token.line == statment.line) then
+		this:Throw(statment.token, "Statements must be separated by semicolon (;) or newline")
+	end
+
+	return statment;
+end
+
+
+
+
+
 
 --[[
 	Section: DIRECTIVES
