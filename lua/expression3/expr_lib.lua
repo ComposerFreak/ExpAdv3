@@ -441,27 +441,29 @@ function EXPR_LIB.RegisterAtribute(class, atribute, type, native)
 	native = native or atribute;
 
 	if (not loadAtributes) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register atribute %s.%s outside of Hook::Expression3.loadAtributes", class, atribute);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register atribute %s.%s outside of Hook::Expression3.LoadAtributes", class, atribute);
 	end
 
 	local cls = EXPR_LIB.GetClass(class);
 
 	if (not cls) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register atribute %s.%s for none existing class %s", class,atribute, class);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register atribute %s.%s for none existing class %s", class, atribute, class);
 	end
 
 	local typ = EXPR_LIB.GetClass(class);
 
 	if (not typ) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register atribute %s.%s of none existing class %s", class,atribute, class);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register atribute %s.%s of none existing class %s", class, atribute, class);
 	end
 
 	local atr = {};
 	atr.feild = feild;
-	atr.type = typ.id;
+	atr.class = typ.id;
 	atr.atribute = atribute;
 
 	cls.atributes[atribute] = atr;
+
+	MsgN("Registered atribute: ", class .. "." .. atribute);
 
 	return atr;
 end
@@ -617,7 +619,7 @@ function EXPR_LIB.GetAllClasses()
 end
 
 function EXPR_LIB.GetClass(class)
-	if (class == "") then
+	if (not class or class == "") then
 		class = "void";
 	end
 
@@ -998,7 +1000,7 @@ function EXPR_LIB.Initalize()
 	EXPR_METHODS = methods;
 
 	loadAtributes = true;
-	hook.Run("Expression3.loadAtributes");
+	hook.Run("Expression3.LoadAtributes");
 	loadAtributes = false;
 
 	operators = {};

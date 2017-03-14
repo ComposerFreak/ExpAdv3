@@ -3173,20 +3173,16 @@ function COMPILER.Compile_FEILD(this, inst, token, expressions)
 		local info = cls.atributes[inst.__feild.data];
 
 		if (not info) then
-			this:Throw(token, "No sutch feild %s.%s", name(type), inst.__feild.data);
+			this:Throw(token, "No sutch atribute %s.%s", name(type), inst.__feild.data);
 		end
 
-		if (info) then
-			this:QueueReplace(inst, inst.__feild, info.feild);
-		end
-
-		return info.type, 1;
+		return info.class, 1;
 	end
 
 	local info = userclass.memory[inst.__feild.data];
 
 	if (not info) then
-		this:Throw(token, "No sutch feild %s.%s", type, inst.__feild.data);
+		this:Throw(token, "No sutch atribute %s.%s", type, inst.__feild.data);
 	end
 
 	if (info) then
@@ -3255,19 +3251,37 @@ function COMPILER.Compile_DEF_FEILD(this, inst, token, expressions)
 	return "", 0;
 end
 
-function COMPILER.Compile_SET_FEILD(this, inst, token, expr)
-	--inst.__feild
-	--inst.__ass
+function COMPILER.Compile_SET_FEILD(this, inst, token, expressions)
+	
+	local info;
+	local atribute = inst.__feild.data;
+	local r1, c1 = this:Compile(expressions[1]);
+	local r2, c2 = this:Compile(expressions[1]);
+	local cls = EXPR_LIB.GetClass(r1);
 
-	local r, c = this:Compile(expr);
-
-	local class, scope, info = this:AssToClass(token, false, inst.__feild.data, r);
-
-	if (not info) then
-		this:Throw(token, "No such feild %s.%s", name(r), inst.__feild.data);
+	if (not cls) then
+		local userclass = this:GetUserClass(r1);
+		info = userclass.memory[atribute];
+	else
+		info = cls.atributes[atribute];
 	end
 
-	this:QueueReplace(inst, inst.__feild, "vars." .. inst.__feild.data);
+	if (not info) then
+		this:Throw(token, "No sutch atribute %s.%s", name(r1), atribute);
+	end
+
+	
+	if (info.class ~= r1) then
+		this:Throw( token, "Can not assign atribute %s.%s of type %s with %s", name(r1), atribute, name(info.class), name(r2));
+	end
+
+	if (not cls) then
+		this:QueueReplace(inst, inst.__feild, "vars." .. atribute);
+	elseif (info.feild) then
+		this:QueueReplace(inst, inst.__feild, info.feild);
+	end
+
+	return info.class, 1;
 end
 
 --[[

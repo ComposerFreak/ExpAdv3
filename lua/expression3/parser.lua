@@ -1384,7 +1384,7 @@ function PARSER.Statment_13(this, expr)
 		this:Require("ass", "Assigment operator (=) expected after index operator.");
 		inst.__ass = this.__token;
 
-		return this:EndInstruction(inst, this:Expression_1()); 
+		return this:EndInstruction(inst, {expr, this:Expression_1()}); 
 	end
 end
 
