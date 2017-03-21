@@ -424,7 +424,7 @@ function EXPR_WIKI.COMPILER.Operator(data)
 	local args = data.args or nil
 	local rtns = data.rtns or nil
 	local exms = data.exms or nil
-	
+
 	local offset = 50
 	
 	--============================--

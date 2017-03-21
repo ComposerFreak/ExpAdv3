@@ -3256,7 +3256,7 @@ function COMPILER.Compile_SET_FEILD(this, inst, token, expressions)
 	local info;
 	local atribute = inst.__feild.data;
 	local r1, c1 = this:Compile(expressions[1]);
-	local r2, c2 = this:Compile(expressions[1]);
+	local r2, c2 = this:Compile(expressions[2]);
 	local cls = EXPR_LIB.GetClass(r1);
 
 	if (not cls) then
@@ -3270,8 +3270,7 @@ function COMPILER.Compile_SET_FEILD(this, inst, token, expressions)
 		this:Throw(token, "No sutch atribute %s.%s", name(r1), atribute);
 	end
 
-	
-	if (info.class ~= r1) then
+	if (info.class ~= r2) then
 		this:Throw( token, "Can not assign atribute %s.%s of type %s with %s", name(r1), atribute, name(info.class), name(r2));
 	end
 
