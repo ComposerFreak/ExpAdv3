@@ -48,9 +48,11 @@ function TOOL:PostMake(ent)
 	ent.player = ply;
 	ent:SetPlayer(ply);
 	
-	net.Start("Expression3.RequestUpload");
-		net.WriteEntity(ent);
-	net.Send(ply);
+	timer.Simple(0.2, function()
+		net.Start("Expression3.RequestUpload");
+			net.WriteEntity(ent);
+		net.Send(ply);
+	end);
 end
 
 local GateModels = {
