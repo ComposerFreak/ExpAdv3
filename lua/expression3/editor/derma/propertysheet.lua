@@ -20,7 +20,6 @@ function PANEL:Init( )
 	self.btnNewTab:SetFlat( true )
 	self.btnNewTab:SetOutlined( true )
 	self.btnNewTab:DrawButton( true )
-	-- self.btnNewTab:SetColor( Color( 60, 100, 180 ) )
 	self.btnNewTab:SetMaterial( Material( "fugue/script--plus.png" ) )
 	
 	self.btnNewTab.DoClick = function( btn ) 
@@ -48,14 +47,10 @@ function PANEL:AddSheet( strName, pnlContent, strMaterial, fClose )
 	Sheet.Tab:DrawButton( true )
 	Sheet.Tab:SetPadding( 5 )
 	Sheet.Tab:SetMaterial( Material( strMaterial ) )
-	Sheet.Tab:SetIconFading( false )
-	-- Sheet.Tab:SetColor( Color( 60, 100, 180 ) )
+	Sheet.Tab:SetIconFading( false ) 
 
 	Sheet.Tab.btnClose = vgui.Create( "GOLEM_ImageButton", Sheet.Tab ) 
-	Sheet.Tab.btnClose.DoClick = fClose --function( btn ) self:GetParent( ):GetParent( ):CloseTab( Sheet.Tab, true ) end 
-	-- Sheet.Tab.btnClose.DoRightClick = function( ) self:GetParent( ):GetParent( ):CloseTab( false, Sheet.Tab ) end --Keep?
-	-- Sheet.Tab.btnClose:SetMaterial( Material( "fugue/cross-small.png" ) ) 
-	-- Sheet.Tab.btnClose:SetMaterial( Material( "fugue/cross-circle.png" ) ) 
+	Sheet.Tab.btnClose.DoClick = fClose
 	Sheet.Tab.btnClose:SetMaterial( Material( "oskar/close.png" ) ) 
 	Sheet.Tab.btnClose:SetSize( 16, 16 ) 
 	Sheet.Tab.btnClose:Dock( RIGHT )
@@ -68,15 +63,14 @@ function PANEL:AddSheet( strName, pnlContent, strMaterial, fClose )
 	end
 	
 	Sheet.Tab.SetName = function( tab, name )
-		tab:SetText( " " .. name .. " " )
+		tab:SetText( name )
 		tab.Sheet.Name = name 
 		self:InvalidateLayout( true )
 	end
-	Sheet.Tab:SetText( strName )
+	Sheet.Tab:SetName( strName )
 	
 	Sheet.Tab.GetName = function( tab )
-		return tab.Sheet.Name
-		//return string.Trim( tab:GetText( ) )
+		return string.Trim( tab:GetText( ) )
 	end
 	
 	Sheet.Tab.GetPanel = function( tab ) return tab.m_pPanel end 
@@ -117,7 +111,6 @@ function PANEL:CloseTab( tab, bRemovePanelToo )
 	self.tabScroller:InvalidateLayout( true )
 	
 	if tab == self:GetActiveTab( ) then
-		-- if #self.Items > 0 then self:SetActiveTab( self.Items[#self.Items].Tab )
 		if #self.Items > 0 then self:SetActiveTab( self.Items[math.min(idx,#self.Items)].Tab )
 		else self:SetActiveTab( nil ) end
 	end
@@ -133,15 +126,12 @@ end
 function PANEL:SetActiveTab( active )
 	if self.m_pActiveTab == active then return end
 	if self.m_pActiveTab then
-		-- self:GetParent( ):GetParent( ):ChangeTab( self.m_pActiveTab, active )
 		self.m_pActiveTab:GetPanel( ):SetVisible( false )
-		-- self.m_pActiveTab:SetColor( Color( 60, 100, 180 ) )
 		self.m_pActiveTab:SetColor( Color( 100, 100, 100 ) )
 	end
 	
 	if active then 
 		active:SetColor( Color( 20, 20, 20 ) )
-		-- active:SetColor( Color( 20, 60, 120 ) )
 	end 
 	
 	self.m_pActiveTab = active
@@ -149,17 +139,14 @@ function PANEL:SetActiveTab( active )
 end
 
 function PANEL:Paint( w, h ) 
-	-- surface.SetDrawColor( 0, 0, 0, 255 )
-	-- surface.DrawRect( 0, 0, w, h )
 end 
 
 function PANEL:PerformLayout( )
 	local ActiveTab = self:GetActiveTab( )
 	
-	if not ActiveTab /*or not ValidPanel( ActiveTab )*/ then return end
+	if not ActiveTab then return end
 	
 	ActiveTab:InvalidateLayout( true )
-	-- self.tabScroller:SetTall( ActiveTab:GetTall( ) )
 	self.pnlTabs:SetTall( ActiveTab:GetTall( ) )
 	
 	local ActivePanel = ActiveTab:GetPanel( )
@@ -172,9 +159,7 @@ function PANEL:PerformLayout( )
 			v.Tab:GetPanel( ):SetVisible( false )	
 			v.Tab:SetZPos( 1 )
 		end
-		-- v.Tab:ApplySchemeSettings( )
 		v.Tab:InvalidateLayout( true )
-		-- v.Tab:PerformLayout()
 	end
 	
 	ActivePanel:SetPos( 0, ActiveTab:GetTall( ) )

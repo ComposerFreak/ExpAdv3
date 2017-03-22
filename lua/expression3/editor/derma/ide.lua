@@ -668,8 +668,6 @@ function PANEL:SaveFile( sPath, bSaveAs, pTab, bNoSound )
 	
 	local sCode = self:GetCode( pTab )
 	pTab:SetName( string.match( sCode, "@name +\"([^\"]*)\"" ) )
-	-- print( pTab )
-	-- PrintTable( pTab:GetTable( ) )
 	
 	file.Write( sPath, sCode)
 	pTab.LastEdit = nil

@@ -485,7 +485,7 @@ function Syntaxer:Parse( nRow )
 				end 
 				
 				self:SkipSpaces( )
-								
+				
 				if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
 					self:AddUserFunction( nRow, self.sTokenData )
 					self:AddToken( "userfunction" ) 
@@ -519,7 +519,7 @@ function Syntaxer:Parse( nRow )
 				continue 
 			end 
 			
-			if word == "method" and false then 
+			if word == "method" then 
 				self:AddToken( "keyword" ) 
 				self:SkipSpaces( ) 
 				
@@ -532,7 +532,7 @@ function Syntaxer:Parse( nRow )
 				end 
 				
 				self:SkipSpaces( )
-								
+				
 				self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" )
 				self:AddUserFunction( nRow, self.sTokenData )
 				self:AddToken( "userfunction" ) 
@@ -588,6 +588,20 @@ function Syntaxer:Parse( nRow )
 					end 
 				end 
 				
+				continue 
+			end 
+			
+			if word == "new" then 
+				self:AddToken( "keyword" ) 
+				self:SkipSpaces( ) 
+				
+				if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
+					if istype( self.sTokenData ) then 
+						self:AddToken( "typename" )
+					else 
+						self:AddToken( "notfound" )
+					end 
+				end 
 				continue 
 			end 
 			
