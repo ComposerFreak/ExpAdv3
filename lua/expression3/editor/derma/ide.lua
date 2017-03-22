@@ -667,7 +667,7 @@ function PANEL:SaveFile( sPath, bSaveAs, pTab, bNoSound )
 	MakeFolders( sPath )
 	
 	local sCode = self:GetCode( pTab )
-	pTab:SetName( string.match( sCode, "@name +\"([^\"]*)\"" ) )
+	pTab:SetName( string.match( sCode, "@name +\"([^\"]*)\"" ), "" )
 	
 	file.Write( sPath, sCode)
 	pTab.LastEdit = nil
