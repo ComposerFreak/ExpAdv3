@@ -442,8 +442,8 @@ function PANEL:NewTab( sType, ... )
 			return self.FileList[sPath].Sheet
 		end 
 		
-		if not sName or sName == "" then
-			sName = sPath and string.match( sPath, "/([^%./]+)%.txt$" ) or "generic"
+		if not sName or sName == "" or sName == "generic" then
+			sName = sPath and string.match( sPath, "/([^%./]+%.txt)$" ) or "generic"
 		end
 		
 		local Editor = vgui.Create( "GOLEM_Editor" ) 
@@ -452,6 +452,7 @@ function PANEL:NewTab( sType, ... )
 		Sheet.Panel:RequestFocus( )
 		
 		Sheet.Tab.__type = "editor"
+		Editor.Master = self 
 		
 		local func = self:GetSyntaxColorLine( )
 		if func ~= nil then
@@ -665,7 +666,12 @@ function PANEL:SaveFile( sPath, bSaveAs, pTab, bNoSound )
 	
 	MakeFolders( sPath )
 	
-	file.Write( sPath, self:GetCode( pTab ) )
+	local sCode = self:GetCode( pTab )
+	pTab:SetName( string.match( sCode, "@name +\"([^\"]*)\"" ) )
+	-- print( pTab )
+	-- PrintTable( pTab:GetTable( ) )
+	
+	file.Write( sPath, sCode)
 	pTab.LastEdit = nil
 	pTab.SaveTime = CurTime( ) + 0.01
 	

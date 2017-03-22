@@ -206,6 +206,12 @@ function PANEL:_OnKeyCodeTyped( code )
 			self:DoUndo( )
 		elseif code == KEY_Y then
 			self:DoRedo( )
+		elseif code == KEY_S then // Save
+			if shift then // ctrl+shift+s
+				self.Master:SaveFile( true, true )
+			else // ctrl+s
+				self.Master:SaveFile( true )
+			end 
 		elseif code == KEY_X then
 			if self:HasSelection( ) then
 				local clipboard = self:GetSelection( )
