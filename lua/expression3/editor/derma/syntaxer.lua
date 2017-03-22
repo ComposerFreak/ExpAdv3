@@ -150,7 +150,11 @@ function Syntaxer:ResetTokenizer( Row )
 				bComment = nil 
 			elseif bString and tLine[n] == bString and tLine[n-1] ~= "\\" then // End string
 				if bString == "\"" then 
-					skip[#skip][2] = n
+					if skip[#skip] then 
+						skip[#skip][2] = n
+					else 
+						skip[#skip+1] = {1, n}
+					end 
 				else // Multi line string
 					if skip[#skip] then 
 						skip[#skip][2] = n
@@ -515,12 +519,23 @@ function Syntaxer:Parse( nRow )
 				continue 
 			end 
 			
-			if word == "constructor" then 
+			if word == "method" and false then 
 				self:AddToken( "keyword" ) 
 				self:SkipSpaces( ) 
 				
+				if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
+					if istype( self.sTokenData ) then 
+						self:AddToken( "typename" )
+					else 
+						self:AddToken( "notfound" )
+					end 
+				end 
+				
+				self:SkipSpaces( )
+								
 				self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" )
-				self:AddToken( "function" )
+				self:AddUserFunction( nRow, self.sTokenData )
+				self:AddToken( "userfunction" ) 
 				
 				self:NextPattern( " *%( *" ) 
 				self:AddToken( "operator" )
@@ -596,7 +611,27 @@ function Syntaxer:Parse( nRow )
 				self:AddToken( "typename" )
 				self:SkipSpaces( ) 
 				
-				if keyword then 
+				if self:NextPattern( "%(" ) then 
+					self:AddToken( "operator" )
+					self:SkipSpaces( )
+					while self:NextPattern( "([a-zA-Z][a-zA-Z0-9_]*)" ) do 
+						self:AddToken( "typename" ) 
+						self:SkipSpaces( ) 
+						
+						if not self:NextPattern( "([a-zA-Z][a-zA-Z0-9_]*)" ) then break end 
+						
+						self.Variables[self.sTokenData] = nRow 
+						self.VariableTypes[self.sTokenData] = fixtype( word )
+						self:AddToken( "variable" ) 
+						
+						self:SkipSpaces( )
+						
+						if not self:NextPattern( "," ) then break end 
+						
+						self:AddToken( "operator" ) 
+						self:SkipSpaces( )
+					end 
+				else 
 					while self:NextPattern( "([a-zA-Z][a-zA-Z0-9_]*)" ) do 
 						self.Variables[self.sTokenData] = nRow 
 						self.VariableTypes[self.sTokenData] = fixtype( word )

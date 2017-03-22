@@ -70,7 +70,7 @@ function PANEL:AddSheet( strName, pnlContent, strMaterial, fClose )
 	Sheet.Tab.SetName = function( tab, name )
 		tab:SetText( " " .. name .. " " )
 		tab.Sheet.Name = name 
-		self:InvalidateLayout( false )
+		self:InvalidateLayout( true )
 	end
 	Sheet.Tab:SetText( strName )
 	
