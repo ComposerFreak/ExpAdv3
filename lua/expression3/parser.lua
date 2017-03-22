@@ -98,7 +98,7 @@ function PARSER.New()
 	return setmetatable({}, PARSER);
 end
 
-function PARSER.Initalize(this, instance)
+function PARSER.Initalize(this, instance, files)
 	this.__pos = 0;
 	this.__depth = 0;
 	this.__scopeID = 0;
@@ -118,7 +118,9 @@ function PARSER.Initalize(this, instance)
 	this.__directives = {};
 	this.__directives.inport = {};
 	this.__directives.outport = {};
+	this.__directives.includes = {};
 
+	this.__files = files;
 end
 
 function PARSER.Run(this)
@@ -651,7 +653,7 @@ function PARSER.Directive_NAME(this, token, directive)
 	this:Require("str", "String expected to follow directive @name");
 
 	if (this.FirstStatment) then
-		this:Throw(token, "Directive @name must appear at top of your code");
+		this:Throw(token, "Directive @name must appear towards the top of your code");
 	elseif (this.__directives.name) then
 		this:Throw(token, "Directive @name must not appear twice.");
 	end
@@ -665,7 +667,7 @@ function PARSER.Directive_MODEL(this, token, directive)
 	this:Require("str", "String expected to follow directive @model");
 
 	if (this.FirstStatment) then
-		this:Throw(token, "Directive @model must appear at top of your code");
+		this:Throw(token, "Directive @model must appear towards the top of your code");
 	elseif (this.__directives.model) then
 		this:Throw(token, "Directive @model must not appear twice.");
 	end
@@ -673,6 +675,43 @@ function PARSER.Directive_MODEL(this, token, directive)
 	this.__directives.model = this.__token.data;
 	
 	this:QueueRemove({}, this.__token);
+end
+
+function PARSER.Directive_INCLUDE(this, token, directive)
+	this:Require("str", "String expected to follow directive @include");
+
+	local inst = this:StartInstruction("include", token);
+
+	this:QueueRemove(inst, this.__token);
+
+	if (this.FirstStatment) then
+		this:Throw(token, "Directive @include must appear towards the top of your code");
+	end
+
+	local includes = this.__directives.includes or {};
+
+
+	local file_path = string.sub(this.__token.data, 2, -2);
+
+	local exists;
+
+	if (CLIENT) then
+		exists = file.Exists("golem/" .. file_path .. ".txt", "DATA");
+	elseif (SERVER) then
+		exists = this.__files[file_path] ~= nil;
+	end
+
+	if (not exists) then
+		this:Throw(token, "No sutch file %s", file_path);
+	end
+
+	if (includes[file_path]) then
+		this:Throw(token, "File %s, allready included.", file_path);
+	end
+
+	includes[file_path] = file_path;
+
+	return this:EndInstruction(inst, file_path);
 end
 
 function PARSER.Directive_INPUT(this, token, directive)

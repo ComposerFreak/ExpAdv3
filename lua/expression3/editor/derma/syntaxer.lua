@@ -264,6 +264,7 @@ local Directives = {
 	["model"] 			= true,
 	["input"] 			= true,
 	["output"] 			= true,
+	["include"] 		= true,
 }
 
 -- fallback for nonexistant entries:

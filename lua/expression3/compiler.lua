@@ -3083,6 +3083,107 @@ function COMPILER.Compile_OUTPORT(this, inst, token)
 	end
 end
 
+--[[
+	Include support: Huge Work In Progress, I will not like this how ever it comes out.
+]]
+
+local function Inclucde_ROOT(this, inst, token, stmts)
+	for i = 1, #stmts do
+		this:Compile(stmts[i]);
+	end
+
+	return "", 0;
+end
+
+
+
+function COMPILER.Initalize(this, instance, files)
+	this.__tokens = instance.tokens;
+	this.__tasks = instance.tasks;
+	this.__root = instance.instruction;
+	this.__script = instance.script;
+	this.__directives = instance.directives;
+
+	this.__scope = {};
+	this.__scopeID = 0;
+	this.__scopeData = {};
+	this.__scopeData[0] = this.__scope;
+
+	this.__scope.memory = {};
+	this.__scope.classes = {};
+	this.__scope.server = true;
+	this.__scope.client = true;
+
+	this.__defined = {};
+
+	this.__constructors = {};
+	this.__operators = {};
+	this.__functions = {};
+	this.__methods = {};
+	this.__enviroment = {};
+
+	this.__files = files;
+
+end
+
+function COMPILER.Compile_INCLUDE(this, inst, token, file_path)
+	local script;
+
+	if (CLIENT) then
+		script = file.Read("golem/" .. file_path .. ".txt", "DATA");
+	elseif (SERVER) then
+		script = this.__files[file_path];
+	end
+
+	local Toker = EXPR_TOKENIZER.New();
+
+	Toker:Initalize("EXPADV", script);
+
+	local ok, res = Toker:Run();
+
+	if ok then
+		local Parser = EXPR_PARSER.New();
+
+		Parser:Initalize(res);
+		
+		Parser.__directives = this.__directives;
+
+		ok, res = Parser:Run();
+
+		if ok then
+			local Compiler = EXPR_COMPILER.New();
+
+			Compiler:Initalize(res);
+
+			Compiler.Compile_ROOT = Inclucde_ROOT;
+			Compiler.__directives = this.__directives;
+
+			Compiler.__scope = this.__scope;
+			Compiler.__scopeID = this.__scopeID ;
+			Compiler.__scopeData = this.__scopeData;
+			Compiler.__constructors = this.__constructors;
+			Compiler.__operators = this.__operators;
+			Compiler.__functions = this.__functions;
+			Compiler.__methods = this.__methods;
+			Compiler.__enviroment = this.__enviroment;
+
+			ok, res = Compiler:Run();
+
+			if (ok) then
+				this:QueueInjectionAfter(inst, token, res.compiled);
+			end
+		end
+	end
+
+	if (not ok) then
+		if (istable(res)) then
+			res.file = file_path;
+		end
+
+		error(res, 0);
+	end
+
+end
 
 --[[
 ]]

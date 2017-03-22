@@ -28,7 +28,7 @@ ENT.Expression3 	= true;
 	Validate / Set Code
 ]]
 
-function ENT:Validate(script)
+function ENT:Validate(script, files)
 	local Toker = EXPR_TOKENIZER.New();
 
 	Toker:Initalize("EXPADV", script);
@@ -38,14 +38,14 @@ function ENT:Validate(script)
 	if ok then
 		local Parser = EXPR_PARSER.New();
 
-		Parser:Initalize(res);
+		Parser:Initalize(res, files);
 
 		ok, res = Parser:Run();
 
 		if ok then
 			local Compiler = EXPR_COMPILER.New();
 
-			Compiler:Initalize(res);
+			Compiler:Initalize(res, files);
 
 			ok, res = Compiler:Run();
 		end
@@ -54,14 +54,10 @@ function ENT:Validate(script)
 	return ok, res;
 end
 
-function ENT:SetCode(script, run)
+function ENT:SetCode(script, files, run)
 	self.script = script;
 
-	local Toker = EXPR_TOKENIZER.New();
-
-	Toker:Initalize("EXPADV", script);
-
-	local ok, res = self:Validate(script);
+	local ok, res = self:Validate(script, files);
 
 	if (not ok) then
 		self:HandelThrown(res);

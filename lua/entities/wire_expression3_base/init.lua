@@ -19,17 +19,18 @@ include("shared.lua");
 net.Receive("Expression3.SubmitToServer", function(len, ply)
 	local ent = net.ReadEntity();
 	local script = net.ReadString();
+	local files = net.ReadTable();
 
 	if (IsValid(ent) and ent.ReceiveFromClient) then
-		ent:ReceiveFromClient(ply, script);
+		ent:ReceiveFromClient(ply, script, files);
 	end	
 end)
 
-function ENT:ReceiveFromClient(ply, script)
+function ENT:ReceiveFromClient(ply, script, files)
 	if (self:CanSetCode(ply)) then
 		timer.Simple(1, function()
 			if (IsValid(self)) then
-				self:SetCode(script, true);
+				self:SetCode(script, files, true);
 			end
 		end);
 	end

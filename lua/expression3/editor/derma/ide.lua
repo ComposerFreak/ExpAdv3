@@ -875,14 +875,22 @@ function PANEL:DoValidate( Goto, Code, Debug, Native )
 		EXPR_LIB.ShowDebug(tr.tokens, pr.tasks, Native);
 	end
 	
-	return true
+	return true;
 end
 
 function PANEL:OnValidateError( Goto, Thrown )
 	local Error;
 	
 	if (istable(Thrown)) then
+		if (string.sub(Thrown.msg, -1) == ".") then
+			Thrown.msg = string.sub(Thrown.msg, 1, -2);
+		end
+
 		Error = string.format("%s, at line %i char %i.", Thrown.msg, Thrown.line, Thrown.char);
+
+		if (Thrown.file) then
+			Error = string.format("%s in %s.txt", string.sub(Error, 1, -2), Thrown.file);
+		end
 	else
 		Error = Thrown
 		Thrown = nil
