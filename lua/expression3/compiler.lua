@@ -970,7 +970,7 @@ function COMPILER.Compile_AADD(this, inst, token, expressions)
 			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"" .. op.signature .. "\"", "]", "(");
 
 			if (op.context) then
-			    this:QueueInjectionBefore(inst, expr.token "CONTEXT", ",");
+			    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
 			end
 
 			this:QueueInjectionAfter(inst, expr.final, ")" );
@@ -1022,7 +1022,7 @@ function COMPILER.Compile_ASUB(this, inst, token, expressions)
 			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"" .. op.signature .. "\"", "]", "(");
 
 			if (op.context) then
-			    this:QueueInjectionBefore(inst, expr.token "CONTEXT", ",");
+			    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
 			end
 
 			this:QueueInjectionAfter(inst, expr.final, ")" );
@@ -1076,7 +1076,7 @@ function COMPILER.Compile_ADIV(this, inst, token, expressions)
 			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"" .. op.signature .. "\"", "]", "(");
 
 			if (op.context) then
-			    this:QueueInjectionBefore(inst, expr.token "CONTEXT", ",");
+			    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
 			end
 
 			this:QueueInjectionAfter(inst, expr.final, ")" );
@@ -1128,7 +1128,7 @@ function COMPILER.Compile_AMUL(this, inst, token, expressions)
 			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"" .. op.signature .. "\"", "]", "(");
 
 			if (op.context) then
-			    this:QueueInjectionBefore(inst, expr.token "CONTEXT", ",");
+			    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
 			end
 
 			this:QueueInjectionAfter(inst, expr.final, ")" );
