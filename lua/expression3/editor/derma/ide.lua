@@ -192,7 +192,7 @@ function PANEL:Init( )
 	
 	self.pnlTabHolder = vgui.Create( "GOLEM_PropertySheet", self )
 	self.pnlTabHolder:Dock( FILL )
-	self.pnlTabHolder:DockMargin( 0, 5, 5, 5 )
+	self.pnlTabHolder:DockMargin( 0, 0, 0, 5 )
 	self.pnlTabHolder:SetPadding( 0 )
 	
 	self.pnlTabHolder.btnNewTab.DoClick = function( btn ) 
@@ -208,12 +208,13 @@ function PANEL:Init( )
 	self.tbConsoleEditor.bEditable = false
 	self.bConsoleVisible = true
 
-	self.pnlConsoleDivider = vgui.Create("DVerticalDivider", self)
-	self.pnlConsoleDivider:SetTop(self.pnlTabHolder);
-	self.pnlConsoleDivider:SetBottom(self.tbConsoleEditor)
-	self.pnlConsoleDivider:Dock(FILL)
+	self.pnlConsoleDivider = vgui.Create( "DVerticalDivider", self )
+	self.pnlConsoleDivider:SetTop( self.pnlTabHolder )
+	self.pnlConsoleDivider:SetBottom( self.tbConsoleEditor )
+	self.pnlConsoleDivider:Dock( FILL )
+	self.pnlConsoleDivider:DockPadding( 0, 5, 5, 5 )
 	self.pnlConsoleDivider:SetTopMin( 200 )
-	self.pnlConsoleDivider:SetBottomMin(50)
+	self.pnlConsoleDivider:SetBottomMin( 50 )
 	
 	self.tbConsoleRows = { }
 	
@@ -625,7 +626,7 @@ function PANEL:GetFileCode( sPath, bForce )
 	else
 		local sData = file.Read( sPath ) or ""
 		local sTitle, sCode = string.match( sData, "\1(.+)\2(.+)\3" )
-		return sCode or sData, sPath, sTitle or "generic" 
+		return sCode or sData, sPath, sTitle or string.match( sCode or sData, "@name +\"([^\"]*)\"" ) or "generic" 
 	end 
 end
 
@@ -664,8 +665,8 @@ function PANEL:SaveFile( sPath, bSaveAs, pTab, bNoSound )
 	
 	MakeFolders( sPath )
 	
-	file.Write( sPath, "\1".. (pTab:GetText( ) == "generic" and "generic" or pTab:GetText( )) .. "\2" .. self:GetCode( pTab ) .. "\3" )
-	pTab.LastEdit = nil //file.Time( sPath, "DATA" ) 
+	file.Write( sPath, self:GetCode( pTab ) )
+	pTab.LastEdit = nil
 	pTab.SaveTime = CurTime( ) + 0.01
 	
 	if not bNoSound then
@@ -703,7 +704,7 @@ function PANEL:SaveTempFile( Tab )
 	local sCode = Tab:GetPanel( ):GetCode( )
 	local sPath = Tab.TempFile or "golem_temp/" .. TempID( ) .. ".txt"
 	MakeFolders( sPath )
-	file.Write( sPath, "\1" .. Tab:GetText( ) .. "\2" .. sCode .. "\3" )
+	file.Write( sPath, sCode )
 	return sPath
 end
 
@@ -711,7 +712,7 @@ function PANEL:LoadTempFile( sPath )
 	if not file.Exists( sPath, "DATA" ) then return false end 
 	local Data = file.Read( sPath ) 
 	local Name, Code = string.match( Data, "\1(.+)\2(.*)\3" )
-	self:NewTab( "editor", Code or Data, nil, Name ) 
+	self:NewTab( "editor", Code or Data ) 
 	file.Delete( sPath ) 
 	return true 
 end

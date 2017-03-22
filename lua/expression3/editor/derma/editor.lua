@@ -618,7 +618,9 @@ function PANEL:OnMousePressed( code )
 				self.temp = nil 
 				
 				self.Start = Vector2( cursor.x, 1 )
-				self.Caret = Vector2( cursor.x + 1, 1 ) 
+				local s = self:ExpandAll( ) 
+				self.Caret = Vector2( cursor.x, #self.Rows[cursor.x]+1 )
+				self:FoldAll( s )
 			else 
 				self.temp = true 
 				
