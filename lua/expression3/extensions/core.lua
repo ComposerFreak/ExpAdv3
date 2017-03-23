@@ -237,6 +237,7 @@ end, true)
 local func_tostring = EXPR_LIB.ToString;
 
 local func_invoke = function(context, result, count, func, ...)
+	if (count == -1 or result == nil) then count, result = 0, "" end
 	if (result ~= func.result or count ~= func.count) then
 		if (func.scr) then context = func.scr end
 		context:Throw("Invoked function with incorrect return type %s expected, got %s.", result, func.result);
