@@ -234,13 +234,28 @@ end, true)
 	Library: SYSTEM
 ]]
 
+local function name(id)
+	local obj = EXPR_LIB.GetClass(id);
+	return obj and obj.name or id;
+end
+
 local func_tostring = EXPR_LIB.ToString;
 
 local func_invoke = function(context, result, count, func, ...)
-	if (count == -1 or result == nil) then count, result = 0, "" end
-	if (result ~= func.result or count ~= func.count) then
+	local r = func.result;
+	local c = func.count;
+
+	if (r == nil or c == -1) then
+		r, c = "", 0
+	end
+
+	if (result == nil or count == -1) then
+		result, count = "", 0
+	end
+
+	if (result ~= r or count ~= c) then
 		if (func.scr) then context = func.scr end
-		context:Throw("Invoked function with incorrect return type %s expected, got %s.", result, func.result);
+		context:Throw("Invoked function with incorrect return type %q:%i expected, got %q:%i.", name(result), count, name(r), c);
 	end
 
 	return func.op(...);

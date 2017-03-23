@@ -360,8 +360,20 @@ function ENT:Invoke(where, result, count, udf, ...)
 
 		if (udf and udf.op) then
 
-			if (result ~= udf.result or count ~= udf.count) then
-				self:HandelThrown("Invoked function with incorrect return type " .. result .. " expected, got " .. udf.result .. " (" .. where .. ").");
+			local r = udf.result;
+			local c = udf.count;
+
+			if (r == nil or c == -1) then
+				r, c = "", 0
+			end
+
+			if (result == nil or count == -1) then
+				result, count = "", 0
+			end
+
+			if (result ~= r or count ~= c) then
+				if (func.scr) then context = func.scr end
+				context:Throw("Invoked function with incorrect return type %q:%i expected, got %q:%i (%s).", name(result), count, name(r), c, where);
 			end
 
 			self.context:PreExecute();
