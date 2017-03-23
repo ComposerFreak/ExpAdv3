@@ -31,7 +31,7 @@ local function writeBool(ctx, msg, bool)
 end
 
 local function readBool(ctx, msg)
-	msg.size = msg.size - 1;
+	--msg.size = msg.size - 1;
 	msg.read = msg.read + 1;
 
 	if (msg.read > #msg.buffer) then
@@ -56,7 +56,7 @@ local function writeChar(ctx, msg, char, type)
 end
 
 local function readChar(ctx, msg, type)
-	msg.size = msg.size - 1;
+	--msg.size = msg.size - 1;
 	msg.read = msg.read + 1;
 
 	if (msg.read > #msg.buffer) then
@@ -85,7 +85,7 @@ local function readShort(ctx, msg)
 end
 
 extension:RegisterMethod("usmg", "writeShort", "n", "", 0, writeShort, false);
-extension:RegisterMethod("usmg", "readShort", "", "n", 1, writeShort, false);
+extension:RegisterMethod("usmg", "readShort", "", "n", 1, readShort, false);
 
 ---------------------------------------------------------------------------------
 
@@ -116,7 +116,7 @@ local function readLong(ctx, msg)
 end
 
 extension:RegisterMethod("usmg", "writeLong", "n", "", 0, writeLong, false);
-extension:RegisterMethod("usmg", "readLong", "", "n", 1, writeLong, false);
+extension:RegisterMethod("usmg", "readLong", "", "n", 1, readLong, false);
 
 ---------------------------------------------------------------------------------
 
@@ -168,7 +168,7 @@ local function readFloat(ctx, msg)
 end
 
 extension:RegisterMethod("usmg", "writeFloat", "n", "", 0, writeFloat, false);
-extension:RegisterMethod("usmg", "readFloat", "", "n", 1, writeFloat, false);
+extension:RegisterMethod("usmg", "readFloat", "", "n", 1, readFloat, false);
 
 ---------------------------------------------------------------------------------
 
@@ -273,7 +273,7 @@ local function queueMessage(ctx, msg, filter)
 	ctx.data.net_queue = queue;
 end
 
-hook.Add("Expression3.Entity.Update", "Expression3.Network.SendMessages", function(entity, context)
+hook.Add("Expression3.Entity.Update", "Expression3.Network.SendMessages", function(entity, ctx)
 	local queue = ctx.data.net_queue;
 
 	if (queue and #queue > 0) then
@@ -286,7 +286,7 @@ hook.Add("Expression3.Entity.Update", "Expression3.Network.SendMessages", functi
 				net.WriteUInt(#msg.buffer, 16);
 
 				for i = 1, #msg.buffer do
-					net.WriteUInt(msg.buffer, 8);
+					net.WriteInt(#msg.buffer, 8);
 				end
 
 			if (CLIENT) then
@@ -310,7 +310,7 @@ net.Receive("Expression3.Network.Send", function(len, ply)
 	local buffer = {};
 
 	for i = 1, count do
-		buffer[i] = net.ReadUInt(8);
+		buffer[i] = net.ReadInt(8);
 	end
 
 	local msg = {name = name, buffer = buffer, size = #buffer, read = 0};
@@ -319,7 +319,7 @@ net.Receive("Expression3.Network.Send", function(len, ply)
 		local callbacks = entity.context.data.net_callbacks;
 
 		if (callbacks and callbacks[name]) then
-			entity:Execute(callbacks[name], {"_usmg", msg}, ply and {"p", ply} or nil);
+			entity:Invoke("net callback " .. name, "", 0, callbacks[name], {"_usmg", msg}, ply and {"p", ply} or nil);
 		end
 	end
 end);

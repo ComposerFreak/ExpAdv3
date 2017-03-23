@@ -211,8 +211,6 @@ function ENT:InitScript()
 
 	self.context.status = self:Execute(init, self.context.env);
 
-	print("Calling post init", self);
-
 	self:PostInitScript();
 end
 
@@ -363,7 +361,7 @@ function ENT:Invoke(where, result, count, udf, ...)
 		if (udf and udf.op) then
 
 			if (result ~= udf.result or count ~= udf.count) then
-				self:HandelThrown("Invoked function with incorrect return type " .. result .. " expected, got " .. udf.result .. ".");
+				self:HandelThrown("Invoked function with incorrect return type " .. result .. " expected, got " .. udf.result .. " (" .. where .. ").");
 			end
 
 			self.context:PreExecute();
@@ -376,8 +374,6 @@ function ENT:Invoke(where, result, count, udf, ...)
 
 			if (status) then
 				self.context.update = true;
-				-- Moving this hook to run once per think instead.
-				-- hook.Run("Expression3.UpdateEntity", self, self.context);
 			else
 				self:HandelThrown(results[1]);
 			end

@@ -112,14 +112,14 @@ local len = 100;
 local soft, hard;
 
 if (SERVER) then
-	soft = CreateConVar("e3_hardquota", 500, { FCVAR_REPLICATED }, "Absolute max usage quota per one tick.");
-	hard = CreateConVar("e3_softquota", 100, { FCVAR_REPLICATED }, "The max average usage quota.");
+	hard = CreateConVar("e3_hardquota", 500, { FCVAR_REPLICATED }, "Absolute max usage quota per one tick.");
+	soft = CreateConVar("e3_softquota", 100, { FCVAR_REPLICATED }, "The max average usage quota.");
 	--len = CreateConVar("e3_maxbuffersize", 100, { FCVAR_REPLICATED }, "Window width of the CPU time quota moving average.");
 end
 
 if (CLIENT) then
-	soft = CreateClientConVar("e3_hardquota", 500, false, false);
-	hard = CreateClientConVar("e3_softquota", 100, false, false); 
+	hard = CreateClientConVar("e3_hardquota", 500, false, false);
+	soft = CreateClientConVar("e3_softquota", 100, false, false); 
 	--len = CreateClientConVar("e3_maxbuffersize", 100, false, false);
 end
 
@@ -194,11 +194,11 @@ function CONTEXT:UpdateQuotaValues()
 		self.cpu_total = 0;
 
 		self.cpu_average = average;
-	end
 
-	if (r and self.update) then
-		self.context.update = false;
-		hook.Run("Expression3.Entity.Update", self, context);
+		if (self.update) then
+			self.update = false;
+			hook.Run("Expression3.Entity.Update", self.entity, self);
+		end
 	end
 end
 
