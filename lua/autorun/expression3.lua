@@ -35,9 +35,13 @@ if (SERVER) then
 
 	AddCSLuaFile("expression3/extensions/entity.lua");
 
+	AddCSLuaFile("expression3/extensions/player.lua");
+
 	AddCSLuaFile("expression3/extensions/string.lua");
 
 	AddCSLuaFile("expression3/extensions/table.lua");
+
+	AddCSLuaFile("expression3/extensions/network.lua");
 
 	AddCSLuaFile( "expression3/editor.lua");
 
