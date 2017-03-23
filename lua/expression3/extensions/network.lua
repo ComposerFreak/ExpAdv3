@@ -28,6 +28,8 @@ local function writeBool(ctx, msg, bool)
 
 	msg.size = msg.size + 1;
 	msg.buffer[msg.size] = bool and 1 or 0;
+
+	--print("Write:", msg.size .. " = " .. (bool and 1 or 0), "Bool");
 end
 
 local function readBool(ctx, msg)
@@ -37,6 +39,8 @@ local function readBool(ctx, msg)
 	if (msg.read > #msg.buffer) then
 		ctx:Throw("Unable to read Boolean from empty stream.");
 	end
+
+	--print("Read:", msg.read .. " = " .. msg.buffer[msg.read], "Bool");
 
 	return msg.buffer[msg.read] == 1;
 end
@@ -53,6 +57,8 @@ local function writeChar(ctx, msg, char, type)
 
 	msg.size = msg.size + 1;
 	msg.buffer[msg.size] = char;
+
+	--print("Write:", msg.size .. " = " .. char, type or "Char");
 end
 
 local function readChar(ctx, msg, type)
@@ -62,6 +68,8 @@ local function readChar(ctx, msg, type)
 	if (msg.read > #msg.buffer) then
 		ctx:Throw("Unable to read " .. (type or "Char") .. " from empty stream.");
 	end
+
+	--print("Read:", msg.read .. " = " .. msg.buffer[msg.read], type or "Char");
 
 	return msg.buffer[msg.read];
 end
@@ -286,7 +294,7 @@ hook.Add("Expression3.Entity.Update", "Expression3.Network.SendMessages", functi
 				net.WriteUInt(#msg.buffer, 16);
 
 				for i = 1, #msg.buffer do
-					net.WriteInt(#msg.buffer, 8);
+					net.WriteInt(msg.buffer[i], 8);
 				end
 
 			if (CLIENT) then
