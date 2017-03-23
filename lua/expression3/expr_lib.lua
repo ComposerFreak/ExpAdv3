@@ -23,12 +23,12 @@
 		Expression3.LoadAtributes						-> Atributes must be registered inside this hook.
 		Expression3.LoadLibraries						-> Libraries must be registered inside this hook.
 		Expression3.LoadFunctions						-> Functions must be registered inside this hook.
-		REMOVED: Expression3.LoadEvents					-> Events must be registered inside this hook.
 		Expression3.PostRegisterExtensions				-> This is called once expadv3 has loaded its extensions.
 		Expression3.PostCompile.System.<function>		-> This is called after compiling every function on the system library,		-> ressult class, result count = (comiler, instruction, token, expressions)
 												  		   (replace <function> with the name of the function on the library..		
 		Expression3.Entity.BuildSandbox					-> This is called when building the sandboxed enviroment for an entity.		-> (entity, context, enviroment)
-		Expression3.Start.Entity							-> This is called when an entity is about to run for the first time.		-> (entity, context)
+		Expression3.Start.Entity						-> This is called when an entity is about to run for the first time.		-> (entity, context)
+		Expression3.Entity.Think						-> Called by all expression 3 entitys during the entitys think function 	-> (entity, context)
 		Expression3.Entity.Update						-> This is called when an entity has sucessfuly executed.					-> (entity, context)
 		Expression3.Entity.Stop							-> This is called when an entity has shutdown for any given reason.			-> (entity, context)
 		Expression3.GolemInit							-> this is called when the editor is created.
@@ -37,6 +37,7 @@
 		Expression3.AddGolemTabTypes					-> This is called when custom tab types should be registered on the editor. -> (Editor)
 		Expression3.LoadWiki							-> This is called when its time to register the helpers to the wiki.
 
+		
 	::IMPORTANT::
 		You should use 'Extension = EXPR_LIB.RegisterExtension(string)' to create a new Extension object.
 		You should then use the api methods on the new Extension to register everything.
@@ -1112,25 +1113,27 @@ if (SERVER) then
 			end
 		end
 
-		net.Start("Expression3.RelayToClient");
-			net.WriteEntity(ent);
-			net.WriteEntity(ply);
-			net.WriteInt(const, 3);
-			net.WriteInt(count, 16);
+		if (IsValid(trg)) then
+			net.Start("Expression3.RelayToClient");
+				net.WriteEntity(ent);
+				net.WriteEntity(ply);
+				net.WriteInt(const, 3);
+				net.WriteInt(count, 16);
 
-			for _, v in pairs(output) do
-				if (not istable(v)) then
-					net.WriteBit(0);
-					net.WriteString(tostring(v));
-				else
-					net.WriteBit(1);
-					net.WriteInt(v.r, 16);
-					net.WriteInt(v.g, 16);
-					net.WriteInt(v.b, 16);
+				for _, v in pairs(output) do
+					if (not istable(v)) then
+						net.WriteBit(0);
+						net.WriteString(tostring(v));
+					else
+						net.WriteBit(1);
+						net.WriteInt(v.r, 16);
+						net.WriteInt(v.g, 16);
+						net.WriteInt(v.b, 16);
+					end
 				end
-			end
 
-		net.Send(trg);
+			net.Send(trg);
+		end
 	end)
 
 end

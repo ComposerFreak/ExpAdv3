@@ -351,6 +351,11 @@ local bannedVars = {
 	["_METH"] = true,
 	["_FUN"] = true,
 	["invoke"] = true,
+	["in"] = true,
+	["if"] = true,
+	["then"] = true,
+	["end"] = true,
+	["pairs"] = true,
 };
 
 function COMPILER.AssignVariable(this, token, declaired, varName, class, scope)

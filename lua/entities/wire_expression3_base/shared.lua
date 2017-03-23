@@ -56,7 +56,8 @@ end
 
 function ENT:SetCode(script, files, run)
 	self.script = script;
-
+	self.files = files;
+	
 	local ok, res = self:Validate(script, files);
 
 	if (not ok) then
@@ -81,7 +82,7 @@ function ENT:SetCode(script, files, run)
 	end
 
 	if (run) then
-		timer.Simple(1, function()
+		timer.Simple(0.2, function()
 			if (IsValid(self)) then
 				self:InitScript();
 			end
@@ -97,6 +98,7 @@ end
 
 function ENT:BuildContext(instance)
 	self.context = EXPR_CONTEXT.New();
+	self.context.data = {};
 	self.context.events = {};
 	self.context.entity = self;
 	self.context.player = self.player;
@@ -209,28 +211,14 @@ function ENT:InitScript()
 
 	self.context.status = self:Execute(init, self.context.env);
 
+	print("Calling post init", self);
+
 	self:PostInitScript();
 end
 
 --[[
 	Executing
 ]]
-
-function ENT:Execute(func, ...)
-	self.context:PreExecute(); -- This is the stable working one.
-
-	local results = {pcall(func, ...)};
-
-	self.context:PostExecute();
-
-	if (results[1]) then
-		self.context.update = true;
-	else
-		self:HandelThrown(results[2]);
-	end
-
-	return unpack(results);
-end
 
 function ENT:Execute(func, ...) -- This is the new one.
 	local tb, es = {};
@@ -254,7 +242,7 @@ function ENT:Execute(func, ...) -- This is the new one.
 
 	self.context:PreExecute();
 
-	local results = {xpcall(func, cb,  ...)};
+	local results = {xpcall(func, cb, ...)};
 
 	self.context:PostExecute();
 

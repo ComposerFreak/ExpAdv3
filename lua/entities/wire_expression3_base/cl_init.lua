@@ -9,8 +9,6 @@
 
 	::Expression 3 Base::
 ]]
-
-print("expr3->cl_init");
 include("shared.lua");
 
 --[[
@@ -150,20 +148,22 @@ net.Receive("Expression3.SendToClient", function(len)
 	local ent = net.ReadEntity();
 	local ply = net.ReadEntity();
 	local script = net.ReadString();
+	local files = net.ReadTable();
 
 	if (script and script ~= "") then
 		if (ent and IsValid(ent) and ent.ReceiveFromServer) then
 			if (ply and IsValid(ply)) then
-				ent:ReceiveFromServer(ply, script);
+				ent:ReceiveFromServer(ply, script, files);
 			end
 		end
 	end
 end);
 
-function ENT:ReceiveFromServer(ply, script)
+function ENT:ReceiveFromServer(ply, script, files)
 	timer.Simple(1, function()
 		if (IsValid(self)) then
-			self:SetCode(script, true);
+			self.player = ply;
+			self:SetCode(script, files, true);
 		end
 	end);
 end
@@ -195,7 +195,7 @@ end
 ]]
 
 function ENT:SendToOwner(bConsole, ...)
-	local owner = self:GetPlayer();
+	local owner = self.player; --:GetPlayer();
 
 	if (owner == LocalPlayer()) then
 		Golem.Print(...);

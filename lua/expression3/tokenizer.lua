@@ -124,7 +124,7 @@ function TOKENIZER.Initalize(this, lang, script)
 
 		this.__tokens = {};
 		this.__script = script;
-		this.__buffer = script;
+		this.__buffer = script .. "\n ";
 		this.__lengh = string.len(script);
 
 		this.language = lang;
@@ -214,14 +214,14 @@ function TOKENIZER.PushLine(this)
 	this.__readChar = 1;
 
 	this.__pos = this.__pos + 1;
-	this.__char = string.sub(this.__script, this.__pos, this.__pos);
+	this.__char = string.sub(this.__buffer, this.__pos, this.__pos);
 end
 
 function TOKENIZER.PushChar(this)
 	this.__readChar = this.__readChar + 1;
 
 	this.__pos = this.__pos + 1;
-	this.__char = string.sub(this.__script, this.__pos, this.__pos);
+	this.__char = string.sub(this.__buffer, this.__pos, this.__pos);
 end
 
 function TOKENIZER.Clear(this)
@@ -239,14 +239,14 @@ function TOKENIZER.NextPattern(this, pattern, exact)
 		return false;
 	end
 
-	local s, e, r = string.find(this.__script, pattern, this.__pos, exact);
+	local s, e, r = string.find(this.__buffer, pattern, this.__pos, exact);
 
 	if (s ~= this.__pos) then
 		return false;
 	end
 
 	if (not r) then
-		r = string.sub(this.__script, s, e);
+		r = string.sub(this.__buffer, s, e);
 	end
 
 	this.__pos = e + 1;
@@ -259,7 +259,7 @@ function TOKENIZER.NextPattern(this, pattern, exact)
 	if (this.__pos > this.__lengh) then
 		this.__char = nil;
 	else
-		this.__char = string.sub(this.__script, this.__pos, this.__pos);
+		this.__char = string.sub(this.__buffer, this.__pos, this.__pos);
 	end
 
 	local ls = string.Explode("\n", r);
@@ -275,13 +275,13 @@ function TOKENIZER.NextPattern(this, pattern, exact)
 end
 
 function TOKENIZER.MatchPattern(this, pattern, exact)
-	local s, e, r = string.find(this.__script, pattern, this.__pos, exact);
+	local s, e, r = string.find(this.__buffer, pattern, this.__pos, exact);
 
 	if (s ~= this.__pos) then
 		return false;
 	end
 
-	return true, string.sub(this.__script. this.__pos, this.__pos);
+	return true, string.sub(this.__buffer. this.__pos, this.__pos);
 end
 
 function TOKENIZER.NextPatterns(this, exact, pattern, pattern2, ...)
