@@ -370,7 +370,7 @@ function COMPILER.AssignVariable(this, token, declaired, varName, class, scope)
 	local c, s, var = this:GetVariable(varName, scope, declaired);
 
 	if (declaired) then
-		if (c and c == class) then
+		if (c and (c == class or class == "_nil")) then
 			this:Throw(token, "Unable to declare variable %s, Variable already exists.", varName);
 		elseif (c) then
 			this:Throw(token, "Unable to initalize variable %s, %s expected got %s.", varName, name(c), name(class));
@@ -380,7 +380,7 @@ function COMPILER.AssignVariable(this, token, declaired, varName, class, scope)
 	else
 		if (not c) then
 			this:Throw(token, "Unable to assign variable %s, Variable doesn't exist.", varName);
-		elseif (c ~= class) then
+		elseif (c ~= class and class ~= "_nil") then
 			this:Throw(token, "Unable to assign variable %s, %s expected got %s.", varName, name(c), name(class));
 		end
 	end
@@ -2124,10 +2124,6 @@ function COMPILER.Compile_BOOL(this, inst, token, expressions)
 	return "b", 1
 end
 
-function COMPILER.Compile_VOID(this, inst, token, expressions)
-	return "", 1
-end
-
 function COMPILER.Compile_NUM(this, inst, token, expressions)
 	return "n", 1
 end
@@ -2143,6 +2139,11 @@ end
 function COMPILER.Compile_CLS(this, inst, token, expressions)
 	this:QueueReplace(inst, token, "\"" .. token.data .. "\"");
 	return "_cls", 1
+end
+
+function COMPILER.Compile_NIL(this, inst, token, expressions)
+	this:QueueReplace(inst, token, "NIL");
+	return "_nil", 1
 end
 
 function COMPILER.Compile_COND(this, inst, token, expressions)

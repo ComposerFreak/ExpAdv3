@@ -15,28 +15,71 @@ local SetSize = debug.getregistry( ).Panel.SetSize
 
 local PANEL = { }
 
-local sDefaultScript = [[/*-----------------------------
-	Expression 3 - Alpha
------------------------------*/
-@name "Generic - Expression 3";
+local sDefaultGateTab = [[
+@name "Generic Gate";
 
-function void first() {
-	//same as if first.
+/*
+	Generic Gate Code.
+	Wiki: https://github.com/Rusketh/ExpAdv3/wiki or [?].
+*/
+
+function void Main() {
+	system.print("Hello World");
 }
 
-function void main() {
-	//same as run on tick.
+function void Loop() {
+	//Same as RunOnTick;
 }
 
-first();
-main();
-
-//register main event for every think.
-event.add("Think", "Main", main);
-
-//For more on E3 and its development visit:
-//https://github.com/Rusketh/ExpAdv3/
+event.add("Think", "Loop", Loop);
+Main();
 ]]
+
+local sDefaultScreenTab = [[
+@name "Generic Screen";
+
+/*
+	Generic Screen Code.
+	This code uses another E3-Gates Screen events,
+	providing an additonal permanter for the screens entity.
+
+	Wiki: https://github.com/Rusketh/ExpAdv3/wiki or [?].
+*/
+
+entity gate = new entity(0);
+
+server {
+	event.add("Trigger", "E3", function(string port) {
+		if (port == "E3") {
+			@input entity E3;
+			gate = E3;
+			stream bf = net.start("E3");
+			bf.writeShort(E3.id());
+			net.sendToClients(bf);
+		}
+	});
+}
+
+client {
+	net.receive("E3", function(stream bf) {
+		gate = new entity(bf.readShort());
+	});
+
+	event.add("RenderScreen", "Render", function(int w, int h) {
+		event.call(gate, "RenderScreen", w, h, system.getEntity());
+	});
+}
+
+event.add("UseScreen", "Interact", function(int x, int y, player who) {
+	event.call(gate, "Interact", x, y, who, system.getEntity());
+});
+]]
+
+local function sDefaultScript()
+	local screen = GetConVarString("gmod_toolmode") == "wire_expression3_screen";
+	print("sDefaultScript",screen,GetConVarString("gmod_toolmode"));
+	return screen and sDefaultScreenTab or sDefaultGateTab;
+end
 
 AccessorFunc( PANEL, "m_sText", 		"Text", FORCE_STRING ) 
 AccessorFunc( PANEL, "m_bSizable", 		"Sizable", FORCE_BOOL ) 
@@ -196,7 +239,7 @@ function PANEL:Init( )
 	self.pnlTabHolder:SetPadding( 0 )
 	
 	self.pnlTabHolder.btnNewTab.DoClick = function( btn ) 
-		self:NewTab( "editor", sDefaultScript, nil, "generic" )
+		self:NewTab( "editor", sDefaultScript(), nil, "generic" )
 	end
 
 	self.tbConsoleHolder = vgui.Create( "DPanel", self ) 
@@ -269,7 +312,7 @@ function PANEL:Init( )
 	end )
 		
 	if not self:OpenOldTabs( ) then 
-		self:NewTab( "editor", sDefaultScript )
+		self:NewTab( "editor", sDefaultScript() )
 	end 
 	
 	self:NewMenuTab( "options" )

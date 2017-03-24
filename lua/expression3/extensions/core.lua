@@ -60,13 +60,15 @@ local _nil = {} -- Future implimentation of nil.
 local isnil = function(obj) return obj == nil or obj == _nil end;
 local notnil = function(obj) return obj ~= nil and obj ~= _nil end;
 
-local class_nil = ext_core:RegisterClass("", {"void"}, isnumber, isnil);
+EXPR_LIB._NIL_ = _nil;
+
+local class_nil = ext_core:RegisterClass("nil", {"void"}, isnil, isnil);
 
 --[[
 	Class: CLASS
 ]]
 
-local class_nil = ext_core:RegisterClass("cls", {"type"}, isstring, isnil);
+local class_type = ext_core:RegisterClass("cls", {"type"}, isstring, isnil);
 
 --[[
 	Class: BOOLEAN
@@ -265,6 +267,11 @@ end; EXPR_LIB.Invoke = func_invoke;
 
 ext_core:RegisterLibrary("system");
 
+
+ext_core:RegisterFunction("system", "getEntity", "", "e", 1, function(context) return context.entity end);
+
+ext_core:RegisterFunction("system", "getOwner", "", "p", 1, function(context) return context.player end);
+
 ext_core:RegisterFunction("system", "invoke", "cls,n,f,...", "", 0, EXPR_LIB.Invoke);
 
 ext_core:RegisterFunction("system", "print", "...", "", 0, function(context, ...)
@@ -359,12 +366,34 @@ ext_core:RegisterFunction("event", "remove", "s,s", "", 0, function(context, eve
 	events[id] = nil;
 end);
 
-ext_core:RegisterFunction("event", "call", "cls,n,s,...", "", 0, function(context, result, count, event, ...)
-	local status, result = context.ent:CallEvent(result, count, event, ...);
+local function resultsToTable(status, class, results)
+	local t = {{"b", status}};
+	for i = 1, #results do t[i + 1] = {class, results[i]} end
+	return {tbl = t, children = {}, parents = {}, size = #t};
+end
 
-	if (status) then
-		return unpack(result);
-	end
+ext_core:RegisterFunction("event", "call", "s,...", "b", 1, function(context, event, ...)
+	local status = context.ent:CallEvent("", 0, event, ...);
+	return status;
+end);
+
+ext_core:RegisterFunction("event", "call", "cls,n,s,...", "t", 1, function(context, class, count, event, ...)
+	local status, results = context.ent:CallEvent(class, count, event, ...);
+	return resultsToTable(status, class, results);
+end);
+
+ext_core:RegisterFunction("event", "call", "e,s,...", "b", 1, function(context, entity, event, ...)
+	if (not IsValid(entity) or not entity.Expression3) then return end
+	if not hook.Run( "CanTool", context.player, entity, "wire_expression3") then return end
+	local status = entity:CallEvent("", 0, event, ...);
+	return status;
+end);
+
+ext_core:RegisterFunction("event", "call", "cls,n,e,s,...", "", 0, function(context, class, count, entity, event, ...)
+	if (not IsValid(entity) or not entity.Expression3) then return end
+	if not hook.Run( "CanTool", context.player, entity, "wire_expression3") then return end
+	local status, results = entity:CallEvent(class, count, event, ...);
+	return resultsToTable(status, class, results);
 end);
 
 --[[

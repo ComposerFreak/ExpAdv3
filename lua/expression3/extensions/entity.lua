@@ -22,6 +22,10 @@ extension:RegisterClass("e", {"entity"}, IsEntity, IsValid)
 
 extension:RegisterConstructor("e", "n", Entity, true)
 
+extension:RegisterWiredInport("e", "ENTITY")
+
+extension:RegisterWiredOutport("e", "ENTITY")
+
 --[[
 	Operators
 ]]
@@ -38,6 +42,7 @@ extension:RegisterMethod("e", "isValid", "", "b", 1, function(e)
 end, true)
 
 extension:RegisterMethod("e", "class", "", "s", 1, "GetClass")
+extension:RegisterMethod("e", "id", "", "n", 0, "entIndex")
 
 extension:RegisterMethod("e", "getPos", "", "v", 1, "GetPos")
 extension:RegisterMethod("e", "setPos", "v", "", 0, "SetPos")

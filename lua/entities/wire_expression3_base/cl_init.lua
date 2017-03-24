@@ -17,7 +17,6 @@ include("shared.lua");
 local ValidateError;
 
 local function DoValidate(Code)
-	Code = Code or self:GetCode( )
 	
 	if not Code or Code == "" then
 		ValidateError( {msg = "No code submited, compiler exited.", line = 0, char = 0})

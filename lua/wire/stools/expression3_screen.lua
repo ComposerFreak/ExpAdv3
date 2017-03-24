@@ -11,15 +11,15 @@
 AddCSLuaFile();
 
 WireToolSetup.setCategory( "Chips, Gates" )
-WireToolSetup.open("expression3", "Expression 3", "wire_expression3_base", nil, "Expression3s")
+WireToolSetup.open("expression3_screen", "Expression 3 Screen", "wire_expression3_screen", nil, "Expression3s")
 
 --[[
 	Client side language, etc.
 ]]
 
 if CLIENT then
-	language.Add("Tool.wire_expression3.name", "Expression 3 Tool (Wire)")
-	language.Add("Tool.wire_expression3.desc", "Spawns an Expression 3 chip for use with the wire system.")
+	language.Add("Tool.wire_expression3_screen.name", "Expression 3 Scrren Tool (Wire)")
+	language.Add("Tool.wire_expression3_screen.desc", "Spawns an Expression 3 chip for use with the wire system.")
 
 	TOOL.Information = {
 		{ name = "left", text = "Create " .. TOOL.Name },
@@ -34,14 +34,13 @@ end
 ]]
 
 TOOL.ClientConVar = {
-	model = "models/nezzkryptic/e3_chip.mdl",
-	script_model = "";
+	model = "models/props_phx/rt_screen.mdl",
 }
 
 WireToolSetup.SetupMax(20)
 WireToolSetup.BaseLang()
 
-duplicator.RegisterEntityClass( "wire_expression3_base", WireLib.MakeWireEnt, "Data", "code_str" )
+duplicator.RegisterEntityClass( "wire_expression3_screen", WireLib.MakeWireEnt, "Data", "code_str" )
 
 function TOOL:PostMake(ent)
 	local ply = self:GetOwner();
@@ -56,18 +55,7 @@ function TOOL:PostMake(ent)
 	end);
 end
 
-local GateModels = {
-	"models/nezzkryptic/e3_chip.mdl",
-	"models/lemongate/lemongate.mdl",
-	"models/shadowscion/lemongate/gate.mdl",
-	"models/mandrac/wire/e3.mdl",
-	"models/bull/gates/processor.mdl",
-	"models/expression 2/cpu_controller.mdl",
-	"models/expression 2/cpu_expression.mdl",
-	"models/expression 2/cpu_interface.mdl",
-	"models/expression 2/cpu_microchip.mdl",
-	"models/expression 2/cpu_processor.mdl",
-};
+
 
 function TOOL:GetModel()
 	local script_model = self:GetClientInfo("script_model");
@@ -85,23 +73,8 @@ if CLIENT then
 	local TOOL = TOOL;
 
 	function TOOL.BuildCPanel( CPanel )
-
-		local PropList = vgui.Create( "PropSelect" )
-
-		PropList:SetConVar( "wire_expression3_model" )
-
-		for _, Model in pairs( GateModels ) do
-			PropList:AddModel( Model, false )
-		end
-
-		CPanel:AddItem( PropList )
+		WireDermaExts.ModelSelect(CPanel, "wire_expression3_screen_model", list.Get( "WireScreenModels" ), 5)
 	end
-
-	hook.Add("Expression3.CloseGolem", "Expression3.Tool.ChooseModel", function()
-		local model = Golem.GetDirective("model") or "";
-		RunConsoleCommand( "wire_expression3_script_model", model);
-		MsgN("E3 - Closed editor got model ", model)
-	end)
 end
 
 function TOOL:RightClick( Trace )

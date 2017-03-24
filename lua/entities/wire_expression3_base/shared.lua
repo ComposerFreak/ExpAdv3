@@ -133,6 +133,7 @@ function ENT:BuildEnv(context, instance)
 		env.SERVER = SERVER;
 		env.CLIENT = CLIENT;
 		env.CONTEXT = context;
+		env.VOID = EXPR_LIB._NIL_;
 
 	-- Main Operations
 		env._OPS	= instance.operators;

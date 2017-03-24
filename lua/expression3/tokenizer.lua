@@ -36,6 +36,7 @@ local KEYWORDS = {
 		["catch"] = {"cth", "catch"},
 		["class"] = {"cls", "class"},
 		["method"] = {"meth", "method"},
+		["nil"] = {"nil", "nil"},
 	}
 }
 

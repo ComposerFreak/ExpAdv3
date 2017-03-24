@@ -2122,6 +2122,10 @@ function PARSER.Expression_29(this)
 		local inst = this:StartInstruction("cls", this.__token);
 		inst.value = this.__token.data;
 		return this:EndInstruction(inst, {});
+	elseif this:Accept("nil") then
+		local inst = this:StartInstruction("nil", this.__token);
+		inst.value = this.__token.data;
+		return this:EndInstruction(inst, {});
 	end
 end
 
