@@ -135,25 +135,168 @@ end, true)
 --[[
 ]]
 
-extension:RegisterOperator("==", "t,t", "b", 1);
+extension:RegisterOperator("eq", "t,t", "b", 1);
 
-extension:RegisterOperator("!=", "t,t", "b", 1);
+extension:RegisterOperator("neq", "t,t", "b", 1);
+
+extension:RegisterOperator("len", "t", "n", 1, function(tbl)
+	return #tbl.tbl;
+end, true);
 
 --[[
-
+	Methods
 ]]
+
+extension:RegisterMethod("t", "keys", "", "t", 1, function(tbl)
+	local t = {};
+
+	for key, value in pairs(tbl.tbl) do
+		if (value and value[2] ~= nil) then
+			local typ;
+
+			if (isnumber(key)) then
+				typ = "n";
+			elseif (isstring(key)) then
+				typ = "s";
+			elseif (isentity(key)) then
+				typ = "e";
+			elseif (isplayer(key)) then
+				typ = "p";
+			end
+
+			if (type) then
+				t[#t + 1] = {t, key};
+			end
+		end
+	end
+
+	return {tbl = t, children = {}, parents = {}, size = #t};
+end, true);
+
+extension:RegisterMethod("t", "values", "", "t", 1, function(ctx, tbl)
+	local values = {};
+
+	for key, value in pairs(tbl.tbl) do
+		if (value and value[1] ~= "" and value[2] ~= nil) then
+			values[value[2]] = value;
+		end
+	end
+
+	local i = 0;
+	local res = {tbl = {}, children = {}, parents = {}, size = #t};
+
+	for _, value in pairs(values) do
+		i = i + 1;
+		eTable.set(ctx, res, i, value[1], value[2])
+	end
+
+	return res;
+end, false);
+
+--[[
+	Autogen methods and operators (type sepecific)
+]]
+
+local VALID_KEYS = {"n", "s", "e", "p"};
+
+for _, k in pairs(VALID_KEYS) do
+	if (k ~= "") then			
+		extension:RegisterMethod("t", "exists", k, "b", 1, function(ctx, tbl, value)
+			if (k == "_vr") then
+				if (tbl.tbl[value[2]]) then
+					return true;
+				end
+			end
+
+			if (tbl.tbl[value]) then
+				return true;
+			end
+
+			return false;
+		end, false);
+
+		extension:RegisterMethod("t", "type", k, "cls", 1, function(ctx, tbl, key)
+			local value = tabl.tbl[key]
+			return value and value[1] or "";
+		end, false);
+	end
+end
 
 function extension.PostLoadClasses(this, classes)
 	for _, c in pairs(classes) do
-		local i = c.id;
+		local id = c.id;
 
 		if (id ~= "") then
-			extension:RegisterOperator("get", "t," .. i, "vr", 1, eTable.get);
-			extension:RegisterOperator("get", string.format("t,%s,cls", i), "", 1, eTable.get);
+			extension:RegisterOperator("get", "t," .. id, "vr", 1, eTable.get);
+
+			extension:RegisterOperator("get", string.format("t,%s,cls", id), "", 1, eTable.get);
 			
-			for _, _c in pairs(classes) do
-				local v = _c.id;
-				extension:RegisterOperator("set", string.format("t,%s,cls,%s", i, v), "", 1, eTable.set);
+			extension:RegisterMethod("t", "push", id, "", 0, function(ctx, tbl, value)
+				eTable.set(ctx, tbl, #tbl.tbl + 1, id, value);
+			end, false);
+
+			extension:RegisterMethod("t", "insert", id .. ",n", "", 0, function(ctx, tbl, key, value)
+				table.insert(tbl.tbl, key, nil);
+				eTable.set(ctx, tbl, key, id, value);
+			end, false);
+
+			extension:RegisterMethod("t", "pop" .. c.name, "", id, 1, function(ctx, tbl)
+				local value = tbl.tbl[#tbl.tbl];
+
+				if (not value or (value[1] ~= id and id ~= "_vr")) then
+					ctx:Throw(string.format("table.pop%s() got result %s, %s expected.", c.name, value[1], c.name));
+				end
+
+				tbl.tbl[#tbl.tbl] = nil;
+
+				return id ~= "_vr" and value[2] or value;
+			end, false);
+
+			extension:RegisterMethod("t", "shift" .. c.name, "", id, 1, function(ctx, tbl)
+				local value = tbl.tbl[1];
+
+				if (not value or (value[1] ~= id and id ~= "_vr")) then
+					ctx:Throw(string.format("table.shift%s() got result %s, %s expected.", c.name, value[1], c.name));
+				end
+
+				eTable.set(ctx, tbl, 1, "", nil);
+
+				for i = 1, #tbl.tbl do
+					tbl.tbl[i] = tbl.tbl[i + 1];
+				end
+
+				tbl.tbl[#tbl.tbl] = nil;
+				
+				return id ~= "_vr" and value[2] or value;
+			end, false);
+
+			extension:RegisterMethod("t", "unshift" .. c.name, id, "", 0, function(ctx, tbl, value)
+				table.insert(tbl.tbl, 1, nil);
+				eTable.set(ctx, tbl, 1, id, value);
+			end, false);
+
+			extension:RegisterMethod("t", "contains", id, "b", 1, function(ctx, tbl, value)
+				if (id == "_vr") then
+					for k, v in pairs(tbl.tbl) do
+						if (v and k == value[2]) then
+							return true;
+						end
+					end
+				end
+
+				for k, v in pairs(tbl.tbl) do
+					if (v and v[1] == id and v[2] == value) then
+						return true;
+					end
+				end
+
+				return false;
+			end, false);
+
+			for _, k in pairs(VALID_KEYS) do
+				if (k ~= "") then
+					extension:RegisterOperator("set", string.format("t,%s,cls,%s", i, k), "", 1, eTable.set);
+				end
 			end
 		end
 	end
@@ -162,13 +305,5 @@ end
 --[[
 ]]
 
---[[ext_core:RegisterMethod("t", "insert", "", "s", 1, function(err)
-	return err and err.msg or "n/a";
-end, true)]]
-
-
-
 extension:EnableExtension();
 
---GetOperator(get(t,n,n))
---GetOperator(get(t,n,_cls))

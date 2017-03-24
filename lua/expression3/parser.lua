@@ -32,12 +32,12 @@
 			Stmt2 ← ("if" Cond Block Stmt3)? Stmt5
 			Stmt3 ← ("elseif" Cond Block Stmt3)? Stmt4
 			Stmt4 ← ("else" Block)
-			Stmt5 ← ("for" "(" Type "=" Expr1 ")" Block)? Stmt6
+			Stmt5 ← (("for" "(" Type "=" Expr1 ")" Block) / ("while" Cond Block))? Stmt6
 			Stmt6 ← (("server" / "client") Block)? Stmt7
 			Stmt7 ← "global"? (type (Var("," Var)* "="? (Expr1? ("," Expr1)*)))? Stmt8
 			Stmt8 ← (type (Var("," Var)* ("=" / "+=" / "-=" / "/=" / "*=")? (Expr1? ("," Expr1)*)))? Stmt9
 			Stmt9 ← ("delegate" "(" (Type ((",")?)*)?) ")" ("{")? "return" Num ("}")?)? Stmt10
-			Stmt10 ← ("return" (Expr1 ((","")?)*)?)?)?
+			Stmt10 ← (("return" (Expr1 ((","")?)*)?) / "continue", "break")?
 
 		:::Expressions:::
 			Expr1 ← (Expr1 "?" Expr1 ":" Expr1)? Expr2
@@ -1041,6 +1041,16 @@ function PARSER.Statment_5(this)
 		return this:EndInstruction(inst, expressions);
 	end
 
+	if (this:Accept("whl")) then
+		local inst = this:StartInstruction("while", this.__token);
+
+		inst.condition = this:GetCondition();
+
+		inst.block = this:Block_1(true, "do");
+
+		return this:EndInstruction(inst, {});
+	end
+
 	return this:Statment_6();
 end
 
@@ -1367,6 +1377,18 @@ function PARSER.Statment_11(this)
 		return this:EndInstruction(inst, expressions);
 	end
 
+	if (this:Accept("cnt")) then
+		local inst = this:StartInstruction("continue", this.__token);
+		this:Accept("sep");
+		return this:EndInstruction(inst, expressions);
+	end
+
+	if (this:Accept("brk")) then
+		local inst = this:StartInstruction("break", this.__token);
+		this:Accept("sep");
+		return this:EndInstruction(inst, expressions);
+	end
+
 	local expr = this:Expression_1();
 
 	if (expr and this:CheckToken("lsb")) then
@@ -1556,7 +1578,7 @@ function PARSER.Expression_7(this)
 					expressions[#expressions + 1] = this:Expression_1()
 				end
 
-				expr = this:EndInstruction(ist, expressions);
+				expr = this:EndInstruction(inst, expressions);
 			else
 				local inst = this:StartInstruction("eq", expr.token);
 
@@ -1594,7 +1616,7 @@ function PARSER.Expression_7(this)
 
 				local expr2 = this:Expression_8();
 
-				expr = this:EndInstruction(ist, {expr, expr2});
+				expr = this:EndInstruction(inst, {expr, expr2});
 			end
 		end
 	end

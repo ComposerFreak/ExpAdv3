@@ -34,7 +34,7 @@ end
 
 if (CLIENT) then
 	function ENT:Initialize()
-		self.GPU = GPULib.WireGPU(self, WIRE_GPU_HD);
+		self.GPU = GPULib.WireGPU(self)--, WIRE_GPU_HD);
 		local res = self.GPU.Resolution or 512;
 	end
 
@@ -42,7 +42,7 @@ if (CLIENT) then
 
 	function ENT:Draw()
 		self:DrawModel()
-		
+
 		Wire_Render(self)
 
 		self.GPU:RenderToGPU( function()

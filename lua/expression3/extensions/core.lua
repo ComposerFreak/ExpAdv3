@@ -70,6 +70,12 @@ local class_nil = ext_core:RegisterClass("nil", {"void"}, isnil, isnil);
 
 local class_type = ext_core:RegisterClass("cls", {"type"}, isstring, isnil);
 
+ext_core:RegisterOperator("neq", "cls,cls", "b", 1);
+ext_core:RegisterOperator( "eq", "cls,cls", "b", 1); 
+
+ext_core:RegisterOperator("eq*", "cls,cls", "b", 1, eqM, true);
+ext_core:RegisterOperator("neq*", "cls,cls", "b", 1, neqM, true);
+
 --[[
 	Class: BOOLEAN
 ]]

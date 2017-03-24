@@ -958,7 +958,7 @@ function COMPILER.Compile_AADD(this, inst, token, expressions)
 
 		this:CheckState(op.state, token, "Assignment operator (+=)");
 
-		if (not op.operation) then
+		if (not op.operator) then
 			if (r == "s" or class == "s") then
 				char = "..";
 			end
@@ -1013,8 +1013,7 @@ function COMPILER.Compile_ASUB(this, inst, token, expressions)
 
 		this:CheckState(op.state, token, "Assignment operator (-=)");
 
-		if (not op.operation) then
-
+		if (not op.operator) then
 			if (info and info.prefix) then
 				this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "-");
 			else
@@ -1067,8 +1066,7 @@ function COMPILER.Compile_ADIV(this, inst, token, expressions)
 
 		this:CheckState(op.state, token, "Assignment operator (/=)");
 
-		if (not op.operation) then
-
+		if (not op.operator) then
 			if (info and info.prefix) then
 				this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "/");
 			else
@@ -1119,8 +1117,7 @@ function COMPILER.Compile_AMUL(this, inst, token, expressions)
 
 		this:CheckState(op.state, token, "Assignment operator (*=)");
 
-		if (not op.operation) then
-
+		if (not op.operator) then
 			if (info and info.prefix) then
 				this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "*");
 			else
@@ -1160,7 +1157,7 @@ function COMPILER.Compile_TEN(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(expr.token, "Tenary operator (A ? b : C) does not support '%s ? %s : %s'", name(r1), name(r2), name(r3));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		this:QueueReplace(inst, inst.__and, "and");
 		this:QueueReplace(inst, inst.__or, "or");
 	else
@@ -1204,7 +1201,7 @@ function COMPILER.Compile_OR(this, inst, token, expressions)
 		if (not op) then
 			this:Throw(token, "Logical or operator (||) does not support '%s || %s'", name(r1), name(r2));
 		end
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		this:QueueReplace(inst, inst.__operator, "or");
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1245,7 +1242,7 @@ function COMPILER.Compile_AND(this, inst, token, expressions)
 		if (not op) then
 			this:Throw(token, "Logical and operator (&&) does not support '%s && %s'", name(r1), name(r2));
 		end
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		this:QueueReplace(inst, inst.__operator, "and");
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1277,7 +1274,7 @@ function COMPILER.Compile_BXOR(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Binary xor operator (^^) does not support '%s ^^ %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		this:QueueInjectionBefore(inst, expr1.token, "bit.bxor(");
 
 		this:QueueReplace(inst, inst.__operator, ",");
@@ -1315,7 +1312,7 @@ function COMPILER.Compile_BOR(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Binary or operator (|) does not support '%s | %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		this:QueueInjectionBefore(inst, expr1.token, "bit.bor(");
 
 		this:QueueReplace(inst, inst.__operator, ",");
@@ -1352,7 +1349,7 @@ function COMPILER.Compile_BAND(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Binary or operator (&) does not support '%s & %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		this:QueueInjectionBefore(inst, expr1.token, "bit.band(");
 
 		this:QueueReplace(inst, inst.__operator, ",");
@@ -1393,7 +1390,7 @@ function COMPILER.Compile_EQ(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Comparison operator (==) does not support '%s == %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		-- Leave the code alone.
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1428,7 +1425,7 @@ function COMPILER.Compile_NEQ(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Comparison operator (!=) does not support '%s != %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		this:QueueReplace(inst, inst.__operator, "~=");
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1460,7 +1457,7 @@ function COMPILER.Compile_LTH(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Comparison operator (<) does not support '%s < %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		-- Leave the code alone.
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1492,7 +1489,7 @@ function COMPILER.Compile_LEQ(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Comparison operator (<=) does not support '%s <= %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		-- Leave the code alone.
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1524,7 +1521,7 @@ function COMPILER.Compile_GTH(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Comparison operator (>) does not support '%s > %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		-- Leave the code alone.
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1556,7 +1553,7 @@ function COMPILER.Compile_GEQ(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Comparison operator (>=) does not support '%s >= %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		-- Leave the code alone.
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1588,7 +1585,7 @@ function COMPILER.Compile_BSHL(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Binary shift operator (<<) does not support '%s << %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		this:QueueInjectionBefore(inst, expr1.token, "bit.lshift(");
 
 		this:QueueReplace(inst, inst.__operator, ",");
@@ -1626,7 +1623,7 @@ function COMPILER.Compile_BSHR(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Binary shift operator (>>) does not support '%s >> %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		this:QueueInjectionBefore(inst, expr1.token, "bit.rshift(");
 
 		this:QueueReplace(inst, inst.__operator, ",");
@@ -1667,7 +1664,7 @@ function COMPILER.Compile_ADD(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Addition operator (+) does not support '%s + %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		if (r1 == "s" or r2 == "s") then
 			this:QueueReplace(inst, inst.__operator, ".."); -- Replace + with .. for string addition;
 		end
@@ -1701,7 +1698,7 @@ function COMPILER.Compile_SUB(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Subtraction operator (-) does not support '%s - %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		-- Do not change the code.
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1733,7 +1730,7 @@ function COMPILER.Compile_DIV(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(expr.token, "Division operator (/) does not support '%s / %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		-- Do not change the code.
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1765,7 +1762,7 @@ function COMPILER.Compile_MUL(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Multiplication operator (*) does not support '%s * %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		-- Do not change the code.
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1797,7 +1794,7 @@ function COMPILER.Compile_EXP(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Exponent operator (^) does not support '%s ^ %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		-- Do not change the code.
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1829,7 +1826,7 @@ function COMPILER.Compile_MOD(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Modulus operator (%) does not support '%s % %s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		-- Do not change the code.
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1858,7 +1855,7 @@ function COMPILER.Compile_NEG(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Negation operator (-A) does not support '-%s'", name(r1));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		-- Do not change the code.
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1885,7 +1882,7 @@ function COMPILER.Compile_NOT(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Not operator (!A) does not support '!%s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		this:QueueReplace(inst, inst.__operator, "not");
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1912,7 +1909,7 @@ function COMPILER.Compile_LEN(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Length operator (#A) does not support '#%s'", name(r1), name(r2));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		-- Once again we change nothing.
 	else
 		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -1956,7 +1953,7 @@ function COMPILER.Compile_DELTA(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Delta operator ($) does not support '$%s'", name(c));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		this:QueueRemove(inst, inst.__operator);
 		this:QueueInjectionBefore(inst, inst.__var, "DELTA", ".", var, "-");
 	else
@@ -2002,7 +1999,7 @@ function COMPILER.Compile_CHANGED(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "Changed operator (~) does not support '~%s'", name(c));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		this:QueueRemove(inst, inst.__operator);
 		this:QueueInjectionBefore(inst, inst.__var, "DELTA", ".", var, "~=");
 	else
@@ -2029,7 +2026,7 @@ function COMPILER.Expression_IS(this, expr)
 	if (op) then
 		if (not this:CheckState(op.state)) then
 			return false, expr;
-		elseif (not op.operation) then
+		elseif (not op.operator) then
 			expr.result = op.type;
 			expr.rCount = op.count;
 
@@ -2162,7 +2159,7 @@ function COMPILER.Compile_COND(this, inst, token, expressions)
 
 	if (not op) then
 		this:Throw(token, "No such condition (%s).", name(r));
-	elseif (not op.operation) then
+	elseif (not op.operator) then
 		-- Once again we change nothing.
 	else
 		this:QueueInjectionBefore(inst, expr.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -2563,6 +2560,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, expressions)
 
 	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
 
+	this:SetOption("loop", false);
 	this:SetOption("canReturn", true);
 	this:SetOption("retunClass", "?"); -- Indicate we do not know this yet.
 	this:SetOption("retunCount", -1); -- Indicate we do not know this yet.
@@ -2656,6 +2654,18 @@ function COMPILER.Compile_RETURN(this, inst, token, expressions)
 	end
 end
 
+function COMPILER.Compile_BREAK(this, inst, token)
+	if (not this:GetOption("loop", false)) then
+		this:Throw(token, "Break must not appear outside of a loop");
+	end
+end
+
+function COMPILER.Compile_CONTINUE(this, inst, token)
+	if (not this:GetOption("loop", false)) then
+		this:Throw(token, "Continue must not appear outside of a loop");
+	end
+end
+
 --[[
 ]]
 
@@ -2688,6 +2698,7 @@ function COMPILER.Compile_FUNCT(this, inst, token, expressions)
 		end
 	end
 
+	this:SetOption("loop", false);
 	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
 
 	this:SetOption("canReturn", true);
@@ -3000,11 +3011,20 @@ function COMPILER.Compile_FOR(this, inst, token, expressions)
 	end
 
 	this:PushScope();
-
+	this:SetOption("loop", true);
 	this:AssignVariable(token, true, inst.variable.data, inst.class, nil);
 
 	this:Compile(inst.stmts);
 
+	this:PopScope();
+end
+
+function COMPILER.Compile_WHILE(this, inst, token, expressions)
+	this:Compile(inst.condition);
+
+	this:PushScope();
+		this:SetOption("loop", true);
+		this:Compile(inst.block);
 	this:PopScope();
 end
 
@@ -3019,6 +3039,7 @@ function COMPILER.Compile_TRY(this, inst, token, expressions)
 
 	this:PushScope();
 		this:SetOption("canReturn", false);
+		this:SetOption("loop", false);
 
 	this:Compile(inst.protected);
 
@@ -3032,6 +3053,7 @@ function COMPILER.Compile_TRY(this, inst, token, expressions)
 	this:QueueRemove(inst, inst.__rpa);
 
 	this:PushScope();
+	this:SetOption("loop", false);
 
 	this:AssignVariable(token, true, inst.__var.data, "_er", nil);
 
@@ -3395,6 +3417,7 @@ end
 
 function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
 	this:PushScope();
+	this:SetOption("loop", false);
 
 	local userclass = this:GetOption("userclass");
 
@@ -3448,6 +3471,7 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 	userclass.methods[signature] = meth;
 
 	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
+	this:SetOption("loop", false);
 	this:SetOption("canReturn", true);
 	this:SetOption("retunClass", meth.result);
 	this:SetOption("retunCount", meth.result ~= "" and -1 or 0);
@@ -3484,6 +3508,7 @@ function COMPILER.Compile_TOSTR(this, inst, token, expressions)
 	local userclass = this:GetOption("userclass");
 
 	this:PushScope();
+	this:SetOption("loop", false);
 
 	this:AssignVariable(token, true, "this", userclass.name);
 
