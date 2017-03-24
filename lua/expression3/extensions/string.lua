@@ -22,10 +22,6 @@ extention:RegisterMethod("s", "lower", "", "s", 1, "string.lower", true);
 
 extention:RegisterMethod("s", "PatternSafe", "", "s", 1, "string.PatternSafe", true);
 
-extention:RegisterMethod("s", "rep", "n", "s", 1, "string.rep", true);
-
-extention:RegisterMethod("s", "rep", "n,s", "s", 1, "string.rep", true);
-
 extention:RegisterMethod("s", "Replace", "", "s", 1, "string.", true);
 
 extention:RegisterMethod("s", "reverse", "", "s", 1, "string.reverse", true);
@@ -49,23 +45,55 @@ extention:RegisterMethod("s", "TrimRight", "s", "s", 1, "string.TrimRight", true
 extention:RegisterMethod("s", "upper", "", "s", 1, "string.upper", true);
 
 --[[
+	REP
+]]
+
+local rep_chunk = 1000000
+local function str_rep(str, rep, sep) -- Author: edgarasf123
+	if rep < 0.5 then return "" end
+	
+	local ret = {}
+	for i = 1, rep / rep_chunk do
+		ret[#ret+1] = string.rep( str, rep_chunk, sep )
+	end
+	
+	local r = rep%rep_chunk
+	if r>0.5 then
+		ret[#ret+1] = string.rep(str, r, sep)
+	end
+	
+	return table.concat(ret, sep)
+end
+
+extention:RegisterMethod("s", "rep", "n", "s", 1, str_rep, true);
+
+extention:RegisterMethod("s", "rep", "n,s", "s", 1, str_rep, true);
+
+extention:RegisterMethod("s", "rep", "n,s,s", "s", 1, str_rep, true);
+
+
+--[[
 	FIND
 ]]
 
 extention:RegisterMethod("s", "find", "s,s", "n", 2, function(a, b)
 	local s, e = string.find(a, b, 1, true); -- No patterns
+	return s,e
 end, true);
 
 extention:RegisterMethod("s", "find", "s,s,n", "n", 2, function(a, b, c)
 	local s, e = string.find(a, b, c, true); -- No patterns
+	return s,e
 end, true);
 
 extention:RegisterMethod("s", "find", "s,ptr", "n", 2, function(a, b)
 	local s, e = string.find(a, b, 1); -- No patterns
+	return s,e
 end, true);
 
 extention:RegisterMethod("s", "find", "s,ptr,n", "n", 2, function(a, b, c)
 	local s, e = string.find(a, b, c); -- No patterns
+	return s,e
 end, true);
 
 --[[
