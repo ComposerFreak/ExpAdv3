@@ -15,7 +15,7 @@
 		All documentation below is to be considered work in progress and this api will more then likely change.
 	
 	::HOOKS::
-		Expression3.RegisterExtensions					-> Called when extensions should be registered.
+		Expression3.RegisterExtenstions					-> Called when extensions should be registered.
 		Expression3.LoadClasses							-> Classes must be registered inside this hook.
 		Expression3.LoadConstructors					-> Constructors must be registered inside this hook.
 		Expression3.LoadMethods							-> Methods must be registered inside this hook.
@@ -23,7 +23,7 @@
 		Expression3.LoadAtributes						-> Atributes must be registered inside this hook.
 		Expression3.LoadLibraries						-> Libraries must be registered inside this hook.
 		Expression3.LoadFunctions						-> Functions must be registered inside this hook.
-		Expression3.PostRegisterExtensions				-> This is called once expadv3 has loaded its extensions.
+		Expression3.PostRegisterExtenstions				-> This is called once expadv3 has loaded its extensions.
 		Expression3.PostCompile.System.<function>		-> This is called after compiling every function on the system library,		-> ressult class, result count = (comiler, instruction, token, expressions)
 												  		   (replace <function> with the name of the function on the library..		
 		Expression3.Entity.BuildSandbox					-> This is called when building the sandboxed enviroment for an entity.		-> (entity, context, enviroment)
@@ -39,11 +39,11 @@
 
 		
 	::IMPORTANT::
-		You should use 'Extension = EXPR_LIB.RegisterExtension(string)' to create a new Extension object.
+		You should use 'Extension = EXPR_LIB.RegisterExtenstion(string)' to create a new Extension object.
 		You should then use the api methods on the new Extension to register everything.
 		Doing it this way means you do not need to add the hooks yourself as the extension will load the contents at the correct time.
-		Do not forget to call Extension:EnableExtension() once your done otherwise the extension will not load itself.
-		It is possible to register an extension outside the extension folder by creating it inside Expression3.RegisterExtensions hook.
+		Do not forget to call Extension:EnableExtenstion() once your done otherwise the extension will not load itself.
+		It is possible to register an extension outside the extension folder by creating it inside Expression3.RegisterExtenstions hook.
 		
 	::RULES::
 		A constructor's function can be a string, if so the compiler will attempt to use a native lua function at the given string; e.g string.replace.
@@ -142,7 +142,7 @@
 
 		EXPR_LIB.GetClass(str class)
 
-		EXPR_LIB.RegisterExtension(str name)
+		EXPR_LIB.RegisterExtenstion(str name)
 			Returns and registers a new extension with expression 3;
 			This will allow you to add to the api with out manually using the required events.
 	
@@ -177,7 +177,7 @@
 		REMOVED: Extension:RegisterEvent(str name, str parameters, str type, number amount of values returned)
 			Calls EXPR_LIB.RegisterEvent(...) at the correct time with all given valid parameters.
 
-		Extension:EnableExtension()
+		Extension:EnableExtenstion()
 			Must be called to allow the extension to register its contents.
 		
 	::Editor Extention::
@@ -682,7 +682,7 @@ end
 local Extension = {};
 Extension.__index = Extension;
 
-function EXPR_LIB.RegisterExtension(name)
+function EXPR_LIB.RegisterExtenstion(name)
 	local ext = {};
 
 	ext.name = name;
@@ -792,7 +792,7 @@ end
 
 local enabledExtentions = {};
 
-function Extension.EnableExtension(this)
+function Extension.EnableExtenstion(this)
 	this.enabled = true;
 
 	local classes = {};
@@ -896,7 +896,7 @@ function Extension.EnableExtension(this)
 	end)
 end
 
--- emtpty table before: Expression3.PostRegisterExtensions
+-- emtpty table before: Expression3.PostRegisterExtenstions
 function EXPR_LIB.GetEnabledExtensions()
 	return enabledExtentions or {};
 end
@@ -981,7 +981,7 @@ function EXPR_LIB.Initalize()
 
 	include("expression3/extensions/core.lua");
 
-	hook.Run("Expression3.RegisterExtensions");
+	hook.Run("Expression3.RegisterExtenstions");
 
 	classes = {};
 	classIDs = {};
@@ -1034,7 +1034,7 @@ function EXPR_LIB.Initalize()
 
 	hook.Run("Expression3.BuildExtensionData");
 
-	hook.Run("Expression3.PostRegisterExtensions");
+	hook.Run("Expression3.PostRegisterExtenstions");
 
 	include("expression3/tokenizer.lua");
 	include("expression3/parser.lua");

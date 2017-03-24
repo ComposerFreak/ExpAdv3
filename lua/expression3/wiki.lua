@@ -91,7 +91,7 @@ end
 
 --------------------------------
 
-hook.Add("Expression3.PostRegisterExtensions", "Expression3.Wiki", function()
+hook.Add("Expression3.PostRegisterExtenstions", "Expression3.Wiki", function()
 	loadWiki = true;
 	
 	examples = {}

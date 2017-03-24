@@ -10,7 +10,7 @@
 	::Angle Extension::
 ]]
 
-local extension = EXPR_LIB.RegisterExtension("angle")
+local extension = EXPR_LIB.RegisterExtenstion("angle")
 
 --[[
 	CLASS
@@ -167,4 +167,4 @@ end, true)
 --[[
 ]]
 
-extension:EnableExtension()
+extension:EnableExtenstion()

@@ -56,6 +56,16 @@ function TOOL:PostMake(ent)
 	end);
 end
 
+function TOOL:CheckHitOwnClass( trace )
+	return trace.Entity:IsValid() and trace.Entity.Expression3;
+end
+
+function TOOL:LeftClick_Update( trace )
+	net.Start("Expression3.RequestUpload");
+		net.WriteEntity(trace.Entity);
+	net.Send(self:GetOwner());
+end
+
 local GateModels = {
 	"models/nezzkryptic/e3_chip.mdl",
 	"models/lemongate/lemongate.mdl",
@@ -100,7 +110,6 @@ if CLIENT then
 	hook.Add("Expression3.CloseGolem", "Expression3.Tool.ChooseModel", function()
 		local model = Golem.GetDirective("model") or "";
 		RunConsoleCommand( "wire_expression3_script_model", model);
-		MsgN("E3 - Closed editor got model ", model)
 	end)
 end
 

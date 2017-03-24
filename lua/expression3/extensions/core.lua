@@ -22,7 +22,7 @@
 	Core Extention.
 ]]
 
-local ext_core = EXPR_LIB.RegisterExtension("core");
+local ext_core = EXPR_LIB.RegisterExtenstion("core");
 
 local function eqM(a, b, ...)
 	for k, v in pairs({b, ...}) do
@@ -466,21 +466,20 @@ end);
 	Register Extentions
 ]]
 
-hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", function()
-	ext_core:EnableExtension(); -- Core is registered first :P
+hook.Add("Expression3.RegisterExtenstions", "Expression3.Core.Extensions", function()
+	ext_core:EnableExtenstion(); -- Core is registered first :P
 
 	include("expression3/extensions/math.lua");
 	include("expression3/extensions/string.lua");
 	include("expression3/extensions/vector.lua");
+	include("expression3/extensions/vector2.lua");
 	include("expression3/extensions/angle.lua");
 	include("expression3/extensions/entity.lua");
 	include("expression3/extensions/table.lua");
 	include("expression3/extensions/network.lua");
 	include("expression3/extensions/color.lua");
+	include("expression3/extensions/render.lua");
 	include("expression3/extensions/player.lua");
-
-
-	-- Custom will go here.
 end);
 
 

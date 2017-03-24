@@ -17,92 +17,55 @@ if (SERVER) then
 
 	AddCSLuaFile("expression3/expr_lib.lua");
 
-	AddCSLuaFile("expression3/wiki.lua");
-	
 	AddCSLuaFile("expression3/tokenizer.lua");
-
 	AddCSLuaFile("expression3/parser.lua");
-
 	AddCSLuaFile("expression3/compiler.lua");
-
-	AddCSLuaFile("expression3/extensions/core.lua");
-
-	AddCSLuaFile("expression3/extensions/vector.lua");
-
-	AddCSLuaFile("expression3/extensions/math.lua");
-
-	AddCSLuaFile("expression3/extensions/angle.lua");
-
-	AddCSLuaFile("expression3/extensions/entity.lua");
-
-	AddCSLuaFile("expression3/extensions/player.lua");
-
-	AddCSLuaFile("expression3/extensions/string.lua");
-
-	AddCSLuaFile("expression3/extensions/table.lua");
-
-	AddCSLuaFile("expression3/extensions/network.lua");
-
-	AddCSLuaFile( "expression3/editor.lua");
-
-	AddCSLuaFile( "expression3/editor/font.lua" );
-
-	AddCSLuaFile( "expression3/editor/vector2.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/button.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/closebutton.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/editor.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/console.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/dhtml.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/filebrowser.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/frame.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/hscrollbar.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/ide.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/imagebutton.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/options.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/propertysheet.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/toolbar.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/filemenu.lua" );
-	
-	AddCSLuaFile( "expression3/editor/derma/syntaxer.lua" );
-
-	AddCSLuaFile( "expression3/editor/derma/wiki.lua" );
-
-	AddCSLuaFile("expression3/editor/expr_editor_lib.lua");
-	
-	AddCSLuaFile("expression3/compiler.lua");
-
-	AddCSLuaFile("expression3/editor.lua");
-
 	AddCSLuaFile("expression3/debuger.lua");
 
+	AddCSLuaFile("expression3/extensions/core.lua");
+	AddCSLuaFile("expression3/extensions/math.lua");
+	AddCSLuaFile("expression3/extensions/string.lua");
+	AddCSLuaFile("expression3/extensions/vector.lua");
+	AddCSLuaFile("expression3/extensions/vector2.lua");
+	AddCSLuaFile("expression3/extensions/angle.lua");
+	AddCSLuaFile("expression3/extensions/entity.lua");
+	AddCSLuaFile("expression3/extensions/table.lua");
+	AddCSLuaFile("expression3/extensions/network.lua");
+	AddCSLuaFile("expression3/extensions/color.lua");
+	AddCSLuaFile("expression3/extensions/render.lua");
+	AddCSLuaFile("expression3/extensions/player.lua");
+
+	AddCSLuaFile("expression3/editor.lua");
+	AddCSLuaFile( "expression3/editor.lua");
+	AddCSLuaFile( "expression3/editor/font.lua" );
+	AddCSLuaFile( "expression3/editor/vector2.lua" );
+	AddCSLuaFile( "expression3/editor/derma/button.lua" );
+	AddCSLuaFile( "expression3/editor/derma/closebutton.lua" );
+	AddCSLuaFile( "expression3/editor/derma/editor.lua" );
+	AddCSLuaFile( "expression3/editor/derma/console.lua" );
+	AddCSLuaFile( "expression3/editor/derma/dhtml.lua" );
+	AddCSLuaFile( "expression3/editor/derma/filebrowser.lua" );
+	AddCSLuaFile( "expression3/editor/derma/frame.lua" );
+	AddCSLuaFile( "expression3/editor/derma/hscrollbar.lua" );
+	AddCSLuaFile( "expression3/editor/derma/ide.lua" );
+	AddCSLuaFile( "expression3/editor/derma/imagebutton.lua" );
+	AddCSLuaFile( "expression3/editor/derma/options.lua" );
+	AddCSLuaFile( "expression3/editor/derma/propertysheet.lua" );
+	AddCSLuaFile( "expression3/editor/derma/toolbar.lua" );
+	AddCSLuaFile( "expression3/editor/derma/filemenu.lua" );
+	AddCSLuaFile( "expression3/editor/derma/syntaxer.lua" );
+	AddCSLuaFile( "expression3/editor/derma/wiki.lua" );
+	AddCSLuaFile("expression3/editor/expr_editor_lib.lua");
+
+	AddCSLuaFile("expression3/wiki.lua");
 	AddCSLuaFile("expression3/wiki_inc.lua");
-
 	AddCSLuaFile("expression3/wiki/html_compiler.lua");
-
 	AddCSLuaFile("expression3/wiki/inits/autogen.lua");
 
 	include("expression3/expr_lib.lua");
 
 elseif (CLIENT) then
-
 	include("expression3/expr_lib.lua");
-
 	include("expression3/wiki.lua");
-	
 	include("expression3/wiki_inc.lua");
-
 end

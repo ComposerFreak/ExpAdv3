@@ -10,7 +10,7 @@
 	::Advanced Math Extension::
 ]]
 
-local extension = EXPR_LIB.RegisterExtension("math");
+local extension = EXPR_LIB.RegisterExtenstion("math");
 
 
 
@@ -26,4 +26,4 @@ extension:RegisterFunction("math", "sqrt", "n", "n", 1, math.sqrt, true);
 
 extension:RegisterFunction("math", "tan", "n", "n", 1, math.tan, true);
 
-extension:EnableExtension();
+extension:EnableExtenstion();

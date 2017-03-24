@@ -10,7 +10,7 @@
 	::Vector Extension::
 ]]
 
-local extension = EXPR_LIB.RegisterExtension("vector");
+local extension = EXPR_LIB.RegisterExtenstion("vector");
 
 --[[
 		CLASS
@@ -213,4 +213,4 @@ extension:RegisterMethod("v", "toColor", "", "c", 1, ToColor)
 --[[
 ]]
 
-extension:EnableExtension()
+extension:EnableExtenstion()

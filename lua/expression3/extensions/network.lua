@@ -13,7 +13,7 @@
 local NET_MAX = 10;
 local NET_LIMIT = 512;
 
-local extension = EXPR_LIB.RegisterExtension("network");
+local extension = EXPR_LIB.RegisterExtenstion("network");
 
 --[[
 	Extention class with methods
@@ -359,4 +359,4 @@ extension:RegisterFunction("net", "receive", "s,f", "", 0, function(ctx, name, c
 	ctx.data.net_callbacks[name] = cb;
 end, false);
 
-extension:EnableExtension();
+extension:EnableExtenstion();

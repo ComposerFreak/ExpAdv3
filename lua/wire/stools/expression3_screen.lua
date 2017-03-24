@@ -55,7 +55,15 @@ function TOOL:PostMake(ent)
 	end);
 end
 
+function TOOL:CheckHitOwnClass( trace )
+	return trace.Entity:IsValid() and trace.Entity.Expression3;
+end
 
+function TOOL:LeftClick_Update( trace )
+	net.Start("Expression3.RequestUpload");
+		net.WriteEntity(trace.Entity);
+	net.Send(self:GetOwner());
+end
 
 function TOOL:GetModel()
 	local script_model = self:GetClientInfo("script_model");

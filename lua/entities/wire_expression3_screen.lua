@@ -50,6 +50,7 @@ if (CLIENT) then
 			EXPR3_DRAWSCREEN = true;
 			self:CallEvent("", 0, "RenderScreen", {"n", res}, {"n", res}, {"e", self});
 			EXPR3_DRAWSCREEN = false;
+			hook.Call("Expression3.Entity.PostDrawScreen", self.context, self)
 		end);
 
 		self.GPU:Render()

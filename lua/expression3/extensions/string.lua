@@ -10,7 +10,7 @@
 	::Advanced String Extension::
 ]]
 
-local extention = EXPR_LIB.RegisterExtension("string");
+local extention = EXPR_LIB.RegisterExtenstion("string");
 
 extention:RegisterMethod("s", "char", "", "n", 1, "string.char", true);
 
@@ -82,4 +82,4 @@ end);
 
 extention:RegisterMethod("s", "match", "s,ptr,n", "s", 1, "string.match", true);
 
-extention:EnableExtension();
+extention:EnableExtenstion();

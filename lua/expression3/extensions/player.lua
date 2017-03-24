@@ -10,7 +10,7 @@
 	::Player Extension::
 ]]
 
-local extension = EXPR_LIB.RegisterExtension("player")
+local extension = EXPR_LIB.RegisterExtenstion("player")
 
 extension:RegisterLibrary("ply");
 
@@ -68,4 +68,4 @@ end, true);
 --[[
 ]]
 
-extension:EnableExtension()
+extension:EnableExtenstion()

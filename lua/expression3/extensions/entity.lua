@@ -10,7 +10,7 @@
 	::Entity Extension::
 ]]
 
-local extension = EXPR_LIB.RegisterExtension("entity")
+local extension = EXPR_LIB.RegisterExtenstion("entity")
 
 extension:RegisterLibrary("ent");
 
@@ -42,7 +42,7 @@ extension:RegisterMethod("e", "isValid", "", "b", 1, function(e)
 end, true)
 
 extension:RegisterMethod("e", "class", "", "s", 1, "GetClass")
-extension:RegisterMethod("e", "id", "", "n", 0, "entIndex")
+extension:RegisterMethod("e", "id", "", "n", 0, "EntIndex")
 
 extension:RegisterMethod("e", "getPos", "", "v", 1, "GetPos")
 extension:RegisterMethod("e", "setPos", "v", "", 0, "SetPos")
@@ -98,4 +98,4 @@ extension:RegisterFunction("ent", "chip", "", "e", 1, function(context) return c
 --[[
 ]]
 
-extension:EnableExtension()
+extension:EnableExtenstion()

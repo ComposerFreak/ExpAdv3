@@ -10,7 +10,7 @@
 	::Vector2 Extension::
 ]]
 
-local extension = EXPR_LIB.RegisterExtension("vector2");
+local extension = EXPR_LIB.RegisterExtenstion("vector2");
 
 --[[
 		CLASS
@@ -82,7 +82,7 @@ end, true);
 
 extension:RegisterOperator("add", "v2,n", "v2", 1, function(a, b)
 	return {x = a.x + b, y = a.y + b};
-end, true);;
+end, true);
 
 extension:RegisterOperator("sub", "v2,n", "v2", 1, function(a, b)
 	return {x = a.x - b, y = a.y - b};
@@ -166,26 +166,26 @@ end, true);
 
 extension:RegisterMethod("v2", "length", "", "n", 1, function(a)
 	return Vector(a.x, a.y, 0):Length2D()
-end, true)
+end, true);
 
 extension:RegisterMethod("v2", "distance", "v2", "n", 1, function(a,b)
 	return math.Distance(a.x, a.y, b.x, b.y)
-end, true)
+end, true);
 
 extension:RegisterMethod("v2", "normalized", "", "v2", 1, function(a)
 	local nv = Vector(a.x, a.y, 0):GetNormalized()
 	return {x = nv.x, y = nv.y}
-end, true)
+end, true);
 
 extension:RegisterMethod("v2", "ceil", "", "", 0, function(v)
 	v.x = math.ceil(v.x)
 	v.y = math.ceil(v.y)
-end, true)
+end, true);
 
 extension:RegisterMethod("v2", "floor", "", "", 0, function(v)
 	v.x = math.floor(v.x)
 	v.y = math.floor(v.y)
-end, true)
+end, true);
 
 extension:RegisterMethod("v2", "round", "n", "", 0, function(v,n)
 	v.x = math.Round(v.x, n)
@@ -195,9 +195,9 @@ end, true)
 extension:RegisterMethod("v2", "round", "", "", 0, function(v)
 	v.x = math.Round(v.x)
 	v.y = math.Round(v.y)
-end, true)
+end, true);
 
 --[[
 ]]
 
-extension:EnableExtension()
+extension:EnableExtenstion();

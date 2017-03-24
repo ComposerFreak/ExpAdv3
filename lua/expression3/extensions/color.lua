@@ -10,7 +10,7 @@
 	::Color Extension::
 ]]
 
-local extension = EXPR_LIB.RegisterExtension("color");
+local extension = EXPR_LIB.RegisterExtenstion("color");
 
 extension:RegisterLibrary("clr");
 
@@ -229,4 +229,4 @@ extension:RegisterFunction("clr", "hsvToColor", "n,n,n", "c", 1, HSVToColor, tru
 --[[
 ]]
 
-extension:EnableExtension()
+extension:EnableExtenstion()

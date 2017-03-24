@@ -104,7 +104,7 @@ end
 --[[
 ]]
 
-local extension = EXPR_LIB.RegisterExtension("table");
+local extension = EXPR_LIB.RegisterExtenstion("table");
 
 local class_table = extension:RegisterClass("t", {"table", "array"}, istable, notnil);
 
@@ -305,5 +305,5 @@ end
 --[[
 ]]
 
-extension:EnableExtension();
+extension:EnableExtenstion();
 
