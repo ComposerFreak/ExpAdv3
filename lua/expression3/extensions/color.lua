@@ -141,6 +141,10 @@ extension:RegisterMethod("c", "getRGBA", "", "n", 3, function(c)
 	return c.r, c.g, c.b, c.a;
 end, true);
 
+extension:RegisterMethod("c", "unpack", "", "n", 3, function(c)
+	return c.r, c.g, c.b, c.a;
+end, true);
+
 --[[
 ]]
 
@@ -179,6 +183,36 @@ extension:RegisterMethod("c", "withA", "n", "c", 1, function(c,n)
 	return Color(c.r, c.g, c.b, n);
 end, true);
 
+--[[
+]]
+
+extension:RegisterMethod("c", "ceil", "", "", 0, function(c)
+	c.r = math.ceil(c.r)
+	c.g = math.ceil(c.g)
+	c.b = math.ceil(c.b)
+	c.a = math.ceil(c.a)
+end, true)
+
+extension:RegisterMethod("c", "floor", "", "", 0, function(c)
+	c.r = math.floor(c.r)
+	c.g = math.floor(c.g)
+	c.b = math.floor(c.b)
+	c.a = math.floor(c.a)
+end, true)
+
+extension:RegisterMethod("c", "round", "n", "", 0, function(c,n)
+	c.r = math.Round(c.r, n)
+	c.g = math.Round(c.g, n)
+	c.b = math.Round(c.b, n)
+	c.a = math.Round(c.a, n)
+end, true)
+
+extension:RegisterMethod("c", "round", "", "", 0, function(c)
+	c.r = math.Round(c.r)
+	c.g = math.Round(c.g)
+	c.b = math.Round(c.b)
+	c.a = math.Round(c.a)
+end, true)
 
 --[[
 	Functions

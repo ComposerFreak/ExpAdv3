@@ -125,6 +125,10 @@ extension:RegisterMethod("v", "getXYZ", "", "n", 3, function(v)
 	return v.x, v.y, v.z;
 end, true);
 
+extension:RegisterMethod("v", "unpack", "", "n", 3, function(v)
+	return v.x, v.y, v.z;
+end, true);
+
 --[[
 ]]
 
@@ -174,6 +178,30 @@ extension:RegisterMethod("v", "length", "", "n", 1, Length, true)
 extension:RegisterMethod("v", "distance", "v", "n", 1, Distance, true)
 
 extension:RegisterMethod("v", "normalized", "", "v", 1, GetNormalized, true)
+
+extension:RegisterMethod("v", "ceil", "", "", 0, function(v)
+	v.x = math.ceil(v.x)
+	v.y = math.ceil(v.y)
+	v.z = math.ceil(v.z)
+end, true)
+
+extension:RegisterMethod("v", "floor", "", "", 0, function(v)
+	v.x = math.floor(v.x)
+	v.y = math.floor(v.y)
+	v.z = math.floor(v.z)
+end, true)
+
+extension:RegisterMethod("v", "round", "n", "", 0, function(v,n)
+	v.x = math.Round(v.x, n)
+	v.y = math.Round(v.y, n)
+	v.z = math.Round(v.z, n)
+end, true)
+
+extension:RegisterMethod("v", "round", "", "", 0, function(v)
+	v.x = math.Round(v.x)
+	v.y = math.Round(v.y)
+	v.z = math.Round(v.z)
+end, true)
 
 --[[
 ]]

@@ -177,6 +177,26 @@ extension:RegisterMethod("v2", "normalized", "", "v2", 1, function(a)
 	return {x = nv.x, y = nv.y}
 end, true)
 
+extension:RegisterMethod("v2", "ceil", "", "", 0, function(v)
+	v.x = math.ceil(v.x)
+	v.y = math.ceil(v.y)
+end, true)
+
+extension:RegisterMethod("v2", "floor", "", "", 0, function(v)
+	v.x = math.floor(v.x)
+	v.y = math.floor(v.y)
+end, true)
+
+extension:RegisterMethod("v2", "round", "n", "", 0, function(v,n)
+	v.x = math.Round(v.x, n)
+	v.y = math.Round(v.y, n)
+end, true)
+
+extension:RegisterMethod("v2", "round", "", "", 0, function(v)
+	v.x = math.Round(v.x)
+	v.y = math.Round(v.y)
+end, true)
+
 --[[
 ]]
 
