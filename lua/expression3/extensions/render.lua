@@ -89,6 +89,14 @@ extention:SetClientState();
 
 extention:RegisterLibrary("render");
 
+extention:RegisterFunction("render", "setScreenRefresh", "b", "", 0, function(ctx, b)
+	ctx.entity.NoScreenRefresh = not b;
+end, false);
+
+extention:RegisterFunction("render", "setScreenRefresh", "", "b", 1, function(ctx)
+	return not (ctx.entity.NoScreenRefresh or false);
+end, false);
+
 --[[
 	Getter and Setter for color and font
 ]]
