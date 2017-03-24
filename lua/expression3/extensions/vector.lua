@@ -23,6 +23,8 @@ end
 extension:RegisterClass("v", {"vector", "vector.3d"}, isvector, notNil)
 
 extension:RegisterConstructor("v", "n,n,n", Vector, true) -- E3 new vector(n,n,n) == Vector(N, N, N) Lua
+extension:RegisterConstructor("v", "n", function(n) return Vector(n, n, n) end, true)
+extension:RegisterConstructor("v", "", function() return Vector(0, 0, 0) end, true)
 
 --[[
 	Operators
@@ -100,7 +102,9 @@ extension:RegisterOperator("neg", "v", "v", 1, function(a)
 end, true);
 
 --[[
+	Method
 ]]
+
 extension:RegisterAtribute("v", "x", "n");
 extension:RegisterAtribute("v", "y", "n");
 extension:RegisterAtribute("v", "z", "n");
@@ -154,15 +158,29 @@ end, true);
 --[[
 ]]
 
-extension:RegisterMethod("v", "clone", "", "v", 1, function(v,n)
+extension:RegisterMethod("v", "clone", "", "v", 1, function(v)
 	return Vector(v.x, v.y, v.z);
 end, true);
 
 --[[
 ]]
 
-extension:RegisterMethod("v", "toAngle", "", "a", 1, Angle);
---extension:RegisterMethod("v", "toColor", "", "c", 1, ToColor);
+extension:RegisterMethod("v", "dot", "v", "n", 1, Dot, true)
+
+extension:RegisterMethod("v", "cross", "v", "v", 1, Cross, true)
+
+extension:RegisterMethod("v", "length", "", "n", 1, Length, true)
+
+extension:RegisterMethod("v", "distance", "v", "n", 1, Distance, true)
+
+extension:RegisterMethod("v", "normalized", "", "v", 1, GetNormalized, true)
+
+--[[
+]]
+
+extension:RegisterMethod("v", "toAngle", "", "a", 1, Angle)
+
+extension:RegisterMethod("v", "toColor", "", "c", 1, ToColor)
 
 --[[
 ]]
