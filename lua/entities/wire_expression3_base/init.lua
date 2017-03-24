@@ -16,6 +16,21 @@ include("shared.lua");
 --[[
 ]]
 
+hook.Add("PlayerInitialSpawn", "Expression3.Entity.InitalizeAll", function(ply)
+	timer.Simple(0.2, function()
+		for _, context in pairs(EXPR_LIB.GetAll()) do
+			if (IsValid(context.entity)) then
+				net.Start("Expression3.SendToClient")
+					net.WriteEntity(self);
+					net.WriteEntity(self.player);
+					net.WriteString(self.script);
+					net.WriteTable(self.files);
+				net.Send(ply);
+			end
+		end
+	end)
+end);
+
 net.Receive("Expression3.SubmitToServer", function(len, ply)
 	local ent = net.ReadEntity();
 	local script = net.ReadString();

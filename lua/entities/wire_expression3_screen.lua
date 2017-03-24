@@ -29,6 +29,7 @@ if (SERVER) then
 		self.BaseClass.BaseClass.Initialize(self);
 		self.Inputs = WireLib.CreateInputs( self, { } )
 		self.Outputs = WireLib.CreateOutputs( self, { } )
+		self:SetUseType(SIMPLE_USE)
 	end
 end
 
@@ -59,4 +60,81 @@ if (CLIENT) then
 	function ENT:OnRemove()
 		self.GPU:Finalize()
 	end
+end
+
+function ENT:GetCursor(ply)
+	-- LITTERALY RIPPED OUT OF EGP!
+	-- CURTOSY OF DIVRAN!
+
+	if (not ply or not ply:IsValid() or not ply:IsPlayer()) then
+		return -1, -1;
+	end
+
+	local Normal, Pos, monitor, Ang
+	
+	-- Get monitor screen pos & size
+	monitor = WireGPU_Monitors[ self:GetModel() ]
+
+	-- Monitor does not have a valid screen point
+	if (not monitor) then
+		return -1,-1
+	end
+
+	Ang = self:LocalToWorldAngles( monitor.rot )
+	Pos = self:LocalToWorld( monitor.offset )
+
+	Normal = Ang:Up()
+
+	local Start = ply:GetShootPos()
+	local Dir = ply:GetAimVector()
+
+	local A = Normal:Dot(Dir)
+
+	-- If ray is parallel or behind the screen
+	if (A == 0 or A > 0) then
+		return -1, -1
+	end
+
+	local B = Normal:Dot(Pos-Start) / A
+
+	if (B >= 0) then
+		local HitPos = WorldToLocal( Start + Dir * B, Angle(), Pos, Ang )
+		local x = (0.5+HitPos.x/(monitor.RS*512/monitor.RatioX)) * 512
+		local y = (0.5-HitPos.y/(monitor.RS*512)) * 512
+		if (x < 0 or x > 512 or y < 0 or y > 512) then
+			return -1,-1
+		end -- Aiming off the screen
+		return x,y
+	end
+
+	return -1,-1
+end
+
+if (SERVER) then
+	util.AddNetworkString("Expression3.Screen.Use");
+
+	function ENT:Use(ply)
+		local x, y = self:GetCursor(ply);
+		self:CallEvent("", 0, "UseScreen", {"n", x}, {"n", y}, {"p", ply}, {self, "e"});
+
+		net.Start("Expression3.Screen.Use");
+			net.WriteEntity(self);
+			net.WriteEntity(ply);
+			net.WriteInt(x, 16);
+			net.WriteInt(y, 16);
+		net.Broadcast();
+	end
+end
+
+if (CLIENT) then
+	net.Receive("Expression3.Screen.Use", function()
+		local ent = net.ReadEntity();
+		local ply = net.ReadEntity();
+		local x = net.ReadInt(16);
+		local y = net.ReadInt(16);
+
+		if (IsValid(ent) and ent.Expression3_Screen) then
+			ent:CallEvent("", 0, "UseScreen", {"n", x}, {"n", y}, {"p", ply}, {ent, "e"});
+		end
+	end);
 end

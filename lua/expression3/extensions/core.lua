@@ -273,10 +273,19 @@ end; EXPR_LIB.Invoke = func_invoke;
 
 ext_core:RegisterLibrary("system");
 
+ext_core:RegisterFunction("system", "isServer", "", "b", 1, function(context) return SERVER end);
+
+ext_core:RegisterFunction("system", "isClient", "", "b", 1, function(context) return CLIENT end);
 
 ext_core:RegisterFunction("system", "getEntity", "", "e", 1, function(context) return context.entity end);
 
 ext_core:RegisterFunction("system", "getOwner", "", "p", 1, function(context) return context.player end);
+
+ext_core:SetClientState();
+
+ext_core:RegisterFunction("system", "getClient", "", "p", 1, LocalPlayer);
+
+ext_core:SetSharedState();
 
 ext_core:RegisterFunction("system", "invoke", "cls,n,f,...", "", 0, EXPR_LIB.Invoke);
 
