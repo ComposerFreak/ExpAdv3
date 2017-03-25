@@ -75,7 +75,7 @@ local function preText(ctx)
 		ctx:Throw("Attempted to render outside of a rendering event.");
 	end
 
-	surface.setFont(FONT);
+	surface.SetFont(FONT);
 	surface.SetTextColor(TRED, TGREEN, TBLUE, TALPHA);
 end
 
