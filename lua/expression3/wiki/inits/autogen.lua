@@ -11,9 +11,31 @@ local states = {
 }
 
 local operators = {
+	["eq"] = "==",
+	["neq"] = "!=",
+	["lth"] = "<",
+	["leg"] = "<=",
+	["gth"] = ">",
+	["geq"] = ">=",
+	["add"] = "+",
+	["sub"] = "-",
+	["mul"] = "*",
+	["div"] = "/",
+	["is"] = "",
 	["not"] = "!",
 	["neg"] = "-",
-	["is"] = ""
+	["len"] = "#",
+	["bxor"] = "^^",
+	["and"] = "&&",
+	["or"] = "||",
+	["exp"] = "^",
+	["mod"] = "%",
+	["bor"] = "|",
+	["band"] = "&",
+	["neq*"] = "!=",
+	["eq*"] = "==",
+	["bshl"] = "<<",
+	["bshr"] = ">>",
 }
 --op.rCount
 hook.Add("Expression3.LoadWiki", "Expression3.Wiki.RegisterFunction.autogen", function()
@@ -55,8 +77,21 @@ hook.Add("Expression3.LoadWiki", "Expression3.Wiki.RegisterFunction.autogen", fu
 					EXPR_WIKI.RegisterOperator(lib, func, compOper(prefabOper(states[data2.state], name, args, rtns)))
 				else
 					if operators[name] then
-						local func_ = operators[name].."("..args..")"
+						local func_ = ""
+						local args_ = string.Explode(",", args)
+						
+						if #args_ == 2 then
+							func_ = args_[1] .. " " .. operators[name] .. " " .. args_[2]
+						elseif #args_ == 1 then
+							func_ = operators[name] .. args_[1]
+						end
+						
 						EXPR_WIKI.RegisterOperator(lib, func_, compOper(prefabOper(states[data2.state], operators[name], args, rtns), w, h))
+					elseif name == "ten" then
+						local args_ = string.Explode(",", args)
+						local func_ = args_[1] .. "?" .. args_[2] .. ":" .. args_[3]
+						
+						EXPR_WIKI.RegisterOperator(lib, func, compOper(prefabOper(states[data2.state], name, args, rtns), w, h))
 					else
 						EXPR_WIKI.RegisterOperator(lib, func, compFunc(prefabFunc(states[data2.state], name, args, rtns)))
 					end

@@ -105,7 +105,9 @@ function EXPR_WIKI.COMPILER.PrefabOperator(_side, _func, _args, _rtns)
 			}
 		end
 		
-		if table.Count(data.args) == 2 then
+		if table.Count(data.args) == 3 then
+			data.func.func = (data.args[1].type).." ? "..(data.args[2].type).." : "..(data.args[3].type)
+		elseif table.Count(data.args) == 2 then
 			data.func.func = (data.args[1].type).." ".._func.." "..(data.args[2].type)
 		elseif table.Count(data.args) == 1 then
 			data.func.func = _func..(data.args[1].type)
