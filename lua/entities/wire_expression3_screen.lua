@@ -46,6 +46,8 @@ if (CLIENT) then
 
 		Wire_Render(self)
 
+		local res = self.GPU.Resolution;
+		
 		self.GPU:RenderToGPU( function()
 			if (not self.NoScreenRefresh) then render.Clear( 0, 0, 0, 255 ) end
 			EXPR3_DRAWSCREEN = true;
