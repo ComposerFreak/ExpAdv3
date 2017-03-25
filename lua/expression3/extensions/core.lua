@@ -491,6 +491,7 @@ hook.Add("Expression3.RegisterExtenstions", "Expression3.Core.Extensions", funct
 	include("expression3/extensions/player.lua");
 	include("expression3/extensions/timers.lua");
 	include("expression3/extensions/misc.lua");
+	include("expression3/extensions/e2table.lua");
 end);
 
 
