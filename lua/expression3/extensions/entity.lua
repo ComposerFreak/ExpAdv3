@@ -77,7 +77,7 @@ extension:RegisterMethod("e", "isOnFire", "", "b", 1, "IsOnFire")
 extension:RegisterMethod("e", "onGround", "", "b", 1, "OnGround")
 extension:RegisterMethod("e", "getGroundEntity", "", "e", 1, "GetGroundEntity")
 
-extension:RegisterMethod("e", "owner", "", "p", 1, CPPIGetOwner)
+--extension:RegisterMethod("e", "owner", "", "p", 1, CPPIGetOwner)
 
 extension:RegisterMethod("e", "remove", "", "", 0, "Remove")
 

@@ -189,6 +189,8 @@ end)
 end)]]
 
 --Add events to EXPR_LIB player event table to be used in autogen wiki
+EXPR_LIB.WikiEvents = EXPR_LIB.WikiEvents or {}
+
 EXPR_LIB.WikiEvents["PlayerButtonDown"] = {
 	parameter = "p,n",
 	state = 1
