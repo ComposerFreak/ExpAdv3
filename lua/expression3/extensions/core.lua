@@ -489,6 +489,8 @@ hook.Add("Expression3.RegisterExtenstions", "Expression3.Core.Extensions", funct
 	include("expression3/extensions/color.lua");
 	include("expression3/extensions/render.lua");
 	include("expression3/extensions/player.lua");
+	include("expression3/extensions/timers.lua");
+	include("expression3/extensions/misc.lua");
 end);
 
 

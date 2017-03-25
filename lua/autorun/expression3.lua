@@ -34,6 +34,8 @@ if (SERVER) then
 	AddCSLuaFile("expression3/extensions/color.lua");
 	AddCSLuaFile("expression3/extensions/render.lua");
 	AddCSLuaFile("expression3/extensions/player.lua");
+	AddCSLuaFile("expression3/extensions/timers.lua");
+	AddCSLuaFile("expression3/extensions/misc.lua");
 
 	AddCSLuaFile("expression3/editor.lua");
 	AddCSLuaFile( "expression3/editor.lua");

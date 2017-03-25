@@ -2278,8 +2278,8 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 			for i = vargs, #expressions do
 				local arg = expressions[i];
 
-				if (arg.result ~= "_vr") then
-					this:QueueInjectionBefore(inst, this:OffsetToken(arg.token, -1), "{", "\"" .. arg.result .. "\"", ",");
+				if (arg.result ~= "_vr") then -- this was once offset by -1, had issues {"",,v} {"",,v}
+					this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. arg.result .. "\"", ",");
 
 					this:QueueInjectionAfter(inst, arg.final, "}");
 				end
