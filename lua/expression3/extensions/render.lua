@@ -156,7 +156,7 @@ local function cc(a, b, c)
 	return area > 0
 end
 
-local function prawPoly(ctx, points)
+local function drawPoly(ctx, points)
 	render.CullMode(c(points[1], points[2], points[3]) and MATERIAL_CULLMODE_CCW or MATERIAL_CULLMODE_CW);
 	surface.DrawPoly(points)
 	render.CullMode(MATERIAL_CULLMODE_CCW);
