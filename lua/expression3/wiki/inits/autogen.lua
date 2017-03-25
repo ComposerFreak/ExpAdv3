@@ -41,7 +41,7 @@ hook.Add("Expression3.LoadWiki", "Expression3.Wiki.RegisterFunction.autogen", fu
 			for func, data2 in pairs(data.functions) do
 				local name = data2.name
 				local args = data2.parameter
-				local rtns = string.rep(data2.result ,data2.rCount or 0, ",")
+				local rtns = string.rep(data2.result, data2.rCount or 0, ",")
 				
 				EXPR_WIKI.RegisterFunction(lib, func, compFunc(prefabFunc(states[data2.state], name, args, rtns)))
 			end
@@ -63,6 +63,14 @@ hook.Add("Expression3.LoadWiki", "Expression3.Wiki.RegisterFunction.autogen", fu
 				end
 			end
 		end
+	end
+	
+	for func, data2 in pairs(EXPR_LIB.WikiEvents) do
+		local name = func
+		local args = data2.parameter or "_nil"
+		local rtns = data2.result or "_nil"
+		
+		EXPR_WIKI.RegisterEvent(func, compFunc(prefabFunc(states[data2.state], name, args, rtns)))
 	end
 end)
 

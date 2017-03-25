@@ -104,7 +104,7 @@ extension:RegisterOperator("not", "c", "b", 1, function(a)
 	return (a.r == 0) and (a.g == 0) and (a.b == 0) and (a.a == 0);
 end, true);
 
-extension:RegisterOperator("neg", "v", "v", 1, function(a)
+extension:RegisterOperator("neg", "c", "c", 1, function(a)
 	return Color(-a.r, -a.g, -a.b, -a.a);
 end, true);
 

@@ -232,21 +232,14 @@ function PANEL:Init()
 	
 	table.insert(derma, {name = "Events", panel = NodeEvents, parents = {}})
 	
-	for lib, data in pairs(EXPR_WIKI.EVENTS) do
-		local NodeLib = NodeEvents:AddNode(lib)
-		NodeLib.Icon:SetImage("fugue/blue-folder-horizontal.png")
-		
-		table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeEvents}})
-		
-		for func, html in pairs(data) do
-			local NodeFunc = NodeLib:AddNode(func)
-			NodeFunc.Icon:SetImage("fugue/script-text.png")
-			NodeFunc.DoClick = function()
-				Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
-			end
-			
-			table.insert(derma, {name = func, panel = NodeFunc, parents = {NodeEvents, NodeLib}})
+	for func, html in pairs(EXPR_WIKI.EVENTS) do
+		local NodeFunc = NodeEvents:AddNode(func)
+		NodeFunc.Icon:SetImage("fugue/script-text.png")
+		NodeFunc.DoClick = function()
+			Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
 		end
+		
+		table.insert(derma, {name = func, panel = NodeFunc, parents = {NodeEvents}})
 	end
 	
 	--------Operators--------

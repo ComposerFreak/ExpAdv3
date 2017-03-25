@@ -20,22 +20,31 @@ elseif colorSceme == "dark" then
 end
 
 local types = {
-	["o"] = "object",
-	["nil"] = "void",
-	["cls"] = "class",
-	["b"] = "boolean",
-	["n"] = "number",
-	["s"] = "string",
-	["f"] = "function",
-	["vr"] = "variant",
-	["v"] = "vector",
-	["e"] = "entity",
-	["a"] = "angle"
+	["_cls"]	=	"type",
+	["_crf"]	=	"recipientfilter",
+	["_er"]	=	"error",
+	["_nil"]	=	"void",
+	["_ptr"]	=	"patern",
+	["_usmg"]	=	"stream",
+	["_v2"]	=	"vector2",
+	["_vr"]	=	"variant",
+	["a"]	=	"angle",
+	["b"]	=	"boolean",
+	["c"]	=	"color",
+	["e"]	=	"entity",
+	["f"]	=	"function",
+	["n"]	=	"number",
+	["p"]	=	"player",
+	["s"]	=	"string",
+	["t"]	=	"table",
+	["v"]	=	"vector",
 }
 
 --TODO: Fix this
---[[for k, v in pairs(EXPR_LIB.GetAllClasses()) do
-	types[v.id .. ""] = v.name
+--[[local types = {}
+
+for k, v in pairs(EXPR_LIB.GetAllClasses()) do
+	types[v.id] = v.name
 end]]
 
 local function getType(t)
@@ -53,7 +62,7 @@ function EXPR_WIKI.COMPILER.PrefabFunction(_side, _func, _args, _rtns)
 	
 	_args = string.Replace(string.Replace(string.Replace(_args, "(", ""), ")", ""), " ", "")
 	
-	if _args != "" then
+	if _args != "" and _args != "_nil" then
 		data.args = {}
 		
 		for k, v in pairs(string.Explode(",", _args)) do
@@ -65,12 +74,14 @@ function EXPR_WIKI.COMPILER.PrefabFunction(_side, _func, _args, _rtns)
 	
 	_rtns = string.Replace(string.Replace(string.Replace(_rtns, "(", ""), ")", ""), " ", "")
 	
-	data.rtns = {}
-	
-	for k, v in pairs(string.Explode(",", _rtns)) do
-		data.rtns[k] = {
-			type = getType(v)
-		}
+	if _rtns != "" and _rtns != "_nil" then
+		data.rtns = {}
+		
+		for k, v in pairs(string.Explode(",", _rtns)) do
+			data.rtns[k] = {
+				type = getType(v)
+			}
+		end
 	end
 	
 	return data
@@ -85,7 +96,7 @@ function EXPR_WIKI.COMPILER.PrefabOperator(_side, _func, _args, _rtns)
 	
 	_args = string.Replace(string.Replace(string.Replace(_args, "(", ""), ")", ""), " ", "")
 	
-	if _args != "" then
+	if _args != "" and _args != "_nil" then
 		data.args = {}
 		
 		for k, v in pairs(string.Explode(",", _args)) do
@@ -103,12 +114,14 @@ function EXPR_WIKI.COMPILER.PrefabOperator(_side, _func, _args, _rtns)
 	
 	_rtns = string.Replace(string.Replace(string.Replace(_rtns, "(", ""), ")", ""), " ", "")
 	
-	data.rtns = {}
-	
-	for k, v in pairs(string.Explode(",", _rtns)) do
-		data.rtns[k] = {
-			type = getType(v)
-		}
+	if _rtns != "" and _rtns != "_nil" then
+		data.rtns = {}
+		
+		for k, v in pairs(string.Explode(",", _rtns)) do
+			data.rtns[k] = {
+				type = getType(v)
+			}
+		end
 	end
 	
 	return data

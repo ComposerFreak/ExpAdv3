@@ -62,6 +62,21 @@ extension:RegisterOperator("div", "a,a", "a", 1, function(a, b)
 end, true);
 
 --[[
+]]
+
+extension:RegisterOperator("is", "a", "b", 1, function(a)
+	return (a.p ~= 0) and (a.y ~= 0) and (a.r ~= 0);
+end, true);
+
+extension:RegisterOperator("not", "a", "b", 1, function(a)
+	return (a.p == 0) and (a.y == 0) and (a.r == 0);
+end, true);
+
+extension:RegisterOperator("neg", "a", "a", 1, function(a)
+	return Angle(-a.p, -a.y, -a.r);
+end, true);
+
+--[[
 	Methods
 ]]
 
