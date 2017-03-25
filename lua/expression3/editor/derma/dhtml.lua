@@ -10,7 +10,12 @@ end
 
 function PANEL:Setup(html)
 	self.Html:Dock(FILL)
-	self.Html:SetHTML(html)
+	
+	if string.sub(html, 1, 4) != "url:" then
+		self.Html:SetHTML(html)
+	else
+		self.Html:OpenURL(string.sub(html, 5))
+	end
 end
 
 function PANEL:Paint(w, h)

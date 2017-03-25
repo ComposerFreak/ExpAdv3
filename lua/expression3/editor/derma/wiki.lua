@@ -141,6 +141,14 @@ function PANEL:Init()
 		end
 	end
 	
+	local NodeWeb = Tree:AddNode("Syntaxes")
+	NodeWeb.Icon:SetImage("fugue/globe-network.png")
+	NodeWeb.DoClick = function()
+		Golem.GetInstance():NewTab("html", "url:https://github.com/Rusketh/ExpAdv3/wiki", "E3 Web Wiki", 100, 100)
+	end
+	
+	table.insert(derma, {name = name, panel = NodeWeb, parents = {}})
+	
 	--------Examples--------
 	local NodeExam = Tree:AddNode("Examples")
 	NodeExam.Icon:SetImage("fugue/blue-folder-horizontal.png")

@@ -64,8 +64,8 @@ extension:RegisterMethod("e", "getSubMaterial", "n", "s", 1, "GetSubMaterial")
 extension:RegisterMethod("e", "setSubMaterial", "n,s", "", 0, "SetSubMaterial")
 extension:RegisterMethod("e", "resetSubMaterials", "", "", 0, "SetSubMaterial")
 
---extension:RegisterMethod("e", "getColor", "", "c", 1, "GetColor")
---extension:RegisterMethod("e", "setColor", "c", "", 0, "SetColor")
+extension:RegisterMethod("e", "getColor", "", "c", 1, "GetColor")
+extension:RegisterMethod("e", "setColor", "c", "", 0, "SetColor")
 
 extension:RegisterMethod("e", "getGravity", "", "n", 1, "GetGravity")
 extension:RegisterMethod("e", "setGravity", "n", "", 0, "SetGravity")
