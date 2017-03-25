@@ -57,7 +57,7 @@ extension:RegisterMethod("e", "id", "", "n", 0, "EntIndex")
 extension:RegisterMethod("e", "getPos", "", "v", 1, "GetPos")
 
 extension:RegisterMethod("e", "setPos", "v", "", 0, function(context,e,v)
-	if context.player:CPPICanTool(e, "wire_expression3") then
+	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetPos(v)
 	end
 end, false)
@@ -68,7 +68,7 @@ end, false)
 extension:RegisterMethod("e", "getAng", "", "a", 1, "GetAngles")
 
 extension:RegisterMethod("e", "setAng", "a", "", 0, function(context,e,v)
-	if context.player:CPPICanTool(e, "wire_expression3") then
+	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetAngles(v)
 	end
 end, false)
@@ -86,7 +86,7 @@ extension:RegisterMethod("e", "right", "", "v", 1, "GetRight")
 extension:RegisterMethod("e", "getVel", "", "v", 1, "GetVelocity")
 
 extension:RegisterMethod("e", "setVel", "v", "", 0, function(context,e,v)
-	if context.player:CPPICanTool(e, "wire_expression3") then
+	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetVelocity(v)
 	end
 end, false)
@@ -97,7 +97,7 @@ end, false)
 extension:RegisterMethod("e", "getMaterial", "", "s", 1, "GetMaterial")
 
 extension:RegisterMethod("e", "setMaterial", "s", "", 0, function(context,e,v)
-	if context.player:CPPICanTool(e, "wire_expression3") then
+	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetMaterial(v)
 	end
 end, false)
@@ -108,13 +108,13 @@ end, false)
 extension:RegisterMethod("e", "getSubMaterial", "n", "s", 1, "GetSubMaterial")
 
 extension:RegisterMethod("e", "setSubMaterial", "n,s", "", 0, function(context,e,n,v)
-	if context.player:CPPICanTool(e, "wire_expression3") then
+	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetSubMaterial(n,v)
 	end
 end, false)
 
 extension:RegisterMethod("e", "resetSubMaterials", "", "", 0, function(context,e)
-	if context.player:CPPICanTool(e, "wire_expression3") then
+	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetSubMaterial()
 	end
 end, false)
@@ -125,7 +125,7 @@ end, false)
 extension:RegisterMethod("e", "getColor", "", "c", 1, "GetColor")
 
 extension:RegisterMethod("e", "setColor", "c", "", 0, function(context,e,v)
-	if context.player:CPPICanTool(e, "wire_expression3") then
+	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetColor(v)
 	end
 end, false)
@@ -136,7 +136,7 @@ end, false)
 extension:RegisterMethod("e", "getGravity", "", "n", 1, "GetGravity")
 
 extension:RegisterMethod("e", "setGravity", "n", "", 0, function(context,e,v)
-	if context.player:CPPICanTool(e, "wire_expression3") then
+	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetGravity(v)
 	end
 end, false)
@@ -147,13 +147,13 @@ end, false)
 extension:RegisterMethod("e", "isOnFire", "", "b", 1, "IsOnFire")
 
 extension:RegisterMethod("e", "ignite", "n", "", 0, function(context,e,v)
-	if context.player:CPPICanTool(e, "wire_expression3") then
+	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:Ignite(v)
 	end
 end, false)
 
 extension:RegisterMethod("e", "extinguish", "", "", 0, function(context,e)
-	if context.player:CPPICanTool(e, "wire_expression3") then
+	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:Extinguish()
 	end
 end, false)
@@ -170,7 +170,7 @@ extension:RegisterMethod("e", "getGroundEntity", "", "e", 1, "GetGroundEntity")
 extension:RegisterMethod("e", "owner", "", "p", 1, "CPPIGetOwner")
 
 extension:RegisterMethod("e", "remove", "", "", 0, function(context,e)
-	if context.player:CPPICanTool(e, "wire_expression3") then
+	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:Remove()
 	end
 end, false)
