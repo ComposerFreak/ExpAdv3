@@ -70,7 +70,11 @@ end, true);
 ]]
 
 hook.Add("OnPlayerChat", "Expression3.Event", function(ply, text, team, dead)
-	EXPR_LIB.CallEvent("b", 1, "OnPlayerChat", {"p", ply}, {"s", text}, {"b", team}, {"b", dead})
+	local status, c = EXPR_LIB.CallEvent("b", 1, "OnPlayerChat", {"p", ply}, {"s", text}, {"b", team}, {"b", dead})
+	
+	if status then
+		return c
+	end
 end)
 
 hook.Add("PlayerSay", "Expression3.Event", function(ply, text, team)
