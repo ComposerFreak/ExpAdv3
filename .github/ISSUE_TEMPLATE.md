@@ -4,7 +4,7 @@ NOTE:
 2: Please make sure that any long quotes of text (e.g code) should be submitted in the form of a gist link.
 3: Check that your request / Issue has not already been mentioned, if it has please comment on that issue instead.
 4: If this is a request please clear this template and provide your request in as much detail as possible.
-5: Please fill out the following template as accurately as possible:**
+5: Please fill out the following template as accurately as possible:
 6: Please make sure to prefix your title with either [BUG] for issues or [REQ] for requests, as well as attaching any suitable labels.
 
 1) Have you checked your on the latest version of the repository:
@@ -18,7 +18,7 @@ NOTE:
 
 5.1) If your getting either a tokenizer, parser, compiler or interla error, please proivde that below.
     
-5.2) Please provide your a [gist](gist.github.com) link to your code.
+5.2) Please provide a [gist](gist.github.com) link to your code.
     
 5.3) Please run the validation debugger and provide screenshots of the output tab. You can do this by right clicking the validation bar and selecting "Validate and debug".
 
