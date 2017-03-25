@@ -326,7 +326,7 @@ function extension.PostLoadClasses(this, classes)
 
 			for _, k in pairs(VALID_KEYS) do
 				if (k ~= "") then
-					extension:RegisterOperator("set", string.format("e2t,%s,cls,%s", id, k), "", 1, eTable.set);
+					extension:RegisterOperator("set", string.format("e2t,%s,cls,%s", k, id), "", 1, eTable.set);
 				end
 			end
 		end
