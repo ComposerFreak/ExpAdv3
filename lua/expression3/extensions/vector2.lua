@@ -26,6 +26,9 @@ end
 
 extension:RegisterClass("v2", {"vector2", "vector.2d"}, isVector2, notNil)
 
+extension:RegisterWiredInport("v2", "VECTOR2");
+extension:RegisterWiredOutport("v2", "VECTOR2");
+
 extension:RegisterConstructor("v2", "n,n", function(x, y) return {x = x, y = y} end, true)
 extension:RegisterConstructor("v2", "n", function(v) return {x = v, y = v} end, true)
 extension:RegisterConstructor("v2", "", function() return {x = 0, y = 0} end, true)

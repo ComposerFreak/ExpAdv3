@@ -18,6 +18,9 @@ local extension = EXPR_LIB.RegisterExtenstion("angle")
 
 extension:RegisterClass("a", {"angle"}, isangle, IsValid)
 
+extension:RegisterWiredInport("a", "ANGLE");
+extension:RegisterWiredOutport("a", "ANGLE");
+
 extension:RegisterConstructor("a", "n,n,n", Angle, true)
 extension:RegisterConstructor("a", "n", function(n) return Angle(n, n, n) end, true)
 extension:RegisterConstructor("a", "", function() return Angle(0, 0, 0) end, true)
