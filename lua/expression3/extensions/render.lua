@@ -156,13 +156,13 @@ local function cc(a, b, c)
 	return area > 0
 end
 
-local function drawPoly(ctx, points)
+local function drawPoly(points)
 	render.CullMode(c(points[1], points[2], points[3]) and MATERIAL_CULLMODE_CCW or MATERIAL_CULLMODE_CW);
 	surface.DrawPoly(points)
 	render.CullMode(MATERIAL_CULLMODE_CCW);
 end
 
-local function drawPolyOutline(ctx, points)
+local function drawPolyOutline(points)
 	for i=1, #points do
 		if i==#points then
 			surface.DrawLine( points[i].x, points[i].y, points[1].x, points[1].y )
