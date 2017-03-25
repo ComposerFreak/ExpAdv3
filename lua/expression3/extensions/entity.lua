@@ -77,6 +77,8 @@ extension:RegisterMethod("e", "isOnFire", "", "b", 1, "IsOnFire")
 extension:RegisterMethod("e", "onGround", "", "b", 1, "OnGround")
 extension:RegisterMethod("e", "getGroundEntity", "", "e", 1, "GetGroundEntity")
 
+extension:RegisterMethod("e", "owner", "", "p", 1, CPPIGetOwner)
+
 extension:RegisterMethod("e", "remove", "", "", 0, "Remove")
 
 extension:RegisterMethod("e", "getMass", "", "n", 1, function(e)
@@ -94,6 +96,10 @@ end, true)
 ]]
 
 extension:RegisterFunction("ent", "chip", "", "e", 1, function(context) return context.entity end, false)
+
+extension:RegisterMethod("p", "eyePos", "", "v", 2, EyePos)
+
+extension:RegisterMethod("p", "eyeAngles", "", "a", 1, EyeAngles)
 
 --[[
 ]]
