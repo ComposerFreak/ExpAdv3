@@ -62,7 +62,7 @@ extension:RegisterMethod("p", "getAllWeapons", "", "t", 1, function(p)
 	local tbl = {}
 	
 	for k, v in pairs(p:GetWeapons()) do
-		tbl[v:GetClass()] - v:GetPrintName()
+		tbl[v:GetClass()] = v:GetPrintName()
 	end
 	
 	return tbl
