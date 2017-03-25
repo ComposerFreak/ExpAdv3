@@ -200,7 +200,11 @@ end, false);
 local VALID_KEYS = {"n", "s", "e", "p"};
 
 for _, k in pairs(VALID_KEYS) do
-	if (k ~= "") then			
+	if (k ~= "") then
+		extension:RegisterOperator("get", "t," .. k, "vr", 1, eTable.get);
+
+		extension:RegisterOperator("get", string.format("t,%s,cls", k), "", 1, eTable.get);
+
 		extension:RegisterMethod("t", "exists", k, "b", 1, function(ctx, tbl, value)
 			if (k == "_vr") then
 				if (tbl.tbl[value[2]]) then
@@ -227,15 +231,11 @@ function extension.PostLoadClasses(this, classes)
 		local id = c.id;
 
 		if (id ~= "") then
-			extension:RegisterOperator("get", "t," .. id, "vr", 1, eTable.get);
-
-			extension:RegisterOperator("get", string.format("t,%s,cls", id), "", 1, eTable.get);
-			
 			extension:RegisterMethod("t", "push", id, "", 0, function(ctx, tbl, value)
 				eTable.set(ctx, tbl, #tbl.tbl + 1, id, value);
 			end, false);
 
-			extension:RegisterMethod("t", "insert", id .. ",n", "", 0, function(ctx, tbl, key, value)
+			extension:RegisterMethod("t", "insert", "n," .. id, "", 0, function(ctx, tbl, key, value)
 				table.insert(tbl.tbl, key, nil);
 				eTable.set(ctx, tbl, key, id, value);
 			end, false);
@@ -295,7 +295,7 @@ function extension.PostLoadClasses(this, classes)
 
 			for _, k in pairs(VALID_KEYS) do
 				if (k ~= "") then
-					extension:RegisterOperator("set", string.format("t,%s,cls,%s", id, k), "", 1, eTable.set);
+					extension:RegisterOperator("set", string.format("t,%s,cls,%s", k, id), "", 1, eTable.set);
 				end
 			end
 		end

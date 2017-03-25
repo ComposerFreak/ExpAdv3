@@ -13,60 +13,60 @@
 
 local extenstion = EXPR_LIB.RegisterExtenstion("util");
 
-extention:RegisterLibrary("game");
+extenstion:RegisterLibrary("game");
 
-extention:RegisterFunction("game", "map", "", "s", 1, game.GetMap);
+extenstion:RegisterFunction("game", "map", "", "s", 1, game.GetMap);
 
-extention:RegisterFunction("game", "hostname", "", "s", 1, function()
+extenstion:RegisterFunction("game", "hostname", "", "s", 1, function()
 	return GetConVar("hostname"):GetString();
 end, true);
 
-extention:RegisterFunction("game", "isLan", "", "b", 1, function()
+extenstion:RegisterFunction("game", "isLan", "", "b", 1, function()
 	return GetConVar("sv_lan"):GetBool()
 end, true);
 
-extention:RegisterFunction("game", "gamemode", "", "s", 1, function()
+extenstion:RegisterFunction("game", "gamemode", "", "s", 1, function()
 	return gmod.GetGamemode().Name;
 end, true);
 
-extention:RegisterFunction("game", "isSinglePlayer", "", "b", 1, game.SinglePlayer, true);
+extenstion:RegisterFunction("game", "isSinglePlayer", "", "b", 1, game.SinglePlayer, true);
 
-extention:RegisterFunction("game", "isSinglePlayer", "", "b", 1, game.IsDedicated, true);
+extenstion:RegisterFunction("game", "isSinglePlayer", "", "b", 1, game.IsDedicated, true);
 
-extention:RegisterFunction("game", "numPlayers", "", "n", 1, function()
+extenstion:RegisterFunction("game", "numPlayers", "", "n", 1, function()
 	return #player.GetAll();
 end, true);
 
-extention:RegisterFunction("game", "maxPlayers", "", "n", 1, game.MaxPlayers, true);
+extenstion:RegisterFunction("game", "maxPlayers", "", "n", 1, game.MaxPlayers, true);
 
-extention:RegisterFunction("game", "gravity", "", "n", 1, function()
+extenstion:RegisterFunction("game", "gravity", "", "n", 1, function()
 	return GetConVar("sv_gravity"):GetFloat()
 end, true);
 
-extention:RegisterFunction("game", "propGravity", "", "v", 1, physenv.GetGravity, true);
+extenstion:RegisterFunction("game", "propGravity", "", "v", 1, physenv.GetGravity, true);
 
-extention:RegisterFunction("game", "airDensity", "", "n", 1, physenv.GetAirDensity, true);
+extenstion:RegisterFunction("game", "airDensity", "", "n", 1, physenv.GetAirDensity, true);
 
-extention:RegisterFunction("game", "maxFrictionMass", "", "n", 1, function()
+extenstion:RegisterFunction("game", "maxFrictionMass", "", "n", 1, function()
 	return physenv.GetPerformanceSettings()["MaxFrictionMass"];
 end, true);
 
-extention:RegisterFunction("game", "minFrictionMass", "", "n", 1, function()
+extenstion:RegisterFunction("game", "minFrictionMass", "", "n", 1, function()
 	return physenv.GetPerformanceSettings()["MinFrictionMass"];
 end, true);
 
-extention:RegisterFunction("game", "speedLimit", "", "n", 1, function()
+extenstion:RegisterFunction("game", "speedLimit", "", "n", 1, function()
 	return physenv.GetPerformanceSettings()["MaxVelocity"];
 end, true);
 
-extention:RegisterFunction("game", "angSpeedLimit", "", "n", 1, function()
+extenstion:RegisterFunction("game", "angSpeedLimit", "", "n", 1, function()
 	return physenv.GetPerformanceSettings()["MaxAngularVelocity"];
 end, true);
 
-extention:RegisterFunction("game", "tickInterval", "", "n", 1, engine.TickInterval, true);
+extenstion:RegisterFunction("game", "tickInterval", "", "n", 1, engine.TickInterval, true);
 
-extention:RegisterFunction("game", "tickRate", "", "n", 1, function()
+extenstion:RegisterFunction("game", "tickRate", "", "n", 1, function()
 	return 1 / engine.TickInterval();
 end, true);
 
-extention:EnableExtenstion();
+extenstion:EnableExtenstion();

@@ -451,10 +451,10 @@ function EXPR_LIB.RegisterAtribute(class, atribute, type, native)
 		EXPR_LIB.ThrowInternal(0, "Attempt to register atribute %s.%s for none existing class %s", class, atribute, class);
 	end
 
-	local typ = EXPR_LIB.GetClass(class);
+	local typ = EXPR_LIB.GetClass(type);
 
 	if (not typ) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register atribute %s.%s of none existing class %s", class, atribute, class);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register atribute %s.%s of none existing class %s", class, atribute, type);
 	end
 
 	local atr = {};

@@ -354,6 +354,30 @@ function PARSER.StepBackward(this, steps)
 	this:Next();
 end
 
+function PARSER.GotoToken(this, token, offset)
+	
+	if (not offset) then
+		offset = 1;
+	end
+
+	local pos = token.index - (offset + 1);
+
+	if (pos == 0) then
+		this.__pos = 0;
+		this.__token = this.__tokens[0];
+		this.__next = this.__tokens[1];
+		return;
+	end
+
+	if (pos > this.__total) then
+		pos = this.__total;
+	end
+
+	this.__pos = pos;
+
+	this:Next();
+end
+
 function PARSER.GetFirstTokenOnLine(this)
 	for i = this.__pos, 1, -1 do
 		local tkn = this.__tokens[i];
@@ -2221,14 +2245,14 @@ function PARSER.Expression_Trailing(this, expr)
 			-- Check for a set instruction and locate it,
 			-- If we are at our set indexer then we break.
 
-			if (this:StatmentContains(this.__token, "ass")) then
+			--[[if (this:StatmentContains(this.__token, "ass")) then
 				local excluded = this:LastInStatment(this.__token, "lsb", "ass");
 
 				if (excluded and excluded.index == this.__token.index) then
 					this:StepBackward(1);
 					break;
 				end
-			end
+			end]]
 
 			local inst = this:StartInstruction("get", expr.token);
 
@@ -2249,6 +2273,11 @@ function PARSER.Expression_Trailing(this, expr)
 
 			inst.__lsb = lsb;
 			inst.__rsb = this.__token;
+
+			if (this:CheckToken("ass")) then
+				this:GotoToken(lsb);
+				break;
+			end
 
 			expr = this:EndInstruction(inst, expressions);
 		elseif (this:Accept("lpa")) then

@@ -2915,6 +2915,10 @@ function COMPILER.Compile_GET(this, inst, token, expressions)
 
 	this.__operators[op.signature] = op.operator;
 
+	if (cls) then
+		return cls.data, 1;
+	end
+
 	return op.result, op.rCount;
 end
 
@@ -2931,7 +2935,7 @@ function COMPILER.Compile_SET(this, inst, token, expressions)
 	local cls = inst.class;
 
 	if (cls and vExpr ~= cls.data) then
-		-- TODO: Cast
+		this:Throw(token, "Can not assign %s onto %s, %s expected.", name(vExpr), name(vType), name(cls.data));
 	end
 
 	if (not cls) then
