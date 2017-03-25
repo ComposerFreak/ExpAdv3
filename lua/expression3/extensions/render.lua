@@ -157,7 +157,7 @@ local function cc(a, b, c)
 end
 
 local function drawPoly(points)
-	render.CullMode(c(points[1], points[2], points[3]) and MATERIAL_CULLMODE_CCW or MATERIAL_CULLMODE_CW);
+	render.CullMode(cc(points[1], points[2], points[3]) and MATERIAL_CULLMODE_CCW or MATERIAL_CULLMODE_CW);
 	surface.DrawPoly(points)
 	render.CullMode(MATERIAL_CULLMODE_CCW);
 end
