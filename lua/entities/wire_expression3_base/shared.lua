@@ -55,6 +55,8 @@ function ENT:Validate(script, files)
 end
 
 function ENT:SetCode(script, files, run)
+	self:ShutDown();
+
 	self.script = script;
 	self.files = files;
 	
@@ -181,6 +183,8 @@ function ENT:BuildEnv(context, instance)
 			local valid = hashTable[hash];
 			if (valid) then return valid[class.hash] end
 		end
+
+		-- hashtable[extends][class] = is isinstance of.
 
 	-- Get wire changes
 		local out_changed = {};
