@@ -270,6 +270,10 @@ function ENT:ShutDown()
 	end
 end
 
+function ENT:OnRemove()
+	self:ShutDown();
+end
+
 --[[
 ]]
 

@@ -29,6 +29,7 @@ if (SERVER) then
 	AddCSLuaFile("expression3/extensions/vector2.lua");
 	AddCSLuaFile("expression3/extensions/angle.lua");
 	AddCSLuaFile("expression3/extensions/entity.lua");
+	AddCSLuaFile("expression3/extensions/holograms.lua");
 	AddCSLuaFile("expression3/extensions/table.lua");
 	AddCSLuaFile("expression3/extensions/network.lua");
 	AddCSLuaFile("expression3/extensions/color.lua");

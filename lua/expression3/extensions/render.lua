@@ -93,7 +93,7 @@ extention:RegisterFunction("render", "setScreenRefresh", "b", "", 0, function(ct
 	ctx.entity.NoScreenRefresh = not b;
 end, false);
 
-extention:RegisterFunction("render", "setScreenRefresh", "", "b", 1, function(ctx)
+extention:RegisterFunction("render", "getScreenRefresh", "", "b", 1, function(ctx)
 	return not (ctx.entity.NoScreenRefresh or false);
 end, false);
 

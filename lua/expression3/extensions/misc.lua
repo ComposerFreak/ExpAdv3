@@ -13,6 +13,10 @@
 
 local extenstion = EXPR_LIB.RegisterExtenstion("util");
 
+--[[
+	Game for all your game information.
+]]
+
 extenstion:RegisterLibrary("game");
 
 extenstion:RegisterFunction("game", "map", "", "s", 1, game.GetMap);
@@ -68,5 +72,157 @@ extenstion:RegisterFunction("game", "tickInterval", "", "n", 1, engine.TickInter
 extenstion:RegisterFunction("game", "tickRate", "", "n", 1, function()
 	return 1 / engine.TickInterval();
 end, true);
+
+--[[
+	Traces aka rangers
+]]
+
+local function notNil(v)
+	return v ~= nil;
+end
+
+local vector_zero = Vector(0, 0 , 0);
+
+local function DoTrace(trace, start, stop, distance)
+	start, stop = start or trace.start, stop or trace.stop;
+
+	if (distance) then
+		stop = start + (stop:GetNormalized( ) * distance);
+	end
+
+	trace.start, trace.stop = start, stop;
+
+	local iworld = trace.ignore_world;
+	local data = {start = start, endpos = stop, filter = filter};
+
+	if (trace.hit_water) then
+		if (not trace.ignore_entitys) then
+			data.mask = -1;
+		elseif (iworld) then
+			iworld = false;
+			data.mask = MASK_WATER;
+		else
+			data.mask = bit.bor(MASK_WATER, CONTENTS_SOLID);
+		end
+	elseif (trace.ignore_entitys) then
+		if (iworld) then
+			iworld = false;
+			data.mask = 0;
+		else
+			data.mask = MASK_NPCWORLDSTATIC;
+		end
+	end
+
+	local result;
+
+	if (trace.mins and trace.maxs) then
+		data.mins, data.maxs = trace.maxs, trace.maxs;
+		result = util.TraceHull(data);
+	else
+		result = util.TraceLine(data);
+	end
+
+	if (iworld and result.HitWorld) then
+		result.HitPos = trace.default_zero and start or stop;
+		result.HitWorld = false;
+		result.Hit = false;
+	elseif (trace.default_zero and not trace.Hit) then
+		trace.HitPos = start
+	end
+
+	result.Hit = result.Hit or false;
+	result.HitSky = result.HitSky or false;
+	result.HitNoDraw = result.HitNoDraw or false;
+	result.HitWorld = result.HitWorld or false;
+	result.HitNonWorld = result.HitNonWorld or false;
+	result.StartSolid = result.StartSolid or false;
+	result.HitPos = result.HitPos or vector_zero;
+	result.HitNormal = result.HitNormal or vector_zero;
+	result.Normal = result.Normal or vector_zero;
+	result.Normal = result.Normal or vector_zero;
+	result.Fraction = result.Fraction or 0;
+	result.FractionLeftSolid = result.FractionLeftSolid or 0;
+	result.HitGroup = result.HitGroup or 0;
+	result.HitBox = result.HitBox or 0;
+	result.PhysicsBone = result.PhysicsBone or 0;
+	result.HitBoxBone = result.HitBoxBone or 0;
+	result.MatType = result.MatType or 0;
+	result.HitTexture = result.HitTexture or "";
+	result.Entity = result.Entity or Entity(0);
+	result.Distance = start:Distance(result.HitPos or start);
+
+	return result;
+end
+
+extenstion:RegisterClass("tr", {"trace.ranger", "ranger"}, istable, notnil);
+
+extenstion:RegisterConstructor("tr", "", function()
+	return {
+		start = vector_zero,
+		stop = vector_zero,
+		default_zero = false,
+		ignore_world = false,
+		hit_water = false,
+		ignore_entitys = false,
+		mins = false,
+		maxs = false,
+		filter = {},
+	}
+end, true);
+
+extenstion:RegisterAtribute("tr", "default_zero", "b");
+extenstion:RegisterAtribute("tr", "ignore_world", "b");
+extenstion:RegisterAtribute("tr", "ignore_entitys", "b");
+extenstion:RegisterAtribute("tr", "hit_water", "b");
+
+extenstion:RegisterAtribute("tr", "start", "v", "start");
+extenstion:RegisterAtribute("tr", "end", "v", "stop");
+
+extenstion:RegisterMethod("tr", "setHull", "v,v", "", 0, function(trace, min, max)
+	trace.mins = min;
+	trace.maxs = max;
+end, true);
+
+extenstion:RegisterMethod("tr", "setNoHull", "", "", 0, function(trace)
+	trace.mins = nil;
+	trace.maxs = nil;
+end, true);
+
+extenstion:RegisterMethod("tr", "getHull", "", "v", 2, function(trace)
+	return trace.mins or vector_zero, trace.maxs or vector_zero;
+end, true);
+
+extenstion:RegisterMethod("tr", "fire", "", "trr", 1, DoTrace, true);
+
+extenstion:RegisterMethod("tr", "fire", "v,v", "trr", 1, DoTrace, true);
+
+extenstion:RegisterMethod("tr", "fire", "v,v,n", "trr", 1, DoTrace, true);
+
+--[[
+	Trace Results
+]]
+
+extenstion:RegisterClass("trr", {"trace.result", "rangerData"}, istable, notnil);
+
+extenstion:RegisterAtribute("trr", "hit", "b", "Hit");
+extenstion:RegisterAtribute("trr", "hit_sky", "b", "HitSky");
+extenstion:RegisterAtribute("trr", "hit_nodraw", "b", "HitNoDraw");
+extenstion:RegisterAtribute("trr", "hit_world", "b", "HitWorld");
+extenstion:RegisterAtribute("trr", "hit_noneworld", "b", "HitNonWorld");
+extenstion:RegisterAtribute("trr", "start_solid", "b", "StartSolid");
+extenstion:RegisterAtribute("trr", "hit_pos", "v", "HitPos");
+extenstion:RegisterAtribute("trr", "hit_norm", "v", "HitNormal");
+extenstion:RegisterAtribute("trr", "normal", "v", "Normal");
+extenstion:RegisterAtribute("trr", "normal", "n", "Normal");
+extenstion:RegisterAtribute("trr", "fraction", "n", "Fraction");
+extenstion:RegisterAtribute("trr", "fraction_solid", "n", "FractionLeftSolid");
+extenstion:RegisterAtribute("trr", "hit_group", "n", "HitGroup");
+extenstion:RegisterAtribute("trr", "hitbox", "n", "HitBox");
+extenstion:RegisterAtribute("trr", "hit_bone", "n", "PhysicsBone");
+extenstion:RegisterAtribute("trr", "hitbox_bone", "n", "HitBoxBone");
+extenstion:RegisterAtribute("trr", "material_type", "n", "MatType");
+extenstion:RegisterAtribute("trr", "distance", "n", "Distance");
+extenstion:RegisterAtribute("trr", "hit_texture", "s", "HitTexture");
+extenstion:RegisterAtribute("trr", "entity", "e", "Entity");
 
 extenstion:EnableExtenstion();

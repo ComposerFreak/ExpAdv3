@@ -58,10 +58,11 @@ if (CLIENT) then
 
 		self.GPU:Render()
 	end
+end
 
-	function ENT:OnRemove()
-		self.GPU:Finalize()
-	end
+function ENT:OnRemove()
+	if (CLIENT) then self.GPU:Finalize() end
+	self:ShutDown();
 end
 
 function ENT:GetCursor(ply)

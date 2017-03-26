@@ -484,6 +484,7 @@ hook.Add("Expression3.RegisterExtenstions", "Expression3.Core.Extensions", funct
 	include("expression3/extensions/vector2.lua");
 	include("expression3/extensions/angle.lua");
 	include("expression3/extensions/entity.lua");
+	include("expression3/extensions/holograms.lua");
 	include("expression3/extensions/table.lua");
 	include("expression3/extensions/network.lua");
 	include("expression3/extensions/color.lua");
