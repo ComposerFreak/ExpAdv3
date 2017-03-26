@@ -172,15 +172,15 @@ end, true);
 --[[
 ]]
 
-extension:RegisterMethod("v", "dot", "v", "n", 1, Dot, true)
+extension:RegisterMethod("v", "dot", "v", "n", 1, "Dot", true)
 
-extension:RegisterMethod("v", "cross", "v", "v", 1, Cross, true)
+extension:RegisterMethod("v", "cross", "v", "v", 1, "Cross", true)
 
-extension:RegisterMethod("v", "length", "", "n", 1, Length, true)
+extension:RegisterMethod("v", "length", "", "n", 1, "Length", true)
 
-extension:RegisterMethod("v", "distance", "v", "n", 1, Distance, true)
+extension:RegisterMethod("v", "distance", "v", "n", 1, "Distance", true)
 
-extension:RegisterMethod("v", "normalized", "", "v", 1, GetNormalized, true)
+extension:RegisterMethod("v", "normalized", "", "v", 1, "GetNormalized", true)
 
 extension:RegisterMethod("v", "ceil", "", "", 0, function(v)
 	v.x = math.ceil(v.x)
@@ -209,9 +209,9 @@ end, true)
 --[[
 ]]
 
-extension:RegisterMethod("v", "toAngle", "", "a", 1, Angle)
+extension:RegisterMethod("v", "toAngle", "", "a", 1, "Angle")
 
-extension:RegisterMethod("v", "toColor", "", "c", 1, ToColor)
+extension:RegisterMethod("v", "toColor", "", "c", 1, "ToColor")
 
 --[[
 ]]
