@@ -2126,7 +2126,7 @@ function COMPILER.CastUserType(this, left, right)
 				count = 1,
 				operator = function(ctx, obj)
 					if (not ctx.env.CheckHash(to.hash, obj)) then
-						ctx:Throw("Failed to cast %s to %s, #class missmatched.", name(right), namel(left));
+						ctx:Throw("Failed to cast %s to %s, #class missmatched.", name(right), name(left));
 					end; return obj;
 				end,
 			};
