@@ -26,7 +26,22 @@ end
 
 extension:RegisterClass("p", {"player"}, isPlayer, IsValid)
 
---extension:RegisterConstructor("p", "n", Player, true)
+extension:RegisterWiredInport("p", "ENTITY")
+extension:RegisterWiredOutport("p", "ENTITY")
+
+-- Player -> Entity
+extension:RegisterCastingOperator("p", "e", function(ctx, obj)
+	return obj;
+end, false);
+
+-- Entity <- Player
+extension:RegisterCastingOperator("e", "p", function(ctx, obj)
+	if (not IsValid(obj) and obj:IsPlayer()) then
+		return obj;
+	end
+
+	ctx:Throw("Attempted to cast none player entity to player.");
+end, false);
 
 --[[
 	Operators
