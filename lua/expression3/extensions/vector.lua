@@ -105,6 +105,17 @@ extension:RegisterOperator("neg", "v", "v", 1, function(a)
 end, true);
 
 --[[
+]]
+
+extension:RegisterCastingOperator("v", "a", function(ctx, obj)
+	return obj:Angle();
+end, false);
+
+extension:RegisterCastingOperator("v", "c", function(ctx, obj)
+	return obj:ToColor();
+end, false);
+
+--[[
 	Method
 ]]
 

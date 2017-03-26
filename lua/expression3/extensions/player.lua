@@ -13,7 +13,7 @@
 local extension = EXPR_LIB.RegisterExtenstion("player")
 local extensionTeam = EXPR_LIB.RegisterExtenstion("team")
 
-extension:RegisterLibrary("ply");
+extension:RegisterLibrary("plylib");
 extensionTeam:RegisterLibrary("team");
 
 --[[
@@ -29,26 +29,20 @@ extension:RegisterClass("p", {"player"}, isPlayer, IsValid)
 extension:RegisterWiredInport("p", "ENTITY")
 extension:RegisterWiredOutport("p", "ENTITY")
 
--- Player -> Entity
-extension:RegisterCastingOperator("p", "e", function(ctx, obj)
-	return obj;
-end, false);
-
--- Entity <- Player
-extension:RegisterCastingOperator("e", "p", function(ctx, obj)
-	if (not IsValid(obj) and obj:IsPlayer()) then
-		return obj;
-	end
-
-	ctx:Throw("Attempted to cast none player entity to player.");
-end, false);
-
 --[[
 	Operators
 ]]
 
 extension:RegisterOperator("eq", "p,p", "b", 1, function(a, b) return a == b end, true)
 extension:RegisterOperator("neq", "p,p", "b", 1, function(a, b) return a != b end, true)
+
+extension:RegisterOperator("eq", "p,e", "b", 1, function(a, b) return a == b end, true)
+extension:RegisterOperator("neq", "p,e", "b", 1, function(a, b) return a != b end, true)
+
+-- Player -> Entity
+extension:RegisterCastingOperator("p", "e", function(ctx, obj)
+	return obj
+end, false)
 
 --[[
 	Methods
@@ -58,8 +52,14 @@ extension:RegisterMethod("p", "isValid", "", "b", 1, function(e)
 	return IsValid(e)
 end, true)
 
+--[[
+]]
+
 extension:RegisterMethod("p", "steamID", "", "s", 1, "SteamID")
 extension:RegisterMethod("p", "steamID64", "", "s", 1, "SteamID64")
+
+--[[
+]]
 
 extension:RegisterMethod("p", "isTyping", "", "b", 1, "IsTyping")
 extension:RegisterMethod("p", "isCrouching", "", "b", 1, "Crouching")
@@ -68,6 +68,9 @@ extension:RegisterMethod("p", "isSuperAdmin", "", "b", 1, "IsSuperAdmin")
 extension:RegisterMethod("p", "isAdmin", "", "b", 1, "IsAdmin")
 extension:RegisterMethod("p", "isBot", "", "b", 1, "IsBot")
 extension:RegisterMethod("p", "isInVehicle", "", "b", 1, "InVehicle")
+
+--[[
+]]
 
 extension:RegisterMethod("p", "getVehicle", "", "e", 1, "GetVehicle")
 extension:RegisterMethod("p", "getTool", "", "s", 1, function(p) return p:GetTool().Mode end)
@@ -82,6 +85,9 @@ extension:RegisterMethod("p", "getAllWeapons", "", "t", 1, function(p)
 	
 	return tbl
 end)
+
+--[[
+]]
 
 extension:RegisterMethod("p", "getAmmoPrimary", "", "s", 1, function(p)
 	if p:GetActiveWeapon():IsValid() then return p:GetActiveWeapon():Ammo1() end
@@ -103,6 +109,9 @@ extension:RegisterMethod("p", "getClipSecondary", "", "s", 1, function(p)
 	return -1
 end)
 
+--[[
+]]
+
 extension:RegisterMethod("p", "name", "", "s", 1, "Name")
 extension:RegisterMethod("p", "ping", "", "n", 1, "Ping")
 extension:RegisterMethod("p", "kills", "", "n", 1, "Frags")
@@ -111,6 +120,9 @@ extension:RegisterMethod("p", "armor", "", "n", 1, "Armor")
 extension:RegisterMethod("p", "health", "", "n", 1, "Health")
 extension:RegisterMethod("p", "steamFriendStatus", "", "s", 1, "GetFriendStatus")
 
+--[[
+]]
+
 extension:RegisterMethod("p", "aimPos", "", "v", 1, function(p) return p:GetEyeTrace().HitPos end, true)
 extension:RegisterMethod("p", "aimEntity", "", "e", 1, function(p) return p:GetEyeTrace().Entity end, true)
 extension:RegisterMethod("p", "eyeTrace", "", "t", 1, function(p) return p:GetEyeTrace() end, true)
@@ -118,24 +130,23 @@ extension:RegisterMethod("p", "eyePos", "", "v", 1, "EyePos")
 extension:RegisterMethod("p", "eyeAngles", "", "a", 1, "EyeAngles")
 extension:RegisterMethod("p", "getPos", "", "v", 1, "GetPos")
 extension:RegisterMethod("p", "getAngles", "", "v", 1, "GetAngles")
-
 extension:RegisterMethod("p", "teamID", "", "n", 1, "Team")
 
 --[[
 	Functions
 ]]
 
-extension:RegisterFunction("ply", "owner", "", "p", 1, function(context) return context.player end, false)
+extension:RegisterFunction("plylib", "owner", "", "p", 1, function(context) return context.player end, false)
 
-extension:RegisterFunction("ply", "localPlayer", "", "p", 1, LocalPlayer, true)
+extension:RegisterFunction("plylib", "localPlayer", "", "p", 1, LocalPlayer, true)
 
-extension:RegisterFunction("ply", "getAll", "", "t", 1, player.GetAll, true)
+extension:RegisterFunction("plylib", "getAll", "", "t", 1, player.GetAll, true)
 
-extension:RegisterFunction("ply", "getBySteamID", "s", "p", 1, player.GetBySteamID, true)
+extension:RegisterFunction("plylib", "getBySteamID", "s", "p", 1, player.GetBySteamID, true)
 
-extension:RegisterFunction("ply", "getBySteamID64", "s", "p", 1, player.GetBySteamID64, true)
+extension:RegisterFunction("plylib", "getBySteamID64", "s", "p", 1, player.GetBySteamID64, true)
 
-extension:RegisterFunction("ply", "getByName", "s", "t", 1, function(s)
+extension:RegisterFunction("plylib", "getByName", "s", "t", 1, function(s)
 	local list = {}
 	
 	for k, ply in pairs(player.GetAll()) do
@@ -200,11 +211,12 @@ hook.Add("PlayerDisconnected", "Expression3.Event", function(ply)
 	EXPR_LIB.CallEvent("", 0, "OnPlayerDisconnect", {"p", ply})
 end)
 
---Player would be returned as entity in ea3 so entity methods would be able to be used on the player
---[[hook.Add("PlayerDeath", "Expression3.Event", function(ply, wep, attacker)
+hook.Add("PlayerDeath", "Expression3.Event", function(ply, wep, attacker)
 	EXPR_LIB.CallEvent("", 0, "OnPlayerDeath", {"p", ply}, {"e", wep}, {"e", attacker})
-end)]]
+end)
 
+--[[
+]]
 --Add events to EXPR_LIB player event table to be used in autogen wiki
 EXPR_LIB.WikiEvents = EXPR_LIB.WikiEvents or {}
 
@@ -235,6 +247,10 @@ EXPR_LIB.WikiEvents["OnPlayerJoin"] = {
 }
 EXPR_LIB.WikiEvents["OnPlayerDisconnect"] = {
 	parameter = "p",
+	state = 0
+}
+EXPR_LIB.WikiEvents["OnPlayerDeath"] = {
+	parameter = "p,e,e",
 	state = 0
 }
 

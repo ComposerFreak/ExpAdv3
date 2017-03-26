@@ -12,7 +12,7 @@
 
 local extension = EXPR_LIB.RegisterExtenstion("entity")
 
-extension:RegisterLibrary("ent");
+extension:RegisterLibrary("entlib");
 
 --[[
 	CLASS
@@ -37,6 +37,18 @@ extension:RegisterWiredOutport("e", "ENTITY")
 extension:RegisterOperator("eq", "e,e", "b", 1, function(a, b) return a == b end, true)
 extension:RegisterOperator("neq", "e,e", "b", 1, function(a, b) return a != b end, true)
 
+extension:RegisterOperator("eq", "e,p", "b", 1, function(a, b) return a == b end, true)
+extension:RegisterOperator("neq", "e,p", "b", 1, function(a, b) return a != b end, true)
+
+-- Entity <- Player
+extension:RegisterCastingOperator("e", "p", function(ctx, obj)
+	if (not IsValid(obj) and obj:IsPlayer()) then
+		return obj
+	end
+
+	ctx:Throw("Attempted to cast none player entity to player.")
+end, false)
+
 --[[
 	Methods
 ]]
@@ -50,6 +62,7 @@ end, true)
 
 extension:RegisterMethod("e", "class", "", "s", 1, "GetClass")
 extension:RegisterMethod("e", "id", "", "n", 0, "EntIndex")
+extension:RegisterMethod("e", "getModel", "", "n", 0, "GetModel")
 
 --[[
 ]]
@@ -76,28 +89,13 @@ end, false)
 --[[
 ]]
 
-extension:RegisterMethod("e", "setColor", "c", "", 0, function(context, holo, c)
-	if e:CPPICanTool(context.player, "wire_expression3") then
-		holo:SetColor(c);
-		holo:SetRenderMode(c.a == 255 and 0 or 4 );
-	end
-end, false);
-
-extension:RegisterMethod("e", "getColor", "", "c", 1, function(ctx, holo)
-	if IsValid( holo ) then
-		return holo:GetColor( );
-	end; return Color(0, 0, 0 );
-end, false);
-
---[[
-]]
-
 extension:RegisterMethod("e", "forward", "", "v", 1, "GetForward")
 extension:RegisterMethod("e", "up", "", "v", 1, "GetUp")
 extension:RegisterMethod("e", "right", "", "v", 1, "GetRight")
-extension:RegisterMethod("e", "toLocal", "v", "v", 1, "WorldToLocal")
+
 extension:RegisterMethod("e", "toWorld", "v", "v", 1, "LocalToWorld")
 extension:RegisterMethod("e", "toWorld", "a", "a", 1, "LocalToWorldAngles")
+extension:RegisterMethod("e", "toLocal", "v", "v", 1, "WorldToLocal")
 extension:RegisterMethod("e", "toLocal", "a", "a", 1, "WorldToLocalAngles")
 
 --[[
@@ -142,11 +140,18 @@ end, false)
 --[[
 ]]
 
-extension:RegisterMethod("e", "getColor", "", "c", 1, "GetColor")
+extension:RegisterMethod("e", "getColor", "", "c", 1, function(e)
+	if IsValid(e) then
+		return e:GetColor()
+	end
+	
+	return Color(0, 0, 0)
+end, true)
 
 extension:RegisterMethod("e", "setColor", "c", "", 0, function(context,e,v)
 	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetColor(v)
+		e:SetRenderMode(v.a == 255 and 0 or 4 )
 	end
 end, false)
 
@@ -209,14 +214,39 @@ extension:RegisterMethod("e", "getMassCenter", "", "v", 1, function(e)
 end, true)
 
 --[[
+]]
+
+extension:RegisterMethod("e", "applyForce", "v", "", 0, function(e,v)
+	if e:CPPICanTool(context.player, "wire_expression3") then
+		local phys = e:GetPhysicsObject()
+		
+		if IsValid(phys) then
+			e:ApplyForceCenter(v)
+		end
+	end
+end, true)
+
+extension:RegisterMethod("e", "applyOffsetForce", "v", "", 0, function(e)
+	if e:CPPICanTool(context.player, "wire_expression3") then
+		local phys = e:GetPhysicsObject()
+		
+		if IsValid(phys) then
+			e:ApplyForceOffset(v)
+		end
+	end
+end, true)
+
+--[[
+]]
+
+extension:RegisterMethod("e", "eyePos", "", "v", 2, "EyePos")
+extension:RegisterMethod("e", "eyeAngles", "", "a", 1, "EyeAngles")
+
+--[[
 	Functions
 ]]
 
-extension:RegisterFunction("ent", "chip", "", "e", 1, function(context) return context.entity end, false)
-
-extension:RegisterMethod("p", "eyePos", "", "v", 2, EyePos)
-
-extension:RegisterMethod("p", "eyeAngles", "", "a", 1, EyeAngles)
+extension:RegisterFunction("entlib", "chip", "", "e", 1, function(context) return context.entity end, false)
 
 --[[
 ]]
