@@ -564,6 +564,7 @@ end
 
 local functions;
 local loadFunctions = false;
+local blank = function() end
 
 function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _function, excludeContext)
 	if (not loadFunctions) then
@@ -595,7 +596,7 @@ function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _funct
 	op.signature = string.format("%s(%s)", name, signature);
 	op.result = res.id;
 	op.rCount = count;
-	op.operator = _function;
+	op.operator = _function or blank;
 	op.context = not excludeContext;
 
 	lib._functions[op.signature] = op;

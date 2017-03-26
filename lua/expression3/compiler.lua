@@ -40,7 +40,7 @@ function COMPILER.New()
 	return setmetatable({}, COMPILER);
 end
 
-function COMPILER.Initalize(this, instance)
+function COMPILER.Initalize(this, instance, files)
 	this.__tokens = instance.tokens;
 	this.__tasks = instance.tasks;
 	this.__root = instance.instruction;
@@ -64,6 +64,9 @@ function COMPILER.Initalize(this, instance)
 	this.__functions = {};
 	this.__methods = {};
 	this.__enviroment = {};
+	this.__hashtable = {};
+
+	this.__files = files;
 end
 
 function COMPILER.Run(this)
@@ -101,6 +104,7 @@ function COMPILER._Run(this)
 	result.methods = this.__methods;
 	result.enviroment = this.__enviroment;
 	result.directives = this.__directives;
+	result.hashTable = this.__hashtable;
 	result.traceTbl = traceTbl;
 	
 	return result;
@@ -2055,17 +2059,40 @@ function COMPILER.Expression_IS(this, expr)
 end
 
 function COMPILER.CastExpression(this, type, expr)
-
+	local op;
 	local signature = string.format("(%s)%s", name(type), name(expr.result));
-	
-	local op = EXPR_CAST_OPERATORS[signature];
+	local userType, userClass = this:GetUserClass(type), this:GetUserClass(expr.result);
 
-	if (not op) then
-		return false, expr;
+	if (userType and userClass) then
+		if (userClass.extends and userClass.extends.hash == userType.hash) then
+			op = {
+				signature = "usercast",
+				operator = function(a) return a end,
+				type = userType.name,
+				count = 1
+			};
+		elseif (userType.extends and userType.extends.hash == userClass.hash) then
+			op = {
+				signature = "usercast",
+				operator = function(a)
+					return a; -- Not shure how im doing this.
+				end,
+				type = userType.name,
+				count = 1
+			};
+		end
 	end
+	
+	if (not op) then
+		op = EXPR_CAST_OPERATORS[signature];
 
-	if (not this:CheckState(op.state)) then
-		return false, expr;
+		if (not op) then
+			return false, expr;
+		end
+
+		if (not this:CheckState(op.state)) then
+			return false, expr;
+		end
 	end
 
 	this:QueueInjectionBefore(inst, expr.token, "_OPS[\"" .. op.signature .. "\"](");
@@ -2181,15 +2208,17 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 	local ids = {};
 	local total = #expressions;
 
-	local cls = EXPR_LIB.GetClass(inst.class);
-	local userclass = this:GetUserClass(inst.class);
+	local classname = inst.class
+	local cls = EXPR_LIB.GetClass(classname);
+	local userclass = this:GetUserClass(classname);
 
 	if (not cls and userclass) then
 		cls = userclass;
+		classname = "constructor";
 	end
 
 	if (total == 0) then
-		op = cls.constructors[inst.class .. "()"];
+		op = cls.constructors[classname .. "()"];
 	else
 		local constructors = cls.constructors;
 
@@ -2210,13 +2239,13 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 			local args = table.concat(ids,",", 1, i);
 
 			if (i >= total) then
-				local signature = string.format("%s(%s)", inst.class, args);
+				local signature = string.format("%s(%s)", classname, args);
 
 				op = constructors[signature];
 			end
 
 			if (not op) then
-				local signature = string.format("%s(%s,...)", inst.class, args);
+				local signature = string.format("%s(%s,...)", classname, args);
 				op = constructors[signature];
 				if (op) then vargs = i + 1; end
 			end
@@ -2227,7 +2256,7 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 		end
 
 		if (not op) then
-			op = constructors[inst.class .. "(...)"];
+			op = constructors[classname .. "(...)"];
 			if (op) then vargs = 1; end
 		end
 	end
@@ -2368,7 +2397,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 	if (userclass) then
 		this:QueueRemove(inst, inst.__lpa);
 		this:QueueInjectionBefore(inst, expr.token, userclass.name, "['".. op.sig.. "'](");
-		this:QueueReplace(inst, inst.__operator, total >= 1 and "," or "");
+		this:QueueReplace(inst, inst.__operator, total > 1 and "," or "");
 		this:QueueRemove(inst, inst.__method);
 		return op.result, op.count;
 	end
@@ -3127,37 +3156,6 @@ local function Inclucde_ROOT(this, inst, token, stmts)
 	return "", 0;
 end
 
-
-
-function COMPILER.Initalize(this, instance, files)
-	this.__tokens = instance.tokens;
-	this.__tasks = instance.tasks;
-	this.__root = instance.instruction;
-	this.__script = instance.script;
-	this.__directives = instance.directives;
-
-	this.__scope = {};
-	this.__scopeID = 0;
-	this.__scopeData = {};
-	this.__scopeData[0] = this.__scope;
-
-	this.__scope.memory = {};
-	this.__scope.classes = {};
-	this.__scope.server = true;
-	this.__scope.client = true;
-
-	this.__defined = {};
-
-	this.__constructors = {};
-	this.__operators = {};
-	this.__functions = {};
-	this.__methods = {};
-	this.__enviroment = {};
-
-	this.__files = files;
-
-end
-
 function COMPILER.Compile_INCLUDE(this, inst, token, file_path)
 	local script;
 
@@ -3267,29 +3265,65 @@ end
 
 
 function COMPILER.Compile_CLASS(this, inst, token, stmts)
+	local extends;
 	local class = this:StartClass(inst.__classname.data);
 
+	class.hash = this:CRC(token, inst.__rcb);
+
+	this.__hashtable[class.hash] = {[class.hash] = true};	
+
 	this:PushScope();
-		
+
 		this:SetOption("userclass", class);
+
+		if (inst.__ext) then
+			extends = this:GetUserClass(inst.__exttype.data);
+
+			if (not extends) then
+				this:Throw(token, "Can not extend user class from none user class %s.", inst.__exttype.data);
+			end
+
+			class.extends = extends;
+
+			for name, info in pairs(extends.memory) do
+				this:AssToClass(token, true, name, info.class);
+			end
+
+			for name, info in pairs(extends.constructors) do
+				class.constructors[name] = info;
+			end
+
+			for name, info in pairs(extends.methods) do
+				class.methods[name] = info;
+			end
+
+
+			this.__hashtable[extends.hash][class.hash] = true;
+
+			this:QueueRemove(inst, inst.__ext);
+			this:QueueRemove(inst, inst.__exttype);
+		end
 
 		for i = 1, #stmts do
 			this:Compile(stmts[i]);
 		end
 
-	this:PopScope();
+		if (not extends and not class.valid) then
+			this:Throw(token, "Class %s requires at least one constructor.", class.name);
+		end
 
-	local hash = this:CRC(token, inst.__rcb);
+	this:PopScope();
 
 	this:QueueReplace(inst, token, "local");
 	this:QueueRemove(inst, inst.__lcb);
-	this:QueueInjectionAfter(inst, inst.__lcb, " =",  "{", "vars", "=", "{", "}", ",", "hash", "=", "'" .. hash .. "'", "}",";", class.name, ".", "__index", "=", class.name);
+	this:QueueInjectionAfter(inst, inst.__lcb, " = { vars = { }, hash = '" .. class.hash .. "'};", class.name, ".__index =", class.name); -- extends and extends.name or class.name);
+	if (extends) then this:QueueInjectionAfter(inst, inst.__lcb, "setmetatable(", class.name, ",", extends.name, ");") end
 	this:QueueRemove(inst, inst.__rcb);
 	
 	injectNewLine = true;
-	this:QueueInjectionAfter(inst, inst.__lcb, class.name, ".", "vars", ".", "__index", "=", class.name, ".", "vars");
+	this:QueueInjectionAfter(inst, inst.__lcb, class.name, ".vars.__index =", class.name, ".vars"); -- extends and extends.name or class.name, ".vars");
+	if (extends) then this:QueueInjectionAfter(inst, inst.__lcb, "setmetatable(", class.name, ".vars,", extends.name, " .vars);") end
 	injectNewLine = false;
-
 
 	return "", 0;
 end
@@ -3434,8 +3468,9 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
 		this:AssignVariable(token, true, var, class);
 	end
 
-	local signature = string.format("%s(%s)", userclass.name, inst.signature);
+	local signature = string.format("constructor(%s)", inst.signature);
 
+	userclass.valid = true;
 	userclass.constructors[signature] = signature;
 	
 	this:Compile(inst.stmts);
@@ -3466,7 +3501,9 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 	end
 
 	local signature = string.format("@%s(%s)", inst.__name.data, inst.signature);
-	
+
+	local overrride = userclass.methods[signature];
+
 	local meth = {};
 	meth.sig = signature;
 	meth.name = inst.__name.data;
@@ -3492,6 +3529,14 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 
 	meth.count = count;
 
+	if (overrride and meth.result ~= overrride.result) then
+		this:Throw(token, "Overriding method %s(%s) must return %s", inst.__name.data, inst.signature, name(overrride.result));
+	end
+
+	if (overrride and meth.count ~= overrride.count) then
+		this:Throw(token, "Overriding method %s(%s) must return %i values", inst.__name.data, inst.signature, overrride.count);
+	end
+
 	this:QueueReplace(inst, token, userclass.name);
 	this:QueueRemove(inst, inst.__name)
 	this:QueueRemove(inst, inst.__typ)
@@ -3500,7 +3545,7 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 	
 	injectNewLine = true;
 	local error = string.format("Attempt to call user method '%s.%s(%s)' using alien class of the same name.", userclass.name, inst.__name.data, inst.signature);
-	this:QueueInjectionAfter(inst, inst.__preBlock, string.format("if(this.hash ~= %s.hash) then CONTEXT:Throw(%q); end", userclass.name, error))
+	this:QueueInjectionAfter(inst, inst.__preBlock, string.format("if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error))
 	injectNewLine = false;
 
 	if (#inst.perams >= 1) then
@@ -3532,7 +3577,7 @@ function COMPILER.Compile_TOSTR(this, inst, token, expressions)
 
 	injectNewLine = true;
 	local error = string.format("Attempt to call user operation '%s.tostring()' using alien class of the same name.", userclass.name);
-	this:QueueInjectionAfter(inst, inst.__preBlock, string.format("if(this.hash ~= %s.hash) then CONTEXT:Throw(%q); end", userclass.name, error))
+	this:QueueInjectionAfter(inst, inst.__preBlock, string.format("if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error))
 	injectNewLine = false;
 end
 

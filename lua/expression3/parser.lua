@@ -1928,6 +1928,32 @@ function PARSER.Expression_22(this)
 		return this:EndInstruction(inst, {expr});
 	end
 
+	local previous = this.__token;
+
+	if (this:Accept("lpa")) then
+		local lpa = this.__token;
+		if (this:Accept("typ")) then
+			local typ = this.__token;
+			if (this:Accept("rpa")) then
+				local rpa = this.__token;
+
+				local inst = this:StartInstruction("cast", typ);
+				
+				inst.class = typ.data;
+
+				this:QueueRemove(inst, lpa);
+				this:QueueRemove(inst, rpa);
+
+				this:ExcludeWhiteSpace("Cast operator ( (%s) ) must not be succeeded by whitespace", inst.type);
+
+				local expr = this:Expression_1();
+				return this:EndInstruction(inst, {expr});
+			end
+		end
+
+		this:GotoToken(previous);
+	end
+
 	return this:Expression_23();
 end
 
@@ -2379,7 +2405,13 @@ function PARSER.ClassStatment_0(this)
 		
 		this:SetUserObject(inst.__classname.data);
 		
-		this:Require("lcb", "Left curly bracket (}) expected, to open class");
+		if (this:Accept("ext")) then
+			inst.__ext = this.__token;
+			this:Require("typ", "Class name expected after extends");
+			inst.__exttype = this.__token;
+		end
+
+		this:Require("lcb", "Left curly bracket ({) expected, to open class");
 		inst.__lcb = this.__token;
 		
 		local stmts = {};

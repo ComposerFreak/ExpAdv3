@@ -174,6 +174,14 @@ function ENT:BuildEnv(context, instance)
 			end;
 		});
 
+	-- Need a way to confirm user classes are the right has.
+		local hashTable = instance.hashTable;
+
+		function env.CheckHash(hash, class)
+			local valid = hashTable[hash];
+			if (valid) then return valid[class.hash] end
+		end
+
 	-- Get wire changes
 		local out_changed = {};
 		local out_values = {};
