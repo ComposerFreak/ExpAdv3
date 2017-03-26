@@ -76,9 +76,29 @@ end, false)
 --[[
 ]]
 
+extension:RegisterMethod("e", "setColor", "c", "", 0, function(context, holo, c)
+	if e:CPPICanTool(context.player, "wire_expression3") then
+		holo:SetColor(c);
+		holo:SetRenderMode(c.a == 255 and 0 or 4 );
+	end
+end, false);
+
+extension:RegisterMethod("e", "getColor", "", "c", 1, function(ctx, holo)
+	if IsValid( holo ) then
+		return holo:GetColor( );
+	end; return Color(0, 0, 0 );
+end, false);
+
+--[[
+]]
+
 extension:RegisterMethod("e", "forward", "", "v", 1, "GetForward")
 extension:RegisterMethod("e", "up", "", "v", 1, "GetUp")
 extension:RegisterMethod("e", "right", "", "v", 1, "GetRight")
+extension:RegisterMethod("e", "toLocal", "v", "v", 1, "WorldToLocal")
+extension:RegisterMethod("e", "toWorld", "v", "v", 1, "LocalToWorld")
+extension:RegisterMethod("e", "toWorld", "a", "a", 1, "LocalToWorldAngles")
+extension:RegisterMethod("e", "toLocal", "a", "a", 1, "WorldToLocalAngles")
 
 --[[
 ]]
