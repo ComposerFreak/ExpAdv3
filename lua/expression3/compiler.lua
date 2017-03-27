@@ -2098,9 +2098,9 @@ end
 function COMPILER.Compile_IOF(this, inst, token, expr)
 	local r, c = this:Compile(expr);
 
-	local userclass = this:GetUserClass(inst.__cls.data);
+	local userclass = this:GetClassOrInterface(inst.__cls.data);
 
-	if (not userclass or not this:GetUserClass(r)) then
+	if (not userclass or not this:GetClassOrInterface(r)) then
 		this:Throw(token, "Instanceof currently only supports user classes, sorry about that :D");
 	end
 
@@ -2114,8 +2114,8 @@ function COMPILER.Compile_IOF(this, inst, token, expr)
 end
 
 function COMPILER.CastUserType(this, left, right)
-	local to = this:GetUserClass(left) or this:GetInterface(left);
-	local from = this:GetUserClass(right) or this:GetInterface(right);
+	local to = this:GetClassOrInterface(left);
+	local from = this:GetClassOrInterface(right);
 
 	if (not (to or from)) then return end;
 
@@ -3535,7 +3535,7 @@ function COMPILER.Compile_SET_FEILD(this, inst, token, expressions)
 	local cls = EXPR_LIB.GetClass(r1);
 
 	if (not cls) then
-		local userclass = this:GetUserClass(r1);
+		local userclass = this:GetClassOrInterface(r1);
 		info = userclass.memory[atribute];
 	else
 		info = cls.atributes[atribute];
@@ -3762,6 +3762,28 @@ function COMPILER.Compile_INTERFACE_METHOD(this, inst, token)
 	meth.count = inst.count;
 
 	interface.methods[meth.sig] = meth;
+end
+
+function COMPILER.GetClassOrInterface(this, name, scope, nonDeep)
+	if (not scope) then
+		scope = this.__scopeID;
+	end
+
+	local v = this.__scopeData[scope].classes[name] or this.__scopeData[scope].interfaces[name];
+
+	if (v) then
+		return v, v.scope;
+	end
+
+	if (not nonDeep) then
+		for i = scope, 0, -1 do
+			local v = this.__scopeData[i].classes[name] or this.__scopeData[i].interfaces[name];
+
+			if (v) then
+				return v, v.scope;
+			end
+		end
+	end
 end
 
 EXPR_COMPILER = COMPILER;
