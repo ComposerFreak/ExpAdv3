@@ -2016,7 +2016,7 @@ function PARSER.Expression_25(this)
 
 			if (not this:Accept("prd")) then
 				this:StepBackward(1);
-				return this:Expression_25();
+				return this:Expression_26();
 			end
 
 			local inst = this:StartInstruction("func", token);
