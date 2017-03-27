@@ -80,11 +80,13 @@ end, false)
 
 extension:RegisterMethod("e", "getAng", "", "a", 1, "GetAngles")
 
+extension:SetServerState()
 extension:RegisterMethod("e", "setAng", "a", "", 0, function(context,e,v)
 	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetAngles(v)
 	end
 end, false)
+extension:SetSharedState()
 
 --[[
 ]]
@@ -103,28 +105,33 @@ extension:RegisterMethod("e", "toLocal", "a", "a", 1, "WorldToLocalAngles")
 
 extension:RegisterMethod("e", "getVel", "", "v", 1, "GetVelocity")
 
+extension:SetServerState()
 extension:RegisterMethod("e", "setVel", "v", "", 0, function(context,e,v)
 	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetVelocity(v)
 	end
 end, false)
+extension:SetSharedState()
 
 --[[
 ]]
 
 extension:RegisterMethod("e", "getMaterial", "", "s", 1, "GetMaterial")
 
+extension:SetServerState()
 extension:RegisterMethod("e", "setMaterial", "s", "", 0, function(context,e,v)
 	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetMaterial(v)
 	end
 end, false)
+extension:SetSharedState()
 
 --[[
 ]]
 
 extension:RegisterMethod("e", "getSubMaterial", "n", "s", 1, "GetSubMaterial")
 
+extension:SetServerState()
 extension:RegisterMethod("e", "setSubMaterial", "n,s", "", 0, function(context,e,n,v)
 	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetSubMaterial(n,v)
@@ -136,6 +143,7 @@ extension:RegisterMethod("e", "resetSubMaterials", "", "", 0, function(context,e
 		e:SetSubMaterial()
 	end
 end, false)
+extension:SetSharedState()
 
 --[[
 ]]
@@ -148,29 +156,34 @@ extension:RegisterMethod("e", "getColor", "", "c", 1, function(e)
 	return Color(0, 0, 0)
 end, true)
 
+extension:SetServerState()
 extension:RegisterMethod("e", "setColor", "c", "", 0, function(context,e,v)
 	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetColor(v)
 		e:SetRenderMode(v.a == 255 and 0 or 4 )
 	end
 end, false)
+extension:SetSharedState()
 
 --[[
 ]]
 
 extension:RegisterMethod("e", "getGravity", "", "n", 1, "GetGravity")
 
+extension:SetServerState()
 extension:RegisterMethod("e", "setGravity", "n", "", 0, function(context,e,v)
 	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:SetGravity(v)
 	end
 end, false)
+extension:SetSharedState()
 
 --[[
 ]]
 
 extension:RegisterMethod("e", "isOnFire", "", "b", 1, "IsOnFire")
 
+extension:SetServerState()
 extension:RegisterMethod("e", "ignite", "n", "", 0, function(context,e,v)
 	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:Ignite(v)
@@ -182,6 +195,7 @@ extension:RegisterMethod("e", "extinguish", "", "", 0, function(context,e)
 		e:Extinguish()
 	end
 end, false)
+extension:SetSharedState()
 
 --[[
 ]]
@@ -194,11 +208,13 @@ extension:RegisterMethod("e", "getGroundEntity", "", "e", 1, "GetGroundEntity")
 
 extension:RegisterMethod("e", "owner", "", "p", 1, "CPPIGetOwner")
 
+extension:SetServerState()
 extension:RegisterMethod("e", "remove", "", "", 0, function(context,e)
 	if e:CPPICanTool(context.player, "wire_expression3") then
 		e:Remove()
 	end
 end, false)
+extension:SetSharedState()
 
 --[[
 ]]
@@ -216,7 +232,8 @@ end, true)
 --[[
 ]]
 
-extension:RegisterMethod("e", "applyForce", "v", "", 0, function(e,v)
+extension:SetServerState()
+extension:RegisterMethod("e", "applyForce", "v", "", 0, function(context,e,v)
 	if e:CPPICanTool(context.player, "wire_expression3") then
 		local phys = e:GetPhysicsObject()
 		
@@ -224,9 +241,9 @@ extension:RegisterMethod("e", "applyForce", "v", "", 0, function(e,v)
 			e:ApplyForceCenter(v)
 		end
 	end
-end, true)
+end, false)
 
-extension:RegisterMethod("e", "applyOffsetForce", "v", "", 0, function(e)
+extension:RegisterMethod("e", "applyOffsetForce", "v", "", 0, function(context,e)
 	if e:CPPICanTool(context.player, "wire_expression3") then
 		local phys = e:GetPhysicsObject()
 		
@@ -234,7 +251,8 @@ extension:RegisterMethod("e", "applyOffsetForce", "v", "", 0, function(e)
 			e:ApplyForceOffset(v)
 		end
 	end
-end, true)
+end, false)
+extension:SetSharedState()
 
 --[[
 ]]

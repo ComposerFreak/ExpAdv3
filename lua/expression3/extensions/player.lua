@@ -118,7 +118,10 @@ extension:RegisterMethod("p", "kills", "", "n", 1, "Frags")
 extension:RegisterMethod("p", "deaths", "", "n", 1, "Deaths")
 extension:RegisterMethod("p", "armor", "", "n", 1, "Armor")
 extension:RegisterMethod("p", "health", "", "n", 1, "Health")
+
+extension:SetClientState()
 extension:RegisterMethod("p", "steamFriendStatus", "", "s", 1, "GetFriendStatus")
+extension:SetSharedState()
 
 --[[
 ]]
@@ -138,7 +141,9 @@ extension:RegisterMethod("p", "teamID", "", "n", 1, "Team")
 
 extension:RegisterFunction("plylib", "owner", "", "p", 1, function(context) return context.player end, false)
 
+extension:SetClientState()
 extension:RegisterFunction("plylib", "localPlayer", "", "p", 1, LocalPlayer, true)
+extension:SetSharedState()
 
 extension:RegisterFunction("plylib", "getAll", "", "t", 1, player.GetAll, true)
 
