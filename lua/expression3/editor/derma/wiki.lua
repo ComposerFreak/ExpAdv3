@@ -6,12 +6,12 @@ local PANEL = {}
 
 function PANEL:Init()
 	local allExpanded = false
-	local searchNumber = 1
 	local oldSearch = ""
 	local searchResults = {}
 	local searchResultsParents = {}
 	
 	local derma = {}
+	local folders = {}
 	
 	self:DockPadding(5, 5, 5, 5)
 	
@@ -28,10 +28,8 @@ function PANEL:Init()
 	function ExpandAll:OnChange(val)
 		allExpanded = val
 		
-		for k, data in pairs(derma) do
-			if table.Count(data.parents) < 2 then
-				data.panel:SetExpanded(allExpanded)
-			end
+		for k, folder in pairs(folders) do
+			folder:SetExpanded(allExpanded)
 		end
 	end
 	
@@ -41,6 +39,52 @@ function PANEL:Init()
 	TextEntry:Dock(TOP)
 	TextEntry:SetText("")
 	TextEntry.OnEnter = function(self)
+		local txt = self:GetValue()
+		
+		if txt != oldSearch then
+			oldSearch = txt
+			searchResults = {}
+			
+			for k, data in pairs(derma) do
+				data.panel:Show()
+			end
+			
+			for k, folder in pairs(folders) do
+				folder:Show()
+				folder:SetExpanded(false)
+			end
+			
+			if txt != "" then
+				searchResults = {}
+				searchResultsParents = {}
+				
+				for k, data in pairs(derma) do
+					local name = data.name or ""
+					
+					if name:lower():find(txt:lower()) then
+						searchResults[data.panel] = data.panel
+						
+						for k2, parent in pairs(data.parents) do
+							if not searchResultsParents[parent] then
+								searchResultsParents[parent] = parent
+							end
+						end
+					else
+						data.panel:Hide()
+					end
+				end
+				
+				for k, folder in pairs(folders) do
+					if not table.HasValue(searchResultsParents, folder) then
+						folder:Hide()
+					else
+						folder:SetExpanded(true)
+					end
+				end
+			end
+		end
+	end
+	--[[TextEntry.OnEnter = function(self)
 		local txt = self:GetValue()
 		
 		if txt != oldSearch then
@@ -139,7 +183,7 @@ function PANEL:Init()
 				parent:SetExpanded(true)
 			end
 		end
-	end
+	end]]
 	
 	local NodeWeb = Tree:AddNode("Syntaxes")
 	NodeWeb.Icon:SetImage("fugue/globe-network.png")
@@ -153,11 +197,12 @@ function PANEL:Init()
 	local NodeExam = Tree:AddNode("Examples")
 	NodeExam.Icon:SetImage("fugue/blue-folder-horizontal.png")
 	
-	table.insert(derma, {name = "Examples", panel = NodeExam, parents = {}})
+	--table.insert(derma, {name = "Examples", panel = NodeExam, parents = {}})
+	table.insert(folders, NodeExam)
 	
-	for name, file in pairs(EXPR_WIKI.EXAMPLES) do
+	for name, data2 in pairs(EXPR_WIKI.EXAMPLES) do
 		local NodeFile = NodeExam:AddNode(name)
-		NodeFile.Icon:SetImage("fugue/script.png")
+		NodeFile.Icon:SetImage("fugue/script-text.png")
 		NodeFile.DoClick = function()
 			Golem.GetInstance():NewTab("editor", file, "Example - "..name, "Example - "..name)
 		end
@@ -169,19 +214,21 @@ function PANEL:Init()
 	local NodeCons = Tree:AddNode("Constructors")
 	NodeCons.Icon:SetImage("fugue/blue-folder-horizontal.png")
 	
-	table.insert(derma, {name = "Constructors", panel = NodeCons, parents = {}})
+	--table.insert(derma, {name = "Constructors", panel = NodeCons, parents = {}})
+	table.insert(folders, NodeCons)
 	
 	for lib, data in pairs(EXPR_WIKI.CONSTRUCTORS) do
 		local NodeLib = NodeCons:AddNode(lib)
 		NodeLib.Icon:SetImage("fugue/blue-folder-horizontal.png")
 		
-		table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeCons}})
+		--table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeCons}})
+		table.insert(folders, NodeLib)
 		
-		for func, html in pairs(data) do
+		for func, data2 in pairs(data) do
 			local NodeFunc = NodeLib:AddNode(func)
-			NodeFunc.Icon:SetImage("fugue/script-text.png")
+			NodeFunc.Icon:SetImage("fugue/state-" .. data2.state .. ".png")
 			NodeFunc.DoClick = function()
-				Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
+				Golem.GetInstance():NewTab("html", data2.html, "E3 Wiki - "..func, 100, 100)
 			end
 			
 			table.insert(derma, {name = func, panel = NodeFunc, parents = {NodeCons, NodeLib}})
@@ -192,19 +239,21 @@ function PANEL:Init()
 	local NodeMeths = Tree:AddNode("Methods")
 	NodeMeths.Icon:SetImage("fugue/blue-folder-horizontal.png")
 	
-	table.insert(derma, {name = "Methods", panel = NodeMeths, parents = {}})
+	--table.insert(derma, {name = "Methods", panel = NodeMeths, parents = {}})
+	table.insert(folders, NodeMeths)
 	
 	for lib, data in pairs(EXPR_WIKI.METHODS) do
 		local NodeLib = NodeMeths:AddNode(lib)
 		NodeLib.Icon:SetImage("fugue/blue-folder-horizontal.png")
 		
-		table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeMeths}})
+		--table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeMeths}})
+		table.insert(folders, NodeLib)
 		
-		for func, html in pairs(data) do
+		for func, data2 in pairs(data) do
 			local NodeFunc = NodeLib:AddNode(func)
-			NodeFunc.Icon:SetImage("fugue/script-text.png")
+			NodeFunc.Icon:SetImage("fugue/state-" .. data2.state .. ".png")
 			NodeFunc.DoClick = function()
-				Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
+				Golem.GetInstance():NewTab("html", data2.html, "E3 Wiki - "..func, 100, 100)
 			end
 			
 			table.insert(derma, {name = func, panel = NodeFunc, parents = {NodeMeths, NodeLib}})
@@ -215,19 +264,21 @@ function PANEL:Init()
 	local NodeFuncs = Tree:AddNode("Functions")
 	NodeFuncs.Icon:SetImage("fugue/blue-folder-horizontal.png")
 	
-	table.insert(derma, {name = "Functions", panel = NodeFuncs, parents = {}})
+	--table.insert(derma, {name = "Functions", panel = NodeFuncs, parents = {}})
+	table.insert(folders, NodeFuncs)
 	
 	for lib, data in pairs(EXPR_WIKI.FUNCTIONS) do
 		local NodeLib = NodeFuncs:AddNode(lib)
 		NodeLib.Icon:SetImage("fugue/blue-folder-horizontal.png")
 		
-		table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeFuncs}})
+		--table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeFuncs}})
+		table.insert(folders, NodeLib)
 		
-		for func, html in pairs(data) do
+		for func, data2 in pairs(data) do
 			local NodeFunc = NodeLib:AddNode(func)
-			NodeFunc.Icon:SetImage("fugue/script-text.png")
+			NodeFunc.Icon:SetImage("fugue/state-" .. data2.state .. ".png")
 			NodeFunc.DoClick = function()
-				Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
+				Golem.GetInstance():NewTab("html", data2.html, "E3 Wiki - "..func, 100, 100)
 			end
 			
 			table.insert(derma, {name = func, panel = NodeFunc, parents = {NodeFuncs, NodeLib}})
@@ -238,13 +289,14 @@ function PANEL:Init()
 	local NodeEvents = Tree:AddNode("Events")
 	NodeEvents.Icon:SetImage("fugue/blue-folder-horizontal.png")
 	
-	table.insert(derma, {name = "Events", panel = NodeEvents, parents = {}})
+	--table.insert(derma, {name = "Events", panel = NodeEvents, parents = {}})
+	table.insert(folders, NodeEvents)
 	
-	for func, html in pairs(EXPR_WIKI.EVENTS) do
+	for func, data2 in pairs(EXPR_WIKI.EVENTS) do
 		local NodeFunc = NodeEvents:AddNode(func)
-		NodeFunc.Icon:SetImage("fugue/script-text.png")
+		NodeFunc.Icon:SetImage("fugue/state-" .. data2.state .. ".png")
 		NodeFunc.DoClick = function()
-			Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
+			Golem.GetInstance():NewTab("html", data2.html, "E3 Wiki - "..func, 100, 100)
 		end
 		
 		table.insert(derma, {name = func, panel = NodeFunc, parents = {NodeEvents}})
@@ -254,19 +306,21 @@ function PANEL:Init()
 	local NodeOpers = Tree:AddNode("Operators")
 	NodeOpers.Icon:SetImage("fugue/blue-folder-horizontal.png")
 	
-	table.insert(derma, {name = "Operators", panel = NodeOpers, parents = {}})
+	--table.insert(derma, {name = "Operators", panel = NodeOpers, parents = {}})
+	table.insert(folders, NodeOpers)
 	
 	for lib, data in pairs(EXPR_WIKI.OPERATORS) do
 		local NodeLib = NodeOpers:AddNode(lib)
 		NodeLib.Icon:SetImage("fugue/blue-folder-horizontal.png")
 		
-		table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeOpers}})
+		--table.insert(derma, {name = lib, panel = NodeLib, parents = {NodeOpers}})
+		table.insert(folders, NodeLib)
 		
-		for func, html in pairs(data) do
+		for func, data2 in pairs(data) do
 			local NodeFunc = NodeLib:AddNode(func)
-			NodeFunc.Icon:SetImage("fugue/script-text.png")
+			NodeFunc.Icon:SetImage("fugue/state-" .. data2.state .. ".png")
 			NodeFunc.DoClick = function()
-				Golem.GetInstance():NewTab("html", html, "E3 Wiki - "..func, 100, 100)
+				Golem.GetInstance():NewTab("html", data2.html, "E3 Wiki - "..func, 100, 100)
 			end
 			
 			table.insert(derma, {name = func, panel = NodeFunc, parents = {NodeOpers, NodeLib}})

@@ -31,62 +31,62 @@ function EXPR_WIKI.RegisterExample(name, code)
 	examples[name] = code
 end
 
-function EXPR_WIKI.RegisterConstructor(library, name, html)
+function EXPR_WIKI.RegisterConstructor(library, name, html, state)
 	if not loadWiki then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor %s.%s outside of Hook::Expression3.LoadWiki", library, name)
 	end
 	
 	constructors[library] = constructors[library] or {}
 	
-	constructors[library][name] = html
+	constructors[library][name] = {html = html, state = state}
 end
 
-function EXPR_WIKI.RegisterMethod(library, name, html)
+function EXPR_WIKI.RegisterMethod(library, name, html, state)
 	if not loadWiki then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register Method for %s.%s outside of Hook::Expression3.LoadWiki", library, name)
 	end
 
 	methods[library] = methods[library] or {}
 	
-	methods[library][name] = html
+	methods[library][name] = {html = html, state = state}
 end
 
-function EXPR_WIKI.RegisterFunction(library, name, html)
+function EXPR_WIKI.RegisterFunction(library, name, html, state)
 	if not loadWiki then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register Function %s.%s outside of Hook::Expression3.LoadWiki", library, name)
 	end
 	
 	functions[library] = functions[library] or {}
 	
-	functions[library][name] = html
+	functions[library][name] = {html = html, state = state}
 end
 
-function EXPR_WIKI.RegisterPage(catagory, title, html)
+function EXPR_WIKI.RegisterPage(catagory, title, html, state)
 	if not loadWiki then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register Page %s.%s outside of Hook::Expression3.LoadWiki", catagory, title)
 	end
 	
 	pages[catagory] = pages[catagory] or {}
 	
-	pages[catagory][title] = html
+	pages[catagory][title] = {html = html, state = state}
 end
 
-function EXPR_WIKI.RegisterOperator(library, name, html)
+function EXPR_WIKI.RegisterOperator(library, name, html, state)
 	if not loadWiki then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register Operator %s.%s outside of Hook::Expression3.LoadWiki", library, name)
 	end
 	
 	operators[library] = operators[library] or {}
 	
-	operators[library][name] = html
+	operators[library][name] = {html = html, state = state}
 end
 
-function EXPR_WIKI.RegisterEvent(name, html)
+function EXPR_WIKI.RegisterEvent(name, html, state)
 	if not loadWiki then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register Event %s outside of Hook::Expression3.LoadWiki", name)
 	end
 	
-	events[name] = html
+	events[name] = {html = html, state = state}
 end
 
 --------------------------------
