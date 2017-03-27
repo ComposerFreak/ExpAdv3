@@ -55,7 +55,7 @@ end
 function CONTEXT.GetScriptPos(this, line, char)
 	for _, a in pairs(this.traceTable) do
 		if (a.native_line >= line) then
-			return{a.e3_line, a.e3_char};
+			return{a.e3_line, a.e3_char, a.instruction};
 		end
 	end
 
@@ -73,6 +73,7 @@ function CONTEXT.Throw(this, msg, fst, ...)
 	err.line = 0;
 	err.msg = msg;
 	err.ctx = this;
+	err.instruction = "";
 	err.stack = this:Trace(1, 15);
 
 	if (err.stack) then
@@ -81,6 +82,7 @@ function CONTEXT.Throw(this, msg, fst, ...)
 		if (trace) then
 			err.line = trace[1];
 			err.char = trace[2];
+			err.instruction = trace[3] or "";
 		end
 	end
 

@@ -261,6 +261,7 @@ local keywords = {
 	["constructor"] 	= { true, false }, 
 	["operator"] 		= { true, false }, 
 	["method"] 			= { true, false }, 
+	["instanceof"] 		= { true, false }, 
 }
 
 local Directives = {
@@ -569,6 +570,21 @@ function Syntaxer:Parse( nRow )
 				if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
 					self.UserClasses[self.sTokenData] = nRow 
 					self:AddToken( "typename" )
+				end 
+				
+				self:SkipSpaces( ) 
+				
+				if self:NextPattern( "extends" ) then 
+					self:AddToken( "keyword" ) 
+					self:SkipSpaces( ) 
+					
+					if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
+						if istype( self.sTokenData, nRow ) then 
+							self:AddToken( "typename" ) 
+						else 
+							self:AddToken( "notfound" ) 
+						end 
+					end 
 				end 
 				
 				continue

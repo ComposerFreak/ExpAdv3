@@ -55,6 +55,8 @@ function ENT:Validate(script, files)
 end
 
 function ENT:SetCode(script, files, run)
+	self:ShutDown();
+
 	self.script = script;
 	self.files = files;
 	
@@ -181,6 +183,8 @@ function ENT:BuildEnv(context, instance)
 			local valid = hashTable[hash];
 			if (valid) then return valid[class.hash] end
 		end
+
+		-- hashtable[extends][class] = is isinstance of.
 
 	-- Get wire changes
 		local out_changed = {};
@@ -340,7 +344,7 @@ function ENT:HandelThrown(thrown, stackTrace)
 			self:WriteToLogger(Color(255,0,0), "Suffered a ", thrown.state, " error:\n");
 			self:WriteToLogger(Color(0,255, 255), "Message: ", Color(255, 255, 255), "Remotly executed function threw an error", "\n");
 			self:WriteToLogger(Color(0,255, 255), "Thrown error: ", Color(255, 255, 255), thrown.msg, "\n");
-			self:WriteToLogger(Color(0,255, 255), "External Trace: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char);
+			self:WriteToLogger(Color(0,255, 255), "External Trace: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char, " ", thrown.instruction);
 			self:PrintStackTrace(stackTrace);
 			self:FlushLogger();
 			self:ShutDown();
@@ -350,7 +354,7 @@ function ENT:HandelThrown(thrown, stackTrace)
 				thrown.ctx.entity:WriteToLogger(Color(255,0,0), "Suffered a ", thrown.state, " error:\n")
 				thrown.ctx.entity:WriteToLogger(Color(0,255, 255), "Message: ", Color(255, 255, 255), "A function executed from a remote source threw an error.", "\n")
 				thrown.ctx.entity:WriteToLogger(Color(0,255, 255), "Thrown error: ", Color(255, 255, 255), thrown.msg, "\n");
-				thrown.ctx.entity:WriteToLogger(Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char);
+				thrown.ctx.entity:WriteToLogger(Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char, " ", thrown.instruction);
 				thrown.ctx.entity:PrintStackTrace(stackTrace);
 				thrown.ctx.entity:FlushLogger();
 				thrown.ctx.entity:ShutDown();
@@ -358,7 +362,7 @@ function ENT:HandelThrown(thrown, stackTrace)
 		else
 			self:WriteToLogger(Color(255,0,0), "Suffered a ", thrown.state, " error:\n")
 			self:WriteToLogger("    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), thrown.msg, "\n")
-			self:WriteToLogger("    ", Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char)
+			self:WriteToLogger("    ", Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char, " ", thrown.instruction);
 			self:FlushLogger()
 			self:ShutDown();
 		end

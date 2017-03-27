@@ -116,12 +116,14 @@ function COMPILER.BuildScript(this)
 	local buffer = {};
 	local alltasks = this.__tasks;
 
+	local off = 0;
 	local char = 0;
-	local line = 3;
+	local line = -0;
 	local traceTable = {};
 
 	for k, v in pairs(this.__tokens) do
 		local data = tostring(v.data);
+
 		if (v.newLine) then
 			char = 1;
 			line = line + 1;
@@ -131,6 +133,14 @@ function COMPILER.BuildScript(this)
 		local tasks = alltasks[v.pos];
 
 		if (tasks) then
+			local callbacks = tasks.callbacks;
+
+			if (callbacks) then
+				for _, callback in pairs(callbacks) do
+					callback.fun(unpack(callback.args));
+				end
+			end
+
 			local prefixs = tasks.prefix;
 
 			if (prefixs) then
@@ -140,6 +150,7 @@ function COMPILER.BuildScript(this)
 				for _, prefix in pairs(prefixs) do
 					if (prefix.newLine) then
 						char = 1;
+						off = off + 1;
 						line = line + 1;
 						buffer[#buffer + 1] = "\n";
 					end
@@ -158,7 +169,7 @@ function COMPILER.BuildScript(this)
 					char = char + #data + 1;
 				end
 
-				traceTable[#traceTable + 1] = {e3_line = v.line, e3_char = v.char, native_line = line, native_char = char};
+				traceTable[#traceTable + 1] = {e3_line = v.line - 1, e3_char = v.char, native_line = line, native_char = char, instruction = tasks.instruction};
 			end
 
 			local postfixs = tasks.postfix;
@@ -169,6 +180,7 @@ function COMPILER.BuildScript(this)
 				for _, postfix in pairs(postfixs) do
 					if (postfix.newLine) then
 						char = 1;
+						off = off + 1;
 						line = line + 1;
 						buffer[#buffer + 1] = "\n";
 					end
@@ -176,12 +188,8 @@ function COMPILER.BuildScript(this)
 					buffer[#buffer + 1] = postfix.str;
 				end
 			end
-
-			if (tasks.instruction) then
-				
-			end
 		else
-			traceTable[#traceTable + 1] = {e3_line = v.line, e3_char = v.char, native_line = line, native_char = char};
+			traceTable[#traceTable + 1] = {e3_line = v.line - 1, e3_char = v.char, native_line = line, native_char = char};
 			buffer[#buffer + 1] = data;
 			char = char + #data + 1;
 		end
@@ -413,6 +421,33 @@ end
 
 --[[
 ]]
+
+function COMPILER.QueueCallBack(this, inst, token, fun, ...)
+	
+	local op = {};
+	op.token = token;
+	op.inst = inst;
+	op.fun = fun;
+	op.args = {...};
+
+	local tasks = this.__tasks[token.pos];
+
+	if (not tasks) then
+		tasks = {};
+		this.__tasks[token.pos] = tasks;
+	end
+
+	callbacks = tasks.callbacks;
+
+	if (not callbacks) then
+		callbacks = {};
+		tasks.callbacks = callbacks;
+	end
+
+	callbacks[#callbacks + 1] = op;
+
+	return op;
+end
 
 function COMPILER.QueueReplace(this, inst, token, str)
 	
@@ -2058,32 +2093,62 @@ function COMPILER.Expression_IS(this, expr)
 	return false, expr;
 end
 
-function COMPILER.CastExpression(this, type, expr)
-	local op;
-	local signature = string.format("(%s)%s", name(type), name(expr.result));
-	local userType, userClass = this:GetUserClass(type), this:GetUserClass(expr.result);
+function COMPILER.Compile_IOF(this, inst, token, expr)
+	local r, c = this:Compile(expr);
 
-	if (userType and userClass) then
-		if (userClass.extends and userClass.extends.hash == userType.hash) then
-			op = {
-				signature = "usercast",
-				operator = function(a) return a end,
-				type = userType.name,
-				count = 1
-			};
-		elseif (userType.extends and userType.extends.hash == userClass.hash) then
-			op = {
-				signature = "usercast",
-				operator = function(a)
-					return a; -- Not shure how im doing this.
+	local userclass = this:GetUserClass(inst.__cls.data);
+
+	if (not userclass or not this:GetUserClass(r)) then
+		this:Throw(token, "Instanceof currently only supports user classes, sorry about that :D");
+	end
+
+	this:QueueRemove(inst, inst.__cls);
+	this:QueueRemove(inst, inst.__iof);
+
+	this:QueueInjectionBefore(inst, expr.token,"CheckHash('" .. userclass.hash .. "',");
+	this:QueueInjectionAfter(inst, expr.final,")");
+
+	return "b", 1;
+end
+
+function COMPILER.CastUserType(this, left, right)
+	local to = this:GetUserClass(left);
+	local from = this:GetUserClass(right);
+
+	if (not (to or from)) then return end;
+
+	if (not this.__hashtable[to.hash][from.hash]) then
+		if (this.__hashtable[from.hash][to.hash]) then
+			return {
+				signature = string.format("(%s)%s", to.hash, from.hash),
+				context = true,
+				type = left,
+				count = 1,
+				operator = function(ctx, obj)
+					if (not ctx.env.CheckHash(to.hash, obj)) then
+						ctx:Throw("Failed to cast %s to %s, #class missmatched.", name(right), name(left));
+					end; return obj;
 				end,
-				type = userType.name,
-				count = 1
 			};
 		end
+
+		return nil;
 	end
+
+	return {
+		type = left,
+		count = 1,
+	};
+	-- hashtable[extends][class] = is isinstance of.
+end
+
+function COMPILER.CastExpression(this, type, expr)
 	
+	local op = this:CastUserType(type, expr.result);
+
 	if (not op) then
+		local signature = string.format("(%s)%s", name(type), name(expr.result));
+		
 		op = EXPR_CAST_OPERATORS[signature];
 
 		if (not op) then
@@ -2095,15 +2160,17 @@ function COMPILER.CastExpression(this, type, expr)
 		end
 	end
 
-	this:QueueInjectionBefore(inst, expr.token, "_OPS[\"" .. op.signature .. "\"](");
+	if (op.operator) then
+		this:QueueInjectionBefore(inst, expr.token, "_OPS[\"" .. op.signature .. "\"](");
 
-	if (op.context) then
-	    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
+		if (op.context) then
+		    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
+		end
+										
+		this:QueueInjectionAfter(inst, expr.final, ")" );
+
+		this.__operators[op.signature] = op.operator;
 	end
-		
-	this:QueueInjectionAfter(inst, expr.final, ")" );
-
-	this.__operators[op.signature] = op.operator;
 
 	expr.result = op.type;
 	expr.rCount = op.count;
@@ -3221,7 +3288,7 @@ end
 function COMPILER.StartClass(this, name)
 	local classes = this.__scope.classes;
 
-	local newclass = {name = name, constructors = {}, methods = {}, memory = {}};
+	local newclass = {name = name, constructors = {}, methods = {}, memory = {}, instances = {}};
 
 	classes[name] = newclass;
 
@@ -3297,7 +3364,6 @@ function COMPILER.Compile_CLASS(this, inst, token, stmts)
 				class.methods[name] = info;
 			end
 
-
 			this.__hashtable[extends.hash][class.hash] = true;
 
 			this:QueueRemove(inst, inst.__ext);
@@ -3327,6 +3393,18 @@ function COMPILER.Compile_CLASS(this, inst, token, stmts)
 
 	return "", 0;
 end
+
+--[[Notes.
+function downCast()
+	if from-class is extended from to-class then return to-class
+end
+
+function upCast()
+	if to-class is extended from from-class then
+
+end
+]]
+
 
 function COMPILER.Compile_FEILD(this, inst, token, expressions)
 	local expr = expressions[1];
