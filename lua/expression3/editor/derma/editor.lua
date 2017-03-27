@@ -338,6 +338,8 @@ function PANEL:_OnKeyCodeTyped( code )
 			self:ScrollCaret( )
 		elseif code == KEY_F2 then
 			self:Bookmark( )
+		elseif code == KEY_SPACE then 
+			self.Master:DoValidate( true ) 
 		end 
 	else
 		if code == KEY_ENTER then 
