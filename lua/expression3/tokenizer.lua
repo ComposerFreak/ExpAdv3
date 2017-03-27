@@ -34,6 +34,8 @@ local KEYWORDS = {
 		["new"] = {"new", "constructor"},
 		["try"] = {"try", "try"},
 		["catch"] = {"cth", "catch"},
+		["interface"] = {"itf", "interface"},
+		["implements"] = {"imp", "implements"},
 		["class"] = {"cls", "class"},
 		["method"] = {"meth", "method"},
 		["extends"] = {"ext", "extends"},
@@ -534,16 +536,21 @@ function TOKENIZER.Loop(this)
 
 		this:Throw(0, "Unterminated string (\"%s)", str);
 	end
+	
+	local w;
+
+	if (this:NextPattern("^[a-zA-Z][a-zA-Z0-9_]*")) then
+		w = this.__data;
+	end
 
 	-- Classes
-	
 	for k, v in pairs(EXPR_CLASSES) do
 		if (this:NextPattern("%( *" .. k .. " *%)")) then
 			this:CreateToken("cst", "cast", v.id, k);
 			return true;
 		end
 
-		if (this:NextPattern(k, true)) then
+		if (w and w == k) then
 			this:CreateToken("typ", "type", v.id, k);
 			return true;
 		end
@@ -551,8 +558,7 @@ function TOKENIZER.Loop(this)
 
 	-- Keywords.
 
-	if (this:NextPattern("^[a-zA-Z][a-zA-Z0-9_]*")) then
-		local w = this.__data;
+	if (w) then
 		local tkn = this.keywords[w];
 
 		if (tkn) then

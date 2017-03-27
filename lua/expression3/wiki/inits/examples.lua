@@ -1,27 +1,48 @@
 hook.Add("Expression3.LoadWiki", "Expression3.Wiki.RegisterExamples", function()
 	EXPR_WIKI.RegisterExample("custom_class", 
-[[class vec {
-    int x = 0;
-    int y = 0;
-    int z = 0;
-    vec(int x, int y, int z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-    method vector toVector() {
-        return new vector(x, y, z);
-    }
-    method vec add(vec a) {
-        return new vec(x + a.x, y + a.y, z + a.z);
-    }
-    method vec sub(vec a) {
-        return new vec(x - a.x, y - a.y, z - a.z);
-    }
-    tostring() {
-        return "vec(" + x + "," + y + "," + z + ")";
+[[interface fruit {
+    method int health() {
+        return 1;
     }
 }
-vec a = new vec(1,2,3);
-system.out(a.add(a));]])
+
+class food {
+    int i = 0;
+    
+    food() {
+        this.i = i;
+    }
+}
+
+class apple extends food implements fruit {
+    int s = 0;
+    
+    apple(int s) {
+        this.s = s;
+    }
+    
+    method int health() {
+        return 100;
+    }
+}
+
+class orange extends food implements fruit {
+    int j = 0;
+    
+    orange(int j) {
+        this.j = j;
+    }
+    
+    method int health() {
+        return 100;
+    }
+}
+
+apple food1 = new apple(1);
+orange food2 = new orange(2);
+food food3 = (food) food1;
+food food4 = (food) food2;
+orange food5 = (orange) food3;
+fruit food6 = (fruit) food1;
+system.out(food2 instanceof food);]])
 end)

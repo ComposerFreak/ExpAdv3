@@ -54,6 +54,7 @@ function COMPILER.Initalize(this, instance, files)
 
 	this.__scope.memory = {};
 	this.__scope.classes = {};
+	this.__scope.interfaces = {};
 	this.__scope.server = true;
 	this.__scope.client = true;
 
@@ -276,6 +277,7 @@ function COMPILER.PushScope(this)
 	this.__scope = {};
 	this.__scope.memory = {};
 	this.__scope.classes = {};
+	this.__scope.interfaces = {};
 	this.__scopeID = this.__scopeID + 1;
 	this.__scopeData[this.__scopeID] = this.__scope;
 end
@@ -2112,8 +2114,8 @@ function COMPILER.Compile_IOF(this, inst, token, expr)
 end
 
 function COMPILER.CastUserType(this, left, right)
-	local to = this:GetUserClass(left);
-	local from = this:GetUserClass(right);
+	local to = this:GetUserClass(left) or this:GetInterface(left);
+	local from = this:GetUserClass(right) or this:GetInterface(right);
 
 	if (not (to or from)) then return end;
 
@@ -3374,6 +3376,34 @@ function COMPILER.Compile_CLASS(this, inst, token, stmts)
 			this:Compile(stmts[i]);
 		end
 
+		if (inst.impliments) then
+			for _, imp in pairs(inst.impliments) do
+				local interface = this:GetInterface(imp.data);
+
+				if (not interface) then
+					this:Throw(imp, "No sutch interface %s", imp.data);
+				end
+
+				for name, info in pairs(interface.methods) do
+					local overrride = class.methods[name];
+
+					if (not overrride) then
+						this:Throw(token, "Missing method %s(%s) on class %s, for interface %s", info.name, inst.perams or "", inst.__classname.data, imp.data);
+					end
+
+					if (overrride and info.result ~= overrride.result) then
+						this:Throw(overrride.token, "Interface method %s(%s) on %s must return %s", info.name, inst.perams or "", imp.data, name(info.result));
+					end
+
+					if (overrride and info.count ~= overrride.count) then
+						this:Throw(overrride.token, "Interface method %s(%s) on %s must return %i values", info.name, inst.perams or "", imp.data, info.count);
+					end
+				end
+					
+				this.__hashtable[interface.hash][class.hash] = true;
+			end
+		end
+
 		if (not extends and not class.valid) then
 			this:Throw(token, "Class %s requires at least one constructor.", class.name);
 		end
@@ -3586,7 +3616,7 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 	meth.sig = signature;
 	meth.name = inst.__name.data;
 	meth.result = inst.__typ.data;
-
+	meth.token = token;
 	userclass.methods[signature] = meth;
 
 	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
@@ -3657,6 +3687,81 @@ function COMPILER.Compile_TOSTR(this, inst, token, expressions)
 	local error = string.format("Attempt to call user operation '%s.tostring()' using alien class of the same name.", userclass.name);
 	this:QueueInjectionAfter(inst, inst.__preBlock, string.format("if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error))
 	injectNewLine = false;
+end
+
+--[[
+]]
+
+function COMPILER.StartInterface(this, name)
+	local interfaces = this.__scope.interfaces;
+
+	local newinterfaces = {name = name, methods = {}};
+
+	interfaces[name] = newinterfaces;
+
+	return newinterfaces;
+end
+
+function COMPILER.GetInterface(this, name, scope, nonDeep)
+	if (not scope) then
+		scope = this.__scopeID;
+	end
+
+	local v = this.__scopeData[scope].interfaces[name];
+
+	if (v) then
+		return v, v.scope;
+	end
+
+	if (not nonDeep) then
+		for i = scope, 0, -1 do
+			local v = this.__scopeData[i].interfaces[name];
+
+			if (v) then
+				return v, v.scope;
+			end
+		end
+	end
+end
+
+function COMPILER.Compile_INTERFACE(this, inst, token, stmts)
+	local extends;
+	local interface = this:StartInterface(inst.interface);
+
+	interface.hash = this:CRC(token, inst.__rcb);
+
+	this.__hashtable[interface.hash] = {[interface.hash] = true};	
+
+	this:PushScope();
+
+		this:SetOption("interface", interface);
+
+		for i = 1, #stmts do
+			this:Compile(stmts[i]);
+		end
+
+	this:PopScope();
+
+	return "", 0;
+end
+
+function COMPILER.Compile_INTERFACE_METHOD(this, inst, token)
+	local interface = this:GetOption("interface"); 
+
+	local meth = {};
+	meth.name = inst.name;
+	meth.result = inst.result;
+	meth.perams = table.concat(inst.peramaters, ",");
+	meth.sig = string.format("@%s(%s)", inst.name, meth.perams);
+	meth.token = token;
+
+	if (inst.count == -1) then
+		inst.count = 0;
+	end
+
+	meth.count = inst.count;
+
+	interface.methods[meth.sig] = meth;
 end
 
 EXPR_COMPILER = COMPILER;

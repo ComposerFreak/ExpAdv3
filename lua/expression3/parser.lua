@@ -936,6 +936,10 @@ function PARSER.Statment_0(this)
 		return this:ClassStatment_0();
 	end
 
+	if (this:CheckToken("itf")) then
+		return this:InterfaceStatment_0();
+	end
+
 	local stmt = this:Statment_1();
 
 	if (dirLine and (not sep or direLine == stmt.line)) then
@@ -2441,6 +2445,23 @@ function PARSER.ClassStatment_0(this)
 			inst.__exttype = this.__token;
 		end
 
+		if (this:Accept("imp")) then
+			this:QueueRemove(inst, this.__token);
+
+			this:Require("typ", "Class name expected after impliments");
+			this:QueueRemove(inst, this.__token);
+			
+			local impliments = {this.__token};
+
+			while(this:Accept("com")) do
+				this:Require("typ", "Class name expected after impliments");
+				this:QueueRemove(inst, this.__token);
+				impliments[#impliments + 1] = this.__token;
+			end
+
+			inst.impliments = impliments;
+		end
+
 		this:Require("lcb", "Left curly bracket ({) expected, to open class");
 		inst.__lcb = this.__token;
 		
@@ -2597,7 +2618,122 @@ function PARSER.ClassStatment_4(this)
 
 	this:Throw(this.__token, "Right curly bracket (}) expected, to close class.");
 end
+
 --[[
 ]]
+
+function PARSER.InterfaceStatment_0(this)
+	if (this:Accept("itf")) then
+		local inst = this:StartInstruction("interface", this.__token);
+		this:QueueRemove(inst, this.__token);
+
+		this:Require("var", "Interface name expected after class");
+		this:QueueRemove(inst, this.__token);
+
+		inst.interface = this.__token.data;
+		
+		this:SetUserObject(inst.interface);
+
+		this:Require("lcb", "Left curly bracket ({) expected, to open interface");
+		this:QueueRemove(inst, this.__token);
+		
+		local stmts = {};
+
+		if (not this:CheckToken("rcb")) then
+			this:PushScope()
+
+			this:SetOption("interface", inst.interface);
+			stmts = this:Statments(true, this.InterfaceStatment_1);
+
+			this:PopScope()
+		end
+
+		this:Require("rcb", "Right curly bracket (}) missing, to close interface");
+		this:QueueRemove(inst, this.__token);
+		inst.__rcb = this.__token;
+
+		return this:EndInstruction(inst, stmts);
+	end
+
+	this:Throw(this.__token, "Right curly bracket (}) expected, to close interface.");
+end
+
+--[[
+]]
+
+function PARSER.InterfaceStatment_1(this)
+	if (this:Accept("meth")) then
+		local inst = this:StartInstruction("interface_method", this.__token);
+		this:QueueRemove(inst, this.__token);
+
+		this:Require("typ", "Return type expected for method, after method.");
+
+		inst.result = this.__token.data;
+
+		this:QueueRemove(inst, this.__token);
+
+		this:Require("var", "Name expected for method, after %s", name(inst.result));
+
+		inst.name = this.__token.data;
+		this:QueueRemove(inst, this.__token);
+
+		this:Require("lpa", "Left parenthesis ( () expected to close method peramaters.");
+		this:QueueRemove(inst, this.__token);
+
+		local classes = {};
+
+		if (not this:CheckToken("rpa")) then
+
+			while (true) do
+				this:Require("typ", "Peramater type expected for peramater.");
+				this:QueueRemove(inst, this.__token);
+
+				classes[#classes + 1] = this.__token.data;
+
+				if (not this:Accept("com")) then
+					break;
+				end
+
+				this:QueueRemove(inst, this.__token);
+			end
+
+		end
+		
+		inst.peramaters = classes;
+
+		this:Require("rpa", "Right parenthesis ( )) expected to close method peramaters.");
+
+		this:QueueRemove(inst, this.__token);
+
+		local lcb = this:Accept("lcb");
+
+		if (lcb) then
+			this:QueueRemove(inst, this.__token);
+		end
+
+		this:Require("ret", "Method body must be return followed by return count");
+		
+		this:QueueRemove(inst, this.__token);
+
+		this:Require("num", "Method body must be return followed by return count as number.");
+
+		this:QueueRemove(inst, this.__token);
+
+		inst.count = this.__token.data;
+		this:QueueRemove(inst, this.__token);
+
+		if (this:Accept("sep")) then
+			this:QueueRemove(inst, this.__token);
+		end
+
+		if (lcb) then
+			this:Require("rcb", "Right curly bracket ( }) expected to close method.");
+
+			this:QueueRemove(inst, this.__token);
+		end
+
+		return this:EndInstruction(inst, {});
+	end
+end
 
 EXPR_PARSER = PARSER;
