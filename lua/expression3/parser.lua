@@ -488,6 +488,15 @@ function PARSER.StartInstruction(this, _type, token)
 	inst.scope = this.__scope;
 	this.__depth = this.__depth + 1;
 
+	local tasks = this.__tasks[token.pos];
+
+	if (not tasks) then
+		tasks = {};
+		this.__tasks[token.pos] = tasks;
+	end
+
+	tasks.instruction = tasks.instruction or _type;
+
 	return inst;
 end
 

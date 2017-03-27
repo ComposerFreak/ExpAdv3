@@ -116,12 +116,14 @@ function COMPILER.BuildScript(this)
 	local buffer = {};
 	local alltasks = this.__tasks;
 
+	local off = 0;
 	local char = 0;
-	local line = 3;
+	local line = -0;
 	local traceTable = {};
 
 	for k, v in pairs(this.__tokens) do
 		local data = tostring(v.data);
+
 		if (v.newLine) then
 			char = 1;
 			line = line + 1;
@@ -148,6 +150,7 @@ function COMPILER.BuildScript(this)
 				for _, prefix in pairs(prefixs) do
 					if (prefix.newLine) then
 						char = 1;
+						off = off + 1;
 						line = line + 1;
 						buffer[#buffer + 1] = "\n";
 					end
@@ -166,7 +169,7 @@ function COMPILER.BuildScript(this)
 					char = char + #data + 1;
 				end
 
-				traceTable[#traceTable + 1] = {e3_line = v.line, e3_char = v.char, native_line = line, native_char = char};
+				traceTable[#traceTable + 1] = {e3_line = v.line - 1, e3_char = v.char, native_line = line, native_char = char, instruction = tasks.instruction};
 			end
 
 			local postfixs = tasks.postfix;
@@ -177,6 +180,7 @@ function COMPILER.BuildScript(this)
 				for _, postfix in pairs(postfixs) do
 					if (postfix.newLine) then
 						char = 1;
+						off = off + 1;
 						line = line + 1;
 						buffer[#buffer + 1] = "\n";
 					end
@@ -184,12 +188,8 @@ function COMPILER.BuildScript(this)
 					buffer[#buffer + 1] = postfix.str;
 				end
 			end
-
-			if (tasks.instruction) then
-				
-			end
 		else
-			traceTable[#traceTable + 1] = {e3_line = v.line, e3_char = v.char, native_line = line, native_char = char};
+			traceTable[#traceTable + 1] = {e3_line = v.line - 1, e3_char = v.char, native_line = line, native_char = char};
 			buffer[#buffer + 1] = data;
 			char = char + #data + 1;
 		end
