@@ -3130,6 +3130,65 @@ function COMPILER.Compile_WHILE(this, inst, token, expressions)
 	this:PopScope();
 end
 
+function COMPILER.Compile_EACH(this, inst, token, expr)
+	local r, c = this:Compile(expr);
+	local op = this:GetOperator("itor", r);
+
+	if (not op) then
+		this:Throw(token, "%s can not be used inside a foreach loop", name(r));
+	end
+
+	this:PushScope();
+	this:SetOption("loop", true);
+
+	if inst.kType then
+		this:AssignVariable(token, true, inst.kValue, inst.kType,  nil);
+	end
+
+	this:AssignVariable(token, true, inst.vValue, inst.vType, nil);
+
+	this:Compile(inst.block);
+	this:PopScope();
+
+	this:QueueInjectionBefore(inst, inst.__in, "_kt, _kv, _vt, _vv");
+
+	if (isfunction(op.operator)) then
+		this:QueueInjectionBefore(inst, expr.token, "_OPS[\"" .. op.signature .. "\"](");
+
+		if (op.context) then
+		   this:QueueInjectionBefore(inst, expr.token, "CONTEXT,");
+		end
+
+		this:QueueInjectionAfter(inst, expr.final, ")");
+
+		this.__operators[op.signature] = op.operator;
+	end
+
+	injectNewLine = true;
+
+	local pos = inst.block.token;
+
+	if (inst.kType) then
+		if (inst.kType ~= "_vr") then
+			this:QueueInjectionAfter(inst, pos, string.format("if (_kt ~= %q) then continue end", inst.kType));
+			this:QueueInjectionAfter(inst, pos, string.format("local %s = _kv", inst.kValue));
+		else
+			this:QueueInjectionAfter(inst, pos, string.format("local %s = {_kt, _kv}", inst.kValue));
+		end
+	end
+
+	if (inst.vType) then
+		if (inst.vType ~= "_vr") then
+			this:QueueInjectionAfter(inst, pos, string.format("if (_vt ~= %q) then continue end", inst.vType));
+			this:QueueInjectionAfter(inst, pos, string.format("local %s = _vv", inst.vValue));
+		else
+			this:QueueInjectionAfter(inst, pos, string.format("local %s = {_vt, _vv}", inst.vValue));
+		end
+	end
+
+	injectNewLine = false;
+end
+
 --[[
 
 ]]

@@ -97,6 +97,22 @@ function eTable.updateChildren(tbl, oldweight, newweight, updated)
 	end
 end
 
+local n = next;
+local t = type;
+local l = string.lower;
+
+function eTable.itor(tbl) 
+	local w = tbl.tbl;
+	local a, b = n(tbl.tbl);
+
+	return function()
+		if not a then return end
+		local tp, key, val = l(t(a))[1], a, b;
+		a, b = n(w, a);
+		return tp, key, val[1], val[2];
+	end
+end
+
 --[[
 ]]
 
@@ -143,6 +159,8 @@ extension:RegisterOperator("len", "t", "n", 1, function(tbl)
 	return #tbl.tbl;
 end, true);
 
+extension:RegisterOperator("itor", "t", "", 0, eTable.itor, true);
+
 --[[
 	Methods
 ]]
@@ -152,17 +170,7 @@ extension:RegisterMethod("t", "keys", "", "t", 1, function(tbl)
 
 	for key, value in pairs(tbl.tbl) do
 		if (value and value[2] ~= nil) then
-			local typ;
-
-			if (isnumber(key)) then
-				typ = "n";
-			elseif (isstring(key)) then
-				typ = "s";
-			elseif (isentity(key)) then
-				typ = "e";
-			elseif (isplayer(key)) then
-				typ = "p";
-			end
+			local typ = l(t(key))
 
 			if (type) then
 				t[#t + 1] = {t, key};
@@ -197,7 +205,7 @@ end, false);
 	Autogen methods and operators (type sepecific)
 ]]
 
-local VALID_KEYS = {"n", "s", "e", "p"};
+local VALID_KEYS = {"n", "s", "e", "p", "h"};
 
 for _, k in pairs(VALID_KEYS) do
 	if (k ~= "") then

@@ -1089,6 +1089,53 @@ function PARSER.Statment_5(this)
 		return this:EndInstruction(inst, {});
 	end
 
+	if (this:Accept("each")) then
+		local inst = this:StartInstruction("each", this.__token);
+
+		this:QueueReplace(inst, this.__token, "for");
+
+		this:Require("lpa", "Left parenthesis (() ) expected to close cloop defintion.");
+
+		this:QueueRemove(inst, this.__token);
+
+		this:Require("typ", "Class expected after lpa, for foreach loop")
+		this:QueueRemove(inst, this.__token);
+		local a = this.__token.data
+
+		this:Require("var", "Variable expected after class, for foreach loop")
+		this:QueueRemove(inst, this.__token);
+		local b = this.__token.data
+
+		if (this:Accept("as")) then
+			this:QueueRemove(inst, this.__token);
+			inst.kType, inst.kValue = a, b;
+
+			this:Require("typ", "Class expected after as, for foreach loop")
+			this:QueueRemove(inst, this.__token);
+			a = this.__token.data
+
+			this:Require("var", "Variable expected after class, for foreach loop")
+			this:QueueRemove(inst, this.__token);
+			b = this.__token.data
+		end
+
+		inst.vType, inst.vValue = a, b;
+
+		this:Require("in", "In expected after variable, for foreach loop");
+		
+		inst.__in = this.__token;
+
+		local expr = this:Expression_1();
+
+		this:Require("rpa", "Right parenthesis ( )) expected to close loop defintion.");
+		
+		this:QueueRemove(inst, this.__token);
+
+		inst.block = this:Block_1(true, "do");
+
+		return this:EndInstruction(inst, expr);
+	end
+
 	return this:Statment_6();
 end
 
