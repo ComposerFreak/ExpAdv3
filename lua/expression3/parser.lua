@@ -332,7 +332,7 @@ function PARSER.OffsetToken(this, token, offset)
 end
 
 function PARSER.StepBackward(this, steps)
-	
+
 	if (not steps) then
 		steps = 1;
 	end
@@ -358,7 +358,7 @@ end
 function PARSER.GotoToken(this, token, offset)
 	
 	if (not offset) then
-		offset = 1;
+		offset = 0;
 	end
 
 	local pos = token.index - (offset + 1);
@@ -1986,6 +1986,7 @@ function PARSER.Expression_23(this)
 		end
 
 		this:GotoToken(previous);
+
 	end
 
 	return this:Expression_24();
