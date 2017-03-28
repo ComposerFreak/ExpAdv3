@@ -109,8 +109,10 @@ function TOKENIZER.New(lang)
 	return setmetatable({}, TOKENIZER);
 end
 
-function TOKENIZER.Initalize(this, lang, script)
+function TOKENIZER.Initalize(this, lang, script, ish)
 	if (KEYWORDS[lang] and TOKENS[lang]) then
+		this.ish = comments;
+
 		this.__pos = 0;
 		this.__offset = 0;
 		this.__depth = 0;
@@ -124,7 +126,7 @@ function TOKENIZER.Initalize(this, lang, script)
 		this.__tokenLine = 0;
 		this.__tokenChar = 0;
 
-		this.__readChar = 1;
+		this.__readChar = 0;
 		this.__readLine = 1;
 
 		this.__tokens = {};
@@ -197,11 +199,52 @@ function TOKENIZER.NextChar(this)
 	this:SkipChar();
 end
 
+--[[
 function TOKENIZER.PrevChar(this)
+	-- REPLACED:
+	this.__readChar = this.__readChar - 2;
 	this.__dataEnd = this.__dataEnd - 2;
 	this.__pos = this.__pos - 2;
-	this.__data = string.sub(this.__data, 0, #this.__data - 2);
+	this.__data = string.sub(this.__data, -2);
+
 	this:SkipChar();
+
+	if (this.__char == "\n") then
+		this.__readLine = this.__readLine - 2
+	end
+end
+]]
+
+function TOKENIZER.GetState(this)
+	return {
+		pos = this.__pos,
+		offset = this.__offset,
+		depth = this.__depth,
+		char = this.__char,
+		data = this.__data,
+		dataStart = this.__dataStart,
+		dataEnd = this.__dataEnd,
+		tokenPos = this.__tokenPos,
+		tokenLine = this.__tokenLine,
+		tokenChar = this.__tokenChar,
+		readChar = this.__readChar,
+		readLine = this.__readLine,
+	}
+end
+
+function TOKENIZER.SetState(this, state)
+	this.__pos = state.pos;
+	this.__offset = state.offset;
+	this.__depth = state.depth;
+	this.__char = state.char;
+	this.__data = state.data;
+	this.__dataStart = state.dataStart;
+	this.__dataEnd = state.dataEnd;
+	this.__tokenPos = state.tokenPos;
+	this.__tokenLine = state.tokenLine;
+	this.__tokenChar = state.tokenChar;
+	this.__readChar = state.readChar;
+	this.__readLine = state.readLine;
 end
 
 function TOKENIZER.SkipChar(this)
@@ -216,7 +259,7 @@ end
 
 function TOKENIZER.PushLine(this)
 	this.__readLine = this.__readLine + 1;
-	this.__readChar = 1;
+	this.__readChar = 0;
 
 	this.__pos = this.__pos + 1;
 	this.__char = string.sub(this.__buffer, this.__pos, this.__pos);
@@ -348,8 +391,13 @@ end
 
 function TOKENIZER.SkipComments(this)
 	if (this:NextPattern("^/%*.-%*/") or this:NextPattern("^//.-\n")) then
-		this.__data = "";
-		this.__skip = true;
+		if(this.ish) then
+			this:CreateToken("cmt", "comment");
+		else
+			this.__data = "";
+			this.__skip = true;
+		end
+
 		return true;
 	elseif (this:NextPattern("/*", true)) then
 		this:Error(0, "Un-terminated multi line comment (/*)", 0);
@@ -439,12 +487,13 @@ function TOKENIZER.Loop(this)
 	-- Strings
 	
 	local pattern = false;
+	local state = this:GetState();
 
 	if (this.__char == "@") then
 		this:SkipChar();
 
 		if not (this.__char == '"' or this.__char == "'") then
-			this:PrevChar();
+			this:SetState(state);
 		else
 			pattern = true;
 		end
