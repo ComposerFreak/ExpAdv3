@@ -266,6 +266,43 @@ extension:RegisterMethod("e", "eyeAngles", "", "a", 1, "EyeAngles")
 
 extension:RegisterFunction("entlib", "chip", "", "e", 1, function(context) return context.entity end, false)
 
+
+--[[
+	Entity Discovery
+]]
+
+local bl = {};
+hook.Call("Expression3.Extension.EntityBlackList", bl);
+
+local BLACKLIST = {};
+
+for _, v in pairs(bl) do
+	BLACKLIST[v] = true;
+end; bl = nil;
+
+local findFunctions = {
+	{"findByClass", "s", ents.FindByClass},
+	{"findByClass", "s,e", ents.FindByClassAndParent},
+	{"findByModel", "s", ents.FindByModel},
+	{"findInBox", "v,v", ents.FindInBox},
+	{"findInCone", "v,v,n,a", ents.FindInCone},
+	{"finInPVS", "v", ents.FindInPVS},
+	{"finInPVS", "e", ents.FindInPVS},
+	{"FindInSphere", "v,n", entsFindInSphere}
+};
+
+for _, inf in pairs(findFunctions) do
+	extension:RegisterFunction("entlib", inf[1], inf[2], "t", 1, function(c)
+		local t = {};
+		for _, e in pairs(inf[3](c)) do
+			if IsValid(e) and not BLACKLIST[e:GetClass()] then
+				t[#t + 1] = {"e", e};
+			end
+		end
+		return {tbl = t, children = {}, parents = {}, size = #t};
+
+	end, true)
+end
 --[[
 ]]
 
