@@ -115,13 +115,13 @@ local soft, hard;
 
 if (SERVER) then
 	hard = CreateConVar("e3_hardquota", 500, { FCVAR_REPLICATED }, "Absolute max usage quota per one tick.");
-	soft = CreateConVar("e3_softquota", 100, { FCVAR_REPLICATED }, "The max average usage quota.");
+	soft = CreateConVar("e3_softquota", 300, { FCVAR_REPLICATED }, "The max average usage quota."); -- was 100
 	--len = CreateConVar("e3_maxbuffersize", 100, { FCVAR_REPLICATED }, "Window width of the CPU time quota moving average.");
 end
 
 if (CLIENT) then
 	hard = CreateClientConVar("e3_hardquota", 500, false, false);
-	soft = CreateClientConVar("e3_softquota", 100, false, false); 
+	soft = CreateClientConVar("e3_softquota", 300, false, false); -- was 100;
 	--len = CreateClientConVar("e3_maxbuffersize", 100, false, false);
 end
 
