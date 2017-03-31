@@ -184,7 +184,7 @@ function ENT:BuildEnv(context, instance)
 			if (valid) then return valid[class.hash] end
 		end
 
-		-- hashtable[extends][class] = is isinstance of.
+		-- hashtable[extends][class] = is isinstance of;
 
 	-- Get wire changes
 		local out_changed = {};
