@@ -145,22 +145,27 @@ extension:SetClientState()
 extension:RegisterFunction("plylib", "localPlayer", "", "p", 1, LocalPlayer, true)
 extension:SetSharedState()
 
-extension:RegisterFunction("plylib", "getAll", "", "t", 1, player.GetAll, true)
+extension:RegisterFunction("plylib", "getAll", "", "t", 1, function(c)
+	local t = {};
+	for _, e in pairs(player.GetAll()) do
+		t[#t + 1] = {"p", e};
+	end
+	return {tbl = t, children = {}, parents = {}, size = #t};
+end, true)
+
 
 extension:RegisterFunction("plylib", "getBySteamID", "s", "p", 1, player.GetBySteamID, true)
 
 extension:RegisterFunction("plylib", "getBySteamID64", "s", "p", 1, player.GetBySteamID64, true)
 
 extension:RegisterFunction("plylib", "getByName", "s", "t", 1, function(s)
-	local list = {}
-	
-	for k, ply in pairs(player.GetAll()) do
-		if string.find(string.lower(ply:Name()), string.lower(s)) then
-			table.insert(list, ply)
-		end
+	local t = {};
+	for _, e in pairs(player.GetAll()) do
+		if IsValid(e) and string.find(string.lower(e:Name()), string.lower(s)) then
+			t[#t + 1] = {"p", e};
+		end 
 	end
-	
-	return list
+	return {tbl = t, children = {}, parents = {}, size = #t};
 end, true)
 
 --[[
