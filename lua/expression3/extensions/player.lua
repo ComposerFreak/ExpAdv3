@@ -158,7 +158,16 @@ extension:RegisterFunction("plylib", "getBySteamID", "s", "p", 1, player.GetBySt
 
 extension:RegisterFunction("plylib", "getBySteamID64", "s", "p", 1, player.GetBySteamID64, true)
 
-extension:RegisterFunction("plylib", "getByName", "s", "t", 1, function(s)
+extension:RegisterFunction("plylib", "getByName", "s", "p", 1, function(s)
+	for _, e in pairs(player.GetAll()) do
+		if IsValid(e) and string.find(string.lower(e:Name()), string.lower(s)) then
+			return e
+		end 
+	end
+	return nil
+end, true)
+
+extension:RegisterFunction("plylib", "getAllByName", "s", "t", 1, function(s)
 	local t = {};
 	for _, e in pairs(player.GetAll()) do
 		if IsValid(e) and string.find(string.lower(e:Name()), string.lower(s)) then

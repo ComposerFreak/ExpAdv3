@@ -12,7 +12,59 @@
 
 local extension = EXPR_LIB.RegisterExtenstion("entity")
 
-extension:RegisterLibrary("entlib");
+extension:RegisterLibrary("entlib")
+extension:RegisterLibrary("prop")
+
+--[[
+	Prop spawning stuff
+]]
+
+local rate
+
+if SERVER then
+	RateCounter = {}
+	
+	local a = CreateConVar("wire_expression3_prop_rate", 4)
+	
+	timer.Create("Expression3.Prop.Refresh", 1, 0, function()
+		rate = a:GetInt()
+
+		RateCounter = {}
+	end)
+	
+	function create(ctx, model, pos, ang, frozen)
+		local ply = ctx.player
+		
+		RateCounter[ply] = RateCounter[ply] or 0
+		
+		if RateCounter[ply] < rate and ply:CheckLimit("props") then
+			local ent = ents.Create("prop_physics")
+			ent:SetModel(model)
+			ent:SetPos(pos or ctx.entity:GetPos())
+			ent:SetAngles(ang or Angle(0, 0, 0))
+			ent:Spawn()
+			
+			undo.Create("E3 spawned prop")
+			undo.AddEntity(ent)
+			undo.SetPlayer(ply)
+			undo.Finish()
+			
+			local phys = ent:GetPhysicsObject()
+			
+			if frozen and phys then
+				phys:EnableMotion(not frozen)
+			end
+			
+			if CPPI then ent:CPPISetOwner(ply) end
+			
+			RateCounter[ply] = RateCounter[ply] + 1
+			
+			return ent
+		end
+		
+		return nil
+	end
+end
 
 --[[
 	CLASS
@@ -238,7 +290,7 @@ extension:RegisterMethod("e", "applyForce", "v", "", 0, function(context,e,v)
 		local phys = e:GetPhysicsObject()
 		
 		if IsValid(phys) then
-			e:ApplyForceCenter(v)
+			phys:ApplyForceCenter(v)
 		end
 	end
 end, false)
@@ -248,7 +300,7 @@ extension:RegisterMethod("e", "applyOffsetForce", "v", "", 0, function(context,e
 		local phys = e:GetPhysicsObject()
 		
 		if IsValid(phys) then
-			e:ApplyForceOffset(v)
+			phys:ApplyForceOffset(v)
 		end
 	end
 end, false)
@@ -265,7 +317,6 @@ extension:RegisterMethod("e", "eyeAngles", "", "a", 1, "EyeAngles")
 ]]
 
 extension:RegisterFunction("entlib", "chip", "", "e", 1, function(context) return context.entity end, false)
-
 
 --[[
 	Entity Discovery
@@ -303,6 +354,22 @@ for _, inf in pairs(findFunctions) do
 
 	end, true)
 end
+
+--[[
+	Prop Spawning
+]]
+
+extension:SetServerState()
+extension:RegisterFunction("prop", "spawn", "s", "e", 1, create, false)
+extension:RegisterFunction("prop", "spawn", "s,b", "e", 1, function(ctx, s, b) create(ctx, s, nil, nil, b) end, false)
+extension:RegisterFunction("prop", "spawn", "s,v", "e", 1, create, false)
+extension:RegisterFunction("prop", "spawn", "s,v,b", "e", 1, function(ctx, s, v, b) create(ctx, s, v, nil, b) end, false)
+extension:RegisterFunction("prop", "spawn", "s,v,a", "e", 1, create, false)
+extension:RegisterFunction("prop", "spawn", "s,v,a,b", "e", 1, create, false)
+
+extension:RegisterFunction("prop", "canSpawn", "", "b", 1, function(ctx) return RateCounter[ctx.player] < rate end, false)
+extension:SetSharedState()
+
 --[[
 ]]
 

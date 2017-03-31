@@ -428,7 +428,7 @@ ext_core:RegisterFunction("math", "cos", "n", "n", 1, "math.cos", true);
 ext_core:RegisterFunction("math", "deg", "n", "n", 1, "math.deg", true);
 ext_core:RegisterFunction("math", "exp", "n", "n", 1, "math.exp", true);
 ext_core:RegisterFunction("math", "floor", "n", "n", 1, "math.floor", true);
-ext_core:RegisterFunction("math", "fmod", "n", "n", 1, "math.asin", true);
+ext_core:RegisterFunction("math", "fmod", "n", "n", 1, "math.fmod", true);
 ext_core:RegisterFunction("math", "huge", "n", "n", 1, "math.asin", true);
 ext_core:RegisterFunction("math", "log", "n", "n", 1, "math.log", true);
 ext_core:RegisterFunction("math", "modf", "n", "n", 1, "math.modf", true);

@@ -20,27 +20,27 @@ extention:RegisterMethod("s", "replace", "ptr,s,n", "s", 1, "string.gsub", true)
 
 extention:RegisterMethod("s", "lower", "", "s", 1, "string.lower", true);
 
-extention:RegisterMethod("s", "PatternSafe", "", "s", 1, "string.PatternSafe", true);
+extention:RegisterMethod("s", "patternSafe", "", "s", 1, "string.PatternSafe", true);
 
-extention:RegisterMethod("s", "Replace", "", "s", 1, "string.", true);
+extention:RegisterMethod("s", "replace", "", "s", 1, "string.", true);
 
 extention:RegisterMethod("s", "reverse", "", "s", 1, "string.reverse", true);
 
-extention:RegisterMethod("s", "Right", "n", "s", 1, "string.Right", true);
+extention:RegisterMethod("s", "right", "n", "s", 1, "string.Right", true);
 
-extention:RegisterMethod("s", "SetChar", "n,s", "s", 1, "string.SetChar", true);
+extention:RegisterMethod("s", "setChar", "n,s", "s", 1, "string.SetChar", true);
 
-extention:RegisterMethod("s", "Split", "s", "s", 1, "string.Split", true);
+extention:RegisterMethod("s", "split", "s", "s", 1, "string.Split", true);
 
-extention:RegisterMethod("s", "StartWith", "s", "s", 1, "string.StartWith", true);
+extention:RegisterMethod("s", "startWith", "s", "s", 1, "string.StartWith", true);
 
 extention:RegisterMethod("s", "sub", "n,n", "s", 1, "string.sub", true);
 
-extention:RegisterMethod("s", "Trim", "s", "s", 1, "string.Trim", true);
+extention:RegisterMethod("s", "trim", "s", "s", 1, "string.Trim", true);
 
-extention:RegisterMethod("s", "TrimLeft", "s", "s", 1, "string.TrimLeft", true);
+extention:RegisterMethod("s", "trimLeft", "s", "s", 1, "string.TrimLeft", true);
 
-extention:RegisterMethod("s", "TrimRight", "s", "s", 1, "string.TrimRight", true);
+extention:RegisterMethod("s", "trimRight", "s", "s", 1, "string.TrimRight", true);
 
 extention:RegisterMethod("s", "upper", "", "s", 1, "string.upper", true);
 

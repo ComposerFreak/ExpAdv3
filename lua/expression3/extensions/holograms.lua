@@ -323,17 +323,17 @@ end, false);
 	IDS, for e2 style.
 ]]
 
-extension:RegisterFunction("hololib", "getByID", "n", "e", 1, function()
-	return ctx.data.hologramIDs[ ID ] or Entity(0);
+extension:RegisterFunction("hololib", "getByID", "n", "e", 1, function(ctx, id)
+	return ctx.data.hologramIDs[id] or Entity(0);
 end, false);
 
 extension:RegisterMethod("h", "setID", "n", "", 0, function(ctx, holo, id)
 	if id > 0 and IsValid(holo) and holo.IsHologram then
-		local known = ctx.data.hologramIDs[ ID ];
+		local known = ctx.data.hologramIDs[id];
 		if IsValid(known) then known.ID = -1 end
 		if holo.ID then ctx.data.hologramIDs[ holo.ID ] = nil end	
-		ctx.data.hologramIDs[ ID ] = holo;
-		holo.ID = ID;
+		ctx.data.hologramIDs[id] = holo;
+		holo.ID = id;
 	end
 end, false)
 
