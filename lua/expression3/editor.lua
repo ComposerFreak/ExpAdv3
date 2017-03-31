@@ -15,7 +15,7 @@ end
 function Golem.Create( )
 	if Golem.Instance then return end 
 	Golem.Instance = vgui.Create( "GOLEM_IDE" ) 
-	Golem.Instance:SetText( "Expression Advanced 3 IDE - Golem" )
+	Golem.Instance:SetText( "Expression 3 IDE - Golem" )
 	Golem.Instance:SetIcon( "fugue/application-sidebar-list.png" ) // Keep or not to keep, that is the question.
 	Golem.Instance:Open( )
 	
