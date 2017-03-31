@@ -114,6 +114,7 @@ end
 function COMPILER.BuildScript(this)
 	-- This will probably become a separate stage (post compiler?).
 
+	if (true) then return "" end
 	local buffer = {};
 	local alltasks = this.__tasks;
 

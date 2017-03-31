@@ -1915,8 +1915,8 @@ function PARSER.Expression_18(this)
 end
 
 function PARSER.Expression_19(this)
-	if (this:Accept("neg")) then
-		local inst = this:StartInstruction("neg", expr.token);
+	if (this:Accept("sub")) then
+		local inst = this:StartInstruction("neg", this.__token);
 
 		inst.__operator = this.__token;
 
