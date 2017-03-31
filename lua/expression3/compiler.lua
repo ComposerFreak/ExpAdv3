@@ -2768,7 +2768,7 @@ end
 --[[
 ]]
 
-function COMPILER.Compile_DELEGATE(this, inst, token, expressions)
+function COMPILER.Compile_DELEGATE(this, inst, token)
 	local class, scope, info = this:AssignVariable(token, true, inst.variable, "f");
 
 	if (info) then
@@ -2777,6 +2777,10 @@ function COMPILER.Compile_DELEGATE(this, inst, token, expressions)
 		info.resultClass = inst.resultClass;
 		info.resultCount = inst.resultCount;
 	end
+
+	injectNewLine = true;
+	this:QueueInjectionBefore(inst, token, "local " .. inst.variable)
+	injectNewLine = false;
 end
 
 function COMPILER.Compile_FUNCT(this, inst, token, expressions)
