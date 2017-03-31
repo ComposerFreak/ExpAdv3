@@ -41,12 +41,11 @@ local function getType(t)
 	return "UnknownType"
 end
 
-function EXPR_WIKI.COMPILER.PrefabFunction(_side, _func, _args, _rtns, _lib)
+function EXPR_WIKI.COMPILER.PrefabFunction(_side, _func, _args, _rtns)
 	local data = {
 		func = {
 			side = _side,
-			func = _func,
-			lib = _lib
+			func = _func
 		}
 	}
 	
@@ -77,11 +76,10 @@ function EXPR_WIKI.COMPILER.PrefabFunction(_side, _func, _args, _rtns, _lib)
 	return data
 end
 
-function EXPR_WIKI.COMPILER.PrefabOperator(_side, _func, _args, _rtns, _lib)
+function EXPR_WIKI.COMPILER.PrefabOperator(_side, _func, _args, _rtns)
 	local data = {
 		func = {
-			side = _side,
-			lib = _lib
+			side = _side
 		}
 	}
 	
@@ -215,12 +213,6 @@ function EXPR_WIKI.COMPILER.Function(data)
 		--function
 		local funcName = func.func or "NoFuncName"
 		
-		local lib = ""
-		
-		if data.func.lib then
-			lib = data.func.lib.."."
-		end
-		
 		html = html..[[
 			<p id="function_text" style="
 				position: absolute;
@@ -229,7 +221,7 @@ function EXPR_WIKI.COMPILER.Function(data)
 				color: #000;
 				font-weight: 500;
 				font-family: ]]..font..[[;"
-			>]]..lib..funcName.."("
+			>]]..funcName.."("
 		
 		local arg = ""
 		

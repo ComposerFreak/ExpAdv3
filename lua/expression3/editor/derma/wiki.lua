@@ -84,107 +84,8 @@ function PANEL:Init()
 			end
 		end
 	end
-	--[[TextEntry.OnEnter = function(self)
-		local txt = self:GetValue()
-		
-		if txt != oldSearch then
-			oldSearch = txt
-			searchResults = {}
-			searchNumber = 1
-		elseif txt != "" then
-			searchNumber = searchNumber + 1
-		end
-		
-		if txt == "" then
-			searchNumber = 1
-			
-			Tree:SetSelectedItem()
-		end
-		
-		if txt != "" then
-			searchResults = {}
-			searchResultsParents = {}
-			
-			for k, data in pairs(derma) do
-				local panel = data.panel
-				local name = data.name or ""
-				
-				if name:lower():find(txt:lower()) then
-					table.insert(searchResults, panel)
-					table.insert(searchResultsParents, data.parents)
-				end
-			end
-			
-			if searchNumber > table.Count(searchResults) then
-				searchNumber = 1
-			end
-			
-			if table.Count(searchResults) > 0 then
-				local panel = searchResults[searchNumber]
-				
-				Tree:SetSelectedItem(panel)
-				
-				for k, parent in pairs(searchResultsParents[searchNumber]) do
-					parent:SetExpanded(true)
-				end
-			end
-		end
-	end
 	
-	local MoveSelect = self:Add("DPanel")
-	MoveSelect:SetPos(5, 30)
-	MoveSelect:SetSize(90, 15)
-	MoveSelect.Paint = function(self, w, h)
-		local ind = math.Clamp(searchNumber, 0, table.Count(searchResults))
-		
-		draw.RoundedBox(0, 0, 0, 90, 15, Color(50, 50, 50, 255))
-		draw.DrawText(ind.."/"..table.Count(searchResults), "DermaDefault", 45, 1, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER)
-	end
-	
-	local MoveSelectLeft = vgui.Create("DButton", MoveSelect)
-	MoveSelectLeft:SetPos(0, 0)
-	MoveSelectLeft:SetSize(15, 15)
-	MoveSelectLeft:SetText("<")
-	MoveSelectLeft.DoClick = function()
-		searchNumber = searchNumber - 1
-		
-		if searchNumber < 1 then
-			searchNumber = table.Count(searchResults)
-		end
-		
-		if table.Count(searchResults) > 0 then
-			local panel = searchResults[searchNumber]
-			
-			Tree:SetSelectedItem(panel)
-			
-			for k, parent in pairs(searchResultsParents[searchNumber]) do
-				parent:SetExpanded(true)
-			end
-		end
-	end
-	
-	local MoveSelectRight = vgui.Create("DButton", MoveSelect)
-	MoveSelectRight:SetPos(75, 0)
-	MoveSelectRight:SetSize(15, 15)
-	MoveSelectRight:SetText(">")
-	MoveSelectRight.DoClick = function()
-		searchNumber = searchNumber + 1
-		
-		if searchNumber > table.Count(searchResults) then
-			searchNumber = 1
-		end
-		
-		if table.Count(searchResults) > 0 then
-			local panel = searchResults[searchNumber]
-			
-			Tree:SetSelectedItem(panel)
-			
-			for k, parent in pairs(searchResultsParents[searchNumber]) do
-				parent:SetExpanded(true)
-			end
-		end
-	end]]
-	
+	--------Extra Nodes--------
 	local NodeWeb = Tree:AddNode("Syntaxes")
 	NodeWeb.Icon:SetImage("fugue/globe-network.png")
 	NodeWeb.DoClick = function()
@@ -193,6 +94,14 @@ function PANEL:Init()
 	
 	table.insert(derma, {name = name, panel = NodeWeb, parents = {}})
 	
+	--[[local NodeWeb = Tree:AddNode("E3 on youtube")
+	NodeWeb.Icon:SetImage("fugue/youtube.png")
+	NodeWeb.DoClick = function()
+		gui.OpenURL("http://youtube.com/expression3gate")
+	end
+	
+	table.insert(derma, {name = name, panel = NodeWeb, parents = {}})]]
+	
 	--------Examples--------
 	local NodeExam = Tree:AddNode("Examples")
 	NodeExam.Icon:SetImage("fugue/blue-folder-horizontal.png")
@@ -200,7 +109,7 @@ function PANEL:Init()
 	--table.insert(derma, {name = "Examples", panel = NodeExam, parents = {}})
 	table.insert(folders, NodeExam)
 	
-	for name, data2 in pairs(EXPR_WIKI.EXAMPLES) do
+	for name, file in pairs(EXPR_WIKI.EXAMPLES) do
 		local NodeFile = NodeExam:AddNode(name)
 		NodeFile.Icon:SetImage("fugue/script-text.png")
 		NodeFile.DoClick = function()
