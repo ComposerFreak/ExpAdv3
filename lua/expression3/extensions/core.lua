@@ -52,6 +52,8 @@ end
 ]]
 
 
+local pntbl = CreateConVar("wire_expression3_printtbl", 100)
+
 --[[
 	Class: NIL
 ]]
@@ -302,6 +304,49 @@ ext_core:RegisterFunction("system", "print", "...", "", 0, function(context, ...
 
 	if (CLIENT) then
 		chat.AddText(unpack(values));
+	end
+end);
+
+---------------------
+local function tblString(t, l, ta, i)
+	local s = s or ""
+	local ta = ta or 0
+	local i = i or 0
+	local q = {}
+	
+	for k, v in pairs(t) do
+		i = i + 1
+		
+		if i <= l then
+			if v[1] == "t" then
+				local d = tblString(v[2].tbl, l, ta + 1, i)
+				
+				s = s .. string.rep("	", ta) .. k .. ":\n"
+				s = s .. d[1]
+				i = d[2]
+			else
+				s = s .. string.rep("	", ta) .. k .. "	=	" .. tostring(v[2]) .. "\n"
+			end
+		else
+			s = s .. "--- Max table print limit reached, printing cut off ---"
+			
+			break
+		end
+	end
+	
+	return {s, i}
+end
+---------------------
+
+ext_core:RegisterFunction("system", "printTable", "t", "", 0, function(context, t)
+	local s = tblString(t.tbl, pntbl:GetInt())[1]
+	
+	if (SERVER) then
+		context.entity:SendToOwner(false, s);
+	end
+
+	if (CLIENT) then
+		chat.AddText(s);
 	end
 end);
 
