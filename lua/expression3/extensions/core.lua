@@ -98,6 +98,15 @@ ext_core:RegisterOperator("and", "b,b", "b", 1);
 ext_core:RegisterOperator( "or", "b,b", "b", 1);
 ext_core:RegisterOperator( "is", "b", "b", 1);
 ext_core:RegisterOperator("not", "b", "b", 1); 
+ext_core:RegisterOperator("ten", "b,b,b", "b", 1); 
+
+ext_core:RegisterCastingOperator("n", "b", function(b)
+	return b and 1 or 0;
+end, false)
+
+ext_core:RegisterCastingOperator("b", "n", function(n)
+	return n ~= 0 and true or false;
+end, false)
 
 --[[
 	Class: NUMBER
@@ -129,6 +138,7 @@ ext_core:RegisterOperator("geq", "n,n", "b", 1);
 ext_core:RegisterOperator("eq*", "n,n", "b", 1, eqM, true);
 ext_core:RegisterOperator("neq*", "n,n", "b", 1, neqM, true);
 
+ext_core:RegisterOperator("ten", "b,n,n", "n", 1); 
 ext_core:RegisterOperator( "is", "n", "b", 1, tobool, true);
 ext_core:RegisterOperator("neg", "n", "n", 1);
 ext_core:RegisterOperator("not", "n", "b", 1, function (context, number) return number == 0 end, true);
@@ -156,6 +166,7 @@ ext_core:RegisterOperator("eq*", "s,s", "b", 1, eqM, true);
 ext_core:RegisterOperator("neq*", "s,s", "b", 1, neqM, true); 
 ext_core:RegisterOperator("get", "s,n", "s", 1); 
 
+ext_core:RegisterOperator("ten", "b,s,s", "s", 1); 
 ext_core:RegisterOperator( "is", "s", "b", 1, function (context, string) return string and string ~= "" end, true);
 ext_core:RegisterOperator("not", "s", "b", 1, function (context, string) return string and string ~= "" end, true);
 ext_core:RegisterOperator("len", "s", "n", 1, string.len, true);

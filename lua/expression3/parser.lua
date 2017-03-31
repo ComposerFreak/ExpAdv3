@@ -1541,7 +1541,7 @@ function PARSER.Expression_1(this)
 	local expr = this:Expression_2();
 
 	while this:Accept("qsm") do
-		local inst = this:StartInstruction("ten", this.__token);
+		local inst = this:StartInstruction("ten", expr.token);
 
 		inst.__and = this.__token;
 
@@ -2350,18 +2350,6 @@ function PARSER.Expression_Trailing(this, expr)
 		elseif (this:Accept("lsb")) then
 			local lsb = this.__token;
 
-			-- Check for a set instruction and locate it,
-			-- If we are at our set indexer then we break.
-
-			--[[if (this:StatmentContains(this.__token, "ass")) then
-				local excluded = this:LastInStatment(this.__token, "lsb", "ass");
-
-				if (excluded and excluded.index == this.__token.index) then
-					this:StepBackward(1);
-					break;
-				end
-			end]]
-
 			local inst = this:StartInstruction("get", expr.token);
 
 			local expressions = {};
@@ -2383,7 +2371,7 @@ function PARSER.Expression_Trailing(this, expr)
 			inst.__rsb = this.__token;
 
 			if (this:CheckToken("ass")) then
-				this:GotoToken(lsb);
+				this:GotoToken(expr.final);
 				break;
 			end
 

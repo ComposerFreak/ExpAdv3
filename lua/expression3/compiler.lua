@@ -472,6 +472,7 @@ end
 
 function COMPILER.QueueRemove(this, inst, token)
 
+	if (!token) then debug.Trace() end
 	local op = {};
 
 	op.token = token;
@@ -1192,12 +1193,12 @@ function COMPILER.Compile_TEN(this, inst, token, expressions)
 	local r2, c2 = this:Compile(expr2);
 
 	local expr3 = expressions[3];
-	local r3, c3 = this:Compile(expr1);
+	local r3, c3 = this:Compile(expr3);
 
 	local op = this:GetOperator("ten", r1, r2, r3);
 
 	if (not op) then
-		this:Throw(expr.token, "Tenary operator (A ? b : C) does not support '%s ? %s : %s'", name(r1), name(r2), name(r3));
+		this:Throw(expr.token, "Tenary operator (A ? B : C) does not support '%s ? %s : %s'", name(r1), name(r2), name(r3));
 	elseif (not op.operator) then
 		this:QueueReplace(inst, inst.__and, "and");
 		this:QueueReplace(inst, inst.__or, "or");
@@ -1216,7 +1217,7 @@ function COMPILER.Compile_TEN(this, inst, token, expressions)
 		this.__operators[op.signature] = op.operator;
 	end	
 
-	this:CheckState(op.state, token, "Tenary operator (A ? b : C)");
+	this:CheckState(op.state, token, "Tenary operator (A ? B : C)");
 
 	return op.result, op.rCount;
 end
@@ -2124,8 +2125,8 @@ function COMPILER.CastUserType(this, left, right)
 			return {
 				signature = string.format("(%s)%s", to.hash, from.hash),
 				context = true,
-				type = left,
-				count = 1,
+				result = left,
+				rCount = 1,
 				operator = function(ctx, obj)
 					if (not ctx.env.CheckHash(to.hash, obj)) then
 						ctx:Throw("Failed to cast %s to %s, #class missmatched.", name(right), name(left));
@@ -2138,8 +2139,8 @@ function COMPILER.CastUserType(this, left, right)
 	end
 
 	return {
-		type = left,
-		count = 1,
+		result = left,
+		rCount = 1,
 	};
 	-- hashtable[extends][class] = is isinstance of.
 end
@@ -2149,7 +2150,7 @@ function COMPILER.CastExpression(this, type, expr)
 	local op = this:CastUserType(type, expr.result);
 
 	if (not op) then
-		local signature = string.format("(%s)%s", name(type), name(expr.result));
+		local signature = string.format("(%s)%s", type, expr.result);
 		
 		op = EXPR_CAST_OPERATORS[signature];
 
@@ -2174,8 +2175,8 @@ function COMPILER.CastExpression(this, type, expr)
 		this.__operators[op.signature] = op.operator;
 	end
 
-	expr.result = op.type;
-	expr.rCount = op.count;
+	expr.result = op.result;
+	expr.rCount = op.rCount;
 
 	return true, expr;
 end
@@ -2985,7 +2986,11 @@ function COMPILER.Compile_GET(this, inst, token, expressions)
 		end
 
 		if (not op) then
-			this:Throw(token, "No such get operation %s[%s,%s]", name(vType), name(iType), name(cls.data));
+			if cls then
+				this:Throw(token, "No such get operation %s[%s,%s]", name(vType), name(iType), name(cls.data));
+			else
+				this:Throw(token, "No such get operation %s[%s]", name(vType), name(iType));
+			end
 		end
 	end
 
@@ -3001,10 +3006,12 @@ function COMPILER.Compile_GET(this, inst, token, expressions)
 	   this:QueueInjectionBefore(inst, value.token, "CONTEXT", ",");
 	end
 
-	if (not keepid) then
-		this:QueueRemove(inst, cls);
-	else
-		this:QueueReplace(inst, cls, "'" .. cls.data .. "'");
+	if (cls) then
+		if (not keepid) then
+			this:QueueRemove(inst, cls);
+		else
+			this:QueueReplace(inst, cls, "'" .. cls.data .. "'");
+		end
 	end
 
 	this:QueueReplace(inst, inst.__rsb, ")" );
