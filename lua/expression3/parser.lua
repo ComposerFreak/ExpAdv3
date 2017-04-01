@@ -2254,12 +2254,6 @@ function PARSER.Expression_30(this)
 		local inst = this:StartInstruction("bool", this.__token);
 		inst.value = this.__token.data;
 		return this:EndInstruction(inst, {});
-	elseif (this:Accept("void")) then
-		local inst = this:StartInstruction("void", this.__token);
-		
-		this:QueueReplace(this.__token, "nil");
-		
-		return this:EndInstruction(inst, {});
 	elseif (this:Accept("num")) then
 		local inst = this:StartInstruction("num", this.__token);
 		inst.value = this.__token.data;

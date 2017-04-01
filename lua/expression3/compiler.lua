@@ -393,9 +393,9 @@ function COMPILER.AssignVariable(this, token, declaired, varName, class, scope)
 	local c, s, var = this:GetVariable(varName, scope, declaired);
 
 	if (declaired) then
-		if (c and (c == class or class == "_nil")) then
+		if (c and c == class) then
 			this:Throw(token, "Unable to declare variable %s, Variable already exists.", varName);
-		elseif (c) then
+		elseif (c and class ~= "") then
 			this:Throw(token, "Unable to initalize variable %s, %s expected got %s.", varName, name(c), name(class));
 		else
 			return this:SetVariable(varName, class, scope);
@@ -403,7 +403,7 @@ function COMPILER.AssignVariable(this, token, declaired, varName, class, scope)
 	else
 		if (not c) then
 			this:Throw(token, "Unable to assign variable %s, Variable doesn't exist.", varName);
-		elseif (c ~= class and class ~= "_nil") then
+		elseif (c ~= class and class ~= "") then
 			this:Throw(token, "Unable to assign variable %s, %s expected got %s.", varName, name(c), name(class));
 		end
 	end
@@ -878,7 +878,7 @@ function COMPILER.Compile_LOCAL(this, inst, token, expressions)
 
 		this.__defined[var] = true;
 
-		if (result[1] ~= inst.class) then
+		if (result[1] ~= inst.class and result[1] ~= "") then
 			local casted = false;
 			local arg = result[2];
 
@@ -887,7 +887,7 @@ function COMPILER.Compile_LOCAL(this, inst, token, expressions)
 			end
 
 			if (not casted) then
-				this:AssignVariable(arg.token, true, var, result[1]);
+				this:AssignVariable(arg.token, false, var, result[1]);
 			end
 		end
 	end
@@ -2246,7 +2246,7 @@ end
 
 function COMPILER.Compile_NIL(this, inst, token, expressions)
 	this:QueueReplace(inst, token, "NIL");
-	return "_nil", 1
+	return "", 1
 end
 
 function COMPILER.Compile_COND(this, inst, token, expressions)
@@ -3574,29 +3574,38 @@ function COMPILER.Compile_DEF_FEILD(this, inst, token, expressions)
 		local token = inst.variables[i];
 		local var = token.data;
 
-		if (not result) then
-			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
-		end
-
 		local class, scope, info = this:AssToClass(token, true, var, inst.class);
 
-		if (info) then
-			this:QueueReplace(inst, token, userclass.name .. ".vars." .. var);
+		if (not result) then
+			this:QueueRemove(inst, token);
+			--this:Throw(token, "Unable to assign variable %s, no matching value.", var);
+		else
+			if (info) then
+				this:QueueReplace(inst, token, userclass.name .. ".vars." .. var);
+			end
+
+			this.__defined[var] = true;
+
+			if (result[1] ~= inst.class) then
+				local casted = false;
+				local arg = result[2];
+
+				if (result[3]) then
+					-- TODO: CAST
+				end
+
+				if (not casted) then
+					this:AssToClass(arg.token, true, var, result[1]);
+				end
+			end
 		end
+	end
 
-		this.__defined[var] = true;
-
-		if (result[1] ~= inst.class) then
-			local casted = false;
-			local arg = result[2];
-
-			if (result[3]) then
-				-- TODO: CAST
-			end
-
-			if (not casted) then
-				this:AssToClass(arg.token, true, var, result[1]);
-			end
+	if #results == 0 then
+		local token = this:OffsetToken(inst.final, 1);
+		
+		if(token and token.type == "sep") then
+			this:QueueRemove(inst, token);
 		end
 	end
 

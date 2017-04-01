@@ -1288,61 +1288,71 @@ end
 
 function EXPR_LIB.Validate(cb, script, files)
 	local vldr = {};
-
+	local ok, res;
 	vldr.timer = "Validator:" .. tostring(vldr);
 
 	vldr.func = coroutine.create(function()
-		bench = SysTime();
-		vldr.tokenizer = EXPR_TOKENIZER.New();
-
-		vldr.tokenizerTime = 0;
-
-		vldr.tokenizerCount = 0; 
-
-		vldr.tokenizer.vldr = vldr;
-
-		vldr.tokenizer._Run = token_run;
-
-		vldr.tokenizer:Initalize("EXPADV", script);
-
-		local ok, res = vldr.tokenizer:Run();
-
-		vldr.tokenizerTime = vldr.tokenizerTime + (SysTime() - bench);
-
-		if ok then
-			coroutine.yield();
-
+		local a, b = pcall(function()
 			bench = SysTime();
 
-			vldr.parser = EXPR_PARSER.New();
+			vldr.tokenizer = EXPR_TOKENIZER.New();
 
-			vldr.parser:Initalize(res, files);
+			vldr.tokenizerTime = 0;
 
-			ok, res = vldr.parser:Run();
+			vldr.tokenizerCount = 0; 
 
-			vldr.parserTime = SysTime() - bench;
+			vldr.tokenizer.vldr = vldr;
+
+			vldr.tokenizer._Run = token_run;
+
+			vldr.tokenizer:Initalize("EXPADV", script);
+
+			ok, res = vldr.tokenizer:Run();
+
+			vldr.tokenizerTime = vldr.tokenizerTime + (SysTime() - bench);
 
 			if ok then
 				coroutine.yield();
-				
-				bench = SysTime();
-
-				vldr.compiler = EXPR_COMPILER.New();
-
-				vldr.compiler:Initalize(res, files);
-
-				ok, res = vldr.compiler:Run();
-
-				vldr.compilerTime = SysTime() - bench;
-
-				coroutine.yield();
 
 				bench = SysTime();
 
-				res.build();
+				vldr.parser = EXPR_PARSER.New();
 
-				vldr.buildTime = SysTime() - bench;
+				vldr.parser:Initalize(res, files);
+
+				ok, res = vldr.parser:Run();
+
+				vldr.parserTime = SysTime() - bench;
+
+				if ok then
+					coroutine.yield();
+					
+					bench = SysTime();
+
+					vldr.compiler = EXPR_COMPILER.New();
+
+					vldr.compiler:Initalize(res, files);
+
+					ok, res = vldr.compiler:Run();
+
+					vldr.compilerTime = SysTime() - bench;
+
+					if ok then
+						coroutine.yield();
+
+						bench = SysTime();
+
+						res.build();
+
+						vldr.buildTime = SysTime() - bench;
+					end
+				end
 			end
+		end);
+
+		if (not a) then
+			ok = a;
+			res = {msg = b, state == "internal", line = 0, char = 0};
 		end
 
 		--print(vldr.timer);
@@ -1352,11 +1362,18 @@ function EXPR_LIB.Validate(cb, script, files)
 		--print("Build", vldr.buildTime);
 
 		vldr.finished = true;
-		vldr.status, vldr.instance = ok, res;
 	end);
 
 	vldr.start = function()
 		timer.Create(vldr.timer, 0.1, 0, vldr.resume);
+
+		timer.Create(vldr.timer .. 2, 60, 1, function()
+			if (not vldr.finished) then
+				timer.Destroy(vldr.timer);
+				cb(false, "Validation took to long.");
+			end
+		end);
+
 		return vldr.resume();
 	end;
 
@@ -1371,7 +1388,7 @@ function EXPR_LIB.Validate(cb, script, files)
 
 		if (vldr.finished) then
 			vldr.stop();
-			cb(vldr.status, vldr.instance);
+			cb(ok, res);
 			return true;
 		end
 

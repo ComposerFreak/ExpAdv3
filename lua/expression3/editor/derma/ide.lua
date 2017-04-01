@@ -870,6 +870,7 @@ function PANEL:DoValidate( Goto, Code, Debug, Native )
 	end
 
 	local cb = function(status, instance)
+
 		if (status and Debug) then
 			self.btnValidate:SetColor( Color( 50, 255, 50 ) );
 			self.btnValidate:SetText( "Generated debug file." );
@@ -883,89 +884,31 @@ function PANEL:DoValidate( Goto, Code, Debug, Native )
 		else
 			self:OnValidateError( Goto, instance )
 		end
+
+		self.validator = nil;
+
+		timer.Destroy("Golem_Validator");
 	end
 
 	self.validator = EXPR_LIB.Validate(cb, Code);
 
 	self.btnValidate:SetColor( Color( 50, 50, 150 ) );
-	self.btnValidate:SetText( "Validating..." );
+	self.btnValidate:SetText( "Validating... (0%)" );
 
 	self.validator.start();
-end
 
---[[	Code = Code or self:GetCode( )
-	
-	if not Code or Code == "" then
-		self:OnValidateError( false, {msg = "No code submited, compiler exited.", line = 0, char = 0})
-		return false
-	end
-	
-	local t = EXPR_TOKENIZER.New();
-	
-	t:Initalize("EXPADV", Code);
-	
-	local ts, tr = t:Run();
-	
-	if (not ts) then
-		if (tr.state == "internal") then
-			self:OnValidateError( false, "Internal tokenizer error (see console)." )
-			Golem.Print(Color(255, 255, 255), "Internal tokenizer error: ", tr.msg)
-		else
-			self:OnValidateError( Goto, tr )
+	timer.Create("Golem_Validator", 0.5, 0, function()
+		if (self.validator and not self.validator.finished) then
+			local v = math.ceil(((self.validator.tokenizer.__pos or 1) / (self.validator.tokenizer.__lengh or 1)) * 100);
+			self.btnValidate:SetColor( Color( 50, 50, 150 ) );
+			self.btnValidate:SetText( "Validating... (" .. v .. "%)" );
 		end
-		
-		return false;
-	end
-	
-	local p = EXPR_PARSER.New();
-	
-	p:Initalize(tr);
-	
-	local ps, pr = p:Run();
-	
-	if (not ps) then
-		if (pr.state == "internal") then
-			self:OnValidateError( false, "Internal parser error (see console)." )
-			Golem.Print(Color(255, 255, 255), "Internal parser error: ", pr.msg)
-		else
-			self:OnValidateError( Goto, pr )
-		end
-		
-		return false;
-	end
-	
-	local c = EXPR_COMPILER.New();
-	
-	c:Initalize(pr);
-	
-	local cs, cr = c:Run();
-	
-	if (not cs) then
-		if (cr.state == "internal") then
-			self:OnValidateError( false, "Internal compiler error (see console)." )
-			Golem.Print(Color(255, 255, 255), "Internal compiler error: ", cr.msg)
-		else
-			self:OnValidateError( Goto, cr )
-		end
-		
-		return false;
-	end
-	
-	self.btnValidate:SetColor( Color( 50, 255, 50 ) )
-	self.btnValidate:SetText( "Validation Successful!" )
-	
-	self:AddPrintOut(Color(0,255,0), "Validation Successful!" )
-	
-	if (Debug) then
-		EXPR_LIB.ShowDebug(tr.tokens, pr.tasks, Native);
-	end
-	
-	return true;
-end]]
+	end)
+end
 
 function PANEL:OnValidateError( Goto, Thrown )
 	local Error;
-	
+
 	if (istable(Thrown)) then
 		if (string.sub(Thrown.msg, -1) == ".") then
 			Thrown.msg = string.sub(Thrown.msg, 1, -2);
