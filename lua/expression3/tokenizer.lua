@@ -601,11 +601,6 @@ function TOKENIZER.Loop(this)
 		this:Throw(0, "Unterminated string (\"%s)", str);
 	end
 	
-	local w;
-
-	if (this:NextPattern("^[a-zA-Z][a-zA-Z0-9_]*")) then
-		w = this.__data;
-	end
 
 	-- Classes
 	for k, v in pairs(EXPR_CLASSES) do
@@ -613,17 +608,25 @@ function TOKENIZER.Loop(this)
 			this:CreateToken("cst", "cast", v.id, k);
 			return true;
 		end
+	end
 
-		if (w and w == k) then
-			this:CreateToken("typ", "type", v.id, k);
-			return true;
+	local state = this:GetState();
+
+	if (this:NextPattern("^[a-zA-Z][a-zA-Z0-9_%.]*")) then
+		for k, v in pairs(EXPR_CLASSES) do
+			if (this.__data == k) then
+				this:CreateToken("typ", "type", v.id, k);
+				return true;
+			end
 		end
 	end
 
+	this:SetState(state);
+	
 	-- Keywords.
 
-	if (w) then
-		local tkn = this.keywords[w];
+	if (this:NextPattern("^[a-zA-Z][a-zA-Z0-9_]*")) then
+		local tkn = this.keywords[this.__data];
 
 		if (tkn) then
 			this:CreateToken(tkn[1], tkn[2]);
