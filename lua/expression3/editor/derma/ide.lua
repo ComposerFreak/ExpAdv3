@@ -873,7 +873,7 @@ function PANEL:DoValidate( Goto, Code, Debug, Native )
 		if (status and Debug) then
 			self.btnValidate:SetColor( Color( 50, 255, 50 ) );
 			self.btnValidate:SetText( "Generated debug file." );
-			EXPR_LIB.ShowDebug(instance.tokens, instance.tasks, Native);
+			EXPR_LIB.ShowDebug(self.validator.tokenizer.__tokens, self.validator.parser.__tasks, Native);
 		elseif (status) then
 			self.btnValidate:SetColor( Color( 50, 255, 50 ) );
 			self.btnValidate:SetText( "Validation sucessful" );
