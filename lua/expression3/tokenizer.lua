@@ -107,8 +107,20 @@ end )
 local TOKENIZER = {};
 TOKENIZER.__index = TOKENIZER;
 
-function TOKENIZER.New(lang)
-	return setmetatable({}, TOKENIZER);
+function TOKENIZER.New(soft)
+	return setmetatable({soft = soft}, TOKENIZER);
+end
+
+local function softTest(this)
+	if (not this.soft) then return end
+	local softQuota = (this.__softQuota or 0) + 1;
+
+	if (softQuota < 100) then
+		this.__softQuota = softQuota;
+	else
+		this.__softQuota = nil;
+		coroutine.yield();
+	end
 end
 
 function TOKENIZER.Initalize(this, lang, script, ish)
@@ -168,6 +180,7 @@ end
 function TOKENIZER._Run(this)
 	while (this.__char ~= nil) do
 		this:Loop();
+		softTest(this);
 	end
 
 	local result = {};

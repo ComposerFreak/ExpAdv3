@@ -36,8 +36,20 @@ end
 local COMPILER = {};
 COMPILER.__index = COMPILER;
 
-function COMPILER.New()
-	return setmetatable({}, COMPILER);
+function COMPILER.New(soft)
+	return setmetatable({soft = soft}, COMPILER);
+end
+
+local function softTest(this)
+	if (not this.soft) then return end
+	local softQuota = (this.__softQuota or 0) + 1;
+
+	if (softQuota < 100) then
+		this.__softQuota = softQuota;
+	else
+		this.__softQuota = nil;
+		coroutine.yield();
+	end
 end
 
 function COMPILER.Initalize(this, instance, files)
@@ -114,7 +126,6 @@ end
 function COMPILER.BuildScript(this)
 	-- This will probably become a separate stage (post compiler?).
 
-	if (true) then return "" end
 	local buffer = {};
 	local alltasks = this.__tasks;
 
@@ -195,6 +206,8 @@ function COMPILER.BuildScript(this)
 			buffer[#buffer + 1] = data;
 			char = char + #data + 1;
 		end
+
+		softTest(this);
 	end
 
 	return table.concat(buffer, " "), traceTable;
@@ -620,6 +633,8 @@ function COMPILER.Compile(this, inst)
 
 		inst.compiled = true;
 	end
+
+	softTest(this);
 
 	return inst.result, inst.rCount;
 end

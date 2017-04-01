@@ -52,7 +52,7 @@ function ENT:Validate(script, files)
 	end
 
 	return ok, res;
-end
+end -- Replaced \|/
 
 function ENT:SetCode(script, files, run)
 	self:ShutDown();
@@ -60,36 +60,46 @@ function ENT:SetCode(script, files, run)
 	self.script = script;
 	self.files = files;
 	
-	local ok, res = self:Validate(script, files);
+	-- local ok, res = self:Validate(script, files);
 
-	if (not ok) then
-		self:HandelThrown(res);
-
-		return false;
+	if (self.validator and not self.validator.finished) then
+		self.validator.stop();
 	end
 
-	self.nativeScript = res.compiled;
+	local cb = function(ok, res)
+		if (not ok) then
+			self:HandelThrown(res);
 
-	self:BuildContext(res);
-
-	if (SERVER) then
-		local name = "generic";
-
-		if (res.directives and res.directives.name) then
-			name = res.directives.name;
+			return false;
 		end
 
-		self:SetScriptName(name);
-		self:BuildWiredPorts(res.directives.inport, res.directives.outport);
+		self.nativeScript = res.compiled;
+
+		self:BuildContext(res);
+
+		if (SERVER) then
+			local name = "generic";
+
+			if (res.directives and res.directives.name) then
+				name = res.directives.name;
+			end
+
+			self:SetScriptName(name);
+			self:BuildWiredPorts(res.directives.inport, res.directives.outport);
+		end
+
+		if (run) then
+			timer.Simple(0.2, function()
+				if (IsValid(self)) then
+					self:InitScript();
+				end
+			end);
+		end
 	end
 
-	if (run) then
-		timer.Simple(0.2, function()
-			if (IsValid(self)) then
-				self:InitScript();
-			end
-		end);
-	end
+	self.validator = EXPR_LIB.Validate(cb, script, files);
+
+	self.validator.start();
 
 	return true;
 end

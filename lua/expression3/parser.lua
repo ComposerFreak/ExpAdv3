@@ -95,8 +95,20 @@ end
 local PARSER = {};
 PARSER.__index = PARSER;
 
-function PARSER.New()
-	return setmetatable({}, PARSER);
+function PARSER.New(soft)
+	return setmetatable({soft = soft}, PARSER);
+end
+
+local function softTest(this)
+	if (not this.soft) then return end
+	local softQuota = (this.__softQuota or 0) + 1;
+
+	if (softQuota < 100) then
+		this.__softQuota = softQuota;
+	else
+		this.__softQuota = nil;
+		coroutine.yield();
+	end
 end
 
 function PARSER.Initalize(this, instance, files)
@@ -612,6 +624,8 @@ function PARSER.EndInstruction(this, inst, instructions)
 	this.__depth = this.__depth - 1;
 
 	--print("PARSER->" .. inst.type .. "->#" .. #inst.instructions)
+
+	softTest(this); -- Limit of 500 instructions per 0.1 seconds.
 
 	return inst;
 end

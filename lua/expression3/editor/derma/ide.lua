@@ -858,7 +858,42 @@ end
 Code Validation
 ---------------------------------------------------------------------------*/
 function PANEL:DoValidate( Goto, Code, Debug, Native )
+	if (self.validator and not self.validator.finished) then
+		self.validator.stop();
+	end
+
 	Code = Code or self:GetCode( )
+
+	if not Code or Code == "" then
+		self:OnValidateError( false, {msg = "No code submited, compiler exited.", line = 0, char = 0});
+		return false
+	end
+
+	local cb = function(status, instance)
+		if (status and Debug) then
+			self.btnValidate:SetColor( Color( 50, 255, 50 ) );
+			self.btnValidate:SetText( "Generated debug file." );
+			EXPR_LIB.ShowDebug(instance.tokens, instance.tasks, Native);
+		elseif (status) then
+			self.btnValidate:SetColor( Color( 50, 255, 50 ) );
+			self.btnValidate:SetText( "Validation sucessful" );
+		elseif (instance.state == "internal") then
+			self:OnValidateError( false, "Internal error (see console)." )
+			Golem.Print(Color(255, 255, 255), "Internal error: ", instance.msg)
+		else
+			self:OnValidateError( Goto, instance )
+		end
+	end
+
+	self.validator = EXPR_LIB.Validate(cb, Code);
+
+	self.btnValidate:SetColor( Color( 50, 255, 50 ) );
+	self.btnValidate:SetText( "Validation in progress!" );
+
+	self.validator.start();
+end
+
+--[[	Code = Code or self:GetCode( )
 	
 	if not Code or Code == "" then
 		self:OnValidateError( false, {msg = "No code submited, compiler exited.", line = 0, char = 0})
@@ -926,7 +961,7 @@ function PANEL:DoValidate( Goto, Code, Debug, Native )
 	end
 	
 	return true;
-end
+end]]
 
 function PANEL:OnValidateError( Goto, Thrown )
 	local Error;

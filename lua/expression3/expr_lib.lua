@@ -1248,6 +1248,73 @@ function EXPR_LIB.UnregisterContext(context)
 end
 
 --[[
+]]
+
+
+function EXPR_LIB.Validate(cb, script, files)
+	local vldr = {};
+
+	vldr.timer = "Validator:" .. tostring(vldr);
+
+	vldr.func = coroutine.create(function()
+		vldr.tokenizer = EXPR_TOKENIZER.New(true);
+
+		vldr.tokenizer:Initalize("EXPADV", script);
+
+		local ok, res = vldr.tokenizer:Run();
+
+		if ok then
+			coroutine.yield();
+
+			vldr.parser = EXPR_PARSER.New(true);
+
+			vldr.parser:Initalize(res, files);
+
+			ok, res = vldr.parser:Run();
+
+			if ok then
+				coroutine.yield();
+				
+				vldr.compiler = EXPR_COMPILER.New(true);
+
+				vldr.compiler:Initalize(res, files);
+
+				ok, res = vldr.compiler:Run();
+			end
+		end
+
+		vldr.finished = true;
+		vldr.status, vldr.instance = ok, res;
+	end);
+
+	vldr.start = function()
+		timer.Create(vldr.timer, 0.1, 0, vldr.resume);
+		return vldr.resume();
+	end;
+
+	vldr.stop = function()
+		timer.Destroy(vldr.timer);
+	end;
+
+	vldr.resume = function()
+		if (not vldr.finished) then
+			coroutine.resume(vldr.func);
+		end
+
+		if (vldr.finished) then
+			vldr.stop();
+			cb(vldr.status, vldr.instance);
+			return true;
+		end
+
+		return false;
+	end;
+
+	return vldr;
+end
+
+
+--[[
 	:::Load Expression 3:::
 	'''''''''''''''''''''''
 ]]

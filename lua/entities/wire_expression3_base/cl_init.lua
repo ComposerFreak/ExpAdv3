@@ -16,67 +16,6 @@ include("shared.lua");
 
 local ValidateError;
 
-local function DoValidate(Code)
-	
-	if not Code or Code == "" then
-		ValidateError( {msg = "No code submited, compiler exited.", line = 0, char = 0})
-		return false
-	end
-	
-	local t = EXPR_TOKENIZER.New();
-	
-	t:Initalize("EXPADV", Code);
-	
-	local ts, tr = t:Run();
-	
-	if (not ts) then
-		if (tr.state == "internal") then
-			ValidateError( "Internal tokenizer error (see console)." )
-			chat.AddText(Color(255, 255, 255), "Internal tokenizer error: ", tr.msg)
-		else
-			ValidateError( tr )
-		end
-		
-		return false;
-	end
-	
-	local p = EXPR_PARSER.New();
-	
-	p:Initalize(tr);
-	
-	local ps, pr = p:Run();
-	
-	if (not ps) then
-		if (pr.state == "internal") then
-			ValidateError( "Internal parser error (see console)." )
-			chat.AddText(Color(255, 255, 255), "Internal parser error: ", pr.msg)
-		else
-			ValidateError( pr )
-		end
-		
-		return false;
-	end
-	
-	local c = EXPR_COMPILER.New();
-	
-	c:Initalize(pr);
-	
-	local cs, cr = c:Run();
-	
-	if (not cs) then
-		if (cr.state == "internal") then
-			self:OnValidateError( "Internal compiler error (see console)." )
-			chat.AddText(Color(255, 255, 255), "Internal compiler error: ", cr.msg)
-		else
-			ValidateError( cr )
-		end
-		
-		return false;
-	end
-
-	return true, cr;
-end
-
 function ValidateError(Thrown )
 	local Error;
 	
@@ -102,23 +41,34 @@ end
 --[[
 ]]
 
+local validator;
+
 net.Receive("Expression3.RequestUpload", function(len)
 	local ent = net.ReadEntity();
 
 	timer.Create("Expression3.SubmitToServer", 1, 1, function()
 		if (IsValid(ent) and ent.SubmitToServer) then
-			local script = Golem.GetCode();
-			local ok, res = DoValidate(script);
-
-			if (ok) then
-				local includes = {};
-
-				for _, file_path in pairs(res.directives.includes) do
-					includes[file_path] = file.Read("golem/" .. file_path .. ".txt", "DATA");
-				end
-
-				ent:SubmitToServer(script, includes);
+			if (validator and not validator.finished) then
+				validator.stop();
 			end
+
+			local script = Golem.GetCode();
+
+			local cb = function(ok, res)
+				if (ok) then
+					local includes = {};
+
+					for _, file_path in pairs(res.directives.includes) do
+						includes[file_path] = file.Read("golem/" .. file_path .. ".txt", "DATA");
+					end
+
+					ent:SubmitToServer(script, includes);
+				end
+			end
+
+			validator = EXPR_LIB.Validate(cb, script, files);
+
+			validator.start();
 		end
 	end);
 end)
