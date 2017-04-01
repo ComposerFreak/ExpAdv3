@@ -10,24 +10,31 @@
 	::Compiler::
 ]]
 
+local string_Explode = string.Explode;
+local string_upper = string.upper;
+local string_format = string.format;
+local table_concat = table.concat;
+
+E3Class = EXPR_LIB.GetClass;
+
 local function name(id)
-	local obj = EXPR_LIB.GetClass(id);
+	local obj = E3Class(id);
 	return obj and obj.name or id;
 end
 
 local function names(ids)
 	if (isstring(ids)) then
-		ids = string.Explode(",", ids);
+		ids = string_Explode(",", ids);
 	end
 
 	local names = {};
 
 	for i, id in pairs(ids) do
-		local obj = EXPR_LIB.GetClass(id);
+		local obj = E3Class(id);
 		names[i] =  obj and obj.name or id;
 	end
 
-	return table.concat(names,", ")
+	return table_concat(names,", ")
 end
 
 --[[
@@ -36,20 +43,8 @@ end
 local COMPILER = {};
 COMPILER.__index = COMPILER;
 
-function COMPILER.New(soft)
-	return setmetatable({soft = soft}, COMPILER);
-end
-
-local function softTest(this)
-	if (not this.soft) then return end
-	local softQuota = (this.__softQuota or 0) + 1;
-
-	if (softQuota < 100) then
-		this.__softQuota = softQuota;
-	else
-		this.__softQuota = nil;
-		coroutine.yield();
-	end
+function COMPILER.New()
+	return setmetatable({}, COMPILER);
 end
 
 function COMPILER.Initalize(this, instance, files)
@@ -106,11 +101,8 @@ function COMPILER._Run(this)
 
 	this:Compile(this.__root);
 
-	local script, traceTbl = this:BuildScript();
-
 	local result = {}
 	result.script = this.__script;
-	result.compiled = script;
 	result.constructors = this.__constructors;
 	result.operators = this.__operators;
 	result.functions = this.__functions;
@@ -118,8 +110,13 @@ function COMPILER._Run(this)
 	result.enviroment = this.__enviroment;
 	result.directives = this.__directives;
 	result.hashTable = this.__hashtable;
-	result.traceTbl = traceTbl;
 	
+	result.build = function()
+		local script, traceTbl = this:BuildScript();
+		result.compiled = script;
+		result.traceTbl = traceTbl;
+	end
+
 	return result;
 end
 
@@ -206,18 +203,16 @@ function COMPILER.BuildScript(this)
 			buffer[#buffer + 1] = data;
 			char = char + #data + 1;
 		end
-
-		softTest(this);
 	end
 
-	return table.concat(buffer, " "), traceTable;
+	return table_concat(buffer, " "), traceTable;
 end
 
 function COMPILER.Throw(this, token, msg, fst, ...)
 	local err = {};
 
 	if (fst) then
-		msg = string.format(msg, fst, ...);
+		msg = string_format(msg, fst, ...);
 	end
 
 	err.state = "compiler";
@@ -245,7 +240,7 @@ end
 function COMPILER.Import(this, path)
 	local g = _G;
 	local e = this.__enviroment;
-	local a = string.Explode(".", path);
+	local a = string_Explode(".", path);
 	
 	if (#a > 1) then
 		for i = 1, #a - 1 do
@@ -281,7 +276,7 @@ function COMPILER.CRC(this, start, final)
 		tokens[i] = this.__tokens[j].data;
 	end
 
-	return util.CRC(table.concat(tokens, " "));
+	return util.CRC(table_concat(tokens, " "));
 end
 
 --[[
@@ -424,7 +419,7 @@ function COMPILER.GetOperator(this, operation, fst, ...)
 		return EXPR_OPERATORS[operation .. "()"];
 	end
 
-	local signature = string.format("%s(%s)", operation, table.concat({fst, ...},","));
+	local signature = string_format("%s(%s)", operation, table_concat({fst, ...},","));
 	
 	local Op = EXPR_OPERATORS[signature];
 
@@ -613,7 +608,7 @@ function COMPILER.Compile(this, inst)
 	end
 
 	if (not inst.compiled) then
-		local instruction = string.upper(inst.type);
+		local instruction = string_upper(inst.type);
 		local fun = this["Compile_" .. instruction];
 
 		-- print("Compiler->" .. instruction .. "->#" .. #inst.instructions)
@@ -633,8 +628,6 @@ function COMPILER.Compile(this, inst)
 
 		inst.compiled = true;
 	end
-
-	softTest(this);
 
 	return inst.result, inst.rCount;
 end
@@ -750,7 +743,7 @@ function COMPILER.CheckState(this, state, token, msg, frst, ...)
 
 	if (token and msg) then
 		if (frst) then
-			msg = string.format(msg, frst, ...);
+			msg = string_format(msg, frst, ...);
 		end
 
 		if (state == EXPR_SERVER) then
@@ -960,18 +953,18 @@ function COMPILER.Compile_ASS(this, inst, token, expressions)
 			injectNewLine = true;
 			
 			if (info.signature) then
-				local msg = string.format("Failed to assign function to delegate %s(%s), permater missmatch.", var, info.signature);
-				this:QueueInjectionAfter(inst, inst.final, string.format("if (%s and %s.signature ~= %q) then CONTEXT:Throw(%q); %s = nil; end", var, var, info.signature, msg, var));
+				local msg = string_format("Failed to assign function to delegate %s(%s), permater missmatch.", var, info.signature);
+				this:QueueInjectionAfter(inst, inst.final, string_format("if (%s and %s.signature ~= %q) then CONTEXT:Throw(%q); %s = nil; end", var, var, info.signature, msg, var));
 			end
 			
 			if (info.resultClass) then
-				local msg = string.format("Failed to assign function to delegate %s(%s), result type missmatch.", var, name(info.resultClass));
-				this:QueueInjectionAfter(inst, inst.final, string.format("if (%s and %s.result ~= %q) then CONTEXT:Throw(%q); %s = nil; end", var, var, name(info.resultClass), msg, var));
+				local msg = string_format("Failed to assign function to delegate %s(%s), result type missmatch.", var, name(info.resultClass));
+				this:QueueInjectionAfter(inst, inst.final, string_format("if (%s and %s.result ~= %q) then CONTEXT:Throw(%q); %s = nil; end", var, var, name(info.resultClass), msg, var));
 			end
 			
 			if (info.resultCount) then
-				local msg = string.format("Failed to assign function to delegate %s(%s), result count missmatch.", var, info.resultCount);
-				this:QueueInjectionAfter(inst, inst.final, string.format("if (%s and %s.count ~= %i) then CONTEXT:Throw(%q); %s = nil; end", var, var, info.resultCount, msg, var));
+				local msg = string_format("Failed to assign function to delegate %s(%s), result count missmatch.", var, info.resultCount);
+				this:QueueInjectionAfter(inst, inst.final, string_format("if (%s and %s.count ~= %i) then CONTEXT:Throw(%q); %s = nil; end", var, var, info.resultCount, msg, var));
 			end
 
 			injectNewLine = false;
@@ -2139,7 +2132,7 @@ function COMPILER.CastUserType(this, left, right)
 	if (not this.__hashtable[to.hash][from.hash]) then
 		if (this.__hashtable[from.hash][to.hash]) then
 			return {
-				signature = string.format("(%s)%s", to.hash, from.hash),
+				signature = string_format("(%s)%s", to.hash, from.hash),
 				context = true,
 				result = left,
 				rCount = 1,
@@ -2166,7 +2159,7 @@ function COMPILER.CastExpression(this, type, expr)
 	local op = this:CastUserType(type, expr.result);
 
 	if (not op) then
-		local signature = string.format("(%s)%s", type, expr.result);
+		local signature = string_format("(%s)%s", type, expr.result);
 		
 		op = EXPR_CAST_OPERATORS[signature];
 
@@ -2295,7 +2288,7 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 	local total = #expressions;
 
 	local classname = inst.class
-	local cls = EXPR_LIB.GetClass(classname);
+	local cls = E3Class(classname);
 	local userclass = this:GetUserClass(classname);
 
 	if (not cls and userclass) then
@@ -2322,16 +2315,16 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 		end
 
 		for i = #ids, 1, -1 do
-			local args = table.concat(ids,",", 1, i);
+			local args = table_concat(ids,",", 1, i);
 
 			if (i >= total) then
-				local signature = string.format("%s(%s)", classname, args);
+				local signature = string_format("%s(%s)", classname, args);
 
 				op = constructors[signature];
 			end
 
 			if (not op) then
-				local signature = string.format("%s(%s,...)", classname, args);
+				local signature = string_format("%s(%s,...)", classname, args);
 				op = constructors[signature];
 				if (op) then vargs = i + 1; end
 			end
@@ -2347,7 +2340,7 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 		end
 	end
 
-	local signature = string.format("%s(%s)", name(inst.class), names(ids));
+	local signature = string_format("%s(%s)", name(inst.class), names(ids));
 
 	if (op and userclass) then
 		this:QueueRemove(inst, inst.__new);
@@ -2384,7 +2377,7 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 		this:QueueRemove(inst, inst.__const);
 		this:QueueReplace(inst, inst.__const, op.operator);
 	else
-		local signature = string.format("%s.", inst.library, op.signature);
+		local signature = string_format("%s.", inst.library, op.signature);
 		error("Attempt to inject " .. op.signature .. " but operator was incorrect " .. type(op.operator) .. ".");
 	end
 
@@ -2406,14 +2399,14 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 end
 
 local function getMethod(mClass, userclass, method, ...)
-	local prams = table.concat({...}, ",");
+	local prams = table_concat({...}, ",");
 
 	if (userclass) then
-		local sig = string.format("@%s(%s)", method, prams);
+		local sig = string_format("@%s(%s)", method, prams);
 		return userclass.methods[sig]
 	end
 	
-	local sig = string.format("%s.%s(%s)", mClass, method, prams);
+	local sig = string_format("%s.%s(%s)", mClass, method, prams);
 	return EXPR_METHODS[sig];
 end
 
@@ -2448,7 +2441,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 		end
 
 		for i = #ids, 1, -1 do
-			local args = table.concat(ids,",", 1, i);
+			local args = table_concat(ids,",", 1, i);
 
 			if (i == total -  1) then
 				op = getMethod(mClass, userclass, inst.method, args);
@@ -2511,7 +2504,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 		this:QueueReplace(inst, inst.__operator, ":");
 		this:QueueReplace(inst, inst.__method, op.operator);
 	else
-		local signature = string.format("%s.%s", name(inst.class), op.signature);
+		local signature = string_format("%s.%s", name(inst.class), op.signature);
 		error("Attempt to inject " .. op.signature .. " but operator was incorrect, got " .. type(op.operator));
 	end
 
@@ -2563,16 +2556,16 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		end
 
 		for i = #ids, 1, -1 do
-			local args = table.concat(ids,",", 1, i);
+			local args = table_concat(ids,",", 1, i);
 
 			if (i >= total) then
-				local signature = string.format("%s(%s)", inst.name, args);
+				local signature = string_format("%s(%s)", inst.name, args);
 
 				op = lib._functions[signature];
 			end
 
 			if (not op) then
-				local signature = string.format("%s(%s,...)", inst.name, args);
+				local signature = string_format("%s(%s,...)", inst.name, args);
 
 				op = lib._functions[signature];
 
@@ -2598,7 +2591,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 	this:CheckState(op.state, token, "Function %s.%s(%s).", inst.library.data, inst.name, names(ids, ","));
 
 	if (type(op.operator) == "function") then
-		local signature = string.format("%s.%s", inst.library.data, op.signature);
+		local signature = string_format("%s.%s", inst.library.data, op.signature);
 
 		this:QueueRemove(inst, token);
 		this:QueueRemove(inst, inst.library);
@@ -2623,7 +2616,7 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		this:QueueReplace(inst, inst.__func, op.operator); -- This is error.
 		this:Import(op.operator);
 	else
-		local signature = string.format("%s.", inst.library, op.signature);
+		local signature = string_format("%s.", inst.library, op.signature);
 		error("Attempt to inject " .. signature .. " but operator was incorrect " .. type(op.operator) .. ".");
 	end
 	
@@ -2666,9 +2659,9 @@ function COMPILER.Compile_LAMBDA(this, inst, token, expressions)
 
 		if (class ~= "_vr") then
 			injectNewLine = true;
-			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end", var, var, name(class), var));
-			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, class, name(class), var, var));
-			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("%s = %s[2];", var, var));
+			this:QueueInjectionBefore(inst, inst.stmts.token, string_format("if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end", var, var, name(class), var));
+			this:QueueInjectionBefore(inst, inst.stmts.token, string_format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, class, name(class), var, var));
+			this:QueueInjectionBefore(inst, inst.stmts.token, string_format("%s = %s[2];", var, var));
 			injectNewLine = false;
 		end
 	end
@@ -2788,7 +2781,7 @@ function COMPILER.Compile_DELEGATE(this, inst, token)
 	local class, scope, info = this:AssignVariable(token, true, inst.variable, "f");
 
 	if (info) then
-		info.signature = table.concat(inst.peramaters, ",");
+		info.signature = table_concat(inst.peramaters, ",");
 		info.peramaters = inst.peramaters;
 		info.resultClass = inst.resultClass;
 		info.resultCount = inst.resultCount;
@@ -2810,9 +2803,9 @@ function COMPILER.Compile_FUNCT(this, inst, token, expressions)
 
 		if (class ~= "_vr") then
 			injectNewLine = true;
-			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end", var, var, class, var));
-			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, class, class, var, var));
-			this:QueueInjectionBefore(inst, inst.stmts.token, string.format("%s = %s[2];", var, var));
+			this:QueueInjectionBefore(inst, inst.stmts.token, string_format("if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end", var, var, class, var));
+			this:QueueInjectionBefore(inst, inst.stmts.token, string_format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, class, class, var, var));
+			this:QueueInjectionBefore(inst, inst.stmts.token, string_format("%s = %s[2];", var, var));
 			injectNewLine = false;
 		end
 	end
@@ -2878,7 +2871,7 @@ function COMPILER.Compile_CALL(this, inst, token, expressions)
 		end
 	end
 
-	local signature = table.concat(prms, ",");
+	local signature = table_concat(prms, ",");
 
 	if (res == "f" and expr.type == "var") then
 		local c, s, info = this:GetVariable(expr.variable);
@@ -2929,7 +2922,7 @@ function COMPILER.Compile_CALL(this, inst, token, expressions)
 		end
 	else
 		for i = #prms, 1, -1 do
-			local args = table.concat(prms,",", 1, i);
+			local args = table_concat(prms,",", 1, i);
 
 			if (i >= #prms) then
 				op = this:GetOperator("call", res, args);
@@ -3197,19 +3190,19 @@ function COMPILER.Compile_EACH(this, inst, token, expr)
 
 	if (inst.kType) then
 		if (inst.kType ~= "_vr") then
-			this:QueueInjectionAfter(inst, pos, string.format("if (_kt ~= %q) then continue end", inst.kType));
-			this:QueueInjectionAfter(inst, pos, string.format("local %s = _kv", inst.kValue));
+			this:QueueInjectionAfter(inst, pos, string_format("if (_kt ~= %q) then continue end", inst.kType));
+			this:QueueInjectionAfter(inst, pos, string_format("local %s = _kv", inst.kValue));
 		else
-			this:QueueInjectionAfter(inst, pos, string.format("local %s = {_kt, _kv}", inst.kValue));
+			this:QueueInjectionAfter(inst, pos, string_format("local %s = {_kt, _kv}", inst.kValue));
 		end
 	end
 
 	if (inst.vType) then
 		if (inst.vType ~= "_vr") then
-			this:QueueInjectionAfter(inst, pos, string.format("if (_vt ~= %q) then continue end", inst.vType));
-			this:QueueInjectionAfter(inst, pos, string.format("local %s = _vv", inst.vValue));
+			this:QueueInjectionAfter(inst, pos, string_format("if (_vt ~= %q) then continue end", inst.vType));
+			this:QueueInjectionAfter(inst, pos, string_format("local %s = _vv", inst.vValue));
 		else
-			this:QueueInjectionAfter(inst, pos, string.format("local %s = {_vt, _vv}", inst.vValue));
+			this:QueueInjectionAfter(inst, pos, string_format("local %s = {_vt, _vv}", inst.vValue));
 		end
 	end
 
@@ -3263,7 +3256,7 @@ function COMPILER.Compile_INPORT(this, inst, token)
 	for _, token in pairs(inst.variables) do
 		local var = token.data;
 
-		if (var[1] ~= string.upper(var[1])) then
+		if (var[1] ~= string_upper(var[1])) then
 			this:Throw(token, "Invalid name for wired input %s, name must be cammel cased");
 		end
 
@@ -3285,7 +3278,7 @@ function COMPILER.Compile_OUTPORT(this, inst, token)
 	for _, token in pairs(inst.variables) do
 		local var = token.data;
 
-		if (var[1] ~= string.upper(var[1])) then
+		if (var[1] ~= string_upper(var[1])) then
 			this:Throw(token, "Invalid name for wired output %s, name must be cammel cased");
 		end
 
@@ -3530,7 +3523,7 @@ function COMPILER.Compile_FEILD(this, inst, token, expressions)
 	if (not userclass) then
 		-- this:Throw(token, "Unable to refrence feild %s.%s here", name(type), inst.__feild.data);
 
-		local cls = EXPR_LIB.GetClass(type);
+		local cls = E3Class(type);
 		local info = cls.atributes[inst.__feild.data];
 
 		if (not info) then
@@ -3618,7 +3611,7 @@ function COMPILER.Compile_SET_FEILD(this, inst, token, expressions)
 	local atribute = inst.__feild.data;
 	local r1, c1 = this:Compile(expressions[1]);
 	local r2, c2 = this:Compile(expressions[2]);
-	local cls = EXPR_LIB.GetClass(r1);
+	local cls = E3Class(r1);
 
 	if (not cls) then
 		local userclass = this:GetClassOrInterface(r1);
@@ -3662,7 +3655,7 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
 		this:AssignVariable(token, true, var, class);
 	end
 
-	local signature = string.format("constructor(%s)", inst.signature);
+	local signature = string_format("constructor(%s)", inst.signature);
 
 	userclass.valid = true;
 	userclass.constructors[signature] = signature;
@@ -3674,7 +3667,7 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
 	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function")
 	
 	injectNewLine = true;
-	local class_line = string.format("local this = setmetatable({vars = setmetatable({}, %s.vars)}, %s)", userclass.name, userclass.name);
+	local class_line = string_format("local this = setmetatable({vars = setmetatable({}, %s.vars)}, %s)", userclass.name, userclass.name);
 	this:QueueInjectionAfter(inst, inst.__postBlock, class_line);
 	this:QueueInjectionBefore(inst, inst.final, "return this;");
 	injectNewLine = false;
@@ -3694,7 +3687,7 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 		this:AssignVariable(token, true, var, class);
 	end
 
-	local signature = string.format("@%s(%s)", inst.__name.data, inst.signature);
+	local signature = string_format("@%s(%s)", inst.__name.data, inst.signature);
 
 	local overrride = userclass.methods[signature];
 
@@ -3738,8 +3731,8 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function(this")
 	
 	injectNewLine = true;
-	local error = string.format("Attempt to call user method '%s.%s(%s)' using alien class of the same name.", userclass.name, inst.__name.data, inst.signature);
-	this:QueueInjectionAfter(inst, inst.__preBlock, string.format("if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error))
+	local error = string_format("Attempt to call user method '%s.%s(%s)' using alien class of the same name.", userclass.name, inst.__name.data, inst.signature);
+	this:QueueInjectionAfter(inst, inst.__preBlock, string_format("if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error))
 	injectNewLine = false;
 
 	if (#inst.perams >= 1) then
@@ -3770,8 +3763,8 @@ function COMPILER.Compile_TOSTR(this, inst, token, expressions)
 	this:QueueInjectionAfter(inst, this:OffsetToken(inst.__var, 1), "this")
 
 	injectNewLine = true;
-	local error = string.format("Attempt to call user operation '%s.tostring()' using alien class of the same name.", userclass.name);
-	this:QueueInjectionAfter(inst, inst.__preBlock, string.format("if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error))
+	local error = string_format("Attempt to call user operation '%s.tostring()' using alien class of the same name.", userclass.name);
+	this:QueueInjectionAfter(inst, inst.__preBlock, string_format("if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error))
 	injectNewLine = false;
 end
 
@@ -3837,8 +3830,8 @@ function COMPILER.Compile_INTERFACE_METHOD(this, inst, token)
 	local meth = {};
 	meth.name = inst.name;
 	meth.result = inst.result;
-	meth.perams = table.concat(inst.peramaters, ",");
-	meth.sig = string.format("@%s(%s)", inst.name, meth.perams);
+	meth.perams = table_concat(inst.peramaters, ",");
+	meth.sig = string_format("@%s(%s)", inst.name, meth.perams);
 	meth.token = token;
 
 	if (inst.count == -1) then

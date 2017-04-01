@@ -41,52 +41,55 @@ end
 --[[
 ]]
 
-local validator;
+
 
 net.Receive("Expression3.RequestUpload", function(len)
 	local ent = net.ReadEntity();
 
 	timer.Create("Expression3.SubmitToServer", 1, 1, function()
 		if (IsValid(ent) and ent.SubmitToServer) then
-			if (validator and not validator.finished) then
-				validator.stop();
-			end
-
-			local script = Golem.GetCode();
-
-			local cb = function(ok, res)
-				if (ok) then
-					local includes = {};
-
-					for _, file_path in pairs(res.directives.includes) do
-						includes[file_path] = file.Read("golem/" .. file_path .. ".txt", "DATA");
-					end
-
-					ent:SubmitToServer(script, includes);
-				end
-			end
-
-			validator = EXPR_LIB.Validate(cb, script, files);
-
-			validator.start();
+			ent:SubmitToServer(Golem.GetCode());
 		end
 	end);
 end)
 
-function ENT:SubmitToServer(code, files)
-	if (code and code ~= "") then
-		local ok, res = self:Validate(code);
 
-		if (ok) then
-			net.Start("Expression3.SubmitToServer");
-				net.WriteEntity(self);
-				net.WriteString(code);
-				net.WriteTable(files);
-			net.SendToServer();
-		else
-			self:HandelThrown(res);
-			chat.AddText("Failed to validate script (see console).");
+			
+local validator;
+
+function ENT:SubmitToServer(script)
+	if (script and script ~= "") then
+		
+		if (validator and not validator.finished) then
+			return chat.AddText("Failed: Another E3 is uploading.")
 		end
+
+		local cb = function(ok, res)
+			if (ok) then
+				local includes = {};
+
+				for _, file_path in pairs(res.directives.includes) do
+					includes[file_path] = file.Read("golem/" .. file_path .. ".txt", "DATA");
+				end
+
+				net.Start("Expression3.SubmitToServer");
+					net.WriteEntity(self);
+					net.WriteString(script);
+					net.WriteTable(includes);
+				net.SendToServer();
+
+				chat.AddText("Uploading...");
+			else
+				self:HandelThrown(res);
+				chat.AddText("Failed to validate script (see console).");
+			end
+		end
+
+		validator = EXPR_LIB.Validate(cb, script);
+
+		validator.start();
+
+		chat.AddText("Validating...");
 	end
 end
 

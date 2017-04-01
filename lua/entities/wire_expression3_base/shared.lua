@@ -28,7 +28,7 @@ ENT.Expression3 	= true;
 	Validate / Set Code
 ]]
 
-function ENT:Validate(script, files)
+--[[function ENT:Validate(script, files)
 	local Toker = EXPR_TOKENIZER.New();
 
 	Toker:Initalize("EXPADV", script);
@@ -52,7 +52,7 @@ function ENT:Validate(script, files)
 	end
 
 	return ok, res;
-end -- Replaced \|/
+end]]-- Replaced \|/
 
 function ENT:SetCode(script, files, run)
 	self:ShutDown();

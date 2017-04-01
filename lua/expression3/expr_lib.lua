@@ -1250,6 +1250,41 @@ end
 --[[
 ]]
 
+local SysTime, bench = SysTime;
+
+local token_run = function(this)
+	local i = 0;
+	local vldr = this.vldr;
+
+	while (this.__char ~= nil) do
+		i = i + 1;
+
+		this:Loop();
+
+		if (i > 10) then
+
+			local b = SysTime() - bench;
+
+			vldr.tokenizerTime = vldr.tokenizerTime + b;
+
+			vldr.tokenizerCount = vldr.tokenizerCount + 1;
+
+			-- print("Tokeinizer step " .. i .. " took ", b);
+
+			coroutine.yield();
+
+			i = 0;
+
+			bench = SysTime();
+		end
+	end
+
+	local result = {};
+	result.tokens = this.__tokens;
+	result.script = this.__buffer;
+
+	return result;
+end
 
 function EXPR_LIB.Validate(cb, script, files)
 	local vldr = {};
@@ -1257,31 +1292,64 @@ function EXPR_LIB.Validate(cb, script, files)
 	vldr.timer = "Validator:" .. tostring(vldr);
 
 	vldr.func = coroutine.create(function()
-		vldr.tokenizer = EXPR_TOKENIZER.New(true);
+		bench = SysTime();
+		vldr.tokenizer = EXPR_TOKENIZER.New();
+
+		vldr.tokenizerTime = 0;
+
+		vldr.tokenizerCount = 0; 
+
+		vldr.tokenizer.vldr = vldr;
+
+		vldr.tokenizer._Run = token_run;
 
 		vldr.tokenizer:Initalize("EXPADV", script);
 
 		local ok, res = vldr.tokenizer:Run();
 
+		vldr.tokenizerTime = vldr.tokenizerTime + (SysTime() - bench);
+
 		if ok then
 			coroutine.yield();
 
-			vldr.parser = EXPR_PARSER.New(true);
+			bench = SysTime();
+
+			vldr.parser = EXPR_PARSER.New();
 
 			vldr.parser:Initalize(res, files);
 
 			ok, res = vldr.parser:Run();
 
+			vldr.parserTime = SysTime() - bench;
+
 			if ok then
 				coroutine.yield();
 				
-				vldr.compiler = EXPR_COMPILER.New(true);
+				bench = SysTime();
+
+				vldr.compiler = EXPR_COMPILER.New();
 
 				vldr.compiler:Initalize(res, files);
 
 				ok, res = vldr.compiler:Run();
+
+				vldr.compilerTime = SysTime() - bench;
+
+				coroutine.yield();
+
+				bench = SysTime();
+
+				res.build();
+
+				vldr.buildTime = SysTime() - bench;
 			end
 		end
+
+		--print(vldr.timer);
+		--print("Tokenizer", vldr.tokenizerTime, " - ", vldr.tokenizerCount);
+		--print("Parser", vldr.parserTime);
+		--print("Compiler", vldr.compilerTime);
+		--print("Build", vldr.buildTime);
 
 		vldr.finished = true;
 		vldr.status, vldr.instance = ok, res;

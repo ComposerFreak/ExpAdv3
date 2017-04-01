@@ -887,8 +887,8 @@ function PANEL:DoValidate( Goto, Code, Debug, Native )
 
 	self.validator = EXPR_LIB.Validate(cb, Code);
 
-	self.btnValidate:SetColor( Color( 50, 255, 50 ) );
-	self.btnValidate:SetText( "Validation in progress!" );
+	self.btnValidate:SetColor( Color( 50, 50, 150 ) );
+	self.btnValidate:SetText( "Validating..." );
 
 	self.validator.start();
 end

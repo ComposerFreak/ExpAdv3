@@ -107,20 +107,8 @@ end )
 local TOKENIZER = {};
 TOKENIZER.__index = TOKENIZER;
 
-function TOKENIZER.New(soft)
-	return setmetatable({soft = soft}, TOKENIZER);
-end
-
-local function softTest(this)
-	if (not this.soft) then return end
-	local softQuota = (this.__softQuota or 0) + 1;
-
-	if (softQuota < 100) then
-		this.__softQuota = softQuota;
-	else
-		this.__softQuota = nil;
-		coroutine.yield();
-	end
+function TOKENIZER.New()
+	return setmetatable({}, TOKENIZER);
 end
 
 function TOKENIZER.Initalize(this, lang, script, ish)
@@ -180,7 +168,6 @@ end
 function TOKENIZER._Run(this)
 	while (this.__char ~= nil) do
 		this:Loop();
-		softTest(this);
 	end
 
 	local result = {};
@@ -515,6 +502,8 @@ function TOKENIZER.Loop(this)
 	end
 
 	if (this.__char == '"' or this.__char == "'") then
+		local len = 0;
+
 		local strChar = this.__char;
 
 		local escp = false;
@@ -569,6 +558,12 @@ function TOKENIZER.Loop(this)
 			else
 				this:Throw(0, "Unfinished escape sequence (\\%s)", this.__char);
 			end
+
+			len = len + 1;
+
+			if (len > 500) then
+				this:Throw(0, "Maxamum string lenth reached (500)");
+			end
 		end
 
 		if (this.__char and this.__char == strChar) then
@@ -622,7 +617,7 @@ function TOKENIZER.Loop(this)
 	end
 
 	this:SetState(state);
-	
+
 	-- Keywords.
 
 	if (this:NextPattern("^[a-zA-Z][a-zA-Z0-9_]*")) then
