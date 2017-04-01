@@ -1261,7 +1261,7 @@ local token_run = function(this)
 
 		this:Loop();
 
-		if (i > 10) then
+		if (i > 25) then
 
 			local b = SysTime() - bench;
 

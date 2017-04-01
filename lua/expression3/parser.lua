@@ -2041,11 +2041,13 @@ end
 
 function PARSER.Expression_24(this)
 	if (this:Accept("lpa")) then
+		local inst = this:StartInstruction("group", this.__token);
+		this:QueueRemove(inst, this.__token);
 		local expr = this:Expression_1();
 
 		this:Require("rpa", "Right parenthesis ( )) missing, to close grouped equation.");
-
-		return expr;
+		this:QueueRemove(inst, this.__token);
+		return this:EndInstruction(inst, expr);
 	end
 
 	return this:Expression_25();
@@ -2148,6 +2150,7 @@ function PARSER.Expression_27(this)
 		end
 
 		this:Require("rpa", "Right parenthesis ( )) expected to close constructor parameters.");
+		this.__rpa = this.__token;
 
 		return this:EndInstruction(inst, expressions);
 	end

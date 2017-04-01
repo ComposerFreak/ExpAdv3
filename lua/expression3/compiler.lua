@@ -1194,6 +1194,25 @@ end
 --[[
 ]]
 
+function COMPILER.Compile_GROUP(this, inst, token, expr)
+
+	local pre = this:OffsetToken(token, -1);
+	local next = this:OffsetToken(inst.final, 1);
+
+	if (pre and next) then
+		if (pre.type == "lpa" and next.type == "rpa") then
+			return r, c;
+		end
+	end
+
+	--this:QueueInjectionBefore(inst, token, "(");
+	--this:QueueInjectionAfter(inst, inst.final, ")");
+
+	local r, c = this:Compile(expr);
+
+	return r, c;
+end
+
 function COMPILER.Compile_TEN(this, inst, token, expressions)
 	local expr1 = expressions[1];
 	local r1, c1 = this:Compile(expr1);
@@ -2403,7 +2422,7 @@ local function getMethod(mClass, userclass, method, ...)
 
 	if (userclass) then
 		local sig = string_format("@%s(%s)", method, prams);
-		return userclass.methods[sig]
+		return userclass.methods[sig];
 	end
 	
 	local sig = string_format("%s.%s(%s)", mClass, method, prams);
@@ -2420,6 +2439,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 	local total = #expressions;
 	
 	local userclass = this:GetUserClass(mClass);
+
 
 	if (total == 1) then
 		op = getMethod(mClass, userclass, inst.method);
