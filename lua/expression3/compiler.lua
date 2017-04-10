@@ -120,6 +120,15 @@ function COMPILER._Run(this)
 	return result;
 end
 
+local function sortGth(a, b)
+	return (a.weight or a.depth or 0) > (a.weight or a.depth or 0);
+end
+
+
+local function sortLth(a, b)
+	return (a.weight or a.depth or 0) < (a.weight or a.depth or 0);
+end
+
 function COMPILER.BuildScript(this)
 	-- This will probably become a separate stage (post compiler?).
 
@@ -157,6 +166,7 @@ function COMPILER.BuildScript(this)
 
 				--for _ = #prefixs, 1, -1 do
 				--	local prefix = prefixs[_];
+				table.sort(prefixs, sortGth);
 				for _, prefix in pairs(prefixs) do
 					if (prefix.newLine) then
 						char = 1;
@@ -164,9 +174,10 @@ function COMPILER.BuildScript(this)
 						line = line + 1;
 						buffer[#buffer + 1] = "\n";
 					end
-
-					buffer[#buffer + 1] = prefix.str;
-					char = char + #prefix.str + 1;
+					local str = prefix.str; -- .. string.format("(%s)", prefix.weight or prefix.depth or 0);
+					char = char + #str + 1;
+					buffer[#buffer + 1] = str;
+					print("prefix", str, prefix.weight or prefix.depth or 0);
 				end
 			end
 
@@ -187,6 +198,7 @@ function COMPILER.BuildScript(this)
 			if (postfixs) then
 				--for _ = #postfixs, 1, -1 do
 				--	local postfix = postfixs[_];
+				table.sort(postfixs, sortLth);
 				for _, postfix in pairs(postfixs) do
 					if (postfix.newLine) then
 						char = 1;
@@ -194,8 +206,10 @@ function COMPILER.BuildScript(this)
 						line = line + 1;
 						buffer[#buffer + 1] = "\n";
 					end
-					char = char + #postfix.str + 1;
-					buffer[#buffer + 1] = postfix.str;
+					local str = postfix.str; -- .. string.format("(%s)", postfix.weight or postfix.depth or 0)
+					char = char + #str + 1;
+					buffer[#buffer + 1] = str;
+					print("postfix", str, postfix.weight or postfix.depth or 0);
 				end
 			end
 		else
@@ -1205,8 +1219,8 @@ function COMPILER.Compile_GROUP(this, inst, token, expr)
 		end
 	end
 
-	--this:QueueInjectionBefore(inst, token, "(");
-	--this:QueueInjectionAfter(inst, inst.final, ")");
+	this:QueueInjectionBefore(inst, token, "(");
+	this:QueueInjectionAfter(inst, inst.final, ")");
 
 	local r, c = this:Compile(expr);
 

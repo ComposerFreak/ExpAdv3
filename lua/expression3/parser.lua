@@ -107,7 +107,7 @@ function PARSER.Initalize(this, instance, files)
 	this.__scopeData = this.__scope;
 
 	this.__instructions = {};
-
+	this.stmt_deph = 0;
 	this.__token = instance.tokens[0];
 	this.__next = instance.tokens[1];
 	this.__total = #instance.tokens;
@@ -495,6 +495,7 @@ function PARSER.StartInstruction(this, _type, token)
 		this.__tasks[token.pos] = tasks;
 	end
 
+	this.stmt_deph = this.stmt_deph + 1;
 	tasks.instruction = tasks.instruction or _type;
 
 	return inst;
@@ -610,7 +611,7 @@ function PARSER.EndInstruction(this, inst, instructions)
 	inst.final = this.__token;
 
 	this.__depth = this.__depth - 1;
-
+	this.stmt_deph = this.stmt_deph + 1;
 	--print("PARSER->" .. inst.type .. "->#" .. #inst.instructions)
 
 	return inst;
