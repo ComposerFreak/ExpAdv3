@@ -475,21 +475,22 @@ local math_floor = math.floor
 
 ext_core:RegisterLibrary("math");
 
+--ext_core:RegisterFunction("math", "huge", "n", "n", 1, "math.huge", true);	--Isn't function
 ext_core:RegisterFunction("math", "abs", "n", "n", 1, "math.abs", true);
+ext_core:RegisterFunction("math", "ceil", "n", "n", 1, "math.ceil", true);
+ext_core:RegisterFunction("math", "floor", "n", "n", 1, "math.floor", true);
+ext_core:RegisterFunction("math", "cos", "n", "n", 1, "math.cos", true);
 ext_core:RegisterFunction("math", "acos", "n", "n", 1, "math.acos", true);
 ext_core:RegisterFunction("math", "asin", "n", "n", 1, "math.asin", true);
-ext_core:RegisterFunction("math", "atan", "n", "n", 1, "math.asin", true);
-ext_core:RegisterFunction("math", "ceil", "n", "n", 1, "math.ceil", true);
-ext_core:RegisterFunction("math", "cos", "n", "n", 1, "math.cos", true);
-ext_core:RegisterFunction("math", "deg", "n", "n", 1, "math.deg", true);
+ext_core:RegisterFunction("math", "atan", "n", "n", 1, "math.atan", true);
 ext_core:RegisterFunction("math", "exp", "n", "n", 1, "math.exp", true);
-ext_core:RegisterFunction("math", "floor", "n", "n", 1, "math.floor", true);
-ext_core:RegisterFunction("math", "fmod", "n", "n", 1, "math.fmod", true);
-ext_core:RegisterFunction("math", "huge", "n", "n", 1, "math.asin", true);
 ext_core:RegisterFunction("math", "log", "n", "n", 1, "math.log", true);
-ext_core:RegisterFunction("math", "modf", "n", "n", 1, "math.modf", true);
-ext_core:RegisterFunction("math", "randomseed", "n", "n", 1, "math.randomseed", true);
+ext_core:RegisterFunction("math", "log", "n,n", "n", 1, "math.log", true);
+ext_core:RegisterFunction("math", "fmod", "n,n", "n", 1, "math.fmod", true);
+--ext_core:RegisterFunction("math", "modf", "n,n", "n", 2, "math.modf", true);	--In Lua math.modf returns two values: http://wiki.garrysmod.com/page/math/modf
 ext_core:RegisterFunction("math", "rad", "n", "n", 1, "math.rad", true);
+ext_core:RegisterFunction("math", "deg", "n", "n", 1, "math.deg", true);
+ext_core:RegisterFunction("math", "randomseed", "n", "", 1, "math.randomseed", true);
 ext_core:RegisterFunction("math", "random", "", "n", 1, "math.random", true); -- math.random() with no arguments generates a real number between 0 and 1
 ext_core:RegisterFunction("math", "random", "n", "n", 1, "math.random", true); -- math.random(upper) generates integer numbers between 1 and upper
 ext_core:RegisterFunction("math", "random", "n,n", "n", 1, "math.random", true); -- math.random(lower, upper) generates integer numbers between lower and upper
@@ -533,22 +534,13 @@ end);
 
 hook.Add("Expression3.RegisterExtenstions", "Expression3.Core.Extensions", function()
 	ext_core:EnableExtenstion(); -- Core is registered first :P
-
-	include("expression3/extensions/math.lua");
-	include("expression3/extensions/string.lua");
-	include("expression3/extensions/vector.lua");
-	include("expression3/extensions/vector2.lua");
-	include("expression3/extensions/angle.lua");
-	include("expression3/extensions/entity.lua");
-	include("expression3/extensions/holograms.lua");
-	include("expression3/extensions/table.lua");
-	include("expression3/extensions/network.lua");
-	include("expression3/extensions/color.lua");
-	include("expression3/extensions/render.lua");
-	include("expression3/extensions/player.lua");
-	include("expression3/extensions/timers.lua");
-	include("expression3/extensions/misc.lua");
-	include("expression3/extensions/e2table.lua");
+	
+	local path = "expression3/extensions/";
+	local extensions = file.Find( path .. "*.lua", "LUA" );
+	
+	for i, filename in pairs( extensions ) do
+		include( path .. filename );
+	end
 end);
 
 

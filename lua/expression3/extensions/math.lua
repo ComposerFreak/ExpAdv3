@@ -17,13 +17,32 @@ local extension = EXPR_LIB.RegisterExtenstion("math");
 -- TODO: Add math.pi as constant
 
 
+local halfPi = math.pi/2;
+local tan  = math.tan;
+local atan = math.atan;
 
+
+local function cot( radians )
+	return 1 / tan( radians );
+end
+
+local function acot( radians )
+	return halfPi - atan( radians );
+end
 
 
 extension:RegisterFunction("math", "sin", "n", "n", 1, math.sin, true);
 
 extension:RegisterFunction("math", "sqrt", "n", "n", 1, math.sqrt, true);
 
-extension:RegisterFunction("math", "tan", "n", "n", 1, math.tan, true);
+extension:RegisterFunction("math", "tan", "n", "n", 1, tan, true);
+
+extension:RegisterFunction("math", "cot", "n", "n", 1, cot, true);
+
+extension:RegisterFunction("math", "acot", "n", "n", 1, acot, true);
+
+extension:RegisterFunction("math", "atan2", "n,n", "n", 1, math.atan2, true);
+
+extension:RegisterFunction("math", "lerp", "n,n,n", "n", 1, Lerp, true);
 
 extension:EnableExtenstion();
