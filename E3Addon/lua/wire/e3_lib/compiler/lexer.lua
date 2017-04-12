@@ -144,8 +144,6 @@ function LEXER:BLOCK0(prefix, postfix)
 
 	self:StartInstruction("STMT");
 
-	self:PushScope();
-
 	if prefix then
 		self:InsertCode(prefix);
 	end
@@ -159,8 +157,6 @@ function LEXER:BLOCK0(prefix, postfix)
 	if prefix then
 		self:InsertCode(postfix);
 	end
-
-	self:PopScope();
 
 	return self:EndInstruction();
 end
@@ -226,16 +222,46 @@ function LEXER:STMT0()
 		self:StartInstruction();
 
 		--Inject code :D
-		self:InsertCode("local ok, status = pcall(function()");
+		self:InsertCode("local ok, result = pcall(function()");
+
+
+		self:PushScope();
 
 		self:BLOCK0(nil, "end)");
 
+		self:PopScope();
+
+		self:InsertLine("if not ok then");
+
+		local catch = 0;
+
+		while self:AcceptToken("CTH") do
+			self:RequireToken("LPA", "(() ) expected after catch");
+
+			local class = self:RequireType("Class expected after (( )");
+
+			local var = self:RequireToken("VAR", "Variable expected after %s.", Name(class));
+
+			self:InsertLine("elseif result and result.type ~= %s then");
+
+			self:InsertLine("local %s = result", var);
+
+			self:PushScope();
+
+			self:AssignMemory(var, class);
+
+			self:BLOCK0(false, false);
+
+			self:PushScope();
+		end
 		
+		self:InsertLine("end");
+
 		return self:EndInstruction();
 	end
 
 	if not self:STMT1() then
-		self:Error("Furth input expected at end of code."):
+		self:Error("Further input expected at end of code."):
 	end
 end
 
