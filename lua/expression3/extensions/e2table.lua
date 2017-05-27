@@ -6,7 +6,7 @@
 	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
 	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
-	
+
 	E2 Table Extension
 	By Divran
 ]]
@@ -127,7 +127,7 @@ function eTable.set(ctx, tbl, key, tp, value)
 	elseif value == nil then
 		return
 	end
-	
+
 	local val, new_valtp = convert_values_to_e2[tp]( value )
 
 	tbl_val[key] = val
@@ -138,7 +138,7 @@ end
 --[[
 ]]
 
-local extension = EXPR_LIB.RegisterExtenstion("e2table");
+local extension = EXPR_LIB.RegisterExtension("e2table");
 
 local class_table = extension:RegisterClass("e2t", "e2.table", istable, notnil);
 
@@ -254,7 +254,7 @@ end, false);
 local VALID_KEYS = {"n", "s"};
 
 for _, k in pairs(VALID_KEYS) do
-	if (k ~= "") then			
+	if (k ~= "") then
 		extension:RegisterMethod("e2t", "exists", k, "b", 1, function(ctx, tbl, value)
 			if isnumber(value) then
 				return tbl.n[value] ~= nil
@@ -282,7 +282,7 @@ function extension.PostLoadClasses(this, classes)
 			extension:RegisterOperator("get", "e2t," .. id, "vr", 1, eTable.get);
 
 			extension:RegisterOperator("get", string.format("e2t,%s,cls", id), "", 1, eTable.get);
-			
+
 			extension:RegisterMethod("e2t", "push", id, "", 0, function(ctx, tbl, value)
 				eTable.set(ctx, tbl, #tbl.n + 1, id, value);
 			end, false);
@@ -312,7 +312,7 @@ function extension.PostLoadClasses(this, classes)
 				end
 
 				table.remove( tbl.n, 1 )
-				
+
 				return id ~= "_vr" and value[2] or value;
 			end, false);
 
@@ -336,5 +336,4 @@ end
 --[[
 ]]
 
-extension:EnableExtenstion();
-
+extension:EnableExtension();

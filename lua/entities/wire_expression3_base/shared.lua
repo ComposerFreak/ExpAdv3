@@ -31,21 +31,21 @@ ENT.Expression3 	= true;
 --[[function ENT:Validate(script, files)
 	local Toker = EXPR_TOKENIZER.New();
 
-	Toker:Initalize("EXPADV", script);
+	Toker:Initialize("EXPADV", script);
 
 	local ok, res = Toker:Run();
 
 	if ok then
 		local Parser = EXPR_PARSER.New();
 
-		Parser:Initalize(res, files);
+		Parser:Initialize(res, files);
 
 		ok, res = Parser:Run();
 
 		if ok then
 			local Compiler = EXPR_COMPILER.New();
 
-			Compiler:Initalize(res, files);
+			Compiler:Initialize(res, files);
 
 			ok, res = Compiler:Run();
 		end

@@ -1,5 +1,5 @@
 hook.Add("Expression3.LoadWiki", "Expression3.Wiki.RegisterExamples", function()
-	EXPR_WIKI.RegisterExample("custom_class", 
+	EXPR_WIKI.RegisterExample("custom_class",
 [[interface fruit {
     method int health() {
         return 1;
@@ -8,7 +8,7 @@ hook.Add("Expression3.LoadWiki", "Expression3.Wiki.RegisterExamples", function()
 
 class food {
     int i = 0;
-    
+
     food() {
         this.i = i;
     }
@@ -16,11 +16,11 @@ class food {
 
 class apple extends food implements fruit {
     int s = 0;
-    
+
     apple(int s) {
         this.s = s;
     }
-    
+
     method int health() {
         return 100;
     }
@@ -28,11 +28,11 @@ class apple extends food implements fruit {
 
 class orange extends food implements fruit {
     int j = 0;
-    
+
     orange(int j) {
         this.j = j;
     }
-    
+
     method int health() {
         return 100;
     }
@@ -46,7 +46,7 @@ orange food5 = (orange) food3;
 fruit food6 = (fruit) food1;
 system.out(food2 instanceof food);]])
 
-	EXPR_WIKI.RegisterExample("syntaxes", 
+	EXPR_WIKI.RegisterExample("syntaxes",
 [[/*
 	E3 - Example's 101
 */
@@ -116,7 +116,7 @@ try
 	system.throw(myError);
 }
 catch( theError )
-{	
+{
 	string msg = theError.message();
 	//To call a method on an object the syntax is object.method(...)
 
@@ -126,7 +126,7 @@ catch( theError )
 
 //For loops are as follows.
 for (int i = 1; 20; 2)
-{	
+{
 	system.out(i);
 	//system.out is used to print to your Golem console.
 }
@@ -231,7 +231,7 @@ class anotherClass extends exampleClass
 
 //E3 also adds interfaces.
 interface exampleInterface
-{	
+{
 	//Iinterfaces are used to create templates for methods.
 	method int egMethod(int, int)
 	{
@@ -247,7 +247,7 @@ class exampleClass3 implements exampleInterface
 	}
 
 	//Is this interafce method is missing you will get an error.
-	method int egMethod(int a, int b) 
+	method int egMethod(int a, int b)
 	{
 		return a / b;
 	}
@@ -259,6 +259,6 @@ exampleClass3 example9 = new exampleClass3();
 //Interfaces are useful, you can treat interfaces as a class refrence for objects.
 exampleInterface example10 = (exampleClass3) example9;
 
-//Instaceof allows us to check is an object is, extends or impliments a specific class.
+//Instaceof allows us to check is an object is, extends or implements a specific class.
 system.out(example9 instanceof exampleInterface);; //Spits out true.]])
 end)

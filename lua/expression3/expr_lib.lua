@@ -1,21 +1,21 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
-	
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
+
 	::Expression Advanced 3 Library::
 	`````````````````````````````````
 		Some operators, methods and functions can return more then one value of the same type at once.
 		You need to tell the compiler how many results it returns even if that is 0.
 		Parameters should always be class id's separated by a comma (,); e.g "n,n,s".
 		All documentation below is to be considered work in progress and this api will more then likely change.
-	
+
 	::HOOKS::
-		Expression3.RegisterExtenstions					-> Called when extensions should be registered.
+		Expression3.RegisterExtension					-> Called when extensions should be registered.
 		Expression3.LoadClasses							-> Classes must be registered inside this hook.
 		Expression3.LoadConstructors					-> Constructors must be registered inside this hook.
 		Expression3.LoadMethods							-> Methods must be registered inside this hook.
@@ -23,9 +23,9 @@
 		Expression3.LoadAtributes						-> Atributes must be registered inside this hook.
 		Expression3.LoadLibraries						-> Libraries must be registered inside this hook.
 		Expression3.LoadFunctions						-> Functions must be registered inside this hook.
-		Expression3.PostRegisterExtenstions				-> This is called once expadv3 has loaded its extensions.
+		Expression3.PostRegisterExtensions				-> This is called once expadv3 has loaded its extensions.
 		Expression3.PostCompile.System.<function>		-> This is called after compiling every function on the system library,		-> ressult class, result count = (comiler, instruction, token, expressions)
-												  		   (replace <function> with the name of the function on the library..		
+												  		   (replace <function> with the name of the function on the library..
 		Expression3.Entity.BuildSandbox					-> This is called when building the sandboxed enviroment for an entity.		-> (entity, context, enviroment)
 		Expression3.Start.Entity						-> This is called when an entity is about to run for the first time.		-> (entity, context)
 		Expression3.Entity.Think						-> Called by all expression 3 entitys during the entitys think function 	-> (entity, context)
@@ -37,14 +37,14 @@
 		Expression3.AddGolemTabTypes					-> This is called when custom tab types should be registered on the editor. -> (Editor)
 		Expression3.LoadWiki							-> This is called when its time to register the helpers to the wiki.
 
-		
+
 	::IMPORTANT::
-		You should use 'Extension = EXPR_LIB.RegisterExtenstion(string)' to create a new Extension object.
+		You should use 'Extension = EXPR_LIB.RegisterExtension(string)' to create a new Extension object.
 		You should then use the api methods on the new Extension to register everything.
 		Doing it this way means you do not need to add the hooks yourself as the extension will load the contents at the correct time.
-		Do not forget to call Extension:EnableExtenstion() once your done otherwise the extension will not load itself.
-		It is possible to register an extension outside the extension folder by creating it inside Expression3.RegisterExtenstions hook.
-		
+		Do not forget to call Extension:EnableExtension() once your done otherwise the extension will not load itself.
+		It is possible to register an extension outside the extension folder by creating it inside Expression3.RegisterExtensions hook.
+
 	::RULES::
 		A constructor's function can be a string, if so the compiler will attempt to use a native lua function at the given string; e.g string.replace.
 		The first parameter to a constructor's function will always be context unless exclude context is true;
@@ -54,19 +54,19 @@
 		The first parameter to a method's function will always be context unless exclude context is true;
 		NO LONGER SUPPORTED: A function's function can be a string, if so the compiler will attempt to use a native lua function at the given string; e.g string.replace.
 		The first parameter to a function's function will always be context unless exclude context is true;
-	
+
 	::Examples::
 		Using a string as an operation.
 		Operator: 	extension:RegisterConstructor("v", "n,n,n", "Vector", true);
 		Input:		new vector(1,2,3);
 		OutPut:		Vector(1,2,3);
-		
+
 		Using a function as operation with context.
 		Operator: 	extension:RegisterConstructor("v", "n,n,n", function(c,x,y,z) end, false);
 		Input:		new vector(1,2,3);
 		OutPut:		_Ops["v(n,n,n)"](context, 1,2,3);
-		
-		using a function as operation with out context.
+
+		using a function as operation without context.
 		Operator: 	extension:RegisterConstructor("v", "n,n,n", function(x,y,z) end, true);
 		Input:		new vector(1,2,3);
 		OutPut:		_Ops["v(n,n,n)"](1,2,3);
@@ -74,7 +74,7 @@
 	::EXPR_LIB::
 		EXPR_LIB.RegisterClass(string short name, string class name, string class boolean = function(object) isType, boolean = function(object) isValid)
 			Registers a new class with expression 3.
-		
+
 		EXPR_LIB.RegisterExtendedClass(string short name, string class name, string base class name, boolean = function(object) isType, boolean = function(object) isValid)
 			Registers a new class based of an existing class.
 
@@ -83,7 +83,7 @@
 
 		EXPR_LIB.RegisterMethod(class, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) method / string)*, boolean exclude context)
 			Registers a method with expression 3 on class;
-			if operator is a string then it will use the method str on object with out context as a parameter.
+			if operator is a string then it will use the method str on object without context as a parameter.
 
 		EXPR_LIB.RegisterAtribute(class, str name, str type, string native feild)
 			Adds an atribute to a class, this does not take an operator or a function.
@@ -92,10 +92,10 @@
 		EXPR_LIB.RegisterOperator(str operation, str parameters, str type, number amount of values returned, obj = function(ctx*, ...) operator*, boolean exclude context)
 			Registers an operator with expression 3;
 			if operator is nil then it will use the native operator on object.
-		
+
 		::OPERATORS::
 			This list will expand as time goes on and more are added.
-			
+
 			and		(type1, type2)			type1 && type2
 			or		(type1, type2)			type1 || type2
 			add		(type1, type2)			type1 + type2
@@ -135,21 +135,21 @@
 
 		EXPR_LIB.RegisterFunction(str library, str name, str parameters, str type, number amount of values returned, (obj = function(ctx, ...) / str) function, boolean exclude context)
 			Registers a function with library, these functions are overloaded.
-			NO LONGER SUPPORTED: If function is a string then expression 3 will use _G[str function]() with out context as a parameter.
+			NO LONGER SUPPORTED: If function is a string then expression 3 will use _G[str function]() without context as a parameter.
 
 		REMOVED: EXPR_LIB.RegisterEvent(str name, str parameters, str type, number amount of values returned)
 			Registers an event with expression 3.
 
 		EXPR_LIB.GetClass(str class)
 
-		EXPR_LIB.RegisterExtenstion(str name)
+		EXPR_LIB.RegisterExtension(str name)
 			Returns and registers a new extension with expression 3;
-			This will allow you to add to the api with out manually using the required events.
-	
+			This will allow you to add to the api without manually using the required events.
+
 	::Extension::
 		Extension:RegisterClass(string short name, string class name, boolean = function(object) isType, boolean = function(object) isValid)
 			Calls EXPR_LIB.RegisterClass(...) at the correct time with all given valid parameter.
-		
+
 		Extension:RegisterExtendedClass(string short name, string class name, string base class name, boolean = function(object) isType, boolean = function(object) isValid)
 			Calls EXPR_LIB.RegisterExtendedClass(...) at the correct time with all given valid parameter.
 
@@ -158,10 +158,10 @@
 
 		Extension:RegisterMethod(class, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...) method) / string*, boolean exclude context)
 			Calls EXPR_LIB.RegisterMethod(...) at the correct time with all given valid parameters.
-		
+
 		Extension:RegisterAtribute(class, str name, str type, string native feild)
 			Calls EXPR_LIB.RegisterAtribute(...) at the correct time with all given valid parameters.
-		
+
 		Extension:RegisterOperator(str operation, str parameters, str type, number amount of values returned, obj = function(ctx*, ...) operator*, boolean exclude context)
 			Calls EXPR_LIB.RegisterOperator(...) at the correct time with all given valid parameters.
 
@@ -177,10 +177,10 @@
 		REMOVED: Extension:RegisterEvent(str name, str parameters, str type, number amount of values returned)
 			Calls EXPR_LIB.RegisterEvent(...) at the correct time with all given valid parameters.
 
-		Extension:EnableExtenstion()
+		Extension:EnableExtension()
 			Must be called to allow the extension to register its contents.
-		
-	::Editor Extention::
+
+	::Editor Extension::
 		Extension.RegisterEditorMenu(str name, str icon, panel function(panel editor), function(panel editor, panel tab, boolean save))
 			CLIENTSIDE ONLY: Used to add a new tab to the lefthand menu with its own menu icon to open it.
 			The first function (arg #3) is called when the tab is created for the first time. The panel returned is used as the tabs main panel.
@@ -292,7 +292,7 @@ function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 
 	class.isType = isType;
 	class.isValid = isValid;
-	
+
 	class.atributes = {};
 	class.constructors = {};
 
@@ -468,7 +468,7 @@ function EXPR_LIB.RegisterAtribute(class, atribute, type, native)
 
 	return atr;
 end
-	
+
 local operators;
 local loadOperators = false;
 
@@ -501,7 +501,7 @@ function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator, 
 	op.operator = operator;
 	op.context = not excludeContext;
 	op.operation = operation;
-	
+
 	operators[op.signature] = op;
 
 	return op;
@@ -683,7 +683,7 @@ end
 local Extension = {};
 Extension.__index = Extension;
 
-function EXPR_LIB.RegisterExtenstion(name)
+function EXPR_LIB.RegisterExtension(name)
 	local ext = {};
 
 	ext.name = name;
@@ -791,9 +791,9 @@ end
 function Extension.PostLoadClasses()
 end
 
-local enabledExtentions = {};
+local enabledExtensions = {};
 
-function Extension.EnableExtenstion(this)
+function Extension.EnableExtension(this)
 	this.enabled = true;
 
 	local classes = {};
@@ -826,7 +826,7 @@ function Extension.EnableExtenstion(this)
 
 		this:PostLoadClasses(EXPR_LIB.GetAllClasses());
 	end);
-	
+
 	local methods = {};
 
 	hook.Add("Expression3.LoadMethods", "Expression3.Extension." .. this.name, function()
@@ -891,15 +891,15 @@ function Extension.EnableExtenstion(this)
 		this.operators = operators;
 		this.functions = functions;
 		this.atributes = atributes;
-		enabledExtentions[this.name] = this;
+		enabledExtensions[this.name] = this;
 
-		MsgN("Registered extention: ", this.name);
+		MsgN("Registered extension: ", this.name);
 	end)
 end
 
--- emtpty table before: Expression3.PostRegisterExtenstions
+-- emtpty table before: Expression3.PostRegisterExtensions
 function EXPR_LIB.GetEnabledExtensions()
-	return enabledExtentions or {};
+	return enabledExtensions or {};
 end
 --[[
 	:::Hooks For Loading extensions:::
@@ -977,12 +977,12 @@ function EXPR_LIB.ToString(context, type, value)
 	end
 end
 
-function EXPR_LIB.Initalize()
+function EXPR_LIB.Initialize()
 	MsgN("Loading Expression 3");
 
 	include("expression3/extensions/core.lua");
 
-	hook.Run("Expression3.RegisterExtenstions");
+	hook.Run("Expression3.RegisterExtensions");
 
 	classes = {};
 	classIDs = {};
@@ -1035,7 +1035,7 @@ function EXPR_LIB.Initalize()
 
 	hook.Run("Expression3.BuildExtensionData");
 
-	hook.Run("Expression3.PostRegisterExtenstions");
+	hook.Run("Expression3.PostRegisterExtensions");
 
 	include("expression3/tokenizer.lua");
 	include("expression3/parser.lua");
@@ -1062,7 +1062,7 @@ EXPR_CONSOLE = 1
 if (SERVER) then
 	util.AddNetworkString("Expression3.Print");
 	util.AddNetworkString("Expression3.RelayToClient");
-	util.AddNetworkString("Expression3.InitalizedClient");
+	util.AddNetworkString("Expression3.InitializedClient");
 
 	function EXPR_LIB.SendToPlayer(ply, ent, const, ...)
 		local t = {...};
@@ -1299,13 +1299,13 @@ function EXPR_LIB.Validate(cb, script, files)
 
 			vldr.tokenizerTime = 0;
 
-			vldr.tokenizerCount = 0; 
+			vldr.tokenizerCount = 0;
 
 			vldr.tokenizer.vldr = vldr;
 
 			vldr.tokenizer._Run = token_run;
 
-			vldr.tokenizer:Initalize("EXPADV", script);
+			vldr.tokenizer:Initialize("EXPADV", script);
 
 			ok, res = vldr.tokenizer:Run();
 
@@ -1318,7 +1318,7 @@ function EXPR_LIB.Validate(cb, script, files)
 
 				vldr.parser = EXPR_PARSER.New();
 
-				vldr.parser:Initalize(res, files);
+				vldr.parser:Initialize(res, files);
 
 				ok, res = vldr.parser:Run();
 
@@ -1326,12 +1326,12 @@ function EXPR_LIB.Validate(cb, script, files)
 
 				if ok then
 					coroutine.yield();
-					
+
 					bench = SysTime();
 
 					vldr.compiler = EXPR_COMPILER.New();
 
-					vldr.compiler:Initalize(res, files);
+					vldr.compiler:Initialize(res, files);
 
 					ok, res = vldr.compiler:Run();
 
@@ -1404,4 +1404,4 @@ end
 	'''''''''''''''''''''''
 ]]
 
-timer.Simple(5, EXPR_LIB.Initalize);
+timer.Simple(5, EXPR_LIB.Initialize);

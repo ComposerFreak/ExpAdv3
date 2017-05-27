@@ -269,7 +269,7 @@ function PANEL:Init( )
 		return {self.tbConsoleRows[row], Color(255,255,255)}
 	end
 	
-	self:AddPrintOut( Color(255, 255, 0), "Expression 3 Console Initalized:" )
+	self:AddPrintOut( Color(255, 255, 0), "Expression 3 Console Initialized:" )
 	
 	hook.Run( "Expression3.AddGolemTabTypes", self )
 	

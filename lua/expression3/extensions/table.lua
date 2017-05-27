@@ -6,7 +6,7 @@
 	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
 	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
-	
+
 	::Table Extension::
 		There is no good way to do this.
 ]]
@@ -88,7 +88,7 @@ end
 
 function eTable.updateChildren(tbl, oldweight, newweight, updated)
 	for _, child in pairs(tbl.children) do
-		if (not updated[child]) then 
+		if (not updated[child]) then
 			local weight = child.size;
 			child.size = (child.size - oldweight) + newweight;
 			eTable.updateChildren(tbl, weight, child.size);
@@ -101,7 +101,7 @@ local n = next;
 local t = type;
 local l = string.lower;
 
-function eTable.itor(tbl) 
+function eTable.itor(tbl)
 	local w = tbl.tbl;
 	local a, b = n(tbl.tbl);
 
@@ -120,7 +120,7 @@ end
 --[[
 ]]
 
-local extension = EXPR_LIB.RegisterExtenstion("table");
+local extension = EXPR_LIB.RegisterExtension("table");
 
 local class_table = extension:RegisterClass("t", {"table", "array"}, istable, notnil);
 
@@ -274,7 +274,7 @@ function extension.PostLoadClasses(this, classes)
 				end
 
 				tbl.tbl[#tbl.tbl] = nil;
-				
+
 				return id ~= "_vr" and value[2] or value;
 			end, false);
 
@@ -313,5 +313,4 @@ end
 --[[
 ]]
 
-extension:EnableExtenstion();
-
+extension:EnableExtension();

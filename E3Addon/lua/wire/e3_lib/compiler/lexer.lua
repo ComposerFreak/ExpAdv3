@@ -1,7 +1,7 @@
 local LEXER = {};
 LEXER.__index = LEXER;
 
-function LEXER.__call(tokens, files, compiler) 
+function LEXER.__call(tokens, files, compiler)
 	return setmetatable({tokens = tokens, files = files}, LEXER).Init();
 end
 
@@ -56,20 +56,20 @@ end
 --[[
 	#Sorry guys, it looks like crap but makes sense to me :D
 
-	
+
 	#KEY:
 	#[*]Optional
 	#[()] Group
 	#[+] Repeate
 	#[?] OR
-	#[-] Exclude	
+	#[-] Exclude
 
 	#PARSER DATA
 
 	ROOT: (DIRS1+)* STMTS0;                                                                             #Root of code
 	BLOCK0: {PUSH}((LCB STMTS0 RCB) ? STMT0){POP};                                                      #Code Block
-	STMTS0: (STMT18 ? (STMT0+)*;                                                                        #Regular Statments (STMT0 - SMST17)
-	STMTS1: (STMT19+)*;                                                                                 #Class Statments (STMT19+)
+	STMTS0: (STMT18 ? (STMT0+)*;                                                                        #Regular Statements (STMT0 - SMST17)
+	STMTS1: (STMT19+)*;                                                                                 #Class Statements (STMT19+)
 
 	STMT0: DIR4 ? (TRY BLOCK0 CTC LPA VAR RPA BLOCK0) ? STMT1;                                          #Try Catch
 	STMT1: (IF LPA CND RPA BLCOK0 (STMT2+)* STMT3*) ? STMT4;                                            #If Statement
@@ -121,8 +121,8 @@ end
 	EXPR16: (FUNC PRMS1 BLOCK0) ? EXPR17;                                                               #Inline Function
 	EXPR17: (NUM ? STR ? TRU ? FLS ? NUL);                                                              #Raw Value
 
-	PRMS0: LPA (TYP (COM TYP)+ -COM)* RPA;                                                              #Delegate Peramaters
-	PRMS1: LPA (TYP VAR (COM TYP VAR)+ -COM)* RPA;                                                      #Function Peramaters
+	PRMS0: LPA (TYP (COM TYP)+ -COM)* RPA;                                                              #Delegate Parameters
+	PRMS1: LPA (TYP VAR (COM TYP VAR)+ -COM)* RPA;                                                      #Function Parameters
 	ARGS: LPA (EXPR0 ((COM EXPR0)+ -COM)*)* RPA;                                                        #Function Arguments
 ]]
 
@@ -183,11 +183,11 @@ function LEXER:STMTS0(rpa)
 
 		if stmt then
 			if stmt.line == s.line and not (self:AcceptToken("SEP") or stmt.seperated) then
-				self:Error("Sepperator (;) expected, betwen statments.");
+				self:Error("Sepperator (;) expected, betwen statements.");
 			end
 
 			if stmt.type == "RETURN" then
-				self:Error("Unreachable code after, return statment.");
+				self:Error("Unreachable code after, return statement.");
 			elseif stmt.type == "BREAK" then
 				self:Error("Unreachable code after, break.");
 			elseif stmt.type == "CONTINUE" then
@@ -206,7 +206,7 @@ end
 ]]
 
 function LEXER:STMTS1()
-	
+
 end
 
 --[[
@@ -217,7 +217,7 @@ function LEXER:STMT0()
 	while self:DIR4() do
 		-- Nothing :D
 	end
-	
+
 	if self:AcceptToken("TRY") then
 		self:StartInstruction();
 
@@ -254,7 +254,7 @@ function LEXER:STMT0()
 
 			self:PushScope();
 		end
-		
+
 		self:InsertLine("end");
 
 		return self:EndInstruction();
