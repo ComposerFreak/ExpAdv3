@@ -3555,7 +3555,7 @@ function COMPILER.Compile_FEILD(this, inst, token, expressions)
 	local userclass = this:GetUserClass(type);
 
 	if (not userclass) then
-		-- this:Throw(token, "Unable to refrence feild %s.%s here", name(type), inst.__feild.data);
+		-- this:Throw(token, "Unable to reference feild %s.%s here", name(type), inst.__feild.data);
 
 		local cls = E3Class(type);
 		local info = cls.atributes[inst.__feild.data];

@@ -109,7 +109,7 @@ end
 	 EXPR4: (EXPR5 (EQ ? NEQ ? GTH ? LTH ? GTHEQ ? LTHEQ) EXPR0) ? EXPR5;                               #Comparison
 	 EXPR5: (EXPR6 (ADD ? SUB ? DIV ? MUL ? EXP ? MOD) EXPR0) ? EXPR6;                                  #Arithmatic
 	 EXPR6: (EXPR7 (BAND ? BOR ? BXOR ? BSL ? BSR) EXPR0) ? EXPR7;                                      #Binary
-	 EXPR7: (EXPR8 IOF TYP) ? EXPR8;                                                                    #Instaceof
+	 EXPR7: (EXPR8 IOF TYP) ? EXPR8;                                                                    #Instanceof
 	 EXPR8: ((ADD ? NEG) EXPR9) ? EXPR9;                                                                #Identity and Negate
 	 EXPR9: ((NOT ? LEN ? DLT) EXPR10) ? EXPR10;                                                        #Not, Lengh, Delta
 	EXPR10: (LIB PRD VAR ARGS) ? EXPR11; #Library Function
