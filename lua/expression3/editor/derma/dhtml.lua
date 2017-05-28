@@ -2,6 +2,7 @@
 	Golem HTML tab
 	Author: DaDamRival
 =============================================================================*/
+
 local PANEL = {}
 
 function PANEL:Init()
@@ -10,7 +11,7 @@ end
 
 function PANEL:Setup(html)
 	self.Html:Dock(FILL)
-	
+
 	if string.sub(html, 1, 4) != "url:" then
 		self.Html:SetHTML(html)
 	else
