@@ -1,11 +1,11 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
 
 	::Expression 3 Base::
 ]]
@@ -16,7 +16,7 @@ include("shared.lua");
 --[[
 ]]
 
-hook.Add("PlayerInitialSpawn", "Expression3.Entity.InitalizeAll", function(ply)
+hook.Add("PlayerInitialSpawn", "Expression3.Entity.InitializeAll", function(ply)
 	timer.Simple(0.2, function()
 		for _, context in pairs(EXPR_LIB.GetAll()) do
 			if (IsValid(context.entity)) then
@@ -38,7 +38,7 @@ net.Receive("Expression3.SubmitToServer", function(len, ply)
 
 	if (IsValid(ent) and ent.ReceiveFromClient) then
 		ent:ReceiveFromClient(ply, script, files);
-	end	
+	end
 end)
 
 function ENT:ReceiveFromClient(ply, script, files)
@@ -60,11 +60,11 @@ function ENT:PostInitScript()
 	net.Broadcast();
 end
 
-net.Receive("Expression3.InitalizedClient", function(len, ply)
+net.Receive("Expression3.InitializedClient", function(len, ply)
 	local ent = net.ReadEntity();
 	if (IsValid(ent) and ent.CallEvent) then
-		ent:CallEvent("", 0, "InitalizedClient", {"p", ply});
-	end	
+		ent:CallEvent("", 0, "InitializedClient", {"p", ply});
+	end
 end)
 
 --[[
@@ -164,7 +164,7 @@ function ENT:BuildWiredPorts(sort_in, sort_out)
 		names_in[#names_in + 1] = var;
 		types_in[#types_in + 1] = port.wire;
 	end
-	
+
 	self.wire_inport_tbl = sort_in;
 	self.Inputs = WireLib.AdjustSpecialInputs(self, names_in, types_in);
 
@@ -176,7 +176,7 @@ function ENT:BuildWiredPorts(sort_in, sort_out)
 
 	local names_out = {};
 	local types_out = {};
-	
+
 	table.sort(sort_out, SortPorts);
 
 	for var, port in pairs(sort_out) do
@@ -200,7 +200,7 @@ function ENT:BuildWiredPorts(sort_in, sort_out)
 
 	if self.extended then
 		WireLib.CreateWirelinkOutput( self.player, self, { true } )
-	end 
+	end
 end
 
 --[[
@@ -229,4 +229,3 @@ function ENT:ApplyDupeInfo(ply, ent, info, GetEntByID)
 	self:SetCode(info.script);
 	self.BaseClass.ApplyDupeInfo(self, ply, ent, info, GetEntByID);
 end
-

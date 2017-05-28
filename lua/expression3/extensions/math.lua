@@ -6,11 +6,11 @@
 	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
 	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
-	
+
 	::Advanced Math Extension::
 ]]
 
-local extension = EXPR_LIB.RegisterExtenstion("math");
+local extension = EXPR_LIB.RegisterExtension("math");
 
 
 
@@ -45,4 +45,4 @@ extension:RegisterFunction("math", "atan2", "n,n", "n", 1, math.atan2, true);
 
 extension:RegisterFunction("math", "lerp", "n,n,n", "n", 1, Lerp, true);
 
-extension:EnableExtenstion();
+extension:EnableExtension();

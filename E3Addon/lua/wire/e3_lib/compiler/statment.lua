@@ -1,11 +1,11 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
 ]]--
 
 local Parser = EXPR3_PARSER;
@@ -22,9 +22,9 @@ local Compiler = EXPR3_COMPILER;
 function Parser:Root( )
 	local instruction = self:StartInstruction( "ROOT", self:GetToken( ) );
 
-	local statments = self:GetStatments( false );
+	local statements = self:GetStatements( false );
 
-	return self:EndInstruction( instruction, statments );
+	return self:EndInstruction( instruction, statements );
 end
 
 -- Method:	Parser.Block_1( string, boolean )
@@ -34,20 +34,20 @@ function Parser:Block_1( startToken, endToken )
 	self:ExcludeWhiteSpace( "Further input required at end of code, incomplete statement" );
 
 	if self:AcceptToken( 0, "lcb" ) then
-		
+
 		local sequence = self:StartInstruction( "SEQ", self:GetToken( ) );
 
 		if startToken then
-			self.sceduler:ReplaceToken( sequence, self:GetToken( ) );
-			self.sceduler:InjectPostfix( sequence, self:GetToken( ), startToken );
+			self.scheduler:ReplaceToken( sequence, self:GetToken( ) );
+			self.scheduler:InjectPostfix( sequence, self:GetToken( ), startToken );
 		end
 
-		local statments = { };
+		local statements = { };
 
 		if not self:CheckToken( 0, "rcb" ) then
 			self:PushScope( )
 
-			statments = self:Statments( true );
+			statements = self:Statements( true );
 
 			self:PopScope( );
 		end
@@ -55,10 +55,10 @@ function Parser:Block_1( startToken, endToken )
 		if not self:AcceptToken( 0, "rcb" ) then
 			self:Throw( self:GetToken( ), "Right curly bracket (}) missing, to close block" );
 		end
-		
-		self.sceduler:ReplaceToken( sequence, self:GetToken( ), endToken and "end" or "" );
 
-		return self:EndInstruction( sequence, statments );
+		self.scheduler:ReplaceToken( sequence, self:GetToken( ), endToken and "end" or "" );
+
+		return self:EndInstruction( sequence, statements );
 	end
 
 	do
@@ -75,32 +75,32 @@ function Parser:Block_1( startToken, endToken )
 		self:PopScope()
 
 		if endToken then
-			self.sceduler:InjectPostfix( sequence, statment.final, "end" );
+			self.scheduler:InjectPostfix( sequence, statment.final, "end" );
 		end
 
 		return self:EndInstruction( sequence, { statment } );
 	end
 end
 
--- Method:	Parser.GetStatments( string, boolean )
--- Description: Gets a block of statments.
+-- Method:	Parser.GetStatements( string, boolean )
+-- Description: Gets a block of statements.
 
-function Parser:GetStatments( block, first )
+function Parser:GetStatements( block, first )
 	first = first or self.GetStatment;
-	local seperator, statments = false, { };
+	local seperator, statements = false, { };
 
 	while true do
 		local statment = first( self );
-		statments[#statments + 1] = statment;
+		statements[#statements + 1] = statment;
 
 		local seperated = this:AcceptToken( 0, "sep" );
 		if not statment then break end
-		
+
 
 		if block and this:CheckToken( 0, "rcb" ) then break end
 		if not this:HasTokens() then break end
 
-		local previous = statments[#statments - 1];
+		local previous = statements[#statements - 1];
 
 		if previous and (previous.line == statment.line and not sep) then
 			self:Throw( statment.token, "Statements must be separated by semicolon (;) or newline" );
@@ -117,7 +117,7 @@ function Parser:GetStatments( block, first )
 		seperator = seperated;
 	end
 
- 	return statments;
+ 	return statements;
 end
 
 function Parser:GetStatment( )
@@ -126,7 +126,7 @@ function Parser:GetStatment( )
 	while self:CheckTokenSequence( "dir", "var" ) do
 		self:Next( );
 		local instruction_token = this:GetToken( );
-		
+
 		-- this:QueueRemove({}, token); -- TODO
 
 		self:Next( );
@@ -178,5 +178,3 @@ end
 	Section: DIRECTIVES
 	Description: Handles directives.
 ]]
-
-

@@ -1,11 +1,11 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
 ]]--
 
 --[[
@@ -93,14 +93,14 @@ table.sort( EXPR3_TOKENS, function( token1, token2 )
 end )
 
 --[[
-	Section: Task Sceduler.
+	Section: Task Scheduler.
 	Description: A base object for the tokenizer, parser and compiler.
 ]]
 
-local Sceduler = { }; Sceduler.__index = Sceduler;
+local Scheduler = { }; Scheduler.__index = Scheduler;
 
-function Sceduler:New( )
-	local new = setmetatable({}, Sceduler);
+function Scheduler:New( )
+	local new = setmetatable({}, Scheduler);
 
 	new.remove = { };
 	new.replace = { };
@@ -112,31 +112,31 @@ function Sceduler:New( )
 	return new;
 end
 
-function Sceduler:InjectLineBefore( instruction, token, str, b, ...)
+function Scheduler:InjectLineBefore( instruction, token, str, b, ...)
 	if b ~= nil then str = string.format( str, b, ...) end;
 	new.prefixLine[#prtoken.index] = {instruction = instruction; token = token; string = str};
 end
 
-function Sceduler:InjectLineAfter( instruction, token, str, b, ...)
+function Scheduler:InjectLineAfter( instruction, token, str, b, ...)
 	if b ~= nil then str = string.format( str, b, ...) end;
 	new.posfixLine[#potoken.index] = {instruction = instruction; token = token; string = str};
 end
 
-function Sceduler:InjectPrefix( instruction, token, str, b, ...)
+function Scheduler:InjectPrefix( instruction, token, str, b, ...)
 	if b ~= nil then str = string.format( str, b, ...) end;
 	new.prefixtoken.index] = {instruction = instruction; token = token; string = str};
 end
 
-function Sceduler:InjectPostfix( instruction, token, str, b, ...)
+function Scheduler:InjectPostfix( instruction, token, str, b, ...)
 	if b ~= nil then str = string.format( str, b, ...) end;
 	new.postfix[token.index] = {instruction = instruction; token = token; string = str};
 end
 
-function Sceduler:ReplaceToken( instruction, token, str)
+function Scheduler:ReplaceToken( instruction, token, str)
 	new.replace[token.index] = {instruction = instruction; token = token; string = str};
 end
 
-function Sceduler:RemoveToken( instruction, token)
+function Scheduler:RemoveToken( instruction, token)
 	new.remove[token.index] = {instruction = instruction; token = token};
 end
 
@@ -155,10 +155,10 @@ function BaseStage:New( )
 	return setmetatable( { }, self );
 end
 
--- Method:	BaseStage.Initalize();
+-- Method:	BaseStage.Initialize();
 -- Description: Sets up the scoping data for the instance.
 
-function BaseStage:Initalize( instance )
+function BaseStage:Initialize( instance )
 	self.__pos = 0;
 	self.__depth = 0;
 	self.__scopeID = 0;
@@ -212,7 +212,7 @@ function BaseStage:SetData( option, value, deep )
 end
 
 -- Method:	BaseStage.GetData(string, boolean);
--- Description: gets the first isntance of data in the scope or upward.
+-- Description: gets the first instance of data in the scope or upward.
 
 function BaseStage:GetData( option, nonDeep )
 	if self.__scope[option] then
@@ -287,7 +287,7 @@ end
 local Tokenizer = {name = "tokenizer"}; Tokenizer.__index = Tokenizer; setmetatable( Tokenizer, BaseStage );
 
 -- Method:	Tokenizer.Init();
--- Description: Initalized the tokenizer instance.
+-- Description: Initialized the tokenizer instance.
 function Tokenizer:Init( )
 	self.__pos = 0;
 	self.__offset = 0;
@@ -379,7 +379,7 @@ function Tokenizer:PushChar( )
 end
 
 -- Method:	Tokenizer.Clear();
--- Description: Cleares the token data.
+-- Description: Clears the token data.
 function Tokenizer:Clear( )
 	self.__data = "";
 	self.__match = "";
@@ -430,7 +430,7 @@ function Tokenizer:NextPattern( pattern, exact )
 end
 
 -- Method:	Tokenizer.MatchPattern(string, boolean);
--- Description: Matches a pattern with out pushing to the tokendata.
+-- Description: Matches a pattern without pushing to the tokendata.
 function Tokenizer:MatchPattern( pattern, exact )
 	local s, e, r = string.find( self.__script, pattern, self.__pos, exact );
 
@@ -477,7 +477,7 @@ function Tokenizer:CreateToken( type, name, data, origonal )
 	tkn.line = self.__readLine;
 	tkn.depth = self.__depth;
 	tkn.orig = origonal;
-	
+
 	local prev = self.__tokens[#self.__tokens];
 
 	if prev and prev.line < tkn.line then
@@ -517,11 +517,11 @@ function Tokenizer:SkipComments( )
 end
 
 -- Method:	Tokenizer.Replace( string );
--- Description: Repalces the current token data.
+-- Description: Replaces the current token data.
 
 function Tokenizer:Replace( str )
 	local len = string.len( self.__data ) - string.len(str);
-	
+
 	self.__data = str;
 
 	self.__offset = self.__offset + len;
@@ -547,7 +547,7 @@ function Tokenizer:Loop( )
 		local cmnt = "--[[" .. string.sub( self.__data, 3, string.len( self.__data ) - 2 ) .. "]]";
 		self:Replace( cmnt );
 	elseif self:NextPattern( "/*", true ) then
-		self:Throw( 0, "Un-terminated multi line comment (/*)", 0 );
+		self:Throw( 0, "Unterminated multi line comment (/*)", 0 );
 	elseif self:NextPattern( "^//.-\n" ) then
 		skip = true;
 		local cmnt = "--" .. string.sub( self.__data, 3 );
@@ -598,7 +598,7 @@ function Tokenizer:Loop( )
 	end
 
 	-- Strings
-	
+
 	local pattern = false;
 
 	if self.__char == "@" then
@@ -699,7 +699,7 @@ function Tokenizer:Loop( )
 	end
 
 	-- Classes
-	
+
 	for k, v in pairs( EXPR3_CLASSES ) do
 		if self:NextPattern("%( *" .. k .. " *%)") then
 			self:CreateToken("cst", "cast", v.id, k);
@@ -723,7 +723,7 @@ function Tokenizer:Loop( )
 		else
 			self:CreateToken("var", "variable");
 		end
-		
+
 		return true;
 	end
 
@@ -781,7 +781,7 @@ function Parser:Init( instance )
 	self.__directives = { };
 	self.__directives.inport = { };
 	self.__directives.outport = { };
-	self.sceduler = instance.sceduler;
+	self.scheduler = instance.scheduler;
 end
 
 -- Method:	Parser.Execute();
@@ -794,7 +794,7 @@ function Parser:Execute( )
 	result.tasks = self.__tasks
 	result.tokens = self.__tokens;
 	result.directives = self.__directives;
-	result.sceduler = self.sceduler;
+	result.scheduler = self.scheduler;
 	return result;
 end
 
@@ -816,7 +816,7 @@ end
 -- Description: Moves backwards a set amount of tokens.
 
 function Parser:StepBackward(steps)
-	
+
 	if not steps then
 		steps = 1;
 	end
@@ -886,7 +886,7 @@ function Parser:CheckToken( offset, types, data )
 
 	if token then
 		local tkntyp = token.type;
-		
+
 		for i = 1, #types do
 			if tkntyp == types[i] then
 				if not data or data == token.data then
@@ -991,7 +991,7 @@ end
 -- Description: Excludes a white space and throws and error.
 
 function Parser:ExcludeWhiteSpace( msg, ... )
-	if not self:HasTokens() then 
+	if not self:HasTokens() then
 		self:Throw( self:GetToken( ), msg, ... )
 	end
 end
@@ -1000,7 +1000,7 @@ end
 -- Description: Excludes a white space and throws and error.
 
 function Parser:StartInstruction( type, token )
-	
+
 	if not istable(token) then
 		error("PARSER: StartInstruction got bad token type " .. tostring(token));
 	elseif not isstring( type ) then
@@ -1022,7 +1022,7 @@ function Parser:StartInstruction( type, token )
 end
 
 -- Method:	Parser.EndInstruction( string, ... );
--- Description: Ends and instruction.
+-- Description: Ends an instruction.
 
 function Parser:EndInstruction( instruction, ... )
 	instruction.final = this:GetToken( );

@@ -1,16 +1,16 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
 
 	::Entity Extension::
 ]]
 
-local extension = EXPR_LIB.RegisterExtenstion("entity")
+local extension = EXPR_LIB.RegisterExtension("entity")
 
 extension:RegisterLibrary("entlib")
 extension:RegisterLibrary("prop")
@@ -23,45 +23,45 @@ local rate
 
 if SERVER then
 	RateCounter = {}
-	
+
 	local a = CreateConVar("wire_expression3_prop_rate", 4)
-	
+
 	timer.Create("Expression3.Prop.Refresh", 1, 0, function()
 		rate = a:GetInt()
 
 		RateCounter = {}
 	end)
-	
+
 	function create(ctx, model, pos, ang, frozen)
 		local ply = ctx.player
-		
+
 		RateCounter[ply] = RateCounter[ply] or 0
-		
+
 		if RateCounter[ply] < rate and ply:CheckLimit("props") then
 			local ent = ents.Create("prop_physics")
 			ent:SetModel(model)
 			ent:SetPos(pos or ctx.entity:GetPos())
 			ent:SetAngles(ang or Angle(0, 0, 0))
 			ent:Spawn()
-			
+
 			undo.Create("E3 spawned prop")
 			undo.AddEntity(ent)
 			undo.SetPlayer(ply)
 			undo.Finish()
-			
+
 			local phys = ent:GetPhysicsObject()
-			
+
 			if frozen and phys then
 				phys:EnableMotion(not frozen)
 			end
-			
+
 			if CPPI then ent:CPPISetOwner(ply) end
-			
+
 			RateCounter[ply] = RateCounter[ply] + 1
-			
+
 			return ent
 		end
-		
+
 		return nil
 	end
 end
@@ -204,7 +204,7 @@ extension:RegisterMethod("e", "getColor", "", "c", 1, function(e)
 	if IsValid(e) then
 		return e:GetColor()
 	end
-	
+
 	return Color(0, 0, 0)
 end, true)
 
@@ -288,7 +288,7 @@ extension:SetServerState()
 extension:RegisterMethod("e", "applyForce", "v", "", 0, function(context,e,v)
 	if e:CPPICanTool(context.player, "wire_expression3") then
 		local phys = e:GetPhysicsObject()
-		
+
 		if IsValid(phys) then
 			phys:ApplyForceCenter(v)
 		end
@@ -298,7 +298,7 @@ end, false)
 extension:RegisterMethod("e", "applyOffsetForce", "v", "", 0, function(context,e)
 	if e:CPPICanTool(context.player, "wire_expression3") then
 		local phys = e:GetPhysicsObject()
-		
+
 		if IsValid(phys) then
 			phys:ApplyForceOffset(v)
 		end
@@ -373,4 +373,4 @@ extension:SetSharedState()
 --[[
 ]]
 
-extension:EnableExtenstion()
+extension:EnableExtension()

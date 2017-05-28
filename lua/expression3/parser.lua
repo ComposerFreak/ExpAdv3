@@ -1,16 +1,16 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
 
 	::Base Parser::
 	```````````````
 	A parser is the logical structure used to turn tokens into instructions that.
-	
+
 	:::Syntax Grammar:::
 	```````````````````
 		I have based this off the one from E2.
@@ -23,11 +23,11 @@
 		* E / F tries matching E, if it fails it matches F (from the start location)
 		* &E matches E, but does not consume any input.
 		* !E matches everything except E, and does not consume any input.
-		
+
 		:::Root:::
 			Root ← Stmt1((";" / " ") Stmt1)* ε
 
-		:::Statments:::
+		:::Statements:::
 			Stmt1 ← ("try" Block "(" Var ")" Block)? Stmt2
 			Stmt2 ← ("if" Cond Block Stmt3)? Stmt5
 			Stmt3 ← ("elseif" Cond Block Stmt3)? Stmt4
@@ -67,7 +67,7 @@
 			Expr25 ← (Library "." Function  "(" (Expr1 ((",")?)*)?) ")")? Expr26
 			Expr26 ← (Var (Trailing)?)? Expr27
 			Expr27 ← ("new" Type "(" (Expr1 ((","")?)*)?) ")")? Expr28
-			Expr28 ← ("Function" Perams Block1)? Expr29
+			Expr28 ← ("Function" Params Block1)? Expr29
 			Expr29 ← Expr30? Error
 			Expr30 ← (String / Number / "true" / "false", "void")?
 
@@ -80,7 +80,7 @@
 			Method 		← (("." Method "(" (Expr1 ((","")?)*)?) ")")
 			Get 		← ("[" Expr1 ("," Type)? "]")
 			Call 		← ("(" (Expr1 ((","")?)*)?) ")")?
-			Perams 		← ("(" (Type Var (("," Type Var)*)?)? ")")
+			Params 		← ("(" (Type Var (("," Type Var)*)?)? ")")
 
 ]]
 
@@ -99,7 +99,7 @@ function PARSER.New()
 	return setmetatable({}, PARSER);
 end
 
-function PARSER.Initalize(this, instance, files)
+function PARSER.Initialize(this, instance, files)
 	this.__pos = 0;
 	this.__depth = 0;
 	this.__scopeID = 0;
@@ -259,7 +259,7 @@ end
 ]]
 function PARSER.Next(this)
 	this.__pos = this.__pos + 1;
-	
+
 	this.__token = this.__tokens[this.__pos];
 	this.__next = this.__tokens[this.__pos + 1];
 
@@ -356,7 +356,7 @@ function PARSER.StepBackward(this, steps)
 end
 
 function PARSER.GotoToken(this, token, offset)
-	
+
 	if (not offset) then
 		offset = 0;
 	end
@@ -419,7 +419,7 @@ function PARSER.LastInStatment(this, token, type, endType)
 
 	while (i <= this.__total) do
 		local tkn = this.__tokens[i];
-		
+
 		if (not tkn) then
 			break;
 		end
@@ -456,7 +456,7 @@ function PARSER.Exclude( this, tpye, msg, ... )
 end
 
 function PARSER.ExcludeWhiteSpace(this, msg, ...)
-	if (not this:HasTokens()) then 
+	if (not this:HasTokens()) then
 		this:Throw( this.__token, msg, ... )
 	end
 end
@@ -465,7 +465,7 @@ end
 ]]
 
 function PARSER.StartInstruction(this, _type, token)
-	
+
 	if (not istable(token)) then
 		debug.Trace();
 		error("PARSER:StartInstruction got bad token type " .. tostring(token));
@@ -554,7 +554,7 @@ function PARSER.QueueInjectionBefore(this, inst, token, str, ...)
 
 	for i = 1, #t do
 		local op = {};
-	
+
 		op.token = token;
 		op.str = t[i];
 		op.inst = inst;
@@ -567,7 +567,7 @@ end
 
 function PARSER.QueueInjectionAfter(this, inst, token, str, ...)
 	local op = {};
-	
+
 	op.token = token;
 	op.str = str;
 	op.inst = inst;
@@ -588,7 +588,7 @@ function PARSER.QueueInjectionAfter(this, inst, token, str, ...)
 
 	for i = 1, #t do
 		local op = {};
-	
+
 		op.token = token;
 		op.str = t[i];
 		op.inst = inst;
@@ -623,16 +623,16 @@ end
 function PARSER.Root(this)
 	local seq = this:StartInstruction("root", this.__tokens[1]);
 
-	local stmts = this:Statments(false);
+	local stmts = this:Statements(false);
 
 	return this:EndInstruction(seq, stmts);
 end
 
 function PARSER.Block_1(this, _end, lcb)
 	this:ExcludeWhiteSpace( "Further input required at end of code, incomplete statement" )
-	
+
 	if (this:Accept("lcb")) then
-		
+
 		local seq = this:StartInstruction("seq", this.__token);
 
 		if (lcb) then
@@ -645,7 +645,7 @@ function PARSER.Block_1(this, _end, lcb)
 		if (not this:CheckToken("rcb")) then
 			this:PushScope()
 
-			stmts = this:Statments(true);
+			stmts = this:Statements(true);
 
 			this:PopScope();
 		end
@@ -653,7 +653,7 @@ function PARSER.Block_1(this, _end, lcb)
 		if (not this:Accept("rcb")) then
 			this:Throw(this.__token, "Right curly bracket (}) missing, to close block");
 		end
-		
+
 		this:QueueReplace(seq, this.__token, _end and "end" or "");
 
 		return this:EndInstruction(seq, stmts);
@@ -708,7 +708,7 @@ function PARSER.Directive_MODEL(this, token, directive)
 	end
 
 	this.__directives.model = this.__token.data;
-	
+
 	this:QueueRemove({}, this.__token);
 end
 
@@ -767,7 +767,7 @@ function PARSER.Directive_INPUT(this, token, directive)
 	local variables = {};
 
 	this:Require("var", "Variable('s) expected after class for inport name.");
-	
+
 	variables[1] = this.__token;
 
 	this:QueueRemove(inst, this.__token);
@@ -809,7 +809,7 @@ function PARSER.Directive_OUTPUT(this, token, directive)
 	local variables = {};
 
 	this:Require("var", "Variable('s) expected after class for output name.");
-	
+
 	variables[1] = this.__token;
 
 	this:QueueRemove(inst, this.__token);
@@ -838,7 +838,7 @@ end
 --[[
 ]]
 
-function PARSER.Statments(this, block, call)
+function PARSER.Statements(this, block, call)
 	local sep = false;
 	local stmts = {};
 
@@ -986,7 +986,7 @@ function PARSER.Statment_2(this)
 		local inst = this:StartInstruction("if", this.__token);
 
 		inst.condition = this:GetCondition();
-		
+
 		inst.block = this:Block_1(false, "then");
 
 		inst._else = this:Statment_3();
@@ -1065,7 +1065,7 @@ function PARSER.Statment_5(this)
 
 		if (this:Accept("sep")) then
 			this:QueueReplace(inst, this.__token, (","));
-			
+
 			inst.__sep2 = this.__token;
 
 			expressions[3] = this:Expression_1();
@@ -1123,13 +1123,13 @@ function PARSER.Statment_5(this)
 		inst.vType, inst.vValue = a, b;
 
 		this:Require("in", "In expected after variable, for foreach loop");
-		
+
 		inst.__in = this.__token;
 
 		local expr = this:Expression_1();
 
 		this:Require("rpa", "Right parenthesis ( )) expected to close loop defintion.");
-		
+
 		this:QueueRemove(inst, this.__token);
 
 		inst.block = this:Block_1(true, "do");
@@ -1178,7 +1178,7 @@ function PARSER.Statment_7(this)
 		this:QueueRemove(inst, this.__token);
 
 		this:Require("typ", "Class expected after global.");
-		
+
 		local type = this.__token.data;
 
 		inst.class = type;
@@ -1201,7 +1201,7 @@ function PARSER.Statment_7(this)
 
 		if (this:Accept("ass")) then
 			this:ExcludeWhiteSpace( "Assignment operator (=), must not be preceded by whitespace." );
-			
+
 			expressions[1] = this:Expression_1();
 
 			while (this:Accept("com")) do
@@ -1217,7 +1217,7 @@ function PARSER.Statment_7(this)
 
 	if (this:Accept("typ")) then
 		local inst = this:StartInstruction("local", this.__token);
-		
+
 		local type = this.__token.data;
 
 		if (type == "f" and this:CheckToken("typ")) then
@@ -1228,7 +1228,7 @@ function PARSER.Statment_7(this)
 		this:QueueReplace(inst, this.__token, "local");
 
 		inst.class = type;
-		
+
 		local variables = {};
 
 		this:Require("var", "Variable('s) expected after class for variable.");
@@ -1238,12 +1238,12 @@ function PARSER.Statment_7(this)
 			this:Require("var", "Variable expected after comma (,).");
 			variables[#variables + 1] = this.__token;
 		end
-		
+
 		local expressions = {};
 
 		if (this:Accept("ass")) then
 			this:ExcludeWhiteSpace( "Assignment operator (=), must not be preceded by whitespace." );
-			
+
 			expressions[1] = this:Expression_1();
 
 			while (this:Accept("com")) do
@@ -1266,23 +1266,23 @@ function PARSER.Statment_8(this)
 			this:StepBackward(1);
 		else
 			local inst = this:StartInstruction("ass", this.__token);
-			
+
 			local variables = {};
-		
+
 			variables[1] = this.__token;
 
 			while (this:Accept("com")) do
 				this:Require("var", "Variable expected after comma (,).");
 				variables[#variables + 1] = this.__token;
 			end
-			
+
 			inst.variables = variables;
 
 			local expressions = {};
 
 			if (this:Accept("ass")) then
 				this:ExcludeWhiteSpace( "Assignment operator (=), must not be preceded by whitespace." );
-				
+
 				expressions[1] = this:Expression_1();
 
 				while (this:Accept("com")) do
@@ -1299,7 +1299,7 @@ function PARSER.Statment_8(this)
 				inst.type = this.__token.type;
 
 				this:ExcludeWhiteSpace("Assignment operator (%s), must not be preceded by whitespace.", this.__token.data);
-				
+
 				expressions[1] = this:Expression_1();
 
 				while (this:Accept("com")) do
@@ -1327,7 +1327,7 @@ function PARSER.Statment_9(this)
 		local inst = this:StartInstruction("delegate", this.__token);
 
 		this:QueueRemove(inst, this.__token);
-		
+
 		this:Require("typ", "Return class expected after delegate.");
 
 		inst.resultClass = this.__token.data;
@@ -1340,7 +1340,7 @@ function PARSER.Statment_9(this)
 
 		this:QueueRemove(inst, this.__token);
 
-		this:Require("lpa", "Left parenthesis (( ) expected to open delegate peramaters.");
+		this:Require("lpa", "Left parenthesis (( ) expected to open delegate parameters.");
 
 		this:QueueRemove(inst, this.__token);
 
@@ -1349,7 +1349,7 @@ function PARSER.Statment_9(this)
 		if (not this:CheckToken("rpa")) then
 
 			while (true) do
-				this:Require("typ", "Peramater type expected for peramater.");
+				this:Require("typ", "Parameter type expected for parameter.");
 
 				this:QueueRemove(inst, this.__token);
 
@@ -1363,10 +1363,10 @@ function PARSER.Statment_9(this)
 			end
 
 		end
-		
-		inst.peramaters = classes;
 
-		this:Require("rpa", "Right parenthesis ( ) expected to close delegate peramaters.");
+		inst.parameters = classes;
+
+		this:Require("rpa", "Right parenthesis ( ) expected to close delegate parameters.");
 
 		this:QueueRemove(inst, this.__token);
 
@@ -1377,7 +1377,7 @@ function PARSER.Statment_9(this)
 		end
 
 		this:Require("ret", "Delegate body must be return followed by return count");
-		
+
 		this:QueueRemove(inst, this.__token);
 
 		this:Require("num", "Delegate body must be return followed by return count as number.");
@@ -1408,7 +1408,7 @@ function PARSER.Statment_10(this)
 		local inst = this:StartInstruction("funct", this.__token);
 
 		this:QueueReplace(inst, this.__token, "function");
-		
+
 		this:Require("typ", "Return class expected after user function.");
 
 		inst.resultClass = this.__token.data;
@@ -1421,10 +1421,10 @@ function PARSER.Statment_10(this)
 
 		this:QueueRemove(inst, this.__token);
 
-		local perams, signature = this:InputPeramaters(inst);
-		
-		inst.perams = perams;
-		
+		local params, signature = this:InputParameters(inst);
+
+		inst.params = params;
+
 		inst.signature = signature;
 
 		inst.stmts = this:Block_1(true, " ");
@@ -1531,7 +1531,7 @@ function PARSER.Statment_13(this, expr)
 		this:Require("ass", "Assigment operator (=) expected after index operator.");
 		inst.__ass = this.__token;
 
-		return this:EndInstruction(inst, {expr, this:Expression_1()}); 
+		return this:EndInstruction(inst, {expr, this:Expression_1()});
 	end
 end
 
@@ -1649,7 +1649,7 @@ function PARSER.Expression_7(this)
 
 			if (this:Accept("lsb")) then
 				local inst = this:StartInstruction("eq_mul", expr.token);
-				
+
 				inst.__operator = eqTkn;
 
 				inst.__listStart = this.__token;
@@ -1679,7 +1679,7 @@ function PARSER.Expression_7(this)
 
 			if (this:Accept("lsb")) then
 				local inst = this:StartInstruction("neq_mul", expr.token);
-				
+
 				inst.__operator = eqTkn;
 
 				inst.__listStart = this.__token;
@@ -1998,7 +1998,7 @@ end
 function PARSER.Expression_23(this)
 	if (this:Accept("cst")) then
 		local inst = this:StartInstruction("cast", this.__token);
-		
+
 		inst.class = this.__token.data;
 
 		this:ExcludeWhiteSpace("Cast operator ( (%s) ) must not be succeeded by whitespace", inst.type);
@@ -2075,7 +2075,7 @@ function PARSER.Expression_25(this)
 			inst.__operator = this.__token;
 
 			this:Require("var", "function expected after library name");
-			
+
 			inst.__func = this.__token;
 
 			inst.name = this.__token.data;
@@ -2083,7 +2083,7 @@ function PARSER.Expression_25(this)
 			this:Require("lpa", "Left parenthesis (( ) expected to open function parameters.")
 
 			inst.__lpa = this.__token;
-			
+
 			local expressions = {};
 
 			if (not this:CheckToken("rpa")) then
@@ -2095,8 +2095,8 @@ function PARSER.Expression_25(this)
 					expressions[#expressions + 1] = this:Expression_1();
 				end
 
-			end  
-			
+			end
+
 			this:Require("rpa", "Right parenthesis ( )) expected to close function parameters.")
 
 			return this:EndInstruction(inst, expressions);
@@ -2132,9 +2132,9 @@ function PARSER.Expression_27(this)
 		inst.class = this.__token.data;
 
 		inst.__const = this.__token; -- this:QueueRemove(inst, this.__token);
-		
+
 		this:Require("lpa", "Left parenthesis (( ) expected to open constructor parameters.")
-		
+
 		inst.__lpa = this.__token;
 
 		local expressions = {};
@@ -2167,12 +2167,12 @@ function PARSER.Expression_28(this)
 
 		this:QueueReplace(inst, this.__token, "function");
 
-		inst.perams, inst.signature = this:InputPeramaters(inst);
+		inst.params, inst.signature = this:InputParameters(inst);
 
 		inst.stmts = this:Block_1(true, " ");
 
 		this:QueueInjectionAfter(inst, this.__token, ", signature = \"" .. inst.signature .. "\"");
-		
+
 		inst.__end = this.__token;
 		-- We inject the } in the compiler.
 		-- this:QueueInjectionAfter(inst, this.__token, "}");
@@ -2183,29 +2183,29 @@ function PARSER.Expression_28(this)
 	return this:Expression_29();
 end
 
-function PARSER.InputPeramaters(this, inst)
+function PARSER.InputParameters(this, inst)
 	this:Require("lpa", "Left parenthesis (( ) expected to open function parameters.");
-	
+
 	inst.__lpa = this.__token;
 
 	local signature = {};
 
-	local perams = {};
+	local params = {};
 
 	--[[
 	if (not this:CheckToken("rpa")) then
 		while (true) do
-			this:Require("typ", "Class expected for new peramater.");
+			this:Require("typ", "Class expected for new parameter.");
 
 			this:QueueRemove(inst, this.__token);
 
 			local class = this.__token.data;
 
-			this:Require("var", "Peramater expected after class.");
+			this:Require("var", "Parameter expected after class.");
 
 			signature[#signature + 1] = class;
 
-			perams[#perams + 1] = {class, this.__token.data}
+			params[#params + 1] = {class, this.__token.data}
 
 			if (this:CheckToken("rpa")) then
 				break;
@@ -2225,22 +2225,22 @@ function PARSER.InputPeramaters(this, inst)
 
 		local class = this.__token.data;
 		signature[1] = class;
-		this:Require("var", "Peramater expected after %s.", class);
-		perams[1] = {class, this.__token.data}
+		this:Require("var", "Parameter expected after %s.", class);
+		params[1] = {class, this.__token.data}
 
 		while(this:Accept("com")) do
-			this:Require("typ", "Class expected for new peramater.");
+			this:Require("typ", "Class expected for new parameter.");
 			local class = this.__token.data;
 			signature[#signature + 1] = class;
 			this:QueueRemove(inst, this.__token);
-			this:Require("var", "Peramater expected after %s.", class);
-			perams[#perams + 1] = {class, this.__token.data}
+			this:Require("var", "Parameter expected after %s.", class);
+			params[#params + 1] = {class, this.__token.data}
 		end
 	end
 
 	this:Require("rpa", "Right parenthesis ( )) expected to close function parameters. %s", this.__next.data);
 
-	return perams, table.concat(signature, ",");
+	return params, table.concat(signature, ",");
 end
 
 function PARSER.Expression_29(this)
@@ -2284,7 +2284,7 @@ end
 function PARSER.Expression_Trailing(this, expr)
 
 	while this:CheckToken("prd", "lsb", "lpa") do
-		
+
 		-- Methods
 		if (this:Accept("prd")) then
 			this.__prd = this.__token;
@@ -2303,7 +2303,7 @@ function PARSER.Expression_Trailing(this, expr)
 				inst.__lpa = this.__token;
 
 				local expressions = {};
-	 
+
 				expressions[1] = expr;
 
 				if (not this:CheckToken("rpa")) then
@@ -2315,7 +2315,7 @@ function PARSER.Expression_Trailing(this, expr)
 						expressions[#expressions + 1] = this:Expression_1();
 					end
 
-				end  
+				end
 
 				this:Require("rpa", "Right parenthesis ( )) expected to close method parameters.");
 
@@ -2351,7 +2351,7 @@ function PARSER.Expression_Trailing(this, expr)
 			local inst = this:StartInstruction("get", expr.token);
 
 			local expressions = {};
- 
+
 			expressions[1] = expr;
 
 			expressions[2] = this:Expression_1();
@@ -2379,7 +2379,7 @@ function PARSER.Expression_Trailing(this, expr)
 
 			this:QueueRemove(inst, this.__token);
 			local expressions = {};
- 
+
 			expressions[1] = expr;
 
 			if (not this:CheckToken("rpa")) then
@@ -2391,26 +2391,26 @@ function PARSER.Expression_Trailing(this, expr)
 					expressions[#expressions + 1] = this:Expression_1();
 				end
 
-			end  
+			end
 
 			this:Require("rpa", "Right parenthesis ( )) expected to close call parameters.")
 
 			expr = this:EndInstruction(inst, expressions);
 		end
 	end
-	
+
 	return expr;
 end
 
 function PARSER.GetCondition(this)
 	this:Require("lpa", "Left parenthesis ( () required, to open condition.");
-	
+
 	local inst = this:StartInstruction("cond", this.__token);
-	
+
 	local expr = this:Expression_1();
 
 	this:Require("rpa", "Right parenthesis ( )) missing, to close condition.");
-	
+
 	return this:EndInstruction(inst, {expr});
 end
 
@@ -2470,9 +2470,9 @@ function PARSER.ClassStatment_0(this)
 
 		this:Require("var", "Class name expected after class");
 		inst.__classname = this.__token;
-		
+
 		this:SetUserObject(inst.__classname.data);
-		
+
 		if (this:Accept("ext")) then
 			inst.__ext = this.__token;
 			this:Require("typ", "Class name expected after extends");
@@ -2482,30 +2482,30 @@ function PARSER.ClassStatment_0(this)
 		if (this:Accept("imp")) then
 			this:QueueRemove(inst, this.__token);
 
-			this:Require("typ", "Class name expected after impliments");
+			this:Require("typ", "Class name expected after implements");
 			this:QueueRemove(inst, this.__token);
-			
-			local impliments = {this.__token};
+
+			local implements = {this.__token};
 
 			while(this:Accept("com")) do
-				this:Require("typ", "Class name expected after impliments");
+				this:Require("typ", "Class name expected after implements");
 				this:QueueRemove(inst, this.__token);
-				impliments[#impliments + 1] = this.__token;
+				implements[#implements + 1] = this.__token;
 			end
 
-			inst.impliments = impliments;
+			inst.implements = implements;
 		end
 
 		this:Require("lcb", "Left curly bracket ({) expected, to open class");
 		inst.__lcb = this.__token;
-		
+
 		local stmts = {};
 
 		if (not this:CheckToken("rcb")) then
 			this:PushScope()
 
 			this:SetOption("curclass", inst.__classname.data);
-			stmts = this:Statments(true, this.ClassStatment_1);
+			stmts = this:Statements(true, this.ClassStatment_1);
 
 			this:PopScope()
 		end
@@ -2527,7 +2527,7 @@ function PARSER.ClassStatment_1(this)
 		end
 
 		local inst = this:StartInstruction("def_feild", this.__token);
-		
+
 		local type = this.__token.data;
 
 		if (type == "f" and this:CheckToken("typ")) then
@@ -2538,7 +2538,7 @@ function PARSER.ClassStatment_1(this)
 		this:QueueRemove(inst, this.__token);
 
 		inst.class = type;
-		
+
 		local variables = {};
 
 		this:Require("var", "Variable('s) expected after class for variable.");
@@ -2549,12 +2549,12 @@ function PARSER.ClassStatment_1(this)
 			this:Require("var", "Variable expected after comma (,).");
 			variables[#variables + 1] = this.__token;
 		end
-		
+
 		local expressions = {};
 
 		if (this:Accept("ass")) then
 			this:ExcludeWhiteSpace( "Assignment operator (=), must not be preceded by whitespace." );
-			
+
 			expressions[1] = this:Expression_1();
 
 			while (this:Accept("com")) do
@@ -2579,16 +2579,16 @@ function PARSER.ClassStatment_2(this)
 
 		inst.__name = this.__token;
 
-		local perams, signature = this:InputPeramaters(inst);
+		local params, signature = this:InputParameters(inst);
 
-		inst.perams = perams;
-		
+		inst.params = params;
+
 		inst.signature = signature;
 
 		inst.__postBlock = this.__token;
 
 		inst.stmts = this:Block_1(true, " ");
-		
+
 		inst.__end = this.__token;
 
 		return this:EndInstruction(inst, {});
@@ -2608,16 +2608,16 @@ function PARSER.ClassStatment_3(this)
 		this:Require("var", "Name expected for method, after %s", name(inst.__typ.data));
 		inst.__name = this.__token;
 
-		local perams, signature = this:InputPeramaters(inst);
+		local params, signature = this:InputParameters(inst);
 
-		inst.perams = perams;
-		
+		inst.params = params;
+
 		inst.signature = signature;
 
 		inst.__preBlock = this.__token;
 
 		inst.stmts = this:Block_1(true, " ");
-		
+
 		inst.__end = this.__token
 
 		return this:EndInstruction(inst, {});
@@ -2631,20 +2631,20 @@ function PARSER.ClassStatment_4(this)
 		local inst = this:StartInstruction("tostr", this.__token);
 		inst.__var = this.__token;
 
-		local perams, signature = this:InputPeramaters(inst);
+		local params, signature = this:InputParameters(inst);
 
-		if (#perams > 0) then
+		if (#params > 0) then
 			this:Throw(inst.__var, "The tostring operation does not take any parameters.");
 		end
 
-		inst.perams = perams;
-		
+		inst.params = params;
+
 		inst.signature = signature;
 
 		inst.__preBlock = this.__token;
 
 		inst.stmts = this:Block_1(true, " ");
-		
+
 		inst.__end = this.__token
 
 		return this:EndInstruction(inst, {});
@@ -2665,19 +2665,19 @@ function PARSER.InterfaceStatment_0(this)
 		this:QueueRemove(inst, this.__token);
 
 		inst.interface = this.__token.data;
-		
+
 		this:SetUserObject(inst.interface);
 
 		this:Require("lcb", "Left curly bracket ({) expected, to open interface");
 		this:QueueRemove(inst, this.__token);
-		
+
 		local stmts = {};
 
 		if (not this:CheckToken("rcb")) then
 			this:PushScope()
 
 			this:SetOption("interface", inst.interface);
-			stmts = this:Statments(true, this.InterfaceStatment_1);
+			stmts = this:Statements(true, this.InterfaceStatment_1);
 
 			this:PopScope()
 		end
@@ -2711,7 +2711,7 @@ function PARSER.InterfaceStatment_1(this)
 		inst.name = this.__token.data;
 		this:QueueRemove(inst, this.__token);
 
-		this:Require("lpa", "Left parenthesis ( () expected to close method peramaters.");
+		this:Require("lpa", "Left parenthesis ( () expected to close method parameters.");
 		this:QueueRemove(inst, this.__token);
 
 		local classes = {};
@@ -2719,7 +2719,7 @@ function PARSER.InterfaceStatment_1(this)
 		if (not this:CheckToken("rpa")) then
 
 			while (true) do
-				this:Require("typ", "Peramater type expected for peramater.");
+				this:Require("typ", "Parameter type expected for parameter.");
 				this:QueueRemove(inst, this.__token);
 
 				classes[#classes + 1] = this.__token.data;
@@ -2732,10 +2732,10 @@ function PARSER.InterfaceStatment_1(this)
 			end
 
 		end
-		
-		inst.peramaters = classes;
 
-		this:Require("rpa", "Right parenthesis ( )) expected to close method peramaters.");
+		inst.parameters = classes;
+
+		this:Require("rpa", "Right parenthesis ( )) expected to close method parameters.");
 
 		this:QueueRemove(inst, this.__token);
 
@@ -2746,7 +2746,7 @@ function PARSER.InterfaceStatment_1(this)
 		end
 
 		this:Require("ret", "Method body must be return followed by return count");
-		
+
 		this:QueueRemove(inst, this.__token);
 
 		this:Require("num", "Method body must be return followed by return count as number.");

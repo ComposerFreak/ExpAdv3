@@ -1,11 +1,11 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
 
 	::Network Extension::
 ]]
@@ -13,10 +13,10 @@
 local NET_MAX = 10;
 local NET_LIMIT = 512;
 
-local extension = EXPR_LIB.RegisterExtenstion("network");
+local extension = EXPR_LIB.RegisterExtension("network");
 
 --[[
-	Extention class with methods
+	Extension class with methods
 ]]
 
 extension:RegisterClass("usmg", "stream", istable, istable);
@@ -108,7 +108,7 @@ local function writeLong(ctx, msg, long)
 
     local c = math.modf(long / 256);
     long = long - c * 256;
-   
+
     writeChar(ctx, msg, a - 128, "Long");
     writeChar(ctx, msg, b - 128, "Long");
     writeChar(ctx, msg, c - 128, "Long");
@@ -184,14 +184,14 @@ local function writeString(ctx, msg, string)
 	for i = 1, #string do
 		writeChar(ctx, msg, string[i]:byte() - 128, "String");
 	end
-	
+
 	writeChar(ctx, msg, 0, "String");
 end
 
 local function readString(ctx, msg)
 	local str = "";
 	local char = readChar(ctx, msg, "String");
-	
+
 	while (b ~= 0) do
 		str = str .. string.char(char + 128);
 		char = readChar(ctx, msg, "String");
@@ -333,7 +333,7 @@ net.Receive("Expression3.Network.Send", function(len, ply)
 end);
 
 --[[
-	Extention Library
+	Extension Library
 ]]
 
 extension:RegisterLibrary("net");
@@ -359,4 +359,4 @@ extension:RegisterFunction("net", "receive", "s,f", "", 0, function(ctx, name, c
 	ctx.data.net_callbacks[name] = cb;
 end, false);
 
-extension:EnableExtenstion();
+extension:EnableExtension();

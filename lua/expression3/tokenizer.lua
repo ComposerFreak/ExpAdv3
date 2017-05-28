@@ -111,7 +111,7 @@ function TOKENIZER.New()
 	return setmetatable({}, TOKENIZER);
 end
 
-function TOKENIZER.Initalize(this, lang, script, ish)
+function TOKENIZER.Initialize(this, lang, script, ish)
 	if (KEYWORDS[lang] and TOKENS[lang]) then
 		this.ish = comments;
 

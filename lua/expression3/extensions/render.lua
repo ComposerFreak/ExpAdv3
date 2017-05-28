@@ -1,11 +1,11 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
 
 	::Rendering Features::
 	``````````````````````
@@ -80,20 +80,20 @@ local function preText(ctx)
 end
 
 --[[
-	Extention
+	Extension
 ]]
 
-local extention = EXPR_LIB.RegisterExtenstion("render");
+local extension = EXPR_LIB.RegisterExtension("render");
 
-extention:SetClientState();
+extension:SetClientState();
 
-extention:RegisterLibrary("render");
+extension:RegisterLibrary("render");
 
-extention:RegisterFunction("render", "setScreenRefresh", "b", "", 0, function(ctx, b)
+extension:RegisterFunction("render", "setScreenRefresh", "b", "", 0, function(ctx, b)
 	ctx.entity.NoScreenRefresh = not b;
 end, false);
 
-extention:RegisterFunction("render", "getScreenRefresh", "", "b", 1, function(ctx)
+extension:RegisterFunction("render", "getScreenRefresh", "", "b", 1, function(ctx)
 	return not (ctx.entity.NoScreenRefresh or false);
 end, false);
 
@@ -101,49 +101,49 @@ end, false);
 	Getter and Setter for color and font
 ]]
 
-extention:RegisterFunction("render", "setFontColor", "n,n,n", "", 0, function(r, g, b)
+extension:RegisterFunction("render", "setFontColor", "n,n,n", "", 0, function(r, g, b)
 	TRED, TGREEN, TBLUE, TALPHA = r, g, b, 255;
 end, true);
 
-extention:RegisterFunction("render", "setFontColor", "n,n,n,n", "", 0, function(r, g, b, a)
+extension:RegisterFunction("render", "setFontColor", "n,n,n,n", "", 0, function(r, g, b, a)
 	TRED, TGREEN, TBLUE, TALPHA= r, g, b, a;
 end, true);
 
-extention:RegisterFunction("render", "setFontColor", "c", "", 0, function(c)
+extension:RegisterFunction("render", "setFontColor", "c", "", 0, function(c)
 	TRED, TGREEN, TBLUE, TALPHA = c.r, c.g, c.b, c.a;
 end, true);
 
-extention:RegisterFunction("render", "getFontColor", "", "c", 1, function()
+extension:RegisterFunction("render", "getFontColor", "", "c", 1, function()
 	return Color(TRED, TGREEN, TBLUE, TALPHA);
 end, true);
 
-extention:RegisterFunction("render", "setColor", "n,n,n", "", 0, function(r, g, b)
+extension:RegisterFunction("render", "setColor", "n,n,n", "", 0, function(r, g, b)
 	DRED, DGREEN, DBLUE, DALPHA = r, g, b, 255;
 end, true);
 
-extention:RegisterFunction("render", "setColor", "n,n,n,n", "", 0, function(r, g, b, a)
+extension:RegisterFunction("render", "setColor", "n,n,n,n", "", 0, function(r, g, b, a)
 	DRED, DGREEN, DBLUE, DALPHA = r, g, b, a;
 end, true);
 
-extention:RegisterFunction("render", "setColor", "c", "", 0, function(c)
+extension:RegisterFunction("render", "setColor", "c", "", 0, function(c)
 	DRED, DGREEN, DBLUE, DALPHA = c.r, c.g, c.b, c.a;
 end, true);
 
-extention:RegisterFunction("render", "getColor", "", "c", 1, function()
+extension:RegisterFunction("render", "getColor", "", "c", 1, function()
 	return Color(DRED, DGREEN, DBLUE, DALPHA);
 end, true);
 
-extention:RegisterFunction("render", "setFont", "n,n", "", 0, setFont, true);
+extension:RegisterFunction("render", "setFont", "n,n", "", 0, setFont, true);
 
 --[[
 	Materials and Textures
 ]]
 
-extention:RegisterFunction("render", "setTexture", "", "", 0, function(texture)
+extension:RegisterFunction("render", "setTexture", "", "", 0, function(texture)
 	TEXTURE = 0;
 end, true);
 
-extention:RegisterFunction("render", "setTexture", "s", "", 0, function(texture)
+extension:RegisterFunction("render", "setTexture", "s", "", 0, function(texture)
 	TEXTURE = surface.GetTextureID(texture) or 0;
 end, true);
 
@@ -176,22 +176,22 @@ end
 	Basic Shapes
 ]]
 
-extention:RegisterFunction("render", "drawLine", "v2,v2", "", 0, function(ctx, s, e)
+extension:RegisterFunction("render", "drawLine", "v2,v2", "", 0, function(ctx, s, e)
 	preDraw(ctx, false);
 	surface.DrawLine(s.x, s.y, e.x, e.y);
 end, false);
 
-extention:RegisterFunction("render", "drawBox", "v2,v2", "", 0, function(ctx, p, w)
+extension:RegisterFunction("render", "drawBox", "v2,v2", "", 0, function(ctx, p, w)
 	preDraw(ctx, true);
 	surface.DrawTexturedRect(p.x, p.y, w.x, w.y);
 end, false)
 
-extention:RegisterFunction("render", "drawBox", "v2,v2,n", "", 0, function(ctx, p, w, a)
+extension:RegisterFunction("render", "drawBox", "v2,v2,n", "", 0, function(ctx, p, w, a)
 	preDraw(ctx, true);
 	surface.DrawTexturedRectRotated(p.x, p.y, w.x, w.y, a);
 end, false);
 
-extention:RegisterFunction("render", "drawBoxOutline", "v2,v2", "", 0, function(ctx, p, w)
+extension:RegisterFunction("render", "drawBoxOutline", "v2,v2", "", 0, function(ctx, p, w)
 	preDraw(ctx, false);
 
 	local x, y = p.x, p.y;
@@ -200,41 +200,41 @@ extention:RegisterFunction("render", "drawBoxOutline", "v2,v2", "", 0, function(
 	drawPolyOutline({x = x, y = y}, {x = x + w, y = y}, {x = x + w, y = y + h}, {x = x, y = y + h});
 end, false);
 
-extention:RegisterFunction("render", "drawTriangle", "v2,v2,v2", "", 0, function(ctx, a, b, c)
+extension:RegisterFunction("render", "drawTriangle", "v2,v2,v2", "", 0, function(ctx, a, b, c)
 	preDraw(ctx, true);
 	drawPoly({a, b, c});
 end, false);
 
-extention:RegisterFunction("render", "drawTriangleOutline", "v2,v2,v2", "", 0, function(ctx, a, b, c)
+extension:RegisterFunction("render", "drawTriangleOutline", "v2,v2,v2", "", 0, function(ctx, a, b, c)
 	preDraw(ctx, false);
 	drawPolyOutline({a, b, c});
 end, false);
 
-extention:RegisterFunction("render", "drawCircle", "v2,n", "", 0, function(ctx, p, r)
+extension:RegisterFunction("render", "drawCircle", "v2,n", "", 0, function(ctx, p, r)
 	preDraw(ctx, true);
-	
+
 	local vertices = { }
-	
+
 	for i=1, 30 do
 		vertices[i] = {x = p.x + math.sin(-math.rad(i/30*360)) * r, y = p.y + math.cos(-math.rad(i/30*360)) * r};
 	end
-	
+
 	drawPoly(vertices);
 end, false);
 
-extention:RegisterFunction("render", "drawCircleOutline", "v2,n", "", 0, function(ctx, p, r)
+extension:RegisterFunction("render", "drawCircleOutline", "v2,n", "", 0, function(ctx, p, r)
 	preDraw(ctx, false);
-	
+
 	local vertices = { };
-	
+
 	for i=1, 30 do
 		vertices[i] = {x = p.x + math.sin(-math.rad(i/30*360)) * r, y = p.y + math.cos(-math.rad(i/30*360)) * r};
 	end
-	
+
 	drawPolyOutline(vertices);
 end, false);
 
-extention:RegisterFunction("render", "drawPoly", "t", "", 0, function(ctx, tbl)
+extension:RegisterFunction("render", "drawPoly", "t", "", 0, function(ctx, tbl)
 	preDraw(ctx, true);
 
 	local vertices = { };
@@ -248,7 +248,7 @@ extention:RegisterFunction("render", "drawPoly", "t", "", 0, function(ctx, tbl)
 	drawPoly(vertices);
 end, false);
 
-extention:RegisterFunction("render", "drawPolyOutline", "t", "", 0, function(ctx, tbl)
+extension:RegisterFunction("render", "drawPolyOutline", "t", "", 0, function(ctx, tbl)
 	preDraw(ctx, false);
 
 	local vertices = { };
@@ -266,15 +266,15 @@ end, false);
 	Text
 ]]
 
-extention:RegisterFunction("render", "getTextSize", "s", "n", 2, function(str)
+extension:RegisterFunction("render", "getTextSize", "s", "n", 2, function(str)
 	surface.setFont(FONT);
 	return surface.GetTextSize(str);
 end, true);
 
-extention:RegisterFunction("render", "drawText", "v2,s", "n", 2, function(ctx, p, str)
+extension:RegisterFunction("render", "drawText", "v2,s", "n", 2, function(ctx, p, str)
 	preText(ctx);
 	surface.SetTextPos(p.x, p.y);
 	surface.DrawText(str);
 end, false);
 
-extention:EnableExtenstion();
+extension:EnableExtension();

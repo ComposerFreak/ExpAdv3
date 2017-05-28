@@ -1,17 +1,17 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
 
 	::Player Extension::
 ]]
 
-local extension = EXPR_LIB.RegisterExtenstion("player")
-local extensionTeam = EXPR_LIB.RegisterExtenstion("team")
+local extension = EXPR_LIB.RegisterExtension("player")
+local extensionTeam = EXPR_LIB.RegisterExtension("team")
 
 extension:RegisterLibrary("plylib");
 extensionTeam:RegisterLibrary("team");
@@ -78,11 +78,11 @@ extension:RegisterMethod("p", "getToolName", "", "s", 1, function(p) return p:Ge
 
 extension:RegisterMethod("p", "getAllWeapons", "", "t", 1, function(p)
 	local tbl = {}
-	
+
 	for k, v in pairs(p:GetWeapons()) do
 		tbl[v:GetClass()] = v:GetPrintName()
 	end
-	
+
 	return tbl
 end)
 
@@ -162,7 +162,7 @@ extension:RegisterFunction("plylib", "getByName", "s", "p", 1, function(s)
 	for _, e in pairs(player.GetAll()) do
 		if IsValid(e) and string.find(string.lower(e:Name()), string.lower(s)) then
 			return e
-		end 
+		end
 	end
 	return nil
 end, true)
@@ -172,7 +172,7 @@ extension:RegisterFunction("plylib", "getAllByName", "s", "t", 1, function(s)
 	for _, e in pairs(player.GetAll()) do
 		if IsValid(e) and string.find(string.lower(e:Name()), string.lower(s)) then
 			t[#t + 1] = {"p", e};
-		end 
+		end
 	end
 	return {tbl = t, children = {}, parents = {}, size = #t};
 end, true)
@@ -208,7 +208,7 @@ end)
 
 hook.Add("OnPlayerChat", "Expression3.Event", function(ply, text, team, dead)
 	local status, c = EXPR_LIB.CallEvent("b", 1, "OnPlayerChat", {"p", ply}, {"s", text}, {"b", team}, {"b", dead})
-	
+
 	if status then
 		return c
 	end
@@ -276,5 +276,5 @@ EXPR_LIB.WikiEvents["OnPlayerDeath"] = {
 --[[
 ]]
 
-extension:EnableExtenstion()
-extensionTeam:EnableExtenstion()
+extension:EnableExtension()
+extensionTeam:EnableExtension()

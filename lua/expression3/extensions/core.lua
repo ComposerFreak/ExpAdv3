@@ -1,11 +1,11 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
 
 	::Core Features::
 	`````````````````
@@ -19,10 +19,10 @@
 ]]
 
 --[[
-	Core Extention.
+	Core Extension.
 ]]
 
-local ext_core = EXPR_LIB.RegisterExtenstion("core");
+local ext_core = EXPR_LIB.RegisterExtension("core");
 
 local function eqM(a, b, ...)
 	for k, v in pairs({b, ...}) do
@@ -73,7 +73,7 @@ local class_nil = ext_core:RegisterClass("nil", {"void"}, isnil, isnil);
 local class_type = ext_core:RegisterClass("cls", {"type"}, isstring, isnil);
 
 ext_core:RegisterOperator("neq", "cls,cls", "b", 1);
-ext_core:RegisterOperator( "eq", "cls,cls", "b", 1); 
+ext_core:RegisterOperator( "eq", "cls,cls", "b", 1);
 
 ext_core:RegisterOperator("eq*", "cls,cls", "b", 1, eqM, true);
 ext_core:RegisterOperator("neq*", "cls,cls", "b", 1, neqM, true);
@@ -97,8 +97,8 @@ ext_core:RegisterOperator( "eq", "b,b", "b", 1);
 ext_core:RegisterOperator("and", "b,b", "b", 1);
 ext_core:RegisterOperator( "or", "b,b", "b", 1);
 ext_core:RegisterOperator( "is", "b", "b", 1);
-ext_core:RegisterOperator("not", "b", "b", 1); 
-ext_core:RegisterOperator("ten", "b,b,b", "b", 1); 
+ext_core:RegisterOperator("not", "b", "b", 1);
+ext_core:RegisterOperator("ten", "b,b,b", "b", 1);
 
 ext_core:RegisterCastingOperator("n", "b", function(b)
 	return b and 1 or 0;
@@ -130,7 +130,7 @@ ext_core:RegisterOperator("band", "n,n", "n", 1); -- Uses bit.band
 ext_core:RegisterOperator("bshl", "n,n", "n", 1); -- Uses bit.lshift
 ext_core:RegisterOperator("bshr", "n,n", "n", 1); -- Uses bit.rshift
 ext_core:RegisterOperator("neq", "n,n", "b", 1);
-ext_core:RegisterOperator( "eq", "n,n", "b", 1); 
+ext_core:RegisterOperator( "eq", "n,n", "b", 1);
 ext_core:RegisterOperator("lth", "n,n", "b", 1);
 ext_core:RegisterOperator("leg", "n,n", "b", 1);
 ext_core:RegisterOperator("gth", "n,n", "b", 1);
@@ -138,7 +138,7 @@ ext_core:RegisterOperator("geq", "n,n", "b", 1);
 ext_core:RegisterOperator("eq*", "n,n", "b", 1, eqM, true);
 ext_core:RegisterOperator("neq*", "n,n", "b", 1, neqM, true);
 
-ext_core:RegisterOperator("ten", "b,n,n", "n", 1); 
+ext_core:RegisterOperator("ten", "b,n,n", "n", 1);
 ext_core:RegisterOperator( "is", "n", "b", 1, tobool, true);
 ext_core:RegisterOperator("neg", "n", "n", 1);
 ext_core:RegisterOperator("not", "n", "b", 1, function (context, number) return number == 0 end, true);
@@ -157,16 +157,16 @@ ext_core:RegisterOperator("add", "s,n", "s", 1);
 ext_core:RegisterOperator("add", "n,s", "s", 1);
 ext_core:RegisterOperator("add", "s,s", "s", 1);
 ext_core:RegisterOperator("neq", "s,s", "b", 1);
-ext_core:RegisterOperator( "eq", "s,s", "b", 1); 
+ext_core:RegisterOperator( "eq", "s,s", "b", 1);
 ext_core:RegisterOperator("lth", "s,s", "b", 1);
 ext_core:RegisterOperator("leg", "s,s", "b", 1);
 ext_core:RegisterOperator("gth", "s,s", "b", 1);
 ext_core:RegisterOperator("geq", "s,s", "b", 1);
 ext_core:RegisterOperator("eq*", "s,s", "b", 1, eqM, true);
-ext_core:RegisterOperator("neq*", "s,s", "b", 1, neqM, true); 
-ext_core:RegisterOperator("get", "s,n", "s", 1); 
+ext_core:RegisterOperator("neq*", "s,s", "b", 1, neqM, true);
+ext_core:RegisterOperator("get", "s,n", "s", 1);
 
-ext_core:RegisterOperator("ten", "b,s,s", "s", 1); 
+ext_core:RegisterOperator("ten", "b,s,s", "s", 1);
 ext_core:RegisterOperator( "is", "s", "b", 1, function (context, string) return string and string ~= "" end, true);
 ext_core:RegisterOperator("not", "s", "b", 1, function (context, string) return string and string ~= "" end, true);
 ext_core:RegisterOperator("len", "s", "n", 1, string.len, true);
@@ -202,7 +202,7 @@ local class_object = ext_core:RegisterClass("vr", {"variant", "object"}, istable
 function ext_core.PostLoadClasses(this, classes)
 	for _, c in pairs(classes) do
 		local id = c.id;
-		
+
 		if (id ~= "_vr" and id ~= "") then
 			ext_core:RegisterCastingOperator(id, "vr", function(ctx, obj)
 				return {id, obj};
@@ -324,14 +324,14 @@ local function tblString(t, l, ta, i)
 	local ta = ta or 0
 	local i = i or 0
 	local q = {}
-	
+
 	for k, v in pairs(t) do
 		i = i + 1
-		
+
 		if i <= l then
 			if v[1] == "t" then
 				local d = tblString(v[2].tbl, l, ta + 1, i)
-				
+
 				s = s .. string.rep("	", ta) .. k .. ":\n"
 				s = s .. d[1]
 				i = d[2]
@@ -340,18 +340,18 @@ local function tblString(t, l, ta, i)
 			end
 		else
 			s = s .. "--- Max table print limit reached, printing cut off ---"
-			
+
 			break
 		end
 	end
-	
+
 	return {s, i}
 end
 ---------------------
 
 ext_core:RegisterFunction("system", "printTable", "t", "", 0, function(context, t)
 	local s = tblString(t.tbl, pntbl:GetInt())[1]
-	
+
 	if (SERVER) then
 		context.entity:SendToOwner(false, s);
 	end
@@ -371,14 +371,14 @@ ext_core:RegisterFunction("system", "out", "...", "", 0, function(context, ...)
 	context.entity:SendToOwner(true, unpack(values));
 end);
 
-	--[[ 
+	--[[
 		::EXAMPLE - Compile time alterations for function call::
 			* You should never need this, but you can alter the compilers output here.
-			* When system.invoke is called, we take all peramaters and convert to variant.
-	]] 
+			* When system.invoke is called, we take all parameters and convert to variant.
+	]]
 
 hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions", function(this, inst, token, expressions)
-	
+
 	-- We need to instruct the compiler what this actualy returns.
 	local class = expressions[1].token.data; -- Return class was arg 1.
 	local count = expressions[2].token.data; -- Return count was arg 2.
@@ -391,7 +391,7 @@ ext_core:RegisterFunction("system", "throw", "er", "", 0, function(context, err)
 
 	if (err.stack) then
 		local trace = err.stack[1];
-		
+
 		if (trace) then
 			err.char = trace[2];
 			err.line = trace[1];
@@ -529,18 +529,16 @@ hook.Add("Think", "Expression3.Event", function()
 end);
 
 --[[
-	Register Extentions
+	Register Extensions
 ]]
 
-hook.Add("Expression3.RegisterExtenstions", "Expression3.Core.Extensions", function()
-	ext_core:EnableExtenstion(); -- Core is registered first :P
-	
+hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", function()
+	ext_core:EnableExtension(); -- Core is registered first :P
+
 	local path = "expression3/extensions/";
 	local extensions = file.Find( path .. "*.lua", "LUA" );
-	
+
 	for i, filename in pairs( extensions ) do
 		include( path .. filename );
 	end
 end);
-
-

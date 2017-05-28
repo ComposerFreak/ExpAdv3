@@ -1,11 +1,11 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
 
 	::Hologram Extension::
 ]]
@@ -14,7 +14,7 @@ local Models;
 local RateCounter, PlayerCounter;
 local max, rate, clips, size, any;
 
-local def = function() end; 
+local def = function() end;
 local LowerCount, SetModel, Create = def, def, def;
 -- Clientside wont need the actual functions.
 
@@ -82,7 +82,7 @@ if (SERVER) then
 	--[[
 		Out util functions, more then util more like super important.
 	]]
-	
+
 	LowerCount = function( self )
 		if IsValid( self.player ) then
 			PlayerCounter[self.player] = PlayerCounter[self.player] - 1
@@ -91,7 +91,7 @@ if (SERVER) then
 
 	SetModel = function(ctx, holo, model )
 		local ValidModel = Models[ model or "sphere" ];
-		
+
 		if ValidModel then
 			if holo.IsHologram and holo.player == ctx.player then
 				holo:SetModel( "models/holograms/" .. ValidModel .. ".mdl" );
@@ -106,46 +106,46 @@ if (SERVER) then
 	function Create( ctx, model, pos, ang )
 		local ent, ply = ctx.entity, ctx.player;
 		local nrate, ncount = RateCounter[ply] or 0, PlayerCounter[ply] or 0
-		
+
 		if nrate >= rate then
 			ctx:Throw("Hologram cooldown reached.");
 		elseif ncount >= max then
 			ctx:Throw("Hologram max reached.");
 		end
-		
+
 		local holo = ents.Create("wire_expression3_hologram");
-		
-		if not IsValid(holo) then 
+
+		if not IsValid(holo) then
 			ctx:Throw("Failed to create hologram.");
 		end
-		
+
 		RateCounter[ply] = nrate + 1;
 		PlayerCounter[ply] = ncount + 1;
-		
+
 		holo.player = ply;
 		holo:Spawn( );
 		holo:Activate( );
 		holo.LowerCount = LowerCount;
-		
+
 		ctx.data.holograms[#ctx.data.holograms + 1] = holo;
 		ctx.data.hologramIDs[#ctx.data.hologramIDs + 1] = holo;
-		
+
 		if CPPI then holo:CPPISetOwner( ply ) end
-		
+
 		SetModel( ctx, holo, model or "sphere" );
-		
+
 		if not pos then
 			holo:SetPos( ent:GetPos( ) );
 		else
 			holo:SetPos( pos );
 		end
-		
+
 		if not ang then
 			holo:SetAngles( ent:GetAngles( ) );
 		else
 			holo:SetAngles( ang );
 		end
-		
+
 		return holo;
 	end;
 
@@ -188,7 +188,7 @@ if (SERVER) then
 		["torus"]             = "torus",
 		["torus2"]            = "torus2",
 		["torus3"]            = "torus3",
-		
+
 		["hq_rcube"]          = "hq_rcube",
 		["hq_rcube_thick"]    = "hq_rcube_thick",
 		["hq_rcube_thin"]     = "hq_rcube_thin",
@@ -199,9 +199,9 @@ if (SERVER) then
 		["hexagon"]           = "hexagon",
 		["octagon"]           = "octagon",
 		["right_prism"]       = "right_prism",
-		
+
 		// Removed models with their replacements
-		
+
 		["dome"]             = "hq_dome",
 		["dome2"]            = "hq_hdome",
 		["hqcone"]           = "hq_cone",
@@ -213,9 +213,9 @@ if (SERVER) then
 		["hqsphere2"]        = "hq_sphere",
 		["hqtorus"]          = "hq_torus_oldsize",
 		["hqtorus2"]         = "hq_torus_oldsize",
-		
+
 		// HQ models with their short names
-		
+
 		["hqhdome"]          = "hq_hdome",
 		["hqhdome2"]         = "hq_hdome_thin",
 		["hqhdome3"]         = "hq_hdome_thick",
@@ -239,10 +239,10 @@ if (SERVER) then
 end
 
 --[[
-	Register Extenstion and the library.
+	Register Extension and the library.
 ]]
 
-local extension = EXPR_LIB.RegisterExtenstion("holograms");
+local extension = EXPR_LIB.RegisterExtension("holograms");
 
 extension:SetServerState();
 
@@ -298,10 +298,10 @@ extension:RegisterCastingOperator("e", "h", function(ctx, obj)
 
 	ctx:Throw("Attempted to cast none hologram entity to hologram.");
 end, false);
-	
+
 --[[
 	Create the holograms
-]]	
+]]
 
 extension:RegisterFunction("hololib", "create", "", "h", 1, Create);
 extension:RegisterFunction("hololib", "create", "s", "h", 1, Create);
@@ -331,7 +331,7 @@ extension:RegisterMethod("h", "setID", "n", "", 0, function(ctx, holo, id)
 	if id > 0 and IsValid(holo) and holo.IsHologram then
 		local known = ctx.data.hologramIDs[id];
 		if IsValid(known) then known.ID = -1 end
-		if holo.ID then ctx.data.hologramIDs[ holo.ID ] = nil end	
+		if holo.ID then ctx.data.hologramIDs[ holo.ID ] = nil end
 		ctx.data.hologramIDs[id] = holo;
 		holo.ID = id;
 	end
@@ -760,4 +760,4 @@ end, false);
 
 -----------------------------------------------------------------------------------------------
 
-extension:EnableExtenstion();
+extension:EnableExtension();
