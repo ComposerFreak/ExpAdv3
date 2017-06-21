@@ -1,8 +1,18 @@
+--[[
+	ERROR MESSAGES
+]]
+
+local ERROR_VAR_EXISTS = "Unable to define %s %s, %s already exists here.";
+local ERROR_IO_MISSMATCH = "Unable to declair %s here, %s exists as %s.";
+--[[
+	THE LEXER
+]]
+
 local LEXER = {};
 LEXER.__index = LEXER;
 
 function LEXER.__call(tokens, files, compiler)
-	return setmetatable({tokens = tokens, files = files}, LEXER).Init();
+	return setmetatable({tokens = tokens, files = files, pos = 0}, LEXER).Init();
 end
 
 --[[
@@ -17,17 +27,223 @@ end
 	PUSH SCOPE / POP SCOPE
 ]]
 
+function LEXER:NewScope()
+	local new = {};
+	new.level = -1;
+	new.levels = { };
+	new.outports = { };
+	new.inports = { };
+	new.loopDeph = 0;
+	new.classDeph = 0;
+	new.functionDeph = 0;
+
+	local old = self.scopeTable;
+	self.scopeTable = new;
+
+	self:pushScope();
+	return old;
+end
+
+function LEXER:PushScope()
+	local data = self.scopeTable;
+	local level = data.level + 1;
+	local prev = data[level - 1];
+
+	local new = { };
+
+	new.locals = { };
+	new.outports = { };
+	new.inports = { };
+	new.classes = { };
+
+	new.inClass = prev.inClass;
+	new.canBreak = prev.canBreak or false;
+	new.canCont = prev.canCont or false;
+	new.canRet = prev.canRet or false;
+
+	new.retType = prev.retType;
+	new.retcount = prev.retCount;
+
+	data.current = new;
+	data.level = level;
+	data.levels[level] = new;
+
+	return new;
+end
+
+function LEXER:popScope()
+	local data = self.scopeTable;
+	local level = data.level - 1;
+
+	data.level = level;
+	data.current = data.levels[level];
+end
+
 --[[
-	GET STAT / SET STATE
+	GET STATE DATA
 ]]
+
+function LEXER:canBreak()
+	return self.scopeTable.current.canBreak or false;
+end
+
+function LEXER:canContinue()
+	return self.scopeTable.current.canContinue or false;
+end
+
+function LEXER:canReturn()
+	return self.scopeTable.current.canReturn or false;
+end
+
+function LEXER:returnValues()
+	return self.scopeTable.current.retType or "void", self.scopeTable.current.retcount or 0;
+end
+
+function LEXER:currentClass()
+	local class = self.scopeTable.current.inClass;
+	return class, self:getUDC(class); -- Todo this function.
+end
+
+--[[
+	STATE INFORMATION
+]]
+
+function LEXER:startLoop()
+	self.scopeTable.loopDeph = self.scopeTable.loopDeph + 1;
+	local data = self:pushScope();
+	data.canBreak = true;
+	data.canCont = true;
+end
+
+function LEXER:endLoop()
+	self.scopeTable.loopDeph = self.scopeTable.loopDeph - 1;
+	self:popScope();
+end
+
+function LEXER:startFunction(res, count)
+	self.scopeTable.functionDeph = self.scopeTable.functionDeph + 1;
+	local data = self:pushScope();
+	data.canBreak = false;
+	data.canCont = false;
+	data.canRet = (res ~= nil);
+	data.retType = res;
+	data.retcount = count;
+end
+
+function LEXER:endFunction()
+	self.scopeTable.functionDeph = self.scopeTable.functionDeph - 1;
+	self:popScope();
+end
+
+function LEXER:startClass(name, tbl)
+	self.scopeTable.classDeph = self.scopeTable.classDeph + 1;
+
+	local data = self:pushScope();
+	data.classes[name] = tbl;
+	data.inClass = name;
+
+	data.canBreak = false;
+	data.canCont = false;
+	data.canRet = false;
+	data.retType = nil;
+	data.retcount = nil;
+end
+
+function LEXER:endClass()
+	self.scopeTable.classDeph = self.scopeTable.classDeph - 1;
+	self:popScope();
+end
+
+function LEXER:getUDC(name)
+	local levels = self.scopeTable.levels;
+
+	for level = self.scopeTable.level, 0, -1 do
+		local data = levels[level];
+
+		if data.classes[name] then
+			return data.classes[name], level, "class";
+		end
+	end
+end
 
 --[[
 	GET MEMORY / SET MEMORY
 ]]
 
---[[
-	START CLASS / END CLASS
-]]
+function LEXER:getVariable(name, scope, noLoop)
+	local levels = self.scopeTable.levels;
+
+	for level = scope or self.scopeTable.level, 0, -1 do
+		local data = levels[level];
+
+		if data.locals[name] then
+			return data.locals[name], level, "variable";
+		elseif data.outports[name] then
+			return data.outports[name], level, "outport";
+		elseif data.inports[name] then
+			return data.inports[name], level, "inport";
+		elseif noLoop then
+			return;
+		end
+	end
+end
+
+function LEXER:createGlobal(type, name)
+	local var, level, mem = self:getVariable(name, 0, true);
+	if var then self:error(ERROR_VAR_EXISTS, "variable", name, mem); end
+
+	var = {};
+	var.name = name;
+	var.type = type;
+	var.level = 0;
+
+	self.scopeTable.levels[0].locals[name] = var;
+end
+
+function LEXER:createVariable(type, name)
+	local var, level, mem = self:getVariable(name, true);
+
+	if var then self:error(ERROR_VAR_EXISTS, "variable", name, mem); end
+
+	var = {};
+	var.name = name;
+	var.type = type;
+	var.level = 0;
+
+	self.scopeTable.current.locals[name] = var;
+end
+
+function LEXER:createInport(type, name)
+	local port = self.scopeTable.inports[name];
+	if port and port.type ~= type then self:error(ERROR_IO_MISSMATCH, "inport", name, Name(port.type)); end
+	
+	local var, level, mem = self:getVariable(name, true);
+	if var then self:error(ERROR_VAR_EXISTS, "inport", name, mem); end
+
+	var = {};
+	var.name = name;
+	var.type = type;
+	var.level = 0;
+
+	self.scopeTable.inports[name] = var;
+	self.scopeTable.current.inports[name] = var;
+end
+
+function LEXER:createOutport(type, name)
+	local port = self.scopeTable.outports[name];
+	if port and port.type ~= type then self:error(ERROR_IO_MISSMATCH, "outport", name, Name(port.type)); end
+
+	local var, level, mem = self:getVariable(name, true);
+	if var then self:error(ERROR_VAR_EXISTS, "outport", name, mem); end
+
+	var = {};
+	var.name = name;
+	var.type = type;
+	var.level = 0;
+
+	self.scopeTable.outports[name] = var;
+	self.scopeTable.current.outports[name] = var;
+end
 
 --[[
 	ERROR / REQUIRE
@@ -149,7 +365,7 @@ function LEXER:BLOCK0(prefix, postfix)
 	end
 
 	if self:AcceptToken("LPA") then
-		seq = self:STMTS0("RPA")
+		seq = self:STMTS0(true);
 	else
 		seq = self:STMT0();
 	end
@@ -434,7 +650,7 @@ function LEXER:DIR3()
 end
 
 --[[
-	DIR4
+	DIR4: (DIR VAR[=input] TYP VAR ((COM VAR)+ -COM)* ? DIR5; 
 ]]
 
 function LEXER:DIR4()

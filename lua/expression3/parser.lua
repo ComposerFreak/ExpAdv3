@@ -525,6 +525,7 @@ function PARSER.QueueRemove(this, inst, token)
 
 	op.token = token;
 	op.inst = inst;
+	op.deph = inst.stmt_deph or 0;
 
 	local tasks = this.__tasks[token.pos];
 
@@ -558,6 +559,7 @@ function PARSER.QueueInjectionBefore(this, inst, token, str, ...)
 		op.token = token;
 		op.str = t[i];
 		op.inst = inst;
+		op.deph = inst.stmt_deph or 0;
 
 		tasks.prefix[#tasks.prefix + 1] = op;
 	end
@@ -571,6 +573,7 @@ function PARSER.QueueInjectionAfter(this, inst, token, str, ...)
 	op.token = token;
 	op.str = str;
 	op.inst = inst;
+	op.deph = inst.stmt_deph or 0;
 
 	local tasks = this.__tasks[token.pos];
 
@@ -592,6 +595,7 @@ function PARSER.QueueInjectionAfter(this, inst, token, str, ...)
 		op.token = token;
 		op.str = t[i];
 		op.inst = inst;
+		op.deph = inst.stmt_deph or 0;
 
 		r[#r + 1] = op;
 		tasks.postfix[#tasks.postfix + 1] = op;

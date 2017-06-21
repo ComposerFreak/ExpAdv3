@@ -129,6 +129,8 @@ local function sortLth(a, b)
 	return (a.weight or a.depth or 0) < (a.weight or a.depth or 0);
 end
 
+
+
 function COMPILER.BuildScript(this)
 	-- This will probably become a separate stage (post compiler?).
 
@@ -163,9 +165,6 @@ function COMPILER.BuildScript(this)
 			local prefixs = tasks.prefix;
 
 			if (prefixs) then
-
-				--for _ = #prefixs, 1, -1 do
-				--	local prefix = prefixs[_];
 				table.sort(prefixs, sortGth);
 				for _, prefix in pairs(prefixs) do
 					if (prefix.newLine) then
@@ -174,10 +173,14 @@ function COMPILER.BuildScript(this)
 						line = line + 1;
 						buffer[#buffer + 1] = "\n";
 					end
-					local str = prefix.str; -- .. string.format("(%s)", prefix.weight or prefix.depth or 0);
+
+					local str = prefix.str;
+
 					char = char + #str + 1;
+
 					buffer[#buffer + 1] = str;
-					print("prefix", str, prefix.weight or prefix.depth or 0);
+
+					print("PREFIX", str);
 				end
 			end
 
@@ -185,9 +188,11 @@ function COMPILER.BuildScript(this)
 				if (tasks.replace) then
 					buffer[#buffer + 1] = tasks.replace.str;
 					char = char + #tasks.replace;
+					print("REPLACE", tasks.replace.str);
 				else
 					buffer[#buffer + 1] = data;
 					char = char + #data + 1;
+					print("KEEP", data);
 				end
 
 				traceTable[#traceTable + 1] = {e3_line = v.line - 1, e3_char = v.char, native_line = line, native_char = char, instruction = tasks.instruction};
@@ -196,8 +201,6 @@ function COMPILER.BuildScript(this)
 			local postfixs = tasks.postfix;
 
 			if (postfixs) then
-				--for _ = #postfixs, 1, -1 do
-				--	local postfix = postfixs[_];
 				table.sort(postfixs, sortLth);
 				for _, postfix in pairs(postfixs) do
 					if (postfix.newLine) then
@@ -209,13 +212,14 @@ function COMPILER.BuildScript(this)
 					local str = postfix.str; -- .. string.format("(%s)", postfix.weight or postfix.depth or 0)
 					char = char + #str + 1;
 					buffer[#buffer + 1] = str;
-					print("postfix", str, postfix.weight or postfix.depth or 0);
+					print("POSTFIX", data);
 				end
 			end
 		else
 			traceTable[#traceTable + 1] = {e3_line = v.line - 1, e3_char = v.char, native_line = line, native_char = char};
 			buffer[#buffer + 1] = data;
 			char = char + #data + 1;
+			print("KEEP", data);
 		end
 	end
 
@@ -480,6 +484,7 @@ function COMPILER.QueueReplace(this, inst, token, str)
 	op.token = token;
 	op.str = str;
 	op.inst = inst;
+	op.deph = inst.stmt_deph or 0;
 
 	local tasks = this.__tasks[token.pos];
 
@@ -500,6 +505,7 @@ function COMPILER.QueueRemove(this, inst, token)
 
 	op.token = token;
 	op.inst = inst;
+	op.deph = inst.stmt_deph or 0;
 
 	local tasks = this.__tasks[token.pos];
 
@@ -537,6 +543,7 @@ function COMPILER.QueueInjectionBefore(this, inst, token, str, ...)
 		op.token = token;
 		op.str = t[i];
 		op.inst = inst;
+		op.deph = inst.stmt_deph or 0;
 
 		if (i == 1) then
 			op.newLine = injectNewLine;
@@ -554,6 +561,7 @@ function COMPILER.QueueInjectionAfter(this, inst, token, str, ...)
 	op.token = token;
 	op.str = str;
 	op.inst = inst;
+	op.deph = inst.stmt_deph or 0;
 
 	local tasks = this.__tasks[token.pos];
 
@@ -575,6 +583,7 @@ function COMPILER.QueueInjectionAfter(this, inst, token, str, ...)
 		op.token = token;
 		op.str = t[i];
 		op.inst = inst;
+		op.deph = inst.stmt_deph or 0;
 
 		if (i == 1) then
 			op.newLine = injectNewLine;
@@ -595,6 +604,7 @@ function COMPILER.QueueInstruction(this, inst, inst, token, inst, type)
 	op.token = token;
 	op.inst = inst;
 	op.type = type;
+	op.deph = inst.stmt_deph or 0;
 
 	local tasks = this.__tasks[token.pos];
 
