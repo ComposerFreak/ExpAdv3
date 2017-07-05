@@ -146,9 +146,10 @@ function TOKENIZER.Initialize(this, lang, script, ish)
 	end
 end
 
-function TOKENIZER.Run(this)
+function TOKENIZER.Run(this, etokens)
 	--TODO: PcallX for stack traces on internal errors?
-	local status, result = pcall(this._Run, this);
+	this.etokens = etokens;
+	local status, result = pcall(this._Run, this, etokens);
 
 	if (status) then
 		return true, result;
@@ -178,6 +179,11 @@ function TOKENIZER._Run(this)
 end
 
 function TOKENIZER.Throw(this, offset, msg, fst, ...)
+	if this.etokens then
+		this:NextPattern("^.-\n")) then
+		this:CreateToken("err", "error");
+	end
+
 	local err = {};
 
 	if (fst) then

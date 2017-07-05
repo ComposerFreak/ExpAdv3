@@ -296,13 +296,42 @@ function LEXER:checkToken(typ, off)
 end
 
 function LEXER:checkSeqence(...)
+	local p =self.tokenPosition - 1;
 	local seq = { ... };
 
+	local exprs = {};
+	local valid = true;
+
 	for i = 1, #seq do
-		if not self:checkToken(seq[i], i - 1) then return false; end
+		local v = seq[i];
+		local f = self[v];
+
+		if not self:checkToken(v, i - 1) then
+			if not f then
+				valid = false;
+				break;
+			end
+
+			local r = f(self);
+
+			if not r and not opt then
+				valid = false;
+				break;
+			end
+
+			exprs[#exprs + 1] = r;
+		end
 	end
 
-	return true;
+	if not valid then
+		self.tokenPosition = p;
+		self:nextToken();
+		return false;
+	end
+
+	if #exprs == 0 then return true; end
+
+	return true, unpack(exprs);
 end
 
 function LEXER:acceptToken(typ)
@@ -417,10 +446,18 @@ function LEXER:EndInstruction(class, count)
 	instruction.eChar = self.token.char;
 	instruction.eLine = self.token.char;
 
-	instructions[position] = nil;
 	self.instruction = instructions[position - 1];
+	instructions[position] = nil;
 
 	return instruction;
+end
+
+function LEXER:TerminateInstruction()
+	local position = #instructions;
+	local instructions = self.instructions;
+
+	self.instruction = instructions[position - 1];
+	instructions[position] = nil;
 end
 
 --[[
@@ -579,7 +616,8 @@ end
 
 	PRMS0: LPA (TYP (COM TYP)+ -COM)* RPA;                                                              #Delegate Parameters
 	PRMS1: LPA (TYP VAR (COM TYP VAR)+ -COM)* RPA;                                                      #Function Parameters
-	ARGS: LPA (EXPR0 ((COM EXPR0)+ -COM)*)* RPA;                                                        #Function Arguments
+	ARGS: LPA (EXPR0 ((COM EXPR0)+ -COM)*)* RPA;
+	CND: EXPR0                                                       #Function Arguments
 ]]
 
 --[[
@@ -595,7 +633,7 @@ end
 	BLOCK0
 ]]
 
-function LEXER:BLOCK0(prefix, postfix)
+function LEXER:BLOCK0()
 	local seq;
 
 	self:StartInstruction("STMT");
@@ -727,18 +765,18 @@ end
 function LEXER:STMT1()
 	--(IF LPA CND RPA BLCOK0 (STMT2+)* STMT3*) ? STMT4;
 
-	if self:acceptToken("if") then
-		self:StartInstruction("IF");
+	self:StartInstruction("IF");
 
-		if not self:getAsBoolean(self.EXPR1) then
-			return self:error(ERROR_INVALID_COND, "if");
-		end
+	local accepted, cnd, block = self:checkSequence("IF", "LPA", "CND", "RPA", "BLOCK0");
 
-		
-		return self:endInstruction();
+	if not accepted then
+		self:TerminateInstruction();
+		return self:STMT4();
 	end
 
-	return self:STMT4();
+	self:STMT2();
+
+	return self:endInstruction();
 end
 
 --[[
@@ -746,6 +784,17 @@ end
 ]]
 
 function LEXER:STMT2()
+	self:StartInstruction("EIF");
+
+	local accepted, cnd, block = self:checkSequence("EIF", "LPA", "CND", "RPA", "BLOCK0");
+
+	if not accepted then return self:TerminateInstruction(); end
+
+	local eif = self:STMT2();
+
+	if not eif then eif = self:STMT3(); end
+
+	return self:endInstruction();
 end
 
 --[[
@@ -753,6 +802,13 @@ end
 ]]
 
 function LEXER:STMT3()
+	self:StartInstruction("ELS");
+
+	local accepted, block = self:checkSequence("EIF", "LPA", "CND", "RPA", "BLOCK0");
+
+	if not accepted then return self:TerminateInstruction(); end
+
+	return self:endInstruction();
 end
 
 --[[
@@ -1062,6 +1118,13 @@ end
 function LEXER:ARGS()
 end
 
+--[[
+	CND
+]]
+
+function LEXER:CND()
+	return self:getAsBoolean(self.EXPR0);
+end
 
 --[[
 	UTIL
