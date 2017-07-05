@@ -4,6 +4,7 @@
 
 local ERROR_VAR_EXISTS = "Unable to define %s %s, %s already exists here.";
 local ERROR_IO_MISSMATCH = "Unable to declair %s here, %s exists as %s.";
+local ERROR_INVALID_COND = "Invalid condition for %s statment."
 --[[
 	THE LEXER
 ]]
@@ -21,6 +22,9 @@ end
 
 function LEXER:Init()
 	self.buffer = {};
+	self:NewScope();
+	self:firstToken();
+	return self;
 end
 
 --[[
@@ -250,24 +254,260 @@ end
 ]]
 
 --[[
-	NEXT TOKEN / SKIP TOKEN
+	NEXT TOKEN
 ]]
+
+function LEXER:firstToken()
+	self.tokenPosition = 1;
+	self:nextToken();
+end
+
+function LEXER:nextToken()
+	local pos = self.tokenPosition;
+
+	if pos > 0 and pos < #self.tokens then
+		self.token = self.tokens[self.tokenPosition];
+		self.tokenPosition = self.tokenPosition + 1;
+	else
+		self.token = nil;
+	end
+end
 
 --[[
 	CHECK SEQUENCE / ACCEPT TOKEN
 ]]
 
+function LEXER:getToken(off)
+	return self.tokens[self.tokenPosition + off];
+end
+
+function LEXER:checkToken(typ, off)
+	local token = self:getToken(off);
+
+	if token and istable(typ) then
+		for i = 1, #typ do
+			if token.type == type[i] then return true; end
+		end
+	elseif token and token.type == typ then
+		return true;
+	end
+
+	return false;
+end
+
+function LEXER:checkSeqence(...)
+	local seq = { ... };
+
+	for i = 1, #seq do
+		if not self:checkToken(seq[i], i - 1) then return false; end
+	end
+
+	return true;
+end
+
+function LEXER:acceptToken(typ)
+	if self:checkToken(typ, 0) then
+		self:nextToken();
+		return true;
+	end
+
+	return false;
+end
+
+--[[
+	FIND/LAST IN STATMENT
+]]
+
+function LEXER:findInStatment(typ, off)
+	off = off or 0;
+	local first = self:getToken(off);
+	
+	while true do
+		local token = self:getToken(off);
+
+		if not token then return false; end
+
+		if token.type == "sep" then return false; end
+
+		if first.line ~= token.line then return false; end
+
+		if self:checkToken(typ, off) then return true, token; end
+
+		off = off + 1;
+	end
+
+	return false;
+end
+
+function Parser:lastInStatment(typ, off)
+	off = off or 0;
+
+	local last;
+	local first = self:getToken(off);
+
+	while true do
+		local token = self:getToken(off);
+
+		if not token then return last; end
+
+		if token.type == "sep" then return last; end
+
+		if first.line ~= token.line then return last; end
+
+		if self:checkToken(typ, off) then last = token end
+
+		off = off + 1;
+	end
+
+	return last;
+end
+
 --[[
 	START INSTRUCTION / END INSTRUCTION
 ]]
 
---[[
-	INSERT CODE
-]]
+function LEXER:StartInstruction(type)
+	local position = #instructions;
+	local instructions = self.instructions;
+
+	local instruction = { };
+	instruction.info = {};
+	instruction.buffer = {};
+	instruction.type = type;
+	instruction.result = {"", 0};
+	instruction.sChar = self.token.char;
+	instruction.sLine = self.token.line;
+	instruction.parent = instructions[position];
+
+	instructions[position + 1] = instruction;
+	self.instruction = instruction;
+
+	return instruction;
+end
+
+function LEXER:insertCode(code, a, ...)
+	if self.instruction then
+		if a then code = string.format(code, a, ...); end
+		local buffer = self.instruction.buffer;
+		local info = self.instruction.info;
+		buffer[#buffer + 1] = code;
+	end
+end
+
+function LEXER:insertLine(line, a, ...)
+	if a then line = string.format(line, a, ...); end
+	self:insertCode("\n" .. line .. "\n");
+end
+
+function LEXER:injectCode(inst, pos, code, a, ...)
+	if a then code = string.format(code, a, ...); end
+	table.insert(inst, pos, code);
+end
+
+function LEXER:EndInstruction(class, count)
+	local position = #instructions;
+	local instructions = self.instructions;
+	local instruction = instructions[position];
+
+	local inject = string.concat(instruction.buffer, " ");
+	if inject ~= "" then self:insertCode(inject); end
+
+	if class then instruction.result = {class, count or 0}; end
+
+	instruction.eChar = self.token.char;
+	instruction.eLine = self.token.char;
+
+	instructions[position] = nil;
+	self.instruction = instructions[position - 1];
+
+	return instruction;
+end
 
 --[[
-
+	Casted Expression
 ]]
+
+function LEXER:getOperator(op_table, operator, ...)
+	if not op_table then return; end
+
+	local types = { };
+	local expressons = { ... };
+
+	for k = 1, #expressons do
+		local v = expressons[k];
+
+		if isstring(v) then
+			types[k] = v;
+		elseif istable(v) and v.result then
+			types[k] = v.result[1];
+		else
+			error("LEXER:getOperator() was given invalid type " .. tostring(v), 0);
+		end
+	end
+
+	local name = string.format(operator, unpack(types));
+	local op = op_table[name];
+
+	return op, name;
+end
+
+--[[
+	Casted Expression
+]]
+
+function LEXER:compareClass(inst, class)
+	if not inst.result then return false; end
+
+	if inst.result[1] ~= class then return false; end
+
+	if inst.result[2] > 0 and class ~= "" then return false; end
+
+	return true;
+end
+
+function LEXER:useCallableOperator(op, inst)
+	self:injectCode(inst, 1, "_OPS[%q] (", op.signature);
+
+	if op.context then self:injectCode(inst, 2, "CONTEXT"); end
+
+	if inst.buffer[3] then self:injectCode(inst, 3, ","); end
+
+	self:injectCode(inst, nil, ")");
+
+	inst.result = {op.result, op.rCount};
+end
+
+function LEXER:getCastedValue(func, class, ...)
+	local inst = self:StartInstruction("CAST");
+
+	local expr = func(self, ...);
+
+	if not expr then return false; end
+
+	if not self:compareClass(expr, class) then
+		-- TODO: Check for user type casting.
+
+		local op = self:getOperator(EXPR_CAST_OPERATORS, "(%s)%s", class, expr);
+
+		if op.operation then self:useCallableOperator(op, inst); end
+
+		return true, self:endInstruction(op.result, op.rCount);
+	end
+
+	return false;
+end
+
+function LEXER:getAsBoolean(func, ...)
+	return self:getCastedValue(func, "b", ...);
+end
+
+function LEXER:getAsString(func, ...)
+	return self:getCastedValue(func, "s", ...);
+end
+
+function LEXER:getAsVariant(func, ...)
+	return self:getCastedValue(func, "_vr", ...);
+end
 
 --[[
 	#Sorry guys, it looks like crap but makes sense to me :D
@@ -361,17 +601,17 @@ function LEXER:BLOCK0(prefix, postfix)
 	self:StartInstruction("STMT");
 
 	if prefix then
-		self:InsertCode(prefix);
+		self:insertCode(prefix);
 	end
 
-	if self:AcceptToken("LPA") then
+	if self:acceptToken("LPA") then
 		seq = self:STMTS0(true);
 	else
 		seq = self:STMT0();
 	end
 
 	if prefix then
-		self:InsertCode(postfix);
+		self:insertCode(postfix);
 	end
 
 	return self:EndInstruction();
@@ -387,7 +627,7 @@ function LEXER:STMTS0(rpa)
 	self:StartInstruction("SEQUENCE");
 
 	while true do
-		if rpa and self:CheckToken("RPA") then
+		if rpa and self:checkToken("RPA") then
 			break;
 		end
 
@@ -398,7 +638,7 @@ function LEXER:STMTS0(rpa)
 		end
 
 		if stmt then
-			if stmt.line == s.line and not (self:AcceptToken("SEP") or stmt.seperated) then
+			if stmt.line == s.line and not (self:acceptToken("SEP") or stmt.seperated) then
 				self:Error("Sepperator (;) expected, betwen statements.");
 			end
 
@@ -434,12 +674,11 @@ function LEXER:STMT0()
 		-- Nothing :D
 	end
 
-	if self:AcceptToken("TRY") then
+	if self:acceptToken("TRY") then
 		self:StartInstruction();
 
 		--Inject code :D
-		self:InsertCode("local ok, result = pcall(function()");
-
+		self:insertCode("local ok, result = pcall(function()");
 
 		self:PushScope();
 
@@ -447,20 +686,20 @@ function LEXER:STMT0()
 
 		self:PopScope();
 
-		self:InsertLine("if not ok then");
+		self:insertLine("if not ok then");
 
 		local catch = 0;
 
-		while self:AcceptToken("CTH") do
+		while self:acceptToken("CTH") do
 			self:RequireToken("LPA", "(() ) expected after catch");
 
 			local class = self:RequireType("Class expected after (( )");
 
 			local var = self:RequireToken("VAR", "Variable expected after %s.", Name(class));
 
-			self:InsertLine("elseif result and result.type ~= %s then");
+			self:insertLine("elseif result and result.type ~= %s then");
 
-			self:InsertLine("local %s = result", var);
+			self:insertLine("local %s = result", var);
 
 			self:PushScope();
 
@@ -471,7 +710,7 @@ function LEXER:STMT0()
 			self:PushScope();
 		end
 
-		self:InsertLine("end");
+		self:insertLine("end");
 
 		return self:EndInstruction();
 	end
@@ -486,6 +725,20 @@ end
 ]]
 
 function LEXER:STMT1()
+	--(IF LPA CND RPA BLCOK0 (STMT2+)* STMT3*) ? STMT4;
+
+	if self:acceptToken("if") then
+		self:StartInstruction("IF");
+
+		if not self:getAsBoolean(self.EXPR1) then
+			return self:error(ERROR_INVALID_COND, "if");
+		end
+
+		
+		return self:endInstruction();
+	end
+
+	return self:STMT4();
 end
 
 --[[
@@ -808,3 +1061,8 @@ end
 
 function LEXER:ARGS()
 end
+
+
+--[[
+	UTIL
+]]
