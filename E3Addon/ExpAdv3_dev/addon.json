@@ -1,0 +1,14 @@
+{
+	"title"		:	"Expression 3",
+	"type"		:	"tool",
+	"tags"		:	[ "build", "fun" ],
+	"description":	"The Expression Three Beta.",
+	"ignore"	:
+	[
+		"*.txt",
+		"README.md",
+		".git*",
+		"pre-commit",
+		"LICENSE"
+	]
+}

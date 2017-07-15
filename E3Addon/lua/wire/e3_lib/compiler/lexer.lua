@@ -5,6 +5,7 @@
 local ERROR_VAR_EXISTS = "Unable to define %s %s, %s already exists here.";
 local ERROR_IO_MISSMATCH = "Unable to declair %s here, %s exists as %s.";
 local ERROR_INVALID_COND = "Invalid condition for %s statment."
+
 --[[
 	THE LEXER
 ]]
@@ -564,10 +565,10 @@ end
 	STMTS0: (STMT18 ? (STMT0+)*;                                                                        #Regular Statements (STMT0 - SMST17)
 	STMTS1: (STMT19+)*;                                                                                 #Class Statements (STMT19+)
 
-	STMT0: DIR4 ? (TRY BLOCK0 CTC LPA VAR RPA BLOCK0) ? STMT1;                                          #Try Catch
-	STMT1: (IF LPA CND RPA BLCOK0 (STMT2+)* STMT3*) ? STMT4;                                            #If Statement
-	STMT2: (EIF LPA CND RPA BLOCK0);                                                                    #Esleif Statement
-	STMT3: (ELSE BLOCK0)*;                                                                              #Else Statement
+	 STMT0: DIR4 ? (TRY BLOCK0 CTC LPA VAR RPA BLOCK0) ? STMT1;                                          #Try Catch
+	 STMT1: (IF LPA CND RPA BLCOK0 (STMT2+)* STMT3*) ? STMT4;                                            #If Statement
+	 STMT2: (EIF LPA CND RPA BLOCK0);                                                                    #Esleif Statement
+	 STMT3: (ELSE BLOCK0)*;                                                                              #Else Statement
 
 	 STMT4: (FOR LPA TYPE ASS EXPR0 SEP EXPR0 (SEP EXPR0)* RPA BLOCK0) ? STMT5;                         #For Loop
 	 STMT5: (WHILE CND BLOCK0) ? STMT6;                                                                 #While Loop

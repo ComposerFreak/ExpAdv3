@@ -4,13 +4,70 @@
 
 E3_PARSERDATA = {};
 
-local function parseSyntax(syntax)
+local parseSyntax;
+
+function parseSyntax(syntax)
 	local sequence = {};
-	-- TODO: Create sequence structure
+
+	local lor = string.find(syntax, "?");
+
+	if lor then
+		local instr = {};
+		instr.lor = true;
+		instr.left = parseSyntax(string.sub(syntax, 1, lor - 1));
+		instr.right = parseSyntax(string.sub(syntax, lor, -1));
+	end
+
+	for _, word in pairs(string.Explode(" ", syntax)) do
+		local instr = {};
+		instr.lor = false;
+		instr.word = word;
+
+		if string.sub(word, -1) == "*" then
+			word = string.sub(word, 1, -1);
+			instr.optional = true;
+		end
+
+		if string.sub(word, -1) == "+" then
+			word = string.sub(word, 1, -1);
+			instr.repeate = true;
+		end
+
+		local a = string.find(word, "{");
+		if a and string.sub(word, -1) == "}" then
+			instr.func = string.sub(a, 1, -1);
+		end
+
+		local b = string.find(word, "[");
+		if b and string.sub(word, -1) == "]" then
+			local compare = string.sub(b, 1, -1);
+			if string.sub(compare, 1, 2) == "!=" then
+				instr.filter = "not"
+				instr.filterData = string.sub(compare, 3);
+			elseif string.sub(compare, 1, 1) == "=" then
+				instr.filter = "is"
+				instr.filterData = string.sub(compare, 2);
+			end
+		end
+
+		if string.sub(word, 1)  == "(" and string.sub(word, -1) == ")" then
+			instr.instruction = parseSyntax(string.sub(word, 1, -1));
+		end
+
+		sequence[#sequence + 1] = instr;
+	end
+
+	return sequence;
 end
 
-function E3_RegisterSyntax(instruction, sequence, compileFunc, desc) 
-	E3_PARSERDATA[instruction] = {parseSyntaxsequence), compileFunc, desc};
+function E3_RegisterSyntax(instruction, sequence, compileFunc, desc)
+	local seq = parseSyntax(sequence);
+	E3_PARSERDATA[instruction] = {seq, compileFunc, desc};
+
+	-- Debug data
+	print("PARERDATA:", instruction, sequence)
+	PrintTable(seq);
+	print("--------------------------------------------")
 end
 
 E3_RegisterSyntax("ROOT", "(DIRS1+)* STMTS0", COMPILE_ROOT, "Root of code");
