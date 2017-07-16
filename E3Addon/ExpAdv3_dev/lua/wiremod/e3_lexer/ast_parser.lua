@@ -5,10 +5,10 @@
 local  E3_ASTPARSER = {};
 E3_ASTPARSER.__index =  E3_ASTPARSER;
 
-function E3_ASTSYNTAX(ast)
+function E3_ASTSYNTAX(ast, name)
 	local p = E3_ASTPARSER.New();
 
-	p:Initialize(ast);
+	p:Initialize(ast, name);
 
 	local ok, res = p:Run();
 
@@ -19,7 +19,7 @@ function E3_ASTPARSER.New()
 	return setmetatable({},  E3_ASTPARSER);
 end
 
-function E3_ASTPARSER:Initialize(ast)
+function E3_ASTPARSER:Initialize(ast, name)
 	self.pos = 0;
 
 	self.char = "";
@@ -29,6 +29,9 @@ function E3_ASTPARSER:Initialize(ast)
 
 	self.buffer = ast;
 	self.lengh = string.len(ast);
+
+	self.ast = ast;
+	self.name = name;
 
 	self:NextChar();
 end
@@ -129,11 +132,11 @@ function E3_ASTPARSER:SkipSpaces()
 	return r;
 end
 
-function E3_ASTPARSER:NextSequence()
+function E3_ASTPARSER:NextSequence(name)
 	local seq = {};
 
 	while self.char and self.char ~= ")" do
-		local token1 = self:NextSyntax();
+		local token1 = self:NextSyntax(name);
 
 		if not token1 then
 			error("incomplete ast sequence " .. self.char);
@@ -148,7 +151,7 @@ function E3_ASTPARSER:NextSequence()
 	return {type = "GROUP", seq = seq};
 end
 
-function E3_ASTPARSER:NextSyntax()
+function E3_ASTPARSER:NextSyntax(name)
 
 	self:SkipSpaces();
 
@@ -156,17 +159,22 @@ function E3_ASTPARSER:NextSyntax()
 		return;
 	elseif self.char == "-" then
 		self:SkipChar();
-		return {type = "EXCL", seq = self:NextSyntax()};
+		return {type = "EXCL", seq = self:NextSyntax(), name = self.name};
 	end
 
 	local token = {};
 
+	token.name = self.name;
+	
 	if self.char == "(" then
 		-- (GROUP EXPR)
 		self:SkipChar();
 
-		token.type = "GROUP";
-		token.seq = self:NextSequence();
+		local token2 = self:NextSequence();
+
+		token2.name = token2.name or token.name;
+
+		token = token2;
 
 		if (not self.char) or self.char ~= ")" then
 			error("Incomplete ast sequence, ) expected.");
@@ -176,7 +184,8 @@ function E3_ASTPARSER:NextSyntax()
 
 	elseif self:NextPattern("^([A-Z0-9_]+)") then
 		token.type = "TOKEN";
-		token.data = self.data; self.data = ""
+		token.data = self.data
+		self.data = ""
 	else
 		error("Invalid token in sequence '" .. self.char .. "'");
 	end
@@ -184,6 +193,10 @@ function E3_ASTPARSER:NextSyntax()
 	if self.char == "{" then
 		-- {FUNC}
 		self:SkipChar();
+
+		if token.type ~= "TOKEN" then
+			error("Parser functions must preceed token.")
+		end
 
 		while self.char and self.char ~= "}" do
 			if self:NextPattern("^%!=([a-zA-Z0-9_]+)") then

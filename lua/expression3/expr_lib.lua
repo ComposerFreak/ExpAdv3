@@ -299,7 +299,7 @@ function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 	classIDs[class.id] = class;
 	classes[class.name] = class;
 
-	MsgN("Registered Class: ", class.id, " - ", class.name);
+	--MsgN("Registered Class: ", class.id, " - ", class.name);
 
 	return class;
 end
@@ -464,7 +464,7 @@ function EXPR_LIB.RegisterAtribute(class, atribute, type, native)
 
 	cls.atributes[atribute] = atr;
 
-	MsgN("Registered atribute: ", class .. "." .. atribute);
+	--MsgN("Registered atribute: ", class .. "." .. atribute);
 
 	return atr;
 end
@@ -559,7 +559,7 @@ function EXPR_LIB.RegisterLibrary(name)
 
 	libraries[lib.name] = lib;
 
-	MsgN("Registered library: ", lib.name);
+	--MsgN("Registered library: ", lib.name);
 end
 
 local functions;
@@ -601,7 +601,7 @@ function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _funct
 
 	lib._functions[op.signature] = op;
 
-	MsgN("Registered function ", library, ".", op.signature);
+	--MsgN("Registered function ", library, ".", op.signature);
 
 	return op;
 end
@@ -893,7 +893,7 @@ function Extension.EnableExtension(this)
 		this.atributes = atributes;
 		enabledExtensions[this.name] = this;
 
-		MsgN("Registered extension: ", this.name);
+		--MsgN("Registered extension: ", this.name);
 	end)
 end
 
@@ -962,7 +962,7 @@ function extendClass(class, base)
 
 	c.extends[b.id] = true;
 
-	MsgN("Extended Class: ", c.name, " from ", b.name);
+	--MsgN("Extended Class: ", c.name, " from ", b.name);
 end
 
 function EXPR_LIB.ToString(context, type, value)
@@ -978,7 +978,7 @@ function EXPR_LIB.ToString(context, type, value)
 end
 
 function EXPR_LIB.Initialize()
-	MsgN("Loading Expression 3");
+	--MsgN("Loading Expression 3");
 
 	include("expression3/extensions/core.lua");
 
@@ -1047,7 +1047,7 @@ function EXPR_LIB.Initialize()
 
 	include("expression3/debuger.lua");
 
-	MsgN("Expression 3 has loaded.");
+	--MsgN("Expression 3 has loaded.");
 end
 
 
