@@ -12,11 +12,6 @@
 
 local extension = EXPR_LIB.RegisterExtension("math");
 
-
-
--- TODO: Add math.pi as constant
-
-
 local halfPi = math.pi/2;
 local tan  = math.tan;
 local atan = math.atan;
@@ -30,6 +25,7 @@ local function acot( radians )
 	return halfPi - atan( radians );
 end
 
+extension:RegisterFunction("math", "pi", "", "n", 1, math.pi, true);
 
 extension:RegisterFunction("math", "sin", "n", "n", 1, math.sin, true);
 
