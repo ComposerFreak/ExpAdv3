@@ -16,6 +16,9 @@ local halfPi = math.pi/2;
 local tan  = math.tan;
 local atan = math.atan;
 
+local function pi()
+	return math.pi	
+end
 
 local function cot( radians )
 	return 1 / tan( radians );
@@ -25,7 +28,7 @@ local function acot( radians )
 	return halfPi - atan( radians );
 end
 
-extension:RegisterFunction("math", "pi", "", "n", 1, math.pi, true);
+extension:RegisterFunction("math", "pi", "", "n", 1, pi, true);
 
 extension:RegisterFunction("math", "sin", "n", "n", 1, math.sin, true);
 
