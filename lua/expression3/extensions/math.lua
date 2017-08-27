@@ -32,8 +32,6 @@ extension:RegisterFunction("math", "pi", "", "n", 1, pi, true);
 
 extension:RegisterFunction("math", "sin", "n", "n", 1, math.sin, true);
 
-extension:RegisterFunction("math", "cos", "n", "n", 1, math.cos, true);
-
 extension:RegisterFunction("math", "sqrt", "n", "n", 1, math.sqrt, true);
 
 extension:RegisterFunction("math", "tan", "n", "n", 1, tan, true);
