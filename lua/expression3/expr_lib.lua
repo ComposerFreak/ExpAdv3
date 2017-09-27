@@ -209,8 +209,6 @@ EXPR_LIB = {};
 print("E3 Lib Loading.");
 
 if (not CLIENT) then
-	print("Adding E3 message names.");
-
 	util.AddNetworkString("Expression3.SubmitToServer");
 
 	util.AddNetworkString("Expression3.RequestUpload");
@@ -893,7 +891,7 @@ function Extension.EnableExtension(this)
 		this.atributes = atributes;
 		enabledExtensions[this.name] = this;
 
-		--MsgN("Registered extension: ", this.name);
+		MsgN("Registered E3 extension: ", this.name);
 	end)
 end
 
@@ -995,7 +993,7 @@ function EXPR_LIB.Initialize()
 	loadConstructors = true;
 	hook.Run("Expression3.LoadConstructors");
 	loadConstructors = false;
-
+	
 	methods = {};
 	loadMethods = true;
 	hook.Run("Expression3.LoadMethods");
@@ -1223,7 +1221,6 @@ end
 if (CLIENT) then
 	hook.Add("Expression3.LoadGolem", "Expression3.Golem.Init", function()
 		include("expression3/editor.lua");
-		print("Golem::", Golem);
 		Golem.Reload();
 	end);
 end
@@ -1268,8 +1265,6 @@ local token_run = function(this)
 			vldr.tokenizerTime = vldr.tokenizerTime + b;
 
 			vldr.tokenizerCount = vldr.tokenizerCount + 1;
-
-			-- print("Tokeinizer step " .. i .. " took ", b);
 
 			coroutine.yield();
 
@@ -1354,12 +1349,6 @@ function EXPR_LIB.Validate(cb, script, files)
 			ok = a;
 			res = {msg = b, state == "internal", line = 0, char = 0};
 		end
-
-		--print(vldr.timer);
-		--print("Tokenizer", vldr.tokenizerTime, " - ", vldr.tokenizerCount);
-		--print("Parser", vldr.parserTime);
-		--print("Compiler", vldr.compilerTime);
-		--print("Build", vldr.buildTime);
 
 		vldr.finished = true;
 	end);

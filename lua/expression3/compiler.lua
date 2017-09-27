@@ -49,7 +49,6 @@ end
 
 function COMPILER.Initialize(this, instance, files)
 	this.__tokens = instance.tokens;
-	this.__tasks = instance.tasks;
 	this.__root = instance.instruction;
 	this.__script = instance.script;
 	this.__directives = instance.directives;
@@ -110,126 +109,80 @@ function COMPILER._Run(this)
 	result.enviroment = this.__enviroment;
 	result.directives = this.__directives;
 	result.hashTable = this.__hashtable;
+	result.rootInstruction = this.__root;
 
 	result.build = function()
-		local script, traceTbl = this:BuildScript();
+		local script, traceTbl = this:BuildScript(this.__root);
 		result.compiled = script;
 		result.traceTbl = traceTbl;
+		return script, traceTbl;
 	end
 
 	return result;
 end
 
-local function sortGth(a, b)
-	return (a.weight or a.depth or 0) > (a.weight or a.depth or 0);
-end
+local addNativeLua;
 
+function addNativeLua(instruction, outBuffer, traceTable, char, line)
+	--print("\nadding instruction to buffer: ", instruction.type);
 
-local function sortLth(a, b)
-	return (a.weight or a.depth or 0) < (a.weight or a.depth or 0);
-end
+	local inBuffer = instruction.buffer;
+	local len = #inBuffer;
 
+	for key = 1, len do
+		local value = inBuffer[key];
+		local _type = type(value);
 
-
-function COMPILER.BuildScript(this)
-	-- This will probably become a separate stage (post compiler?).
-
-	local buffer = {};
-	local alltasks = this.__tasks;
-
-	local off = 0;
-	local char = 0;
-	local line = -0;
-	local traceTable = {};
-
-	for k, v in pairs(this.__tokens) do
-		local data = tostring(v.data);
-
-		if (v.newLine) then
-			char = 1;
-			line = line + 1;
-			buffer[#buffer + 1] = "\n";
-		end
-
-		local tasks = alltasks[v.pos];
-
-		if (tasks) then
-			local callbacks = tasks.callbacks;
-
-			if (callbacks) then
-				for _, callback in pairs(callbacks) do
-					callback.fun(unpack(callback.args));
-				end
-			end
-
-			local prefixs = tasks.prefix;
-
-			if (prefixs) then
-				table.sort(prefixs, sortGth);
-				for _, prefix in pairs(prefixs) do
-					if (prefix.newLine) then
-						char = 1;
-						off = off + 1;
-						line = line + 1;
-						buffer[#buffer + 1] = "\n";
-					end
-
-					local str = prefix.str;
-
-					char = char + #str + 1;
-
-					buffer[#buffer + 1] = str;
-
-					print("PREFIX", str);
-				end
-			end
-
-			if (not tasks.remove) then
-				if (tasks.replace) then
-					buffer[#buffer + 1] = tasks.replace.str;
-					char = char + #tasks.replace;
-					print("REPLACE", tasks.replace.str);
-				else
-					buffer[#buffer + 1] = data;
-					char = char + #data + 1;
-					print("KEEP", data);
-				end
-
-				traceTable[#traceTable + 1] = {e3_line = v.line - 1, e3_char = v.char, native_line = line, native_char = char, instruction = tasks.instruction};
-			end
-
-			local postfixs = tasks.postfix;
-
-			if (postfixs) then
-				table.sort(postfixs, sortLth);
-				for _, postfix in pairs(postfixs) do
-					if (postfix.newLine) then
-						char = 1;
-						off = off + 1;
-						line = line + 1;
-						buffer[#buffer + 1] = "\n";
-					end
-					local str = postfix.str; -- .. string.format("(%s)", postfix.weight or postfix.depth or 0)
-					char = char + #str + 1;
-					buffer[#buffer + 1] = str;
-					print("POSTFIX", data);
-				end
-			end
+		if _type == "table" then
+			char, line = addNativeLua(value, outBuffer, traceTable, char, line);
 		else
-			traceTable[#traceTable + 1] = {e3_line = v.line - 1, e3_char = v.char, native_line = line, native_char = char};
-			buffer[#buffer + 1] = data;
-			char = char + #data + 1;
-			print("KEEP", data);
+			if _type ~= "string" then value = tostring(value); end
+
+			--print("\nadding token to buffer: ", value, _type);
+
+			outBuffer[#outBuffer + 1] = value;
+
+			if string.find(value, "\n") then
+				local lines = string.Explode("\n", value);
+
+				line = line + #lines;
+				char = #lines[#lines] + 1;
+			else
+				char = char + (#value + 1); -- Include the space added by concat later.
+			end
+
+			traceTable[#traceTable + 1] = {
+				e3_line = instruction.line - 1;
+				e3_char = instruction.char;
+				native_line = line;
+				native_char = char
+			};
 		end
 	end
 
-	return table_concat(buffer, " "), traceTable;
+	--print("\nfinished instruction: ", instruction.type);
+
+	return char, line;
+end
+
+function COMPILER.BuildScript(this, instruction)
+	-- This will probably become a separate stage (post compiler?).
+	local outBuffer = {};
+	local traceTable = {};
+
+	addNativeLua(instruction, outBuffer, traceTable, 0, 1);
+
+	return table_concat(outBuffer, " "), traceTable;
 end
 
 function COMPILER.Throw(this, token, msg, fst, ...)
 	local err = {};
 
-	if (fst) then
+	if not token then
+		debug.Trace();
+	end
+
+	if fst then
 		msg = string_format(msg, fst, ...);
 	end
 
@@ -355,6 +308,9 @@ function COMPILER.SetVariable(this, name, class, scope)
 	var.name = name;
 	var.class = class;
 	var.scope = scope;
+
+	if not name then debug.Trace(); end
+
 	this.__scopeData[scope].memory[name] = var;
 
 	return class, scope, var;
@@ -400,6 +356,11 @@ local bannedVars = {
 };
 
 function COMPILER.AssignVariable(this, token, declaired, varName, class, scope)
+	if (not isstring(varName)) or varName == "" then
+		--print("VARNAME is " .. varName);
+		debug.Trace();
+	end
+
 	if (bannedVars[varName]) then
 		this:Throw(token, "Unable to declare variable %s, name is reserved internally.", varName);
 	end
@@ -451,175 +412,6 @@ end
 --[[
 ]]
 
-function COMPILER.QueueCallBack(this, inst, token, fun, ...)
-
-	local op = {};
-	op.token = token;
-	op.inst = inst;
-	op.fun = fun;
-	op.args = {...};
-
-	local tasks = this.__tasks[token.pos];
-
-	if (not tasks) then
-		tasks = {};
-		this.__tasks[token.pos] = tasks;
-	end
-
-	callbacks = tasks.callbacks;
-
-	if (not callbacks) then
-		callbacks = {};
-		tasks.callbacks = callbacks;
-	end
-
-	callbacks[#callbacks + 1] = op;
-
-	return op;
-end
-
-function COMPILER.QueueReplace(this, inst, token, str)
-
-	local op = {};
-	op.token = token;
-	op.str = str;
-	op.inst = inst;
-	op.deph = inst.stmt_deph or 0;
-
-	local tasks = this.__tasks[token.pos];
-
-	if (not tasks) then
-		tasks = {};
-		this.__tasks[token.pos] = tasks;
-	end
-
-	tasks.replace = op;
-
-	return op;
-end
-
-function COMPILER.QueueRemove(this, inst, token)
-
-	if (!token) then debug.Trace() end
-	local op = {};
-
-	op.token = token;
-	op.inst = inst;
-	op.deph = inst.stmt_deph or 0;
-
-	local tasks = this.__tasks[token.pos];
-
-	if (not tasks) then
-		tasks = {};
-		this.__tasks[token.pos] = tasks;
-	end
-
-	tasks.remove = op;
-
-	return op;
-end
-
-local injectNewLine = false;
-
-function COMPILER.QueueInjectionBefore(this, inst, token, str, ...)
-
-	local tasks = this.__tasks[token.pos];
-
-	if (not tasks) then
-		tasks = {};
-		this.__tasks[token.pos] = tasks;
-	end
-
-	if (not tasks.prefix) then
-		tasks.prefix = {};
-	end
-
-	local r = {};
-	local t = {str, ...};
-
-	for i = 1, #t do
-		local op = {};
-
-		op.token = token;
-		op.str = t[i];
-		op.inst = inst;
-		op.deph = inst.stmt_deph or 0;
-
-		if (i == 1) then
-			op.newLine = injectNewLine;
-		end
-
-		tasks.prefix[#tasks.prefix + 1] = op;
-	end
-
-	return r;
-end
-
-function COMPILER.QueueInjectionAfter(this, inst, token, str, ...)
-	local op = {};
-
-	op.token = token;
-	op.str = str;
-	op.inst = inst;
-	op.deph = inst.stmt_deph or 0;
-
-	local tasks = this.__tasks[token.pos];
-
-	if (not tasks) then
-		tasks = {};
-		this.__tasks[token.pos] = tasks;
-	end
-
-	if (not tasks.postfix) then
-		tasks.postfix = {};
-	end
-
-	local r = {};
-	local t = {str, ...};
-
-	for i = 1, #t do
-		local op = {};
-
-		op.token = token;
-		op.str = t[i];
-		op.inst = inst;
-		op.deph = inst.stmt_deph or 0;
-
-		if (i == 1) then
-			op.newLine = injectNewLine;
-		end
-
-		r[#r + 1] = op;
-		tasks.postfix[#tasks.postfix + 1] = op;
-	end
-
-	return r;
-end
-
---[[
-]]
-
-function COMPILER.QueueInstruction(this, inst, inst, token, inst, type)
-	local op = {};
-	op.token = token;
-	op.inst = inst;
-	op.type = type;
-	op.deph = inst.stmt_deph or 0;
-
-	local tasks = this.__tasks[token.pos];
-
-	if (not tasks) then
-		tasks = {};
-		this.__tasks[token.pos] = tasks;
-	end
-
-	if (not tasks.instruction) then
-		tasks.instruction = op;
-	end
-
-	return op;
-end
-
 function COMPILER.Compile(this, inst)
 	if (not inst) then
 		debug.Trace();
@@ -632,18 +424,22 @@ function COMPILER.Compile(this, inst)
 	end
 
 	if (not inst.compiled) then
+		inst.buffer = {};
+
 		local instruction = string_upper(inst.type);
 		local fun = this["Compile_" .. instruction];
-
-		-- print("Compiler->" .. instruction .. "->#" .. #inst.instructions)
 
 		if (not fun) then
 			this:Throw(inst.token, "Failed to compile unknown instruction %s", instruction);
 		end
 
-		--this:QueueInstruction(inst, inst.token, inst.type);
+		local preInst = this.cur_instruction;
 
-		local type, count = fun(this, inst, inst.token, inst.instructions);
+		this.cur_instruction = inst;
+
+		local type, count = fun(this, inst, inst.token, inst.data);
+
+		this.cur_instruction = preInst;
 
 		if (type) then
 			inst.result = type;
@@ -653,50 +449,181 @@ function COMPILER.Compile(this, inst)
 		inst.compiled = true;
 	end
 
-	return inst.result, inst.rCount;
+	return inst.result, inst.rCount, inst;
 end
 
 --[[
 ]]
 
+function COMPILER.writeToBuffer(this, inst, line, a, ...)
+	if (isstring(inst)) then
+		print("writeToBuffer", inst)
+		debug.Trace();
+	end
+
+	if (a) then
+		line = string.format(line, a, ...);
+	end
+
+	inst.buffer[#inst.buffer + 1] = line;
+end
+
+function COMPILER.addInstructionToBuffer(this, inst, inst2)
+	inst.buffer[#inst.buffer + 1] = inst2;
+end
+
+function COMPILER.writeOperationCall(this, inst, op, expr1, ...)
+	this.__operators[op.signature] = op.operator;
+
+	this:writeToBuffer(inst, "_OPS[%q](", op.signature);
+
+	if (op.context) then
+	    this:writeToBuffer(inst, "CONTEXT");
+
+	    if (expr1) then
+	    	this:writeToBuffer(inst, ",");
+	    end
+	end
+
+	if (expr1) then
+		local args = {expr1, ...};
+		local tArgs = #args;
+
+		for i = 1, tArgs do
+			if (type(args[i]) == "table") then
+				this:addInstructionToBuffer(inst, args[i]);
+			else
+				this:writeToBuffer(inst, tostring(args[i]));
+			end
+
+			if (i < tArgs) then
+				this:writeToBuffer(inst, ",");
+			end
+		end
+	end
+
+	this:writeToBuffer(inst, ")");
+end
+
+function COMPILER.writeArgsToBuffer(this, inst, vargs, ...)
+	local args = {...};
+	local tArgs = #args;
+
+	for i = 1, tArgs do
+		local arg = args[i];
+
+		if istable(arg) then
+			local vr = (vargs and i >= vargs) and arg.result ~= "_vr";
+
+			if (vr) then
+				this:writeToBuffer(inst, "{%q,", arg.result);
+			end
+
+			this:addInstructionToBuffer(inst, arg);
+			
+			if (vr) then
+				this:writeToBuffer(inst, "}");
+			end
+		else
+			this:writeToBuffer(inst, tostring(arg));
+		end
+
+		if (i < tArgs) then
+			this:writeToBuffer(inst, ",");
+		end
+	end
+end
+
+function COMPILER.writeMethodCall(this, inst, op, expr1, ...)
+	this.__methods[op.signature] = op.operator;
+
+	this:writeToBuffer(inst, "_METH[%q](", op.signature);
+
+	if (op.context) then
+	    this:writeToBuffer(inst, "CONTEXT");
+
+	    if (expr1) then
+	    	this:writeToBuffer(inst, ",");
+	    end
+	end
+
+	if (expr1) then
+		this:writeArgsToBuffer(inst, nil, expr1, ...);
+	end
+
+	this:writeToBuffer(inst, ")");
+end
+
+function COMPILER.writeOperationCall2(this, tbl, inst, op, vargs, expr1, ...)
+	local t = istable(op);
+	local signature = t and op.signature or op;
+
+	this:writeToBuffer(inst, "%s[%q](", tbl, signature);
+
+	if (t and op.context) then
+	    this:writeToBuffer(inst, "CONTEXT");
+
+	    if (expr1) then
+	    	this:writeToBuffer(inst, ",");
+	    end
+	end
+
+	if (expr1) then
+		this:writeArgsToBuffer(inst, vargs, expr1, ...);
+	end
+
+	this:writeToBuffer(inst, ")");
+end
 
 --[[
 ]]
 
-function COMPILER.Compile_ROOT(this, inst, token, stmts)
-	injectNewLine = true;
-		this:QueueInjectionBefore(inst, token, "return", "function", "(", "env", ")");
-		this:QueueInjectionBefore(inst, token, "setfenv", "(", "1", ",", "env", ")");
-		this:QueueInjectionBefore(inst, token, "");
-	injectNewLine = false;
+--[[
+]]
 
-	for i = 1, #stmts do
-		this:Compile(stmts[i]);
+function COMPILER.Compile_ROOT(this, inst, token, data)
+	this:writeToBuffer(inst, "\nreturn function(env)\n");
+	this:writeToBuffer(inst, "\nsetfenv(1,env)\n");
+
+	local stmts = data.stmts;
+
+	if stmts then
+		for i = 1, #stmts do
+			this:Compile(stmts[i]);
+			this:addInstructionToBuffer(inst, stmts[i]);
+		end
 	end
 
-	injectNewLine = true;
-		this:QueueInjectionAfter(inst, inst.final, "end");
-	injectNewLine = false;
+	this:writeToBuffer(inst, "\nend\n");
 
 	return "", 0;
 end
 
-function COMPILER.Compile_SEQ(this, inst, token, stmts)
-	for i = 1, #stmts do
-		this:Compile(stmts[i]);
+function COMPILER.Compile_SEQ(this, inst, token, data)
+	local stmts = data.stmts;
+	
+	if stmts then
+		for i = 1, #stmts do
+			this:Compile(stmts[i]);
+			this:addInstructionToBuffer(inst, stmts[i]);
+		end
 	end
 
 	return "", 0;
 end
 
-function COMPILER.Compile_IF(this, inst, token)
-	local r, c = this:Compile(inst.condition);
+function COMPILER.Compile_IF(this, inst, token, data)
+	this:writeToBuffer(inst, "if (");
+
+	local condition = data.condition;
+
+	local r, c = this:Compile(condition);
 
 	if (class ~= "b") then
-		local isBool = this:Expression_IS(inst.condition);
+		local isBool = this:Expression_IS(condition);
 
 		if (not isBool) then
-			local t = this:CastExpression("b", inst.condition);
+			local t = this:CastExpression("b", condition);
 
 			if (not t) then
 				this:Throw(token, "Type of %s can not be used as a condition.", name(r));
@@ -704,27 +631,43 @@ function COMPILER.Compile_IF(this, inst, token)
 		end
 	end
 
+	this:addInstructionToBuffer(inst, condition);
+
+	this:writeToBuffer(inst, ") then");
+
 	this:PushScope();
 
-	this:Compile(inst.block);
+	this:Compile(data.block);
+
+	this:addInstructionToBuffer(inst, data.block);
 
 	this:PopScope();
 
-	if (inst._else) then
-		this:Compile(inst._else);
+	local eif = data.eif;
+
+	if (eif) then
+		this:Compile(eif);
+
+		this:addInstructionToBuffer(inst, eif);
 	end
+
+	this:writeToBuffer(inst, "end\n");
 
 	return "", 0;
 end
 
-function COMPILER.Compile_ELSEIF(this, inst, token)
-	local class, count = this:Compile(inst.condition);
+function COMPILER.Compile_ELSEIF(this, inst, token, data)
+	this:writeToBuffer(inst, "elseif (");
+
+	local condition = data.condition;
+
+	local class, count = this:Compile(condition);
 
 	if (class ~= "b") then
-		local isBool = this:Expression_IS(inst.condition);
+		local isBool = this:Expression_IS(condition);
 
 		if (not isBool) then
-			local t = this:CastExpression("b", inst.condition);
+			local t = this:CastExpression("b", condition);
 
 			if (not t) then
 				this:Throw(token, "Type of %s can not be used as a condition.", name(r));
@@ -732,23 +675,37 @@ function COMPILER.Compile_ELSEIF(this, inst, token)
 		end
 	end
 
+	this:addInstructionToBuffer(inst, condition);
+
+	this:writeToBuffer(inst, ") then");
+
 	this:PushScope();
 
-	this:Compile(inst.block);
+	this:Compile(data.block);
+
+	this:addInstructionToBuffer(inst, data.block);
 
 	this:PopScope();
 
-	if (inst._else) then
-		this:Compile(inst._else);
+	local eif = data.eif;
+
+	if (eif) then
+		local _, __, inst4 = this:Compile(eif);
+
+		this:addInstructionToBuffer(inst, inst4);
 	end
 
 	return "", 0;
 end
 
-function COMPILER.Compile_ELSE(this, inst, token)
+function COMPILER.Compile_ELSE(this, inst, token, data)
+	this:writeToBuffer(inst, "else\n");
+
 	this:PushScope();
 
-	this:Compile(inst.block);
+	this:Compile(data.block);
+
+	this:addInstructionToBuffer(inst, data.block);
 
 	this:PopScope();
 
@@ -780,30 +737,46 @@ function COMPILER.CheckState(this, state, token, msg, frst, ...)
 	return false;
 end
 
-function COMPILER.Compile_SERVER(this, inst, token)
+function COMPILER.Compile_SERVER(this, inst, token, data)
+	this:writeToBuffer(inst, "if (SERVER) then\n");
+
 	if (not this:GetOption("server")) then
 		this:Throw(token, "Server block must not appear inside a Client block.")
 	end
 
 	this:PushScope();
+	
 	this:SetOption("state", EXPR_SERVER);
-	this:Compile(inst.block);
+	
+	this:Compile(data.block);
+
+	this:addInstructionToBuffer(inst, data.block);
 
 	this:PopScope();
+
+	this:writeToBuffer(inst, "end\n");
 
 	return "", 0;
 end
 
-function COMPILER.Compile_CLIENT(this, inst, token)
+function COMPILER.Compile_CLIENT(this, inst, token, data)
+	this:writeToBuffer(inst, "if (CLIENT) then\n");
+
 	if (not this:GetOption("client")) then
 		this:Throw(token, "Client block must not appear inside a Server block.")
 	end
 
 	this:PushScope();
+	
 	this:SetOption("state", EXPR_CLIENT);
-	this:Compile(inst.block);
+	
+	this:Compile(data.block);
+
+	this:addInstructionToBuffer(inst, data.block);
 
 	this:PopScope();
+
+	this:writeToBuffer(inst, "end\n");
 
 	return "", 0;
 end
@@ -811,16 +784,16 @@ end
 --[[
 ]]
 
-function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
-	local tArgs = #expressions;
+function COMPILER.Compile_GLOBAL(this, inst, token, data)
+	local tArgs = #data.expressions;
 
 	local results = {};
 
 	for i = 1, tArgs do
-		local arg = expressions[i];
+		local arg = data.expressions[i];
 		local r, c = this:Compile(arg);
 
-		if (not inst.variables[i]) then
+		if (not data.variables[i]) then
 			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
 		elseif (i < tArgs) then
 			results[#results + 1] = {r, arg, true};
@@ -831,9 +804,9 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 		end
 	end
 
-	for i = 1, #inst.variables do
+	for i = 1, #data.variables do
 		local result = results[i];
-		local token = inst.variables[i];
+		local token = data.variables[i];
 		local var = token.data;
 
 		if (not result) then
@@ -845,7 +818,13 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 		if (info) then
 			info.global = true;
 			info.prefix = "GLOBAL";
-			this:QueueReplace(inst, token, info.prefix .. "." .. var);
+		end
+		
+		this:writeToBuffer(inst, "GLOBAL.");
+		this:writeToBuffer(inst, var);
+
+		if (i < #data.variables) then
+			this:writeToBuffer(inst, ",");
 		end
 
 		this.__defined[var] = true;
@@ -864,21 +843,35 @@ function COMPILER.Compile_GLOBAL(this, inst, token, expressions)
 		end
 	end
 
+	this:writeToBuffer(inst, "=");
+
+	for i = 1, tArgs do
+		this:addInstructionToBuffer(inst, data.expressions[i]);
+
+		if (i < tArgs) then
+			this:writeToBuffer(inst, ",");
+		end
+	end
+
 	this.__defined = {};
+
+	this:writeToBuffer(inst, ";\n");
 
 	return "", 0;
 end
 
-function COMPILER.Compile_LOCAL(this, inst, token, expressions)
-	local tArgs = #expressions;
+function COMPILER.Compile_LOCAL(this, inst, token, data)
+	local tArgs = #data.expressions;
 
 	local results = {};
 
+	this:writeToBuffer(inst, "local");
+
 	for i = 1, tArgs do
-		local arg = expressions[i];
+		local arg = data.expressions[i];
 		local r, c = this:Compile(arg);
 
-		if (not inst.variables[i]) then
+		if (not data.variables[i]) then
 			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
 		elseif (i < tArgs) then
 			results[#results + 1] = {r, arg, true};
@@ -889,20 +882,26 @@ function COMPILER.Compile_LOCAL(this, inst, token, expressions)
 		end
 	end
 
-	for i = 1, #inst.variables do
+	for i = 1, #data.variables do
 		local result = results[i];
-		local token = inst.variables[i];
+		local token = data.variables[i];
 		local var = token.data;
 
 		if (not result) then
 			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
 		end
 
-		local class, scope, info = this:AssignVariable(token, true, var, inst.class);
+		local class, scope, info = this:AssignVariable(token, true, var, data.class);
+
+		this:writeToBuffer(inst, var);
+
+		if (i < #data.variables) then
+			this:writeToBuffer(inst, ",");
+		end
 
 		this.__defined[var] = true;
 
-		if (result[1] ~= inst.class and result[1] ~= "") then
+		if (result[1] ~= data.class and result[1] ~= "") then
 			local casted = false;
 			local arg = result[2];
 
@@ -916,86 +915,101 @@ function COMPILER.Compile_LOCAL(this, inst, token, expressions)
 		end
 	end
 
+	this:writeToBuffer(inst, "=");
+
+	for i = 1, tArgs do
+		this:addInstructionToBuffer(inst, data.expressions[i]);
+
+		if (i < tArgs) then
+			this:writeToBuffer(inst, ",");
+		end
+	end
+
 	this.__defined = {};
+
+	this:writeToBuffer(inst, "\n");
 
 	return "", 0;
 end
 
-function COMPILER.Compile_ASS(this, inst, token, expressions)
-	local tArgs = #expressions;
+function COMPILER.Compile_ASS(this, inst, token, data)
+	this:writeToBuffer(inst, "\n");
 
-	local results = {};
+	local vars = data.variables;
+	local tVars = #vars;
+
+	for i = 1, tVars do
+		local var = vars[i].data;
+		local class, scope, info = this:GetVariable(var);
+
+		if (info and info.prefix) then
+			var = info.prefix .. "." .. var;
+		end
+
+		this:writeToBuffer(inst, var);
+
+		if i < tVars then
+			this:writeToBuffer(inst, ",");
+		end
+	end
+
+	this:writeToBuffer(inst, "=");
+
+	local args = data.expressions;
+	local tArgs = #args;
 
 	for i = 1, tArgs do
-		local arg = expressions[i];
-		local r, c = this:Compile(arg);
+		local var = vars[i];
+		local arg = args[i];
 
-		if (not inst.variables[i]) then
+		if not var then
 			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
-		elseif (i < tArgs) then
-			results[#results + 1] = {r, arg, true};
-		else
-			for j = 1, c do
-				results[#results + 1] = {r, arg, j == 1};
+		end
+
+		local r, c = this:Compile(arg);
+		local class, scope, info = this:AssignVariable(var, false, var.data, r);
+
+		this:addInstructionToBuffer(inst, arg);
+
+		if i < tVars then this:writeToBuffer(inst, ","); end
+
+		if i == tArgs and c > 1 then
+			for i = (i + 1), i + c do
+				local var = vars[i];
+				local arg = args[i];
+
+				if not arg then
+					this:Throw(var, "Unable to assign variable %s, no matching value.", var.data);
+				end
+
+				local class, scope, info = this:AssignVariable(var, false, var.data, r);
 			end
 		end
 	end
 
-	for i = 1, #inst.variables do
-		local result = results[i];
+	this:writeToBuffer(inst, ";\n");
 
-		local token = inst.variables[i];
-		local var = token.data;
-
-		if (not result) then
-			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
-		end
-
-		this.__defined[var] = true;
-
-		local type = result[1];
+	for i = 1, tVars do
+		local var = vars[i].data;
 		local class, scope, info = this:GetVariable(var);
 
-		if (type ~= class) then
-			local arg = result[2];
-
-			if (result[3]) then
-				-- TODO: CAST
-				-- Once done rember: type = class;
-			end
-		end
-
-		local class, scope, info = this:AssignVariable(token, false, var, class);
-
-		if (info and info.prefix) then
-			var = info.prefix .. "." .. var;
-
-			this:QueueReplace(inst, token, var);
-		end
-
-		if (inst.class == "f") then
-			injectNewLine = true;
-
+		if (data.class == "f") then
 			if (info.signature) then
 				local msg = string_format("Failed to assign function to delegate %s(%s), permater missmatch.", var, info.signature);
-				this:QueueInjectionAfter(inst, inst.final, string_format("if (%s and %s.signature ~= %q) then CONTEXT:Throw(%q); %s = nil; end", var, var, info.signature, msg, var));
+				this:writeToBuffer(inst, "if (%s and %s.signature ~= %q) then CONTEXT:Throw(%q); %s = nil; end\n", var, var, info.signature, msg, var);
 			end
 
 			if (info.resultClass) then
 				local msg = string_format("Failed to assign function to delegate %s(%s), result type missmatch.", var, name(info.resultClass));
-				this:QueueInjectionAfter(inst, inst.final, string_format("if (%s and %s.result ~= %q) then CONTEXT:Throw(%q); %s = nil; end", var, var, name(info.resultClass), msg, var));
+				this:writeToBuffer(inst, "if (%s and %s.result ~= %q) then CONTEXT:Throw(%q); %s = nil; end\n", var, var, name(info.resultClass), msg, var);
 			end
 
 			if (info.resultCount) then
 				local msg = string_format("Failed to assign function to delegate %s(%s), result count missmatch.", var, info.resultCount);
-				this:QueueInjectionAfter(inst, inst.final, string_format("if (%s and %s.count ~= %i) then CONTEXT:Throw(%q); %s = nil; end", var, var, info.resultCount, msg, var));
+				this:writeToBuffer(inst, "if (%s and %s.count ~= %i) then CONTEXT:Throw(%q); %s = nil; end\n", var, var, info.resultCount, msg, var);
 			end
-
-			injectNewLine = false;
 		end
 	end
-
-	this.__defined = {};
 
 	return "", 0;
 end
@@ -1003,18 +1017,18 @@ end
 --[[
 ]]
 
-function COMPILER.Compile_AADD(this, inst, token, expressions)
-	this:QueueReplace(inst, inst.__operator, "=");
+function COMPILER.Compile_AADD(this, inst, token, data)
+	for k = 1, #data.variables do
+		local token = data.variables[k];
+		local var = token.data;
 
-	for k = 1, #inst.variables do
-		local token = inst.variables[k];
-		local expr = expressions[k];
+		local expr = data.expressions[k];
 		local r, c = this:Compile(expr);
 
-		local class, scope, info = this:GetVariable(token.data, nil, false);
+		local class, scope, info = this:GetVariable(var, nil, false);
 
 		if (info and info.prefix) then
-			this:QueueReplace(inst, token, info.prefix .. "." .. token.data);
+			var = info.prefix .. "." .. token.data;
 		end
 
 		local char = "+";
@@ -1038,40 +1052,35 @@ function COMPILER.Compile_AADD(this, inst, token, expressions)
 				char = "..";
 			end
 
-			if (info and info.prefix) then
-				this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, char);
-			else
-				this:QueueInjectionBefore(inst, expr.token, token.data, char);
-			end
+			this:writeToBuffer(inst, "%s = %s %s", var, var, char);
+
+			this:addInstructionToBuffer(inst, expr);
+
+			this:writeToBuffer(inst, ";\n");
 		else
-			-- Implement Operator
-			this.__operators[op.signature] = op.operator;
+			this:writeToBuffer(inst, "%s = ", var);
 
-			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"" .. op.signature .. "\"", "]", "(");
-
-			if (op.context) then
-			    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
-			end
-
-			this:QueueInjectionAfter(inst, expr.final, ")" );
+			this:writeOperationCall(inst, op, "var", expr);
+			
+			this:writeToBuffer(inst, ";\n");
 		end
 
 		this:AssignVariable(token, false, token.data, op.result);
 	end
 end
 
-function COMPILER.Compile_ASUB(this, inst, token, expressions)
-	this:QueueReplace(inst, inst.__operator, "=");
+function COMPILER.Compile_ASUB(this, inst, token, data)
+	for k = 1, #data.variables do
+		local token = data.variables[k];
+		local var = token.data;
 
-	for k = 1, #inst.variables do
-		local token = inst.variables[k];
-		local expr = expressions[k];
+		local expr = data.expressions[k];
 		local r, c = this:Compile(expr);
 
-		local class, scope, info = this:GetVariable(token.data, nil, false);
+		local class, scope, info = this:GetVariable(var, nil, false);
 
 		if (info and info.prefix) then
-			this:QueueInjectionBefore(inst, token, info.prefix .. ".");
+			var = info.prefix .. "." .. token.data;
 		end
 
 		local op = this:GetOperator("sub", class, r);
@@ -1089,22 +1098,17 @@ function COMPILER.Compile_ASUB(this, inst, token, expressions)
 		this:CheckState(op.state, token, "Assignment operator (-=)");
 
 		if (not op.operator) then
-			if (info and info.prefix) then
-				this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "-");
-			else
-				this:QueueInjectionBefore(inst, expr.token, token.data, char);
-			end
+			this:writeToBuffer(inst, "%s = %s -", var, var);
+
+			this:addInstructionToBuffer(inst, expr);
+
+			this:writeToBuffer(inst, ";\n");
 		else
-			-- Implement Operator
-			this.__operators[op.signature] = op.operator;
+			this:writeToBuffer(inst, "%s = ", var);
 
-			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"" .. op.signature .. "\"", "]", "(");
-
-			if (op.context) then
-			    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
-			end
-
-			this:QueueInjectionAfter(inst, expr.final, ")" );
+			this:writeOperationCall(inst, op, "var", expr);
+			
+			this:writeToBuffer(inst, ";\n");
 		end
 
 		this:AssignVariable(token, false, token.data, op.result);
@@ -1113,18 +1117,18 @@ end
 
 
 
-function COMPILER.Compile_ADIV(this, inst, token, expressions)
-	this:QueueReplace(inst, inst.__operator, "=");
+function COMPILER.Compile_ADIV(this, inst, token, data)
+	for k = 1, #data.variables do
+		local token = data.variables[k];
+		local var = token.data;
 
-	for k = 1, #inst.variables do
-		local token = inst.variables[k];
-		local expr = expressions[k];
+		local expr = data.expressions[k];
 		local r, c = this:Compile(expr);
 
-		local class, scope, info = this:GetVariable(token.data, nil, false);
+		local class, scope, info = this:GetVariable(var, nil, false);
 
 		if (info and info.prefix) then
-			this:QueueInjectionBefore(inst, token, info.prefix .. ".");
+			var = info.prefix .. "." .. token.data;
 		end
 
 		local op = this:GetOperator("div", class, r);
@@ -1142,40 +1146,35 @@ function COMPILER.Compile_ADIV(this, inst, token, expressions)
 		this:CheckState(op.state, token, "Assignment operator (/=)");
 
 		if (not op.operator) then
-			if (info and info.prefix) then
-				this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "/");
-			else
-				this:QueueInjectionBefore(inst, expr.token, token.data, char);
-			end
+			this:writeToBuffer(inst, "%s = %s /", var, var);
+
+			this:addInstructionToBuffer(inst, expr);
+
+			this:writeToBuffer(inst, ";\n");
 		else
-			-- Implement Operator
-			this.__operators[op.signature] = op.operator;
+			this:writeToBuffer(inst, "%s = ", var);
 
-			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"" .. op.signature .. "\"", "]", "(");
-
-			if (op.context) then
-			    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
-			end
-
-			this:QueueInjectionAfter(inst, expr.final, ")" );
+			this:writeOperationCall(inst, op, "var", expr);
+			
+			this:writeToBuffer(inst, ";\n");
 		end
 
 		this:AssignVariable(token, false, token.data, op.result);
 	end
 end
 
-function COMPILER.Compile_AMUL(this, inst, token, expressions)
-	this:QueueReplace(inst, inst.__operator, "=");
+function COMPILER.Compile_AMUL(this, inst, token, data)
+	for k = 1, #data.variables do
+		local token = data.variables[k];
+		local var = token.data;
 
-	for k = 1, #inst.variables do
-		local token = inst.variables[k];
-		local expr = expressions[k];
+		local expr = data.expressions[k];
 		local r, c = this:Compile(expr);
 
-		local class, scope, info = this:GetVariable(token.data, nil, false);
+		local class, scope, info = this:GetVariable(var, nil, false);
 
 		if (info and info.prefix) then
-			this:QueueInjectionBefore(inst, token, info.prefix .. ".");
+			var = info.prefix .. "." .. token.data;
 		end
 
 		local op = this:GetOperator("mul", class, r);
@@ -1193,22 +1192,17 @@ function COMPILER.Compile_AMUL(this, inst, token, expressions)
 		this:CheckState(op.state, token, "Assignment operator (*=)");
 
 		if (not op.operator) then
-			if (info and info.prefix) then
-				this:QueueInjectionBefore(inst, expr.token, info.prefix .. "." .. token.data, "*");
-			else
-				this:QueueInjectionBefore(inst, expr.token, token.data, char);
-			end
+			this:writeToBuffer(inst, "%s = %s *", var, var);
+
+			this:addInstructionToBuffer(inst, expr);
+
+			this:writeToBuffer(inst, ";\n");
 		else
-			-- Implement Operator
-			this.__operators[op.signature] = op.operator;
+			this:writeToBuffer(inst, "%s = ", var);
 
-			this:QueueInjectionBefore(inst, expr.token, "_OPS", "[", "\"" .. op.signature .. "\"", "]", "(");
-
-			if (op.context) then
-			    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
-			end
-
-			this:QueueInjectionAfter(inst, expr.final, ")" );
+			this:writeOperationCall(inst, op, "var", expr);
+			
+			this:writeToBuffer(inst, ";\n");
 		end
 
 		this:AssignVariable(token, false, token.data, op.result);
@@ -1218,33 +1212,27 @@ end
 --[[
 ]]
 
-function COMPILER.Compile_GROUP(this, inst, token, expr)
+function COMPILER.Compile_GROUP(this, inst, token, data)
 
-	local pre = this:OffsetToken(token, -1);
-	local next = this:OffsetToken(inst.final, 1);
+	this:writeToBuffer("(");
 
-	if (pre and next) then
-		if (pre.type == "lpa" and next.type == "rpa") then
-			return r, c;
-		end
-	end
+	local r, c = this:Compile(data.expr);
 
-	this:QueueInjectionBefore(inst, token, "(");
-	this:QueueInjectionAfter(inst, inst.final, ")");
+	this.addInstructionToBuffer(inst, data.expr);
 
-	local r, c = this:Compile(expr);
+	this:writeToBuffer(")");
 
 	return r, c;
 end
 
-function COMPILER.Compile_TEN(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_TEN(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
-	local expr3 = expressions[3];
+	local expr3 = data.expr3;
 	local r3, c3 = this:Compile(expr3);
 
 	local op = this:GetOperator("ten", r1, r2, r3);
@@ -1252,21 +1240,21 @@ function COMPILER.Compile_TEN(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(expr.token, "Tenary operator (A ? B : C) does not support '%s ? %s : %s'", name(r1), name(r2), name(r3));
 	elseif (not op.operator) then
-		this:QueueReplace(inst, inst.__and, "and");
-		this:QueueReplace(inst, inst.__or, "or");
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, "and");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, "or");
+
+		this:addInstructionToBuffer(inst, expr3);
+
+		this:writeToBuffer(inst, ")");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__and, ",");
-		this:QueueReplace(inst, inst.__or, ",");
-
-		this:QueueInjectionAfter(inst, expr3.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2, expr3);
 	end
 
 	this:CheckState(op.state, token, "Tenary operator (A ? B : C)");
@@ -1275,11 +1263,11 @@ function COMPILER.Compile_TEN(this, inst, token, expressions)
 end
 
 
-function COMPILER.Compile_OR(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_OR(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("or", r1, r2);
@@ -1289,26 +1277,26 @@ function COMPILER.Compile_OR(this, inst, token, expressions)
 		local is2 = this:Expression_IS(expr2);
 
 		if (is1 and is2) then
-			op = this:GetOperator("and", "b", "b");
+			op = this:GetOperator("or", "b", "b");
 		end
 
 		if (not op) then
 			this:Throw(token, "Logical or operator (||) does not support '%s || %s'", name(r1), name(r2));
 		end
-	elseif (not op.operator) then
-		this:QueueReplace(inst, inst.__operator, "or");
+	end
+
+	if (not op.operator) then
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, "or");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, "(");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Logical or operator (||) '%s || %s'", name(r1), name(r2));
@@ -1316,11 +1304,11 @@ function COMPILER.Compile_OR(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_AND(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_AND(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("and", r1, r2);
@@ -1336,20 +1324,20 @@ function COMPILER.Compile_AND(this, inst, token, expressions)
 		if (not op) then
 			this:Throw(token, "Logical and operator (&&) does not support '%s && %s'", name(r1), name(r2));
 		end
-	elseif (not op.operator) then
-		this:QueueReplace(inst, inst.__operator, "and");
+	end
+
+	if (not op.operator) then
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, "and");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, "(");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Logical and operator (&&) '%s && %s'", name(r1), name(r2));
@@ -1357,11 +1345,11 @@ function COMPILER.Compile_AND(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_BXOR(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_BXOR(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("bxor", r1, r2);
@@ -1369,25 +1357,17 @@ function COMPILER.Compile_BXOR(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Binary xor operator (^^) does not support '%s ^^ %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		this:QueueInjectionBefore(inst, expr1.token, "bit.bxor(");
+		this:writeToBuffer(inst, "bit.bxor(");
 
-		this:QueueReplace(inst, inst.__operator, ",");
+		this:addInstructionToBuffer(inst, expr1);
 
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
+		this:writeToBuffer(inst, ",");
 
+		this:addInstructionToBuffer(inst, expr2);
 
+		this:writeToBuffer(inst, "(");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Binary xor operator (^^) '%s ^^ %s'", name(r1), name(r2));
@@ -1395,11 +1375,11 @@ function COMPILER.Compile_BXOR(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_BOR(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_BOR(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("bor", r1, r2);
@@ -1407,24 +1387,17 @@ function COMPILER.Compile_BOR(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Binary or operator (|) does not support '%s | %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		this:QueueInjectionBefore(inst, expr1.token, "bit.bor(");
+		this:writeToBuffer(inst, "bit.bor(");
 
-		this:QueueReplace(inst, inst.__operator, ",");
+		this:addInstructionToBuffer(inst, expr1);
 
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
+		this:writeToBuffer(inst, ",");
 
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, "(");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Binary xor operator (|) '%s | %s'", name(r1), name(r2));
@@ -1432,11 +1405,11 @@ function COMPILER.Compile_BOR(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_BAND(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_BAND(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("band", r1, r2);
@@ -1444,25 +1417,17 @@ function COMPILER.Compile_BAND(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Binary or operator (&) does not support '%s & %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		this:QueueInjectionBefore(inst, expr1.token, "bit.band(");
+		this:writeToBuffer(inst, "bit.band(");
 
-		this:QueueReplace(inst, inst.__operator, ",");
+		this:addInstructionToBuffer(inst, expr1);
 
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
+		this:writeToBuffer(inst, ",");
 
+		this:addInstructionToBuffer(inst, expr2);
 
+		this:writeToBuffer(inst, "(");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Binary xor operator (&) '%s & %s'", name(r1), name(r2));
@@ -1473,11 +1438,11 @@ end
 --[[function COMPILER.Compile_EQ_MUL(inst, token, expressions)
 end]]
 
-function COMPILER.Compile_EQ(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_EQ(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("eq", r1, r2);
@@ -1485,19 +1450,17 @@ function COMPILER.Compile_EQ(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Comparison operator (==) does not support '%s == %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		-- Leave the code alone.
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, "==");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, "(");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Comparison operator (==) '%s == %s'", name(r1), name(r2));
@@ -1508,11 +1471,11 @@ end
 --[[function COMPILER.Compile_NEQ_MUL(inst, token, expressions)
 end]]
 
-function COMPILER.Compile_NEQ(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_NEQ(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("neq", r1, r2);
@@ -1520,19 +1483,17 @@ function COMPILER.Compile_NEQ(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Comparison operator (!=) does not support '%s != %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		this:QueueReplace(inst, inst.__operator, "~=");
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, "~=");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, "(");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Comparison operator (!=) '%s != %s'", name(r1), name(r2));
@@ -1540,11 +1501,11 @@ function COMPILER.Compile_NEQ(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_LTH(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_LTH(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("lth", r1, r2);
@@ -1552,19 +1513,17 @@ function COMPILER.Compile_LTH(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Comparison operator (<) does not support '%s < %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		-- Leave the code alone.
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, "<");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, "(");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Comparison operator (<) '%s < %s'", name(r1), name(r2));
@@ -1572,11 +1531,11 @@ function COMPILER.Compile_LTH(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_LEQ(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_LEQ(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("leg", r1, r2);
@@ -1584,19 +1543,17 @@ function COMPILER.Compile_LEQ(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Comparison operator (<=) does not support '%s <= %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		-- Leave the code alone.
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, "<=");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, "(");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Comparison operator (<=) '%s <= %s'", name(r1), name(r2));
@@ -1604,11 +1561,11 @@ function COMPILER.Compile_LEQ(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_GTH(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_GTH(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("gth", r1, r2);
@@ -1616,19 +1573,17 @@ function COMPILER.Compile_GTH(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Comparison operator (>) does not support '%s > %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		-- Leave the code alone.
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, ">");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, "(");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Comparison operator (>) '%s > %s'", name(r1), name(r2));
@@ -1636,11 +1591,11 @@ function COMPILER.Compile_GTH(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_GEQ(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_GEQ(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("geq", r1, r2);
@@ -1648,19 +1603,17 @@ function COMPILER.Compile_GEQ(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Comparison operator (>=) does not support '%s >= %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		-- Leave the code alone.
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, ">=");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, "(");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Comparison operator (>=) '%s >= %s'", name(r1), name(r2));
@@ -1668,11 +1621,11 @@ function COMPILER.Compile_GEQ(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_BSHL(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_BSHL(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("bshl", r1, r2);
@@ -1680,25 +1633,17 @@ function COMPILER.Compile_BSHL(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Binary shift operator (<<) does not support '%s << %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		this:QueueInjectionBefore(inst, expr1.token, "bit.lshift(");
+		this:writeToBuffer(inst, "bit.lshift(");
 
-		this:QueueReplace(inst, inst.__operator, ",");
+		this:addInstructionToBuffer(inst, expr1);
 
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
+		this:writeToBuffer(inst, ",");
 
+		this:addInstructionToBuffer(inst, expr2);
 
+		this:writeToBuffer(inst, "(");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Binary shift operator (<<) '%s << %s'", name(r1), name(r2));
@@ -1706,11 +1651,11 @@ function COMPILER.Compile_BSHL(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_BSHR(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_BSHR(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("bshr", r1, r2);
@@ -1718,25 +1663,17 @@ function COMPILER.Compile_BSHR(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Binary shift operator (>>) does not support '%s >> %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		this:QueueInjectionBefore(inst, expr1.token, "bit.rshift(");
+		this:writeToBuffer(inst, "bit.rshift(");
 
-		this:QueueReplace(inst, inst.__operator, ",");
+		this:addInstructionToBuffer(inst, expr1);
 
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
+		this:writeToBuffer(inst, ",");
 
+		this:addInstructionToBuffer(inst, expr2);
 
+		this:writeToBuffer(inst, "(");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Binary shift operator (>>) '%s >> %s'", name(r1), name(r2));
@@ -1747,11 +1684,11 @@ end
 --[[
 ]]
 
-function COMPILER.Compile_ADD(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_ADD(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("add", r1, r2);
@@ -1759,21 +1696,21 @@ function COMPILER.Compile_ADD(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Addition operator (+) does not support '%s + %s'", name(r1), name(r2));
 	elseif (not op.operator) then
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
 		if (r1 == "s" or r2 == "s") then
-			this:QueueReplace(inst, inst.__operator, ".."); -- Replace + with .. for string addition;
+			this:writeToBuffer(inst, "..");
+		else
+			this:writeToBuffer(inst, "+");
 		end
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, ")");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Addition operator (+) '%s + %s'", name(r1), name(r2));
@@ -1781,11 +1718,11 @@ function COMPILER.Compile_ADD(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_SUB(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_SUB(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("sub", r1, r2);
@@ -1793,19 +1730,17 @@ function COMPILER.Compile_SUB(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Subtraction operator (-) does not support '%s - %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		-- Do not change the code.
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, "-");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, ")");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Subtraction operator (-) '%s - %s'", name(r1), name(r2));
@@ -1813,11 +1748,11 @@ function COMPILER.Compile_SUB(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_DIV(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_DIV(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("div", r1, r2);
@@ -1825,19 +1760,17 @@ function COMPILER.Compile_DIV(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(expr.token, "Division operator (/) does not support '%s / %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		-- Do not change the code.
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, "/");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, ")");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Division operator (/) '%s / %s'", name(r1), name(r2));
@@ -1845,11 +1778,11 @@ function COMPILER.Compile_DIV(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_MUL(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_MUL(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("mul", r1, r2);
@@ -1857,19 +1790,17 @@ function COMPILER.Compile_MUL(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Multiplication operator (*) does not support '%s * %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		-- Do not change the code.
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, "*");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, ")");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Multiplication operator (*) '%s * %s'", name(r1), name(r2));
@@ -1877,11 +1808,11 @@ function COMPILER.Compile_MUL(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_EXP(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_EXP(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("exp", r1, r2);
@@ -1889,19 +1820,17 @@ function COMPILER.Compile_EXP(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Exponent operator (^) does not support '%s ^ %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		-- Do not change the code.
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, "^");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, ")");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Exponent operator (^) '%s ^ %s'", name(r1), name(r2));
@@ -1909,11 +1838,11 @@ function COMPILER.Compile_EXP(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_MOD(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_MOD(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
-	local expr2 = expressions[2];
+	local expr2 = data.expr2;
 	local r2, c2 = this:Compile(expr2);
 
 	local op = this:GetOperator("mod", r1, r2);
@@ -1921,19 +1850,17 @@ function COMPILER.Compile_MOD(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Modulus operator (%) does not support '%s % %s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		-- Do not change the code.
+		this:writeToBuffer(inst, "(");
+
+		this:addInstructionToBuffer(inst, expr1);
+
+		this:writeToBuffer(inst, "^");
+
+		this:addInstructionToBuffer(inst, expr2);
+
+		this:writeToBuffer(inst, ")");
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueReplace(inst, inst.__operator, ",");
-
-		this:QueueInjectionAfter(inst, expr2.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
 	this:CheckState(op.state, token, "Modulus operator (%) '%s % %s'", name(r1), name(r2));
@@ -1941,8 +1868,8 @@ function COMPILER.Compile_MOD(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_NEG(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_NEG(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
 	local op = this:GetOperator("neg", r1);
@@ -1950,17 +1877,11 @@ function COMPILER.Compile_NEG(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Negation operator (-A) does not support '-%s'", name(r1));
 	elseif (not op.operator) then
-		-- Do not change the code.
+		this:writeToBuffer(inst, "-");
+
+		this:addInstructionToBuffer(inst, expr1);
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueInjectionAfter(inst, expr1.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1);
 	end
 
 	this:CheckState(op.state, token, "Negation operator (-A) '-%s'", name(r1));
@@ -1968,8 +1889,8 @@ function COMPILER.Compile_NEG(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_NOT(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_NOT(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
 	local op = this:GetOperator("not", r1);
@@ -1977,17 +1898,11 @@ function COMPILER.Compile_NOT(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Not operator (!A) does not support '!%s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		this:QueueReplace(inst, inst.__operator, "not");
+		this:writeToBuffer(inst, "not");
+
+		this:addInstructionToBuffer(inst, expr1);
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueInjectionAfter(inst, expr1.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1);
 	end
 
 	this:CheckState(op.state, token, "Not operator (!A) '!%s'", name(r1));
@@ -1995,8 +1910,8 @@ function COMPILER.Compile_NOT(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_LEN(this, inst, token, expressions)
-	local expr1 = expressions[1];
+function COMPILER.Compile_LEN(this, inst, token, data)
+	local expr1 = data.expr;
 	local r1, c1 = this:Compile(expr1);
 
 	local op = this:GetOperator("len", r1);
@@ -2004,17 +1919,11 @@ function COMPILER.Compile_LEN(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Length operator (#A) does not support '#%s'", name(r1), name(r2));
 	elseif (not op.operator) then
-		-- Once again we change nothing.
+		this:writeToBuffer(inst, "#");
+
+		this:addInstructionToBuffer(inst, expr1);
 	else
-		this:QueueInjectionBefore(inst, expr1.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr1.token, "CONTEXT", ",");
-		end
-
-		this:QueueInjectionAfter(inst, expr1.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr1);
 	end
 
 	this:CheckState(op.state, token, "Length operator (#A) '#%s'", name(r1));
@@ -2023,7 +1932,7 @@ function COMPILER.Compile_LEN(this, inst, token, expressions)
 end
 
 function COMPILER.Compile_DELTA(this, inst, token, expressions)
-	local var = inst.__var.data;
+	local var = data.var.data;
 
 	if (this.__defined[var]) then
 		this:Throw(token, "Variable %s is defined here and can not be used as part of an expression.", var);
@@ -2039,28 +1948,26 @@ function COMPILER.Compile_DELTA(this, inst, token, expressions)
 		this:Throw(token, "Delta operator ($) can not be used on none global variable %s.", var);
 	end
 
-	if (info and info.prefix) then
-		this:QueueReplace(inst, inst.__var, info.prefix .. "." .. var);
-	end
-
 	local op = this:GetOperator("sub", c, c);
 
 	if (not op) then
 		this:Throw(token, "Delta operator ($) does not support '$%s'", name(c));
 	elseif (not op.operator) then
-		this:QueueRemove(inst, inst.__operator);
-		this:QueueInjectionBefore(inst, inst.__var, "DELTA", ".", var, "-");
-	else
-		this:QueueRemove(inst, inst.__operator);
-		this:QueueInjectionBefore(inst, inst.__var, "_OPS[\"" .. op.signature .. "\"](");
+		this:writeToBuffer(inst, "(DELTA.%s - %s",var);
 
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, inst.__var, "CONTEXT", ",", "DELTA", ".", var, ",");
+		if (info and info.prefix) then
+			var = info.prefix .. "." .. var;
 		end
 
-		this:QueueInjectionAfter(inst, inst.__var, ")" );
+		this:writeToBuffer(inst, "%s)",var);
 
-		this.__operators[op.signature] = op.operator;
+		this:writeToBuffer(inst, ")");
+	else
+		if (info and info.prefix) then
+			this:writeOperationCall(inst, op, "DELTA." .. var, info.prefix .. var);
+		else
+			this:writeOperationCall(inst, op, "DELTA." .. var, var);
+		end
 	end
 
 	this:CheckState(op.state, token, "Delta operator ($) '$%s'", name(c));
@@ -2068,8 +1975,8 @@ function COMPILER.Compile_DELTA(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_CHANGED(this, inst, token, expressions)
-	local var = inst.__var.data;
+function COMPILER.Compile_CHANGED(this, inst, token, data)
+	local var = inst.var.data;
 
 	if (this.__defined[var]) then
 		this:Throw(token, "Variable %s is defined here and can not be used as part of an expression.", var);
@@ -2085,10 +1992,6 @@ function COMPILER.Compile_CHANGED(this, inst, token, expressions)
 		this:Throw(token, "Changed operator (~) can not be used on none global variable %s.", var);
 	end
 
-	if (info and info.prefix) then
-		this:QueueReplace(inst, inst.__var, info.prefix .. "." .. var);
-	end
-
 	local op = this:GetOperator("neq", c, c);
 
 	if (not op) then
@@ -2096,17 +1999,19 @@ function COMPILER.Compile_CHANGED(this, inst, token, expressions)
 	elseif (not op.operator) then
 		this:QueueRemove(inst, inst.__operator);
 		this:QueueInjectionBefore(inst, inst.__var, "DELTA", ".", var, "~=");
-	else
-		this:QueueRemove(inst, inst.__operator);
-		this:QueueInjectionBefore(inst, inst.__var, "_OPS[\"" .. op.signature .. "\"](");
 
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, inst.__var, "CONTEXT", ",", "DELTA", ".", var, ",");
+		if (info and info.prefix) then
+			this:writeToBuffer(inst, "(DELTA.%s ~= %s.%s)", var, info.prefix, var);
+		else
+			this:writeToBuffer(inst, "(DELTA.%s ~= %s)", var, var);
 		end
 
-		this:QueueInjectionAfter(inst, inst.__var, ")" );
-
-		this.__operators[op.signature] = op.operator;
+	else
+		if (info and info.prefix) then
+			this:writeOperationCall(inst, op, string_format("DELTA.%s", var), string_format("%s.%s",info.prefix, var));
+		else
+			this:writeOperationCall(inst, op, string_format("DELTA.%s", var), var);
+		end
 	end
 
 	this:CheckState(op.state, token, "Changed operator (~) '~%s'", name(c));
@@ -2126,15 +2031,11 @@ function COMPILER.Expression_IS(this, expr)
 
 			return true, expr;
 		else
-			this:QueueInjectionBefore(inst, expr.token, "_OPS[\"" .. op.signature .. "\"](");
+			local temp = table.Copy(expr);
 
-			if (op.context) then
-			    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
-			end
+			expr.buffer = {};
 
-			this:QueueInjectionAfter(inst, expr.final, ")" );
-
-			this.__operators[op.signature] = op.operator;
+			this:writeOperationCall(expr, op, temp);
 
 			expr.result = op.type;
 			expr.rCount = op.count;
@@ -2148,8 +2049,8 @@ function COMPILER.Expression_IS(this, expr)
 	return false, expr;
 end
 
-function COMPILER.Compile_IOF(this, inst, token, expr)
-	local r, c = this:Compile(expr);
+function COMPILER.Compile_IOF(this, inst, token, data)
+	local r, c = this:Compile(data.expr);
 
 	local userclass = this:GetClassOrInterface(inst.__cls.data);
 
@@ -2157,11 +2058,11 @@ function COMPILER.Compile_IOF(this, inst, token, expr)
 		this:Throw(token, "Instanceof currently only supports user classes, sorry about that :D");
 	end
 
-	this:QueueRemove(inst, inst.__cls);
-	this:QueueRemove(inst, inst.__iof);
+	this.writeToBuffer(inst, string_format("CheckHash(%q,", userclass.hash));
 
-	this:QueueInjectionBefore(inst, expr.token,"CheckHash('" .. userclass.hash .. "',");
-	this:QueueInjectionAfter(inst, expr.final,")");
+	this:addInstructionToBuffer(inst, data.expr);
+
+	this.writeToBuffer(inst, ")");
 
 	return "b", 1;
 end
@@ -2216,15 +2117,11 @@ function COMPILER.CastExpression(this, type, expr)
 	end
 
 	if (op.operator) then
-		this:QueueInjectionBefore(inst, expr.token, "_OPS[\"" .. op.signature .. "\"](");
+		local temp = table.Copy(expr);
 
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
-		end
+		expr.buffer = {};
 
-		this:QueueInjectionAfter(inst, expr.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:addInstructionToBuffer(expr, temp);
 	end
 
 	expr.result = op.result;
@@ -2233,104 +2130,109 @@ function COMPILER.CastExpression(this, type, expr)
 	return true, expr;
 end
 
-function COMPILER.Compile_CAST(this, inst, token, expressions)
-	local expr = expressions[1];
+function COMPILER.Compile_CAST(this, inst, token, data)
+	local expr = data.expr;
 
 	this:Compile(expr);
 
-	local t = this:CastExpression(inst.class, expr);
+	local t = this:CastExpression(data.class, expr);
 
 	if (not t) then
-		this:Throw(token, "Type of %s can not be cast to type of %s.", name(expr.result), name(inst.class))
+		this:Throw(token, "Type of %s can not be cast to type of %s.", name(expr.result), name(data.class))
 	end
 
 	return expr.result, expr.rCount;
 end
 
-function COMPILER.Compile_VAR(this, inst, token, expressions)
+function COMPILER.Compile_VAR(this, inst, token, data)
 	if (this.__defined[inst.variable]) then
-		this:Throw(token, "Variable %s is defined here and can not be used as part of an expression.", inst.variable);
+		this:Throw(token, "Variable %s is defined here and can not be used as part of an expression.", data.variable);
 	end
 
-	local c, s, var = this:GetVariable(inst.variable)
-
+	local c, s, var = this:GetVariable(data.variable)
+	
 	if (var and var.prefix) then
 		local prefix = var.atribute and ("this." .. var.prefix) or var.prefix;
-		this:QueueReplace(inst, token, prefix .. "." .. token.data);
+		this:writeToBuffer(inst, "%s.%s", prefix, data.variable);
+	else
+		this:writeToBuffer(inst, data.variable);
 	end
 
 	if (not c) then
-		this:Throw(token, "Variable %s does not exist.", inst.variable);
+		this:Throw(token, "Variable %s does not exist.", data.variable);
 	end
 
 	return c, 1;
 end
 
-function COMPILER.Compile_BOOL(this, inst, token, expressions)
+function COMPILER.Compile_BOOL(this, inst, token, data)
+	if data.value then
+		this:writeToBuffer(inst, "true");
+	else
+		this:writeToBuffer(inst, "false");
+	end
+
 	return "b", 1
 end
 
-function COMPILER.Compile_NUM(this, inst, token, expressions)
+function COMPILER.Compile_NUM(this, inst, token, data)
+	this:writeToBuffer(inst, data.value);
 	return "n", 1
 end
 
-function COMPILER.Compile_STR(this, inst, token, expressions)
+function COMPILER.Compile_STR(this, inst, token, data)
+	this:writeToBuffer(inst, data.value);
 	return "s", 1
 end
 
-function COMPILER.Compile_PTRN(this, inst, token, expressions)
+function COMPILER.Compile_PTRN(this, inst, token, data)
+	this:writeToBuffer(inst, data.value);
 	return "_ptr", 1
 end
 
 function COMPILER.Compile_CLS(this, inst, token, expressions)
-	this:QueueReplace(inst, token, "\"" .. token.data .. "\"");
+	this:writeToBuffer(inst, "\"" .. data.value .. "\"");
 	return "_cls", 1
 end
 
-function COMPILER.Compile_NIL(this, inst, token, expressions)
-	this:QueueReplace(inst, token, "NIL");
+function COMPILER.Compile_NIL(this, inst, token)
+	this:writeToBuffer(inst, "NIL");
 	return "", 1
 end
 
-function COMPILER.Compile_COND(this, inst, token, expressions)
-	local expr = expressions[1];
+function COMPILER.Compile_COND(this, inst, token, data)
+	local expr = data.expr;
 	local r, c = this:Compile(expr);
 
 	if (r == "b") then
+		this:addInstructionToBuffer(inst, expr);
 		return r, c;
 	end
 
 	local op = this:GetOperator("is", r);
 
 	if (not op and this:CastExpression("b", expr)) then
+		this:addInstructionToBuffer(inst, expr);
 		return r, "b";
 	end
 
 	if (not op) then
 		this:Throw(token, "No such condition (%s).", name(r));
 	elseif (not op.operator) then
-		-- Once again we change nothing.
+		this:addInstructionToBuffer(inst, expr);
 	else
-		this:QueueInjectionBefore(inst, expr.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
-		end
-
-		this:QueueInjectionAfter(inst, expr.final, ")" );
-
-		this.__operators[op.signature] = op.operator;
+		this:writeOperationCall(inst, op, expr);
 	end
 
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_NEW(this, inst, token, expressions)
+function COMPILER.Compile_NEW(this, inst, token, data)
 	local op;
 	local ids = {};
-	local total = #expressions;
+	local total = #data.expressions;
 
-	local classname = inst.class
+	local classname = data.class
 	local cls = E3Class(classname);
 	local userclass = this:GetUserClass(classname);
 
@@ -2344,7 +2246,7 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 	else
 		local constructors = cls.constructors;
 
-		for k, expr in pairs(expressions) do
+		for k, expr in pairs(data.expressions) do
 			local r, c = this:Compile(expr);
 			ids[#ids + 1] = r;
 
@@ -2383,11 +2285,20 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 		end
 	end
 
-	local signature = string_format("%s(%s)", name(inst.class), names(ids));
+	local signature = string_format("%s(%s)", name(data.class), names(ids));
 
 	if (op and userclass) then
-		this:QueueRemove(inst, inst.__new);
-		this:QueueInjectionAfter(inst, inst.__const, "['" ..  op .. "']");
+		this:writeToBuffer(inst, "[%q](", op);
+
+		for k, expr in pairs(data.expressions) do
+			this:addInstructionToBuffer(inst, expr);
+
+			if (k < #data.expressions) then
+				this:writeToBuffer(inst, ",");
+			end
+		end
+
+		this:writeToBuffer(inst, ")");
 
 		return userclass.name, 1;
 	end
@@ -2399,43 +2310,13 @@ function COMPILER.Compile_NEW(this, inst, token, expressions)
 	this:CheckState(op.state, token, "Constructor 'new %s", signature);
 
 	if (type(op.operator) == "function") then
-
-		this:QueueRemove(inst, inst.__new);
-		this:QueueRemove(inst, inst.__const);
-		this:QueueRemove(inst, inst.__lpa);
-
-		this:QueueInjectionBefore(inst, inst.__const, "_CONST[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, inst.__const, "CONTEXT");
-
-		    if (total > 0) then
-				this:QueueInjectionBefore(inst, inst.__const, ",");
-			end
-		end
-
 		this.__constructors[op.signature] = op.operator;
+		this:writeOperationCall2("_CONST", inst, op, vargs, unpack(data.expressions));
 	elseif (type(op.operator) == "string") then
-		this:QueueRemove(inst, inst.__new);
-		this:QueueRemove(inst, inst.__const);
-		this:QueueReplace(inst, inst.__const, op.operator);
+		this:writeToBuffer(inst, op.operator);
 	else
 		local signature = string_format("%s.", inst.library, op.signature);
 		error("Attempt to inject " .. op.signature .. " but operator was incorrect " .. type(op.operator) .. ".");
-	end
-
-	if (vargs) then
-		if (#expressions >= 1) then
-			for i = vargs, #expressions do
-				local arg = expressions[i];
-
-				if (arg.result ~= "_vr") then -- this was once offset by -1, had issues {"",,v} {"",,v}
-					this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. arg.result .. "\"", ",");
-
-					this:QueueInjectionAfter(inst, arg.final, "}");
-				end
-			end
-		end
 	end
 
 	return op.result, op.rCount;
@@ -2453,7 +2334,9 @@ local function getMethod(mClass, userclass, method, ...)
 	return EXPR_METHODS[sig];
 end
 
-function COMPILER.Compile_METH(this, inst, token, expressions)
+function COMPILER.Compile_METH(this, inst, token, data)
+	local expressions = data.expressions;
+
 	local expr = expressions[1];
 	local mClass, mCount = this:Compile(expr);
 
@@ -2461,12 +2344,12 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 	local vargs;
 	local ids = {};
 	local total = #expressions;
-
+	local method = data.method;
 	local userclass = this:GetUserClass(mClass);
 
 
 	if (total == 1) then
-		op = getMethod(mClass, userclass, inst.method);
+		op = getMethod(mClass, userclass, method);
 	else
 		for k, expr in pairs(expressions) do
 			if (k > 1) then
@@ -2488,11 +2371,11 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 			local args = table_concat(ids,",", 1, i);
 
 			if (i == total -  1) then
-				op = getMethod(mClass, userclass, inst.method, args);
+				op = getMethod(mClass, userclass, method, args);
 			end
 
 			if (not op) then
-				op = getMethod(mClass, userclass, inst.method, args, "...");
+				op = getMethod(mClass, userclass, method, args, "...");
 
 				if (op) then
 					vargs = i;
@@ -2505,7 +2388,7 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 		end
 
 		if (not op) then
-			op = getMethod(mClass, userclass, inst.method, "...");
+			op = getMethod(mClass, userclass, method, "...");
 
 			if (op) then
 				vargs = 1;
@@ -2513,64 +2396,39 @@ function COMPILER.Compile_METH(this, inst, token, expressions)
 		end
 	end
 
-	if (not op) then
-		this:Throw(token, "No such method %s.%s(%s).", name(mClass), inst.method, names(ids));
+	if (not op) then 
+		this:Throw(token, "No such method %s.%s(%s).", name(mClass), method, names(ids));
 	end
 
 	if (userclass) then
-		this:QueueRemove(inst, inst.__lpa);
-		this:QueueInjectionBefore(inst, expr.token, userclass.name, "['".. op.sig.. "'](");
-		this:QueueReplace(inst, inst.__operator, total > 1 and "," or "");
-		this:QueueRemove(inst, inst.__method);
+		this:writeOperationCall2(userclass.name, inst, op, vargs, unpack(expressions));
 		return op.result, op.count;
 	end
 
-	this:CheckState(op.state, token, "Method %s.%s(%s)", name(mClass), inst.method, names(ids));
+	this:CheckState(op.state, token, "Method %s.%s(%s)", name(mClass), method, names(ids));
 
 	if (type(op.operator) == "function") then
-		this:QueueRemove(inst, inst.__operator);
-		this:QueueRemove(inst, inst.__method);
-
-		if (total == 1) then
-			this:QueueRemove(inst, inst.__lpa);
-		else
-			this:QueueReplace(inst, inst.__lpa, ",");
-		end
-
-		this:QueueInjectionBefore(inst, expr.token, "_METH[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		    this:QueueInjectionBefore(inst, expr.token , "CONTEXT,");
-		end
-
-		this.__methods[op.signature] = op.operator;
+		this:writeMethodCall(inst, op, unpack(expressions));
 	elseif (type(op.operator) == "string") then
-		this:QueueReplace(inst, inst.__operator, ":");
-		this:QueueReplace(inst, inst.__method, op.operator);
+		this:addInstructionToBuffer(inst, expr);
+
+		this:addInstructionToBuffer(inst, ":");
+
+		this:writeToBuffer(inst, method .. "(");
+
+		this:writeArgsToBuffer(inst, vargs, unpack(expressions));
+
+		this:addInstructionToBuffer(inst, ")");
 	else
 		local signature = string_format("%s.%s", name(inst.class), op.signature);
 		error("Attempt to inject " .. op.signature .. " but operator was incorrect, got " .. type(op.operator));
 	end
 
-	if (vargs) then
-		if (#expressions > 1) then
-			for i = vargs, #expressions do
-				local arg = expressions[i];
-
-				if (arg.result ~= "_vr") then
-					this:QueueInjectionBefore(inst, this:OffsetToken(arg.token, -1), "{", "\"" .. arg.result .. "\"", ",");
-
-					this:QueueInjectionAfter(inst, arg.final, "}");
-				end
-			end
-		end
-	end
-
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_FUNC(this, inst, token, expressions)
-	local lib = EXPR_LIBRARIES[inst.library.data];
+function COMPILER.Compile_FUNC(this, inst, token, data)
+	local lib = EXPR_LIBRARIES[data.library.data];
 
 	if (not lib) then
 		-- Please note this should be impossible.
@@ -2580,12 +2438,12 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 	local op;
 	local vargs;
 	local ids = {};
-	local total = #expressions;
+	local total = #data.expressions;
 
 	if (total == 0) then
-		op = lib._functions[inst.name .. "()"];
+		op = lib._functions[data.name .. "()"];
 	else
-		for k, expr in pairs(expressions) do
+		for k, expr in pairs(data.expressions) do
 			local r, c = this:Compile(expr);
 
 			ids[#ids + 1] = r;
@@ -2603,13 +2461,13 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 			local args = table_concat(ids,",", 1, i);
 
 			if (i >= total) then
-				local signature = string_format("%s(%s)", inst.name, args);
+				local signature = string_format("%s(%s)", data.name, args);
 
 				op = lib._functions[signature];
 			end
 
 			if (not op) then
-				local signature = string_format("%s(%s,...)", inst.name, args);
+				local signature = string_format("%s(%s,...)", data.name, args);
 
 				op = lib._functions[signature];
 
@@ -2622,68 +2480,44 @@ function COMPILER.Compile_FUNC(this, inst, token, expressions)
 		end
 
 		if (not op) then
-			op = lib._functions[inst.name .. "(...)"];
+			op = lib._functions[data.name .. "(...)"];
 
 			if (op) then vargs = 1 end
 		end
 	end
 
 	if (not op) then
-		this:Throw(token, "No such function %s.%s(%s).", inst.library.data, inst.name, names(ids, ","));
+		this:Throw(token, "No such function %s.%s(%s).", data.library.data, data.name, names(ids, ","));
 	end
 
-	this:CheckState(op.state, token, "Function %s.%s(%s).", inst.library.data, inst.name, names(ids, ","));
+	this:CheckState(op.state, token, "Function %s.%s(%s).", data.library.data, data.name, names(ids, ","));
 
-	if (type(op.operator) == "function") then
-		local signature = string_format("%s.%s", inst.library.data, op.signature);
-
-		this:QueueRemove(inst, token);
-		this:QueueRemove(inst, inst.library);
-		this:QueueRemove(inst, inst.__operator);
-		this:QueueRemove(inst, inst.__func);
-
-		this:QueueInjectionAfter(inst, inst.__func, "_FUN[\"" .. signature .. "\"]");
-
-		if (op.context) then
-			this:QueueInjectionAfter(inst, inst.__lpa, "CONTEXT");
-
-		    if (total > 0) then
-				this:QueueInjectionAfter(inst, inst.__lpa, ",");
-			end
-		end
-
-		this.__functions[signature] = op.operator;
-	elseif (type(op.operator) == "string") then
-		--this:QueueRemove(inst, token);
-		this:QueueRemove(inst, inst.library);
-		this:QueueRemove(inst, inst.__operator);
-		this:QueueReplace(inst, inst.__func, op.operator); -- This is error.
-		this:Import(op.operator);
-	else
-		local signature = string_format("%s.", inst.library, op.signature);
-		error("Attempt to inject " .. signature .. " but operator was incorrect " .. type(op.operator) .. ".");
-	end
-
-	if (vargs) then
-		if (#expressions >= 1) then
-			for i = vargs, #expressions do
-				local arg = expressions[i];
-
-				if (arg.result ~= "_vr") then
-					this:QueueInjectionAfter(inst, this:OffsetToken(arg.token, -1), "{", "\"" .. arg.result .. "\"", ",");
-
-					this:QueueInjectionAfter(inst, arg.final, "}");
-				end
-			end
-		end
-	end
-
-	if (inst.library.data == "system") then
-		local res, count = hook.Run("Expression3.PostCompile.System." .. inst.name, this, inst, token, expressions);
+	if (data.library.data == "system") then
+		local res, count = hook.Run("Expression3.PostCompile.System." .. data.name, this, inst, token, data);
 
 		if (res and count) then
 			return res, count;
 		end
+	end
+
+	if (type(op.operator) == "function") then
+		local signature = string_format("%s.%s", data.library.data, op.signature);
+
+		if op.context then
+			this:writeOperationCall2("_FUN", inst, signature, vargs, "CONTEXT", unpack(data.expressions));
+		else
+			this:writeOperationCall2("_FUN", inst, signature, vargs, unpack(data.expressions));
+		end
+
+		this.__functions[signature] = op.operator;
+	elseif (type(op.operator) == "string") then
+		this:writeToBuffer(inst, op.operator .. "(");
+		this:writeArgsToBuffer(unpack(data.expressions));
+		this:writeToBuffer(inst, ")");
+		this:Import(op.operator);
+	else
+		local signature = string_format("%s.", inst.library, op.signature);
+		error("Attempt to inject " .. signature .. " but operator was incorrect " .. type(op.operator) .. ".");
 	end
 
 	return op.result, op.rCount;
@@ -2692,21 +2526,38 @@ end
 --[[
 ]]
 
-function COMPILER.Compile_LAMBDA(this, inst, token, expressions)
+function COMPILER.Compile_LAMBDA(this, inst, token, data)
 	this:PushScope();
 
-	for _, param in pairs(inst.params) do
+	this:writeToBuffer(inst, "{op = function(");
+
+	local args = data.params;
+	local tArgs = #args;
+
+	for k = 1, tArgs do
+		local pram = args[k];
 		local var = param[2];
 		local class = param[1];
 
+		this:writeToBuffer(inst, var);
 		this:AssignVariable(token, true, var, class);
 
+		if (k > tArgs) then
+			this:writeToBuffer(inst, ",");
+		end
+	end
+
+	this:writeToBuffer(inst, ")\n");
+
+	for k = 1, tArgs do
+		local pram = args[k];
+		local var = param[2];
+		local class = param[1];
+
 		if (class ~= "_vr") then
-			injectNewLine = true;
-			this:QueueInjectionBefore(inst, inst.stmts.token, string_format("if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end", var, var, name(class), var));
-			this:QueueInjectionBefore(inst, inst.stmts.token, string_format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, class, name(class), var, var));
-			this:QueueInjectionBefore(inst, inst.stmts.token, string_format("%s = %s[2];", var, var));
-			injectNewLine = false;
+			this:writeToBuffer(inst, "if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end\n", var, var, name(class), var);
+			this:writeToBuffer(inst, "if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end\n", var, class, name(class), var, var);
+			this:writeToBuffer(inst, "%s = %s[2];\n", var, var);
 		end
 	end
 
@@ -2717,7 +2568,9 @@ function COMPILER.Compile_LAMBDA(this, inst, token, expressions)
 	this:SetOption("retunClass", "?"); -- Indicate we do not know this yet.
 	this:SetOption("retunCount", -1); -- Indicate we do not know this yet.
 
-	this:Compile(inst.stmts);
+	this:Compile(data.block);
+
+	this:addInstructionToBuffer(inst, data.block);
 
 	local result = this:GetOption("retunClass");
 	local count = this:GetOption("retunCount");
@@ -2729,10 +2582,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, expressions)
 		count = 0;
 	end
 
-	this:QueueInjectionAfter(inst, inst.__end, ", result = \"" .. result .. "\"");
-	this:QueueInjectionAfter(inst, inst.__end, ", count = " .. count);
-	this:QueueInjectionAfter(inst, inst.__end, ", scr = CONTEXT");
-	this:QueueInjectionAfter(inst, inst.__end, "}");
+	this:writeToBuffer(inst, "\nend,\nresult = %q, count = %i, scr = CONTEXT}", result, count);
 
 	return "f", 1;
 end
@@ -2740,7 +2590,7 @@ end
 --[[
 ]]
 
-function COMPILER.Compile_RETURN(this, inst, token, expressions)
+function COMPILER.Compile_RETURN(this, inst, token, data)
 	if (not this:GetOption("canReturn", false)) then
 		this:Throw(token, "A return statment can not appear here.");
 	end
@@ -2750,7 +2600,7 @@ function COMPILER.Compile_RETURN(this, inst, token, expressions)
 
 	local results = {};
 
-	for _, expr in pairs(expressions) do
+	for _, expr in pairs(data.expressions) do
 		local r, c = this:Compile(expr);
 		results[#results + 1] = {r, c};
 	end
@@ -2774,10 +2624,12 @@ function COMPILER.Compile_RETURN(this, inst, token, expressions)
 		outClass = result;
 	end
 
+	this:writeToBuffer(inst, "\nreturn ");
+
 	local outCount = 0;
 
 	for i = 1, #results do
-		local expr = expressions[i];
+		local expr = data.expressions[i];
 		local res = results[i][1];
 		local cnt = results[i][2];
 
@@ -2794,7 +2646,15 @@ function COMPILER.Compile_RETURN(this, inst, token, expressions)
 		else
 			outCount = outCount + cnt;
 		end
+
+		this:addInstructionToBuffer(inst, expr);
+
+		if (i < #results) then
+			this:writeToBuffer(inst, ",");
+		end
 	end
+
+	this:writeToBuffer(inst, ";\n");
 
 	if (count == -1) then
 		count = outCount;
@@ -2810,47 +2670,74 @@ function COMPILER.Compile_BREAK(this, inst, token)
 	if (not this:GetOption("loop", false)) then
 		this:Throw(token, "Break must not appear outside of a loop");
 	end
+
+	this:writeToBuffer(inst, "\nbreak\n;");
 end
 
 function COMPILER.Compile_CONTINUE(this, inst, token)
 	if (not this:GetOption("loop", false)) then
 		this:Throw(token, "Continue must not appear outside of a loop");
 	end
+
+	this:writeToBuffer(inst, "\ncontinue\n;");
 end
 
 --[[
 ]]
 
-function COMPILER.Compile_DELEGATE(this, inst, token)
-	local class, scope, info = this:AssignVariable(token, true, inst.variable, "f");
+function COMPILER.Compile_DELEGATE(this, inst, token, data)
+	local class, scope, info = this:AssignVariable(token, true, data.variable, "f");
 
 	if (info) then
-		info.signature = table_concat(inst.parameters, ",");
-		info.parameters = inst.parameters;
-		info.resultClass = inst.resultClass;
-		info.resultCount = inst.resultCount;
+		info.signature = table_concat(data.parameters, ",");
+		info.parameters = data.parameters;
+		info.resultClass = data.resultClass;
+		info.resultCount = data.resultCount;
 	end
 
-	injectNewLine = true;
-	this:QueueInjectionBefore(inst, token, "local " .. inst.variable)
-	injectNewLine = false;
+	this:writeToBuffer(inst, "\nlocal %s;\n", data.variable);
 end
 
-function COMPILER.Compile_FUNCT(this, inst, token, expressions)
+function COMPILER.Compile_FUNCT(this, inst, token, data)
+	local variable = data.variable;
+
+	local class, scope, info = this:AssignVariable(token, true, variable, "f");
+
+	if (info and info.prefix) then
+		this:writeToBuffer(inst, "local %s.%s = {op = function(", info.prefix, variable);
+	else
+		this:writeToBuffer(inst, "local %s = {op = function(", variable);
+	end
+
 	this:PushScope();
 
-	for _, param in pairs(inst.params) do
+	local args = data.params;
+	local tArgs = #args;
+
+	for k = 1, tArgs do
+		local param = args[k];
 		local var = param[2];
 		local class = param[1];
 
+		this:writeToBuffer(inst, var);
 		this:AssignVariable(token, true, var, class);
 
+		if (k < tArgs) then
+			this:writeToBuffer(inst, ",");
+		end
+	end
+
+	this:writeToBuffer(inst, ")\n");
+
+	for k = 1, tArgs do
+		local param = args[k];
+		local var = param[2];
+		local class = param[1];
+
 		if (class ~= "_vr") then
-			injectNewLine = true;
-			this:QueueInjectionBefore(inst, inst.stmts.token, string_format("if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end", var, var, class, var));
-			this:QueueInjectionBefore(inst, inst.stmts.token, string_format("if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end", var, class, class, var, var));
-			this:QueueInjectionBefore(inst, inst.stmts.token, string_format("%s = %s[2];", var, var));
-			injectNewLine = false;
+			this:writeToBuffer(inst, "if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end\n", var, var, name(class), var);
+			this:writeToBuffer(inst, "if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end\n", var, class, name(class), var, var);
+			this:writeToBuffer(inst, "%s = %s[2];\n", var, var);
 		end
 	end
 
@@ -2858,56 +2745,47 @@ function COMPILER.Compile_FUNCT(this, inst, token, expressions)
 	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
 
 	this:SetOption("canReturn", true);
-	this:SetOption("retunClass", inst.resultClass);
+	this:SetOption("retunClass", data.resultClass);
 	this:SetOption("retunCount", -1); -- Indicate we do not know this yet.
 
-	this:Compile(inst.stmts);
+	this:Compile(data.block);
+
+	this:addInstructionToBuffer(inst, data.block);
 
 	local count = this:GetOption("retunCount");
 
 	this:PopScope();
 
-	local variable = inst.variable;
-
-	local class, scope, info = this:AssignVariable(token, true, variable, "f");
-
 	if (info) then
-		info.signature = inst.signature;
-		info.parameters = inst.params;
-		info.resultClass = inst.resultClass;
+		info.signature = data.signature;
+		info.parameters = data.params;
+		info.resultClass = data.resultClass;
 		info.resultCount = count;
-
-		if (info.prefix) then
-			variable = info.prefix .. "." .. variable;
-		else
-			this:QueueInjectionBefore(inst, token, "local");
-		end
 	end
 
-	this:QueueInjectionBefore(inst, token, variable, " = { op = ");
-	this:QueueInjectionAfter(inst, inst.__end, ", signature = \"" .. inst.signature .. "\"");
-	this:QueueInjectionAfter(inst, inst.__end, ", result = \"" .. info.resultClass .. "\"");
-	this:QueueInjectionAfter(inst, inst.__end, ", count = " .. count);
-	this:QueueInjectionAfter(inst, inst.__end, "}");
+	this:writeToBuffer(inst, "\nend,\nresult = %q, count = %i, scr = CONTEXT};\n", data.resultClass, count);
 end
 
 --[[
 ]]
 
-function COMPILER.Compile_CALL(this, inst, token, expressions)
-	local expr = expressions[1];
+function COMPILER.Compile_CALL(this, inst, token, data)
+	local args = data.expressions;
+	local tArgs = #args;
+
+	local expr = args[1];
 	local res, count = this:Compile(expr);
 
 	local prms = {};
 
-	if (#expressions > 1) then
-		for i = 2, #expressions do
-			local arg = expressions[i];
+	if (tArgs > 1) then
+		for i = 2, tArgs do
+			local arg = args[i];
 			local r, c = this:Compile(arg);
 
 			prms[#prms + 1] = r;
 
-			if (i == #expressions and c > 1) then
+			if (i == targs and c > 1) then
 				for j = 2, c do
 					prms[#prms + 1] = r;
 				end
@@ -2918,39 +2796,44 @@ function COMPILER.Compile_CALL(this, inst, token, expressions)
 	local signature = table_concat(prms, ",");
 
 	if (res == "f" and expr.type == "var") then
-		local c, s, info = this:GetVariable(expr.variable);
+		local c, s, info = this:GetVariable(expr.data.variable);
 		-- The var instruction will have already validated this variable.
 
-		if (info.signature) then
+		if (info and info.signature) then
+
+			this:writeToBuffer(inst, "invoke(CONTEXT, %q, %i,", info.resultClass, info.resultCount);
+
 			if (info.signature ~= signature) then
 				this:Throw(token, "Invalid arguments to user function got %s(%s), %s(%s) expected.", expr.variable, names(signature), expr.variable, names(info.signature));
 			end
 
-			if (#expressions > 1) then
-				for i = 2, #expressions do
-					local arg = expressions[i];
+			this:addInstructionToBuffer(inst, expr);
 
-					if (arg.result ~= "_vr") then
-						this:QueueInjectionBefore(inst, arg.token, "{", "\"" .. arg.result .. "\"", ",");
+			if (tArgs > 1) then
 
-						this:QueueInjectionAfter(inst, arg.final, "}");
+				this:writeToBuffer(inst, ",");
+
+				for i = 2, tArgs do
+					local arg = args[i];
+					local vr = arg.result ~= "_vr";
+
+					if (vr) then
+						this:writeToBuffer(inst, "{%q,", arg.result);
+					end
+
+					this:addInstructionToBuffer(inst, arg);
+
+					if (vr) then
+						this:writeToBuffer(inst, "}");
+					end
+
+					if (i < tArgs) then
+						this:writeToBuffer(inst, ",");
 					end
 				end
 			end
 
-			this:QueueReplace(inst, expr.token, "invoke");
-
-			this:QueueInjectionAfter(inst, token, "(", "CONTEXT", ",\"" .. info.resultClass .. "\",", tostring(info.resultCount), ",");
-
-			if (info.prefix) then
-				this:QueueInjectionAfter(inst, token, info.prefix .. "." .. expr.variable);
-			else
-				this:QueueInjectionAfter(inst, token, expr.variable);
-			end
-
-			if (#prms >= 1) then
-				this:QueueInjectionAfter(inst, token, ",");
-			end
+			this:writeToBuffer(inst, ")");
 
 			return info.resultClass, info.resultCount;
 		end
@@ -2990,17 +2873,7 @@ function COMPILER.Compile_CALL(this, inst, token, expressions)
 
 	this:QueueRemove(inst, token); -- Removes (
 
-	this:QueueInjectionBefore(inst, expr.token, "_OPS[\"" .. op.signature .. "\"]", "(");
-
-	if (op.context) then
-		this:QueueInjectionBefore(inst, expr.token, "CONTEXT", ",");
-	end
-
-	if (#prms >= 1) then
-		this:QueueInjectionBefore(inst, token, ",");
-	end
-
-	this.__operators[op.signature] = op.operator;
+	this:writeOperationCall(inst, op, unpack(args));
 
 	return op.result, op.rCount;
 end
@@ -3008,7 +2881,8 @@ end
 --[[
 ]]
 
-function COMPILER.Compile_GET(this, inst, token, expressions)
+function COMPILER.Compile_GET(this, inst, token, data)
+	local expressions = data.expressions;
 	local value = expressions[1];
 	local vType = this:Compile(value);
 	local index = expressions[2];
@@ -3016,7 +2890,7 @@ function COMPILER.Compile_GET(this, inst, token, expressions)
 
 	local op;
 	local keepid = false;
-	local cls = inst.class;
+	local cls = data.class;
 
 	if (not cls) then
 		op = this:GetOperator("get", vType, iType);
@@ -3029,8 +2903,6 @@ function COMPILER.Compile_GET(this, inst, token, expressions)
 
 		if (not op) then
 			keepid = true;
-
-			this:QueueReplace(inst, cls, "\'" .. cls.data .. "\'");
 
 			op = this:GetOperator("get", vType, iType, "_cls");
 
@@ -3054,28 +2926,22 @@ function COMPILER.Compile_GET(this, inst, token, expressions)
 	this:CheckState(op.state);
 
 	if (not op.operator) then
+		this:addInstructionToBuffer(inst, value);
+
+		this:writeToBuffer(inst, "[");
+
+		this:addInstructionToBuffer(inst, index);
+
+		this:writeToBuffer(inst, "]");
+
 		return op.result, op.rCount;
 	end
 
-	this:QueueInjectionBefore(inst, value.token, "_OPS[\"" .. op.signature .. "\"](");
-
-	if (op.context) then
-	   this:QueueInjectionBefore(inst, value.token, "CONTEXT", ",");
+	if (keepid) then
+		this:writeOperationCall(inst, op, value, index, string_format("%q", cls.data));
+	else
+		this:writeOperationCall(inst, op, value, index);
 	end
-
-	if (cls) then
-		if (not keepid) then
-			this:QueueRemove(inst, cls);
-		else
-			this:QueueReplace(inst, cls, "'" .. cls.data .. "'");
-		end
-	end
-
-	this:QueueReplace(inst, inst.__rsb, ")" );
-
-	this:QueueReplace(inst, inst.__lsb, "," );
-
-	this.__operators[op.signature] = op.operator;
 
 	if (cls) then
 		return cls.data, 1;
@@ -3084,11 +2950,15 @@ function COMPILER.Compile_GET(this, inst, token, expressions)
 	return op.result, op.rCount;
 end
 
-function COMPILER.Compile_SET(this, inst, token, expressions)
+function COMPILER.Compile_SET(this, inst, token, data)
+	local expressions = data.expressions;
+
 	local value = expressions[1];
 	local vType = this:Compile(value);
+
 	local index = expressions[2];
 	local iType = this:Compile(index);
+
 	local expr = expressions[3];
 	local vExpr = this:Compile(expr);
 
@@ -3122,36 +2992,26 @@ function COMPILER.Compile_SET(this, inst, token, expressions)
 	this:CheckState(op.state);
 
 	if (not op.operator) then
+		this:addInstructionToBuffer(inst, value);
+
+		this:writeToBuffer(inst, "[");
+
+		this:addInstructionToBuffer(inst, index);
+
+		this:writeToBuffer(inst, "] = ");
+
+		this:addInstructionToBuffer(inst, expr);
+
+		this:writeToBuffer(inst, ";\n");
+
 		return op.result, op.rCount;
 	end
 
-	this:QueueRemove(inst, inst.__lsb);
-
-	this:QueueInjectionAfter(inst, token, "," );
-
-	this:QueueInjectionBefore(inst, value.token, "_OPS[\"" .. op.signature .. "\"](");
-
-	if (op.context) then
-	   this:QueueInjectionBefore(inst, value.token, "CONTEXT,");
-	end
-
-	if (inst.__com) then
-		this:QueueRemove(inst, inst.__com)
-	end
-
-	if (not keepclass) then
-		this:QueueRemove(isnt, cls);
+	if (keepid) then
+		this:writeOperationCall(inst, op, value, index, string_format("%q", cls.data), expr);
 	else
-		this:QueueReplace(isnt, cls, ", '" .. cls.data .. "'");
+		this:writeOperationCall(inst, op, value, index, expr);
 	end
-
-	this:QueueRemove(inst, inst.__ass);
-
-	this:QueueReplace(inst, inst.__rsb, "," );
-
-	this:QueueInjectionAfter(inst, expr.final, ")");
-
-	this.__operators[op.signature] = op.operator;
 
 	return op.result, op.rCount;
 end
@@ -3159,98 +3019,115 @@ end
 --[[
 ]]
 
-function COMPILER.Compile_FOR(this, inst, token, expressions)
+function COMPILER.Compile_FOR(this, inst, token, data)
+	local class = data.iClass.data;
+	local expressions = data.expressions;
+
+	local var = data.iVar.data;
+	this:writeToBuffer(inst, "\nfor %s = ", var);
 
 	local start = expressions[1];
 	local tStart = this:Compile(start);
+	this:addInstructionToBuffer(inst, start);
+
+	this:writeToBuffer(inst, ",");
+
 	local _end = expressions[2];
 	local tEnd = this:Compile(_end);
+	this:addInstructionToBuffer(inst, _end);
+
 	local step = expressions[3];
 
-	if (not step and (inst.class ~= "n" or tStart  ~= "n" or tEnd ~= "n")) then
-		this:Throw(token, "No such loop 'for(%s i = %s; %s)'.", name(inst.class), name(tStart), name(tEnd));
-	elseif (step) then
+	if (step) then
 		local tStep = this:Compile(step);
-		if (inst.class ~= "n" or tStart  ~= "n" or tEnd ~= "n" or tEnd ~= "n" or tStep ~= "n") then
-			this:Throw(token, "No such loop 'for(%s i = %s; %s; %s)'.", name(inst.class), name(tStart), name(tEnd), name(tStep));
+
+		if (class ~= "n" or tStart  ~= "n" or tEnd ~= "n" or tEnd ~= "n" or tStep ~= "n") then
+			this:Throw(token, "No such loop 'for(%s i = %s; %s; %s)'.", name(class), name(tStart), name(tEnd), name(tStep));
 		end
+
+		this:writeToBuffer(inst, ",");
+
+		this:addInstructionToBuffer(inst, step);
+	elseif (class ~= "n" or tStart  ~= "n" or tEnd ~= "n") then
+		this:Throw(token, "No such loop 'for(%s i = %s; %s)'.", name(class), name(tStart), name(tEnd));
 	end
+
+	this:writeToBuffer(inst, " do\n");
 
 	this:PushScope();
 	this:SetOption("loop", true);
 	this:AssignVariable(token, true, inst.variable.data, inst.class, nil);
 
-	this:Compile(inst.stmts);
+	this:Compile(data.block);
 
 	this:PopScope();
+
+	this:writeToBuffer(inst, "\nend\n");
 end
 
-function COMPILER.Compile_WHILE(this, inst, token, expressions)
-	this:Compile(inst.condition);
+function COMPILER.Compile_WHILE(this, inst, token, data)
+	this:writeToBuffer(inst, "\nwhile ");
+
+	this:Compile(data.condition);
+	this:addInstructionToBuffer(inst, data.condition);
+
+	this:writeToBuffer(inst, " do\n");
 
 	this:PushScope();
 		this:SetOption("loop", true);
-		this:Compile(inst.block);
+		this:Compile(data.block);
+		this:addInstructionToBuffer(inst, data.block);
 	this:PopScope();
+
+	this:writeToBuffer(inst, "\nend\n");
 end
 
-function COMPILER.Compile_EACH(this, inst, token, expr)
-	local r, c = this:Compile(expr);
+function COMPILER.Compile_EACH(this, inst, token, data)
+	local r, c = this:Compile(data.expr);
 	local op = this:GetOperator("itor", r);
 
-	if (not op) then
+	if not op then
 		this:Throw(token, "%s can not be used inside a foreach loop", name(r));
 	end
 
-	this:PushScope();
+	this:PushScope(); 
 	this:SetOption("loop", true);
 
-	if inst.kType then
-		this:AssignVariable(token, true, inst.kValue, inst.kType,  nil);
+	this:writeToBuffer(inst, "for _kt, _kv, _vt, _vv in ");
+
+	this:writeOperationCall(inst, op, data.expr);
+
+	this:writeToBuffer(inst, " do\n");
+
+	this:AssignVariable(token, true, data.vValue, data.vType, nil);
+
+	if data.kType then
+		this:AssignVariable(token, true, data.kValue, data.kType,  nil);
+
+		if (data.kType ~= "_vr") then
+			this:writeToBuffer(inst, "if (_kt ~= %q) then continue end\n", data.kType);
+			this:writeToBuffer(inst, "local %s = _kv\n", data.kValue);
+		else
+			this:writeToBuffer(inst, "local %s = {_kt, _kv}\n", data.kValue);
+		end
 	end
 
-	this:AssignVariable(token, true, inst.vValue, inst.vType, nil);
+	if (data.vType) then
+		if (data.vType ~= "_vr") then
+			this:writeToBuffer(inst, "if (_vt ~= %q) then continue end\n", data.vType);
+			this:writeToBuffer(inst, "local %s = _vv\n", data.vValue);
+		else
+			this:writeToBuffer(inst, "local %s = {_vt, _vv}\n", data.vValue);
+		end
+	end
 
-	this:Compile(inst.block);
+	this:Compile(data.block);
+
+	this:addInstructionToBuffer(inst, data.block);
+
 	this:PopScope();
 
-	this:QueueInjectionBefore(inst, inst.__in, "_kt, _kv, _vt, _vv");
-
-	if (isfunction(op.operator)) then
-		this:QueueInjectionBefore(inst, expr.token, "_OPS[\"" .. op.signature .. "\"](");
-
-		if (op.context) then
-		   this:QueueInjectionBefore(inst, expr.token, "CONTEXT,");
-		end
-
-		this:QueueInjectionAfter(inst, expr.final, ")");
-
-		this.__operators[op.signature] = op.operator;
-	end
-
-	injectNewLine = true;
-
-	local pos = inst.block.token;
-
-	if (inst.kType) then
-		if (inst.kType ~= "_vr") then
-			this:QueueInjectionAfter(inst, pos, string_format("if (_kt ~= %q) then continue end", inst.kType));
-			this:QueueInjectionAfter(inst, pos, string_format("local %s = _kv", inst.kValue));
-		else
-			this:QueueInjectionAfter(inst, pos, string_format("local %s = {_kt, _kv}", inst.kValue));
-		end
-	end
-
-	if (inst.vType) then
-		if (inst.vType ~= "_vr") then
-			this:QueueInjectionAfter(inst, pos, string_format("if (_vt ~= %q) then continue end", inst.vType));
-			this:QueueInjectionAfter(inst, pos, string_format("local %s = _vv", inst.vValue));
-		else
-			this:QueueInjectionAfter(inst, pos, string_format("local %s = {_vt, _vv}", inst.vValue));
-		end
-	end
-
-	injectNewLine = false;
+	this:writeToBuffer(inst, "\nend\n");
 end
 
 --[[
@@ -3258,35 +3135,30 @@ end
 ]]
 
 function COMPILER.Compile_TRY(this, inst, token, expressions)
-	this:QueueReplace(inst, token, "local");
-
-	this:QueueInjectionAfter(inst, token, "ok", ",", inst.__var.data, "=", "pcall(");
-
+	this:writeToBuffer(inst, "\nlocal ok, %s = pcall(function()\n", data.var.data);
+	
 	this:PushScope();
 		this:SetOption("canReturn", false);
 		this:SetOption("loop", false);
 
-	this:Compile(inst.protected);
+	this:Compile(data.block1);
+	this:addInstructionToBuffer(inst, data.block1);
 
 	this:PopScope();
 
-	this:QueueInjectionAfter(inst, inst.protected.final, ");", "if", "(", "not", "ok", "and", inst.__var.data, ".", "state", "==", "'runtime'", ")");
-
-	this:QueueRemove(inst, inst.__catch);
-	this:QueueRemove(inst, inst.__lpa);
-	this:QueueRemove(inst, inst.__var);
-	this:QueueRemove(inst, inst.__rpa);
+	this:writeToBuffer(inst, "\nend\n); if (not ok and %s.state == 'runtime') then\n", data.var.data);
 
 	this:PushScope();
 	this:SetOption("loop", false);
 
-	this:AssignVariable(token, true, inst.__var.data, "_er", nil);
+	this:AssignVariable(token, true, data.var.data, "_er", nil);
 
-	this:Compile(inst.catch);
+	this:Compile(data.block2);
+	this:addInstructionToBuffer(inst, data.block2);
 
 	this:PopScope();
 
-	this:QueueInjectionAfter(inst, inst.catch.final, "elseif (not ok) then error(", inst.__var.data, ", 0) end");
+	this:writeToBuffer(inst, "\nelseif (not ok) then\nerror(%q, 0);\nend\n", data.var.data);
 end
 
 --[[
@@ -3340,11 +3212,17 @@ end
 	Include support: Huge Work In Progress, I will not like this how ever it comes out.
 ]]
 
-local function Inclucde_ROOT(this, inst, token, stmts)
+local function Inclucde_ROOT(this, inst, token, data)
+	this:writeToBuffer(inst, "\ndo --START INCLUDE\n")
+	
+	local stmts = data.stmts;
+
 	for i = 1, #stmts do
 		this:Compile(stmts[i]);
+		this:addInstructionToBuffer(inst, stmts[i]);
 	end
 
+	this:writeToBuffer(inst, "\nend --END INCLUDE\n")
 	return "", 0;
 end
 
@@ -3456,23 +3334,27 @@ end
 
 
 
-function COMPILER.Compile_CLASS(this, inst, token, stmts)
+function COMPILER.Compile_CLASS(this, inst, token, data)
 	local extends;
-	local class = this:StartClass(inst.__classname.data);
 
-	class.hash = this:CRC(token, inst.__rcb);
-
+	local classname = data.classname;
+	local class = this:StartClass(classname);
+	class.hash = this:CRC(token, inst.start, inst.final);
 	this.__hashtable[class.hash] = {[class.hash] = true};
+
+	this:writeToBuffer(inst, "\n--START CLASS (%s, %q)\n", classname, class.hash);
+
+	this:writeToBuffer(inst, "\nlocal %s = {vars = {}; hash = %q};\n", classname, class.hash);
 
 	this:PushScope();
 
 		this:SetOption("userclass", class);
 
-		if (inst.__ext) then
-			extends = this:GetUserClass(inst.__exttype.data);
+		if (data.extends) then
+			extends = this:GetUserClass(data.extends.data);
 
 			if (not extends) then
-				this:Throw(token, "Can not extend user class from none user class %s.", inst.__exttype.data);
+				this:Throw(token, "Can not extend user class from none user class %s.", data.extends.data);
 			end
 
 			class.extends = extends;
@@ -3490,17 +3372,18 @@ function COMPILER.Compile_CLASS(this, inst, token, stmts)
 			end
 
 			this.__hashtable[extends.hash][class.hash] = true;
-
-			this:QueueRemove(inst, inst.__ext);
-			this:QueueRemove(inst, inst.__exttype);
 		end
 
-		for i = 1, #stmts do
-			this:Compile(stmts[i]);
+		for i = 1, #data.block do
+			local stmt = data.block[i];
+
+			this:Compile(stmt);
+			this:addInstructionToBuffer(inst, stmt);
+			this:writeToBuffer(inst, "\n");
 		end
 
-		if (inst.implements) then
-			for _, imp in pairs(inst.implements) do
+		if (data.implements) then
+			for _, imp in pairs(data.implements) do
 				local interface = this:GetInterface(imp.data);
 
 				if (not interface) then
@@ -3533,16 +3416,14 @@ function COMPILER.Compile_CLASS(this, inst, token, stmts)
 
 	this:PopScope();
 
-	this:QueueReplace(inst, token, "local");
-	this:QueueRemove(inst, inst.__lcb);
-	this:QueueInjectionAfter(inst, inst.__lcb, " = { vars = { }, hash = '" .. class.hash .. "'};", class.name, ".__index =", class.name); -- extends and extends.name or class.name);
-	if (extends) then this:QueueInjectionAfter(inst, inst.__lcb, "setmetatable(", class.name, ",", extends.name, ");") end
-	this:QueueRemove(inst, inst.__rcb);
+	if (extends) then
+		this:writeToBuffer(inst, "\nsetmetatable(%s, %s);\n", class.name, extends.name);
+		this:writeToBuffer(inst, "\nsetmetatable(%s.vars, %s.vars);\n", class.name, extends.name);
+	end
 
-	injectNewLine = true;
-	this:QueueInjectionAfter(inst, inst.__lcb, class.name, ".vars.__index =", class.name, ".vars"); -- extends and extends.name or class.name, ".vars");
-	if (extends) then this:QueueInjectionAfter(inst, inst.__lcb, "setmetatable(", class.name, ".vars,", extends.name, " .vars);") end
-	injectNewLine = false;
+	this:writeToBuffer(inst, "\n%s.vars.__index = %s.vars;\n", class.name, class.name);
+
+	this:writeToBuffer(inst, "\n--END CLASS (%s, %q)\n", classname, class.hash);
 
 	return "", 0;
 end
@@ -3559,50 +3440,59 @@ end
 ]]
 
 
-function COMPILER.Compile_FEILD(this, inst, token, expressions)
-	local expr = expressions[1];
+function COMPILER.Compile_FEILD(this, inst, token, data)
+	local expr = data.expr1;
 	local type = this:Compile(expr);
 	local userclass = this:GetUserClass(type);
+
+	local var = data.var.data;
+
+	this:addInstructionToBuffer(inst, expr);
+
+	this:writeToBuffer(inst, ".");
 
 	if (not userclass) then
 		-- this:Throw(token, "Unable to reference feild %s.%s here", name(type), inst.__feild.data);
 
 		local cls = E3Class(type);
-		local info = cls.atributes[inst.__feild.data];
+		local info = cls.atributes[var];
 
 		if (not info) then
-			this:Throw(token, "No sutch atribute %s.%s", name(type), inst.__feild.data);
+			this:Throw(token, "No sutch atribute %s.%s", name(type), var);
 		end
+
+		this:writeToBuffer(inst, var);
 
 		return info.class, 1;
 	end
 
-	local info = userclass.memory[inst.__feild.data];
+	local info = userclass.memory[var];
 
 	if (not info) then
-		this:Throw(token, "No sutch atribute %s.%s", type, inst.__feild.data);
+		this:Throw(token, "No sutch atribute %s.%s", type, var);
 	end
 
 	if (info) then
-		this:QueueReplace(inst, inst.__feild, info.prefix .. "." .. inst.__feild.data);
+		this:writeToBuffer(inst, info.prefix);
+		this:writeToBuffer(inst, ".");
 	end
+
+	this:writeToBuffer(inst, var);
 
 	return info.class, 1;
 end
 
-function COMPILER.Compile_DEF_FEILD(this, inst, token, expressions)
-	local tArgs = #expressions;
+function COMPILER.Compile_DEF_FEILD(this, inst, token, data)
+	local tArgs = #data.expressions;
 	local userclass = this:GetOption("userclass");
-
-	local tArgs = #expressions;
 
 	local results = {};
 
 	for i = 1, tArgs do
-		local arg = expressions[i];
+		local arg = data.expressions[i];
 		local r, c = this:Compile(arg);
 
-		if (not inst.variables[i]) then
+		if (not data.variables[i]) then
 			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
 		elseif (i < tArgs) then
 			results[#results + 1] = {r, arg, true};
@@ -3613,55 +3503,44 @@ function COMPILER.Compile_DEF_FEILD(this, inst, token, expressions)
 		end
 	end
 
-	for i = 1, #inst.variables do
+	for i = 1, #data.variables do
 		local result = results[i];
-		local token = inst.variables[i];
+		local token = data.variables[i];
 		local var = token.data;
 
-		local class, scope, info = this:AssToClass(token, true, var, inst.class);
+		local class, scope, info = this:AssToClass(token, true, var, data.class);
 
 		if (not result) then
-			this:QueueRemove(inst, token);
-			--this:Throw(token, "Unable to assign variable %s, no matching value.", var);
+			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
 		else
 			if (info) then
-				this:QueueReplace(inst, token, userclass.name .. ".vars." .. var);
+				this:writeToBuffer(inst,string_format("\n%s.vars.%s", userclass.name, var));
 			end
 
 			this.__defined[var] = true;
 
-			if (result[1] ~= inst.class) then
-				local casted = false;
-				local arg = result[2];
+			local arg = result[2];
+			
+			this:AssToClass(arg.token, true, var, result[1]);
+			
+			this:writeToBuffer(inst, " = ");
 
-				if (result[3]) then
-					-- TODO: CAST
-				end
+			this:addInstructionToBuffer(inst, arg);
 
-				if (not casted) then
-					this:AssToClass(arg.token, true, var, result[1]);
-				end
-			end
+			this:writeToBuffer(inst, ";\n");
 		end
-	end
-
-	if #results == 0 then
-		local token = this:OffsetToken(inst.final, 1);
-
-		if(token and token.type == "sep") then
-			this:QueueRemove(inst, token);
-		end
-	end
+	end 
 
 	this.__defined = {};
 
 	return "", 0;
 end
 
-function COMPILER.Compile_SET_FEILD(this, inst, token, expressions)
+function COMPILER.Compile_SET_FEILD(this, inst, token, data)
 
 	local info;
-	local atribute = inst.__feild.data;
+	local atribute = data.var.data;
+	local expressions = data.expressions;
 	local r1, c1 = this:Compile(expressions[1]);
 	local r2, c2 = this:Compile(expressions[2]);
 	local cls = E3Class(r1);
@@ -3681,11 +3560,19 @@ function COMPILER.Compile_SET_FEILD(this, inst, token, expressions)
 		this:Throw( token, "Can not assign atribute %s.%s of type %s with %s", name(r1), atribute, name(info.class), name(r2));
 	end
 
+	this:writeToBuffer(inst, "\n");
+
+	this:addInstructionToBuffer(inst, expressions[1]);
+
 	if (not cls) then
-		this:QueueReplace(inst, inst.__feild, "vars." .. atribute);
+		this:writeToBuffer(inst, ".vars.%s = ", atribute);
 	elseif (info.feild) then
-		this:QueueReplace(inst, inst.__feild, info.feild);
+		this:writeToBuffer(inst, ".%s = ", info.feild);
 	end
+	
+	this:addInstructionToBuffer(inst, expressions[2]);
+
+	this:writeToBuffer(inst, ";\n");
 
 	return info.class, 1;
 end
@@ -3693,7 +3580,7 @@ end
 --[[
 ]]
 
-function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
+function COMPILER.Compile_CONSTCLASS(this, inst, token, data)
 	this:PushScope();
 	this:SetOption("loop", false);
 
@@ -3701,48 +3588,72 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, expressions)
 
 	this:AssignVariable(token, true, "this", userclass.name);
 
-	for _, param in pairs(inst.params) do
-		local var = param[2];
-		local class = param[1];
+	local signature = string_format("constructor(%s)", inst.signature);
 
-		this:AssignVariable(token, true, var, class);
+	this:writeToBuffer(inst, "\n%s[%q] = function(", userclass.name, signature);
+
+	if data.perams then
+		local args = data.perams;
+		local tArgs = #args or 0;
+
+		--if tArgs > 0 then this:writeToBuffer(inst, ","); end
+
+		for i = 1, tArgs do
+			local args = args[i];
+			this:writeToBuffer(inst, param[2]);
+			this:AssignVariable(token, true, param[2], param[1]);
+			if i < tArgs then this:writeToBuffer(inst, ","); end
+		end
 	end
 
-	local signature = string_format("constructor(%s)", inst.signature);
+	this:writeToBuffer(inst, ")\n");
 
 	userclass.valid = true;
 	userclass.constructors[signature] = signature;
 
-	this:Compile(inst.stmts);
+	this:writeToBuffer(inst, "\nlocal this = setmetatable({vars = setmetatable({}, %s.vars)}, %s)\n", userclass.name, userclass.name);
+
+	if data.block then
+		this:Compile(data.block);
+		this:addInstructionToBuffer(inst, data.block);
+	end
 
 	this:PopScope();
 
-	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function")
-
-	injectNewLine = true;
-	local class_line = string_format("local this = setmetatable({vars = setmetatable({}, %s.vars)}, %s)", userclass.name, userclass.name);
-	this:QueueInjectionAfter(inst, inst.__postBlock, class_line);
-	this:QueueInjectionBefore(inst, inst.final, "return this;");
-	injectNewLine = false;
+	this:writeToBuffer(inst, "\nreturn this;\nend\n");
 end
 
-function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
+function COMPILER.Compile_DEF_METHOD(this, inst, token, data)
 	this:PushScope();
 
 	local userclass = this:GetOption("userclass");
 
+	local signature = string_format("@%s(%s)", data.name.data, data.signature);
+
+	this:writeToBuffer(inst, "\n%s[%q] = function(this", userclass.name, signature);
+
+
 	this:AssignVariable(token, true, "this", userclass.name);
 
-	for _, param in pairs(inst.params) do
-		local var = param[2];
-		local class = param[1];
+	local args = data.perams;
+	local tArgs = #args;
 
-		this:AssignVariable(token, true, var, class);
+	if tArgs > 0 then this:writeToBuffer(inst, ","); end
+
+	for i = 1, tArgs do
+		local args = args[i];
+		this:writeToBuffer(inst, param[2]);
+		this:AssignVariable(token, true, param[2], param[1]);
+		if i < tArgs then this:writeToBuffer(inst, ","); end
 	end
 
-	local signature = string_format("@%s(%s)", inst.__name.data, inst.signature);
+	this:writeToBuffer(inst, ")\n");
 
 	local overrride = userclass.methods[signature];
+
+	local error = string_format("Attempt to call user method '%s.%s(%s)' using alien class of the same name.", userclass.name, data.__name.data, data.signature);
+	this:writeToBuffer(inst, "if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error);
+
 
 	local meth = {};
 	meth.sig = signature;
@@ -3757,7 +3668,8 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 	this:SetOption("retunClass", meth.result);
 	this:SetOption("retunCount", meth.result ~= "" and -1 or 0);
 
-	this:Compile(inst.stmts);
+	this:Compile(data.block);
+	this:addInstructionToBuffer(inst, data.block);
 
 	local count = this:GetOption("retunCount");
 
@@ -3777,20 +3689,7 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, expressions)
 		this:Throw(token, "Overriding method %s(%s) must return %i values", inst.__name.data, inst.signature, overrride.count);
 	end
 
-	this:QueueReplace(inst, token, userclass.name);
-	this:QueueRemove(inst, inst.__name)
-	this:QueueRemove(inst, inst.__typ)
-	this:QueueRemove(inst, inst.__lpa)
-	this:QueueInjectionAfter(inst, inst.__name, "['" .. signature .. "']", "=", "function(this")
-
-	injectNewLine = true;
-	local error = string_format("Attempt to call user method '%s.%s(%s)' using alien class of the same name.", userclass.name, inst.__name.data, inst.signature);
-	this:QueueInjectionAfter(inst, inst.__preBlock, string_format("if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error))
-	injectNewLine = false;
-
-	if (#inst.params >= 1) then
-		this:QueueInjectionAfter(inst, inst.__name, ",")
-	end
+	this:writeToBuffer(inst, "\nend\n");
 end
 
 function COMPILER.Compile_TOSTR(this, inst, token, expressions)
@@ -3806,19 +3705,16 @@ function COMPILER.Compile_TOSTR(this, inst, token, expressions)
 	this:SetOption("retunClass", "s");
 	this:SetOption("retunCount", 1);
 
-	this:Compile(inst.stmts);
+	this:writeToBuffer(inst, "\n%s.__tostring = function(this)\n");
 
+	local error = string_format("Attempt to call user method '%s.%s(%s)' using alien class of the same name.", userclass.name, data.__name.data, data.signature);
+	this:writeToBuffer(inst, "if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error);
+
+	this:Compile(data.block);
+	this:writeToBuffer(data.block)
 	this:PopScope();
 
-	this:QueueInjectionBefore(inst, inst.__var, userclass.name, ".")
-	this:QueueReplace(inst, inst.__var, "__tostring");
-	this:QueueInjectionAfter(inst, inst.__var, "=", "function")
-	this:QueueInjectionAfter(inst, this:OffsetToken(inst.__var, 1), "this")
-
-	injectNewLine = true;
-	local error = string_format("Attempt to call user operation '%s.tostring()' using alien class of the same name.", userclass.name);
-	this:QueueInjectionAfter(inst, inst.__preBlock, string_format("if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error))
-	injectNewLine = false;
+	this:writeToBuffer(inst, "\nend\n");
 end
 
 --[[
@@ -3856,11 +3752,11 @@ function COMPILER.GetInterface(this, name, scope, nonDeep)
 	end
 end
 
-function COMPILER.Compile_INTERFACE(this, inst, token, stmts)
+function COMPILER.Compile_INTERFACE(this, inst, token, data)
 	local extends;
-	local interface = this:StartInterface(inst.interface);
+	local interface = this:StartInterface(data.interface);
 
-	interface.hash = this:CRC(token, inst.__rcb);
+	interface.hash = this:CRC(token, inst.start, inst.final);
 
 	this.__hashtable[interface.hash] = {[interface.hash] = true};
 
@@ -3868,8 +3764,9 @@ function COMPILER.Compile_INTERFACE(this, inst, token, stmts)
 
 		this:SetOption("interface", interface);
 
-		for i = 1, #stmts do
-			this:Compile(stmts[i]);
+		for i = 1, #data.block do
+			this:Compile(data.block[i]);
+			this:addInstructionToBuffer()
 		end
 
 	this:PopScope();
