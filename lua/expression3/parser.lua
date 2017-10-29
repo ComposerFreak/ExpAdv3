@@ -225,6 +225,9 @@ function PARSER.SetUserObject(this, name, scope)
 		scope = this.__scopeID;
 	end
 
+	print("SetUserObject",name, scope)
+	if (not name) then debug.Trace() end
+
 	local class = {};
 	class.name = name;
 	class.scope = scope;
@@ -2123,11 +2126,11 @@ function PARSER.ClassStatment_2(this)
 	if (this:AcceptWithData("typ", class)) then
 		local inst = this:StartInstruction("constclass", this.__token);
 
-		local params, signature = this:InputParameters(inst);
+		local args, signature = this:InputParameters(inst);
 
-		this:Block_1(true, " ");
+		local block = this:Block_1(true, " ");
 
-		return this:EndInstruction(inst, {params = params; signature = signature});
+		return this:EndInstruction(inst, {args = args; signature = signature; block = block});
 	end
 
 	return this:ClassStatment_3();
@@ -2137,15 +2140,15 @@ function PARSER.ClassStatment_3(this)
 	if (this:Accept("meth")) then
 		local inst = this:StartInstruction("def_method", this.__token);
 		
-		this:Require("typ", "Return type expected for method, after method.");
+		local typ = this:Require("typ", "Return type expected for method, after method.");
 		
-		this:Require("var", "Name expected for method, after %s", name(inst.__typ.data));
+		local var = this:Require("var", "Name expected for method, after %s", name(typ.data));
 		
 		local params, signature = this:InputParameters(inst);
 
-		this:Block_1(true, " ");
+		local block = this:Block_1(true, " ");
 
-		return this:EndInstruction(inst, {params = params; signature = signature});
+		return this:EndInstruction(inst, {var = var; type = typ; args = params; signature = signature; block = block});
 	end
 
 	return this:ClassStatment_4()
@@ -2177,9 +2180,9 @@ function PARSER.InterfaceStatment_0(this)
 	if (this:Accept("itf")) then
 		local inst = this:StartInstruction("interface", this.__token);
 		
-		this:Require("var", "Interface name expected after class");
+		local interface = this:Require("var", "Interface name expected after class");
 		
-		this:SetUserObject(inst.interface);
+		this:SetUserObject(interface.data);
 
 		this:Require("lcb", "Left curly bracket ({) expected, to open interface");
 		
@@ -2188,7 +2191,7 @@ function PARSER.InterfaceStatment_0(this)
 		if (not this:CheckToken("rcb")) then
 			this:PushScope()
 
-			this:SetOption("interface", inst.interface);
+			this:SetOption("interface", interface.data);
 			stmts = this:Statements(true, this.InterfaceStatment_1);
 
 			this:PopScope()
@@ -2196,7 +2199,7 @@ function PARSER.InterfaceStatment_0(this)
 
 		this:Require("rcb", "Right curly bracket (}) missing, to close interface");
 		
-		return this:EndInstruction(inst, stmts);
+		return this:EndInstruction(inst, {interface = interface.data; stmts = stmts});
 	end
 
 	this:Throw(this.__token, "Right curly bracket (}) expected, to close interface.");
@@ -2209,20 +2212,20 @@ function PARSER.InterfaceStatment_1(this)
 	if (this:Accept("meth")) then
 		local inst = this:StartInstruction("interface_method", this.__token);
 		
-		this:Require("typ", "Return type expected for method, after method.");
+		local result = this:Require("typ", "Return type expected for method, after method.");
 
-		this:Require("var", "Name expected for method, after %s", name(inst.result));
+		local name = this:Require("var", "Name expected for method, after %s", name(result.data));
 
 		this:Require("lpa", "Left parenthesis ( () expected to close method parameters.");
 		
-		local classes = {};
+		local params = {};
 
 		if (not this:CheckToken("rpa")) then
 
 			while (true) do
 				this:Require("typ", "Parameter type expected for parameter.");
 				
-				classes[#classes + 1] = this.__token.data;
+				params[#params + 1] = this.__token.data;
 
 				if (not this:Accept("com")) then
 					break;
@@ -2238,7 +2241,7 @@ function PARSER.InterfaceStatment_1(this)
 
 		this:Require("ret", "Method body must be return followed by return count");
 
-		this:Require("num", "Method body must be return followed by return count as number.");
+		local count = this:Require("num", "Method body must be return followed by return count as number.");
 
 		this:Accept("sep");
 
@@ -2246,7 +2249,7 @@ function PARSER.InterfaceStatment_1(this)
 			this:Require("rcb", "Right curly bracket ( }) expected to close method.");
 		end
 
-		return this:EndInstruction(inst, {classes = classes});
+		return this:EndInstruction(inst, {params = params, result = result, name = name, count = count});
 	end
 end
 

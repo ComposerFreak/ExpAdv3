@@ -943,7 +943,11 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 		local class, scope, info = this:GetVariable(var);
 
 		if (info and info.prefix) then
-			var = info.prefix .. "." .. var;
+			if (info.atribute) then
+				var = "this." .. info.prefix .. "." .. var;
+			else
+				var = info.prefix .. "." .. var;
+			end
 		end
 
 		this:writeToBuffer(inst, var);
@@ -3390,11 +3394,11 @@ function COMPILER.Compile_CLASS(this, inst, token, data)
 					this:Throw(imp, "No sutch interface %s", imp.data);
 				end
 
-				for name, info in pairs(interface.methods) do
-					local overrride = class.methods[name];
+				for mName, info in pairs(interface.methods) do
+					local overrride = class.methods[mName];
 
 					if (not overrride) then
-						this:Throw(token, "Missing method %s(%s) on class %s, for interface %s", info.name, inst.params or "", inst.__classname.data, imp.data);
+						this:Throw(token, "Missing method %s(%s) on class %s, for interface %s", info.name, inst.params or "", data.classname, imp.data);
 					end
 
 					if (overrride and info.result ~= overrride.result) then
@@ -3591,19 +3595,15 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, data)
 	local signature = string_format("constructor(%s)", inst.signature);
 
 	this:writeToBuffer(inst, "\n%s[%q] = function(", userclass.name, signature);
-
-	if data.perams then
-		local args = data.perams;
-		local tArgs = #args or 0;
-
-		--if tArgs > 0 then this:writeToBuffer(inst, ","); end
-
-		for i = 1, tArgs do
-			local args = args[i];
-			this:writeToBuffer(inst, param[2]);
-			this:AssignVariable(token, true, param[2], param[1]);
-			if i < tArgs then this:writeToBuffer(inst, ","); end
-		end
+	
+	local args = data.args;
+	local tArgs = #args;
+	
+	for i = 1, tArgs do
+		local arg = args[i];
+		this:writeToBuffer(inst, arg[2]);
+		this:AssignVariable(token, true, arg[2], arg[1]);
+		if i < tArgs then this:writeToBuffer(inst, ","); end
 	end
 
 	this:writeToBuffer(inst, ")\n");
@@ -3628,14 +3628,14 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, data)
 
 	local userclass = this:GetOption("userclass");
 
-	local signature = string_format("@%s(%s)", data.name.data, data.signature);
+	local signature = string_format("@%s(%s)", data.var.data, data.signature);
 
 	this:writeToBuffer(inst, "\n%s[%q] = function(this", userclass.name, signature);
 
 
 	this:AssignVariable(token, true, "this", userclass.name);
 
-	local args = data.perams;
+	local args = data.args;
 	local tArgs = #args;
 
 	if tArgs > 0 then this:writeToBuffer(inst, ","); end
@@ -3651,14 +3651,14 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, data)
 
 	local overrride = userclass.methods[signature];
 
-	local error = string_format("Attempt to call user method '%s.%s(%s)' using alien class of the same name.", userclass.name, data.__name.data, data.signature);
+	local error = string_format("Attempt to call user method '%s.%s(%s)' using alien class of the same name.", userclass.name, data.var.data, data.signature);
 	this:writeToBuffer(inst, "if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error);
 
 
 	local meth = {};
 	meth.sig = signature;
-	meth.name = inst.__name.data;
-	meth.result = inst.__typ.data;
+	meth.name = data.var.data;
+	meth.result = data.type.data;
 	meth.token = token;
 	userclass.methods[signature] = meth;
 
@@ -3764,9 +3764,9 @@ function COMPILER.Compile_INTERFACE(this, inst, token, data)
 
 		this:SetOption("interface", interface);
 
-		for i = 1, #data.block do
-			this:Compile(data.block[i]);
-			this:addInstructionToBuffer()
+		for i = 1, #data.stmts do
+			this:Compile(data.stmts[i]);
+			this:addInstructionToBuffer(data.stmts[i])
 		end
 
 	this:PopScope();
@@ -3774,21 +3774,23 @@ function COMPILER.Compile_INTERFACE(this, inst, token, data)
 	return "", 0;
 end
 
-function COMPILER.Compile_INTERFACE_METHOD(this, inst, token)
+function COMPILER.Compile_INTERFACE_METHOD(this, inst, token, data)
 	local interface = this:GetOption("interface");
 
 	local meth = {};
-	meth.name = inst.name;
-	meth.result = inst.result;
-	meth.params = table_concat(inst.parameters, ",");
-	meth.sig = string_format("@%s(%s)", inst.name, meth.params);
+	meth.name = data.name.data;
+	meth.result = data.result.data;
+	meth.params = table_concat(data.params, ",");
+	meth.sig = string_format("@%s(%s)", data.name.data, meth.params);
 	meth.token = token;
 
-	if (inst.count == -1) then
-		inst.count = 0;
+	local count = tonumber(data.count.data);
+
+	if (count == -1) then
+		count = 0;
 	end
 
-	meth.count = inst.count;
+	meth.count = count;
 
 	interface.methods[meth.sig] = meth;
 end
