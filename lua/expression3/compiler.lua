@@ -3060,7 +3060,7 @@ function COMPILER.Compile_FOR(this, inst, token, data)
 
 	this:PushScope();
 	this:SetOption("loop", true);
-	this:AssignVariable(token, true, inst.variable.data, inst.class, nil);
+	this:AssignVariable(token, true, var, class, nil);
 
 	this:Compile(data.block);
 
@@ -3445,7 +3445,7 @@ end
 
 
 function COMPILER.Compile_FEILD(this, inst, token, data)
-	local expr = data.expr1;
+	local expr = data.expr;
 	local type = this:Compile(expr);
 	local userclass = this:GetUserClass(type);
 

@@ -905,10 +905,11 @@ function PARSER.Statment_5(this)
 		this:Require("lpa", "Left parenthesis (() ) expected to close cloop defintion.");
 
 		this:Require("typ", "Class expected after lpa, for foreach loop")
-		this:QueueRemove(inst, this.__token);
+		
 		local a = this.__token.data
 
 		this:Require("var", "Variable expected after class, for foreach loop")
+		
 		local b = this.__token.data
 
 		local kType, kValue;
@@ -931,9 +932,9 @@ function PARSER.Statment_5(this)
 
 		this:Require("rpa", "Right parenthesis ( )) expected to close loop defintion.");
 
-		inst.block = this:Block_1(true, "do");
+		local block = this:Block_1(true, "do");
 
-		return this:EndInstruction(inst, {expr = expr; vType = vType; vValue = vValue; kType = kType, kValue = kValue});
+		return this:EndInstruction(inst, {expr = expr; vType = vType; vValue = vValue; kType = kType, kValue = kValue, block = block});
 	end
 
 	return this:Statment_6();
