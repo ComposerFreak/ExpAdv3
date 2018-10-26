@@ -20,7 +20,7 @@ function Golem.Create( )
 	Golem.Instance:SetIcon( "fugue/application-sidebar-list.png" ) // Keep or not to keep, that is the question.
 	Golem.Instance:Open( )
 
-	local function SyntaxColorLine( self, Row )
+	/*local function SyntaxColorLine( self, Row )
 		local Tokens, Ok
 
 		Ok, Tokens = pcall( Golem.Syntaxer.Highlight, self, Row )
@@ -31,9 +31,10 @@ function Golem.Create( )
 		end
 
 		return Tokens
-	end
+	end*/
 
-	Golem.Instance:SetSyntaxColorLine( SyntaxColorLine )
+	-- Golem.Instance:SetSyntaxColorLine( SyntaxColorLine )
+	-- Golem.Instance.SyntaxColorLine = SyntaxColorLine
 
 	hook.Run( "Expression3.GolemInit" )
 end
@@ -68,6 +69,10 @@ function Golem.Reload( )
 	include( "expression3/editor/derma/filemenu.lua" )
 
 	include( "expression3/editor/derma/syntaxer.lua" )
+	
+	include( "expression3/editor/derma/syntax.lua" ) 
+	include( "expression3/editor/derma/syntax/syntax_e3.lua" )
+	include( "expression3/editor/derma/syntax/syntax_lua.lua" )
 end
 
 function Golem.GetInstance( )

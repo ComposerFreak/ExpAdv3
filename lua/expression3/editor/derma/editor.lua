@@ -54,9 +54,9 @@ local PANEL = { }
 function PANEL:Init( )
 	self:SetCursor( "beam" )
 	
-	self.Rows = { "" }
+	self.tRows = { "" }
 	self.FoldButtons = { }
-	self.FoldData = { {0, false, false} }
+	self.tFoldData = { {0, false, false} }
 	self.Undo = { } 
 	self.Redo = { } 
 	self.PaintRows = { }
@@ -128,12 +128,16 @@ function PANEL:SetFont( sFont )
 	surface_SetFont( sFont )
 	self.FontWidth, self.FontHeight = surface_GetTextSize( " " )
 	
-	self.FoldingWidth = self.FontHeight 
-	for k, v in pairs( self.FoldButtons ) do
-		if ValidPanel( v ) then 
-			v:SetSize( self.FontHeight, self.FontHeight )
-		end 
-	end
+	if self.bCodeFolding  then 
+		self.FoldingWidth = self.FontHeight 
+		for k, v in pairs( self.FoldButtons ) do
+			if ValidPanel( v ) then 
+				v:SetSize( self.FontHeight, self.FontHeight )
+			end 
+		end
+	else 
+		self.FoldingWidth = 0
+	end 
 	
 	self:InvalidateLayout( true ) 
 end 
@@ -141,7 +145,6 @@ end
 /*---------------------------------------------------------------------------
 TextEntry hooks
 ---------------------------------------------------------------------------*/
-
 local AutoParam = {
 	["{"] = { "}", true },
 	["["] = { "]", true },
@@ -232,17 +235,17 @@ function PANEL:_OnKeyCodeTyped( code )
 				if self:HasSelection( ) then 
 					local start, stop = self:MakeSelection( self:Selection( ) )
 					if start.x > 1 then 
-						local data = table_remove( self.Rows, start.x - 1 ) 
-						table_insert( self.Rows, stop.x, data ) 
+						local data = table_remove( self.tRows, start.x - 1 ) 
+						table_insert( self.tRows, stop.x, data ) 
 						self.Start:Add( -1, 0 )
 						self.Caret:Add( -1, 0 )
 						self.PaintRows = { }
 						self:ScrollCaret( )
 					end 
 				elseif self.Caret.x > 1 then 
-					local data = table_remove( self.Rows, self.Caret.x ) 
+					local data = table_remove( self.tRows, self.Caret.x ) 
 					self:SetCaret( self.Caret:Add( -1, 0 ) ) 
-					table_insert( self.Rows, self.Caret.x, data )
+					table_insert( self.tRows, self.Caret.x, data )
 					self.PaintRows = { }
 				end 
 			else 
@@ -254,18 +257,18 @@ function PANEL:_OnKeyCodeTyped( code )
 			if shift then 
 				if self:HasSelection( ) then 
 					local start, stop = self:MakeSelection( self:Selection( ) )
-					if stop.x < #self.Rows then 
-						local data = table_remove( self.Rows, stop.x + 1 ) 
-						table_insert( self.Rows, start.x, data ) 
+					if stop.x < #self.tRows then 
+						local data = table_remove( self.tRows, stop.x + 1 ) 
+						table_insert( self.tRows, start.x, data ) 
 						self.Start:Add( 1, 0 )
 						self.Caret:Add( 1, 0 )
 						self.PaintRows = { }
 						self:ScrollCaret( )
 					end 
-				elseif self.Caret.x < #self.Rows then 
-					local data = table_remove( self.Rows, self.Caret.x ) 
+				elseif self.Caret.x < #self.tRows then 
+					local data = table_remove( self.tRows, self.Caret.x ) 
 					self:SetCaret( self.Caret:Add( 1, 0 ) ) 
-					table_insert( self.Rows, self.Caret.x, data )
+					table_insert( self.tRows, self.Caret.x, data )
 					self.PaintRows = { }
 				end 
 			else 
@@ -305,7 +308,7 @@ function PANEL:_OnKeyCodeTyped( code )
 				self.Start = self.Caret:Clone( )
 			end
 		elseif code == KEY_END then
-			self.Caret = Vector2( #self.Rows, 1 )
+			self.Caret = Vector2( #self.tRows, 1 )
 			
 			self:ScrollCaret( )
 			
@@ -324,7 +327,7 @@ function PANEL:_OnKeyCodeTyped( code )
 			else -- If you don't
 				-- Select the current line
 				self.Start = Vector2( self.Start.x, 1 )
-				self.Caret = Vector2( self.Start.x, #self.Rows[self.Start.x] + 1 )
+				self.Caret = Vector2( self.Start.x, #self.tRows[self.Start.x] + 1 )
 				-- Get the text
 				local str = self:GetSelection( )
 				-- Repeat it
@@ -343,7 +346,7 @@ function PANEL:_OnKeyCodeTyped( code )
 		end 
 	else
 		if code == KEY_ENTER then 
-			local Line = self.Rows[self.Caret.x] 
+			local Line = self.tRows[self.Caret.x] 
 			local Count = string_len( string_match( string_sub( Line, 1, self.Caret.y - 1 ), "^%s*" ) ) 
 			
 			if string_match( "{" .. Line .. "}", "^%b{}.*$" ) then 
@@ -372,13 +375,13 @@ function PANEL:_OnKeyCodeTyped( code )
 				self:FoldAll( tFolds )
 				self.Caret.x = self.Caret.x - 1
 				
-				if istable( self.Rows[self.Caret.x] ) and self.Rows[self.Caret.x].Primary ~= self.Caret.x then 
-					self.Caret.x = self.Rows[self.Caret.x].Primary 
+				if istable( self.tRows[self.Caret.x] ) and self.tRows[self.Caret.x].Primary ~= self.Caret.x then 
+					self.Caret.x = self.tRows[self.Caret.x].Primary 
 				end
 				
 				if self.Caret.x < 1 then self.Caret.x = 1 end 
 				
-				local length = #self.Rows[self.Caret.x]
+				local length = #self.tRows[self.Caret.x]
 				if self.Caret.y > length + 1 then
 					self.Caret.y = length + 1
 				end
@@ -390,17 +393,17 @@ function PANEL:_OnKeyCodeTyped( code )
 				self.Start = self.Caret:Clone( )
 			end
 		elseif code == KEY_DOWN then 
-			if self.Caret.x < #self.Rows then
+			if self.Caret.x < #self.tRows then
 				self:FoldAll( tFolds )
 				self.Caret.x = self.Caret.x + 1
 				
-				if istable( self.Rows[self.Caret.x] ) and self.Rows[self.Caret.x].Primary ~= self.Caret.x then 
-					self.Caret.x = #self.Rows[self.Caret.x] + self.Rows[self.Caret.x].Primary 
+				if istable( self.tRows[self.Caret.x] ) and self.tRows[self.Caret.x].Primary ~= self.Caret.x then 
+					self.Caret.x = #self.tRows[self.Caret.x] + self.tRows[self.Caret.x].Primary 
 				end 
 				
-				if self.Caret.x > #self.Rows then self.Caret.x = #self.Rows end 
+				if self.Caret.x > #self.tRows then self.Caret.x = #self.tRows end 
 				
-				local length = #self.Rows[self.Caret.x]
+				local length = #self.tRows[self.Caret.x]
 				if self.Caret.y > length + 1 then
 					self.Caret.y = length + 1
 				end
@@ -447,7 +450,7 @@ function PANEL:_OnKeyCodeTyped( code )
 			else
 				-- self:SetCaret( self:SetArea( { self.Caret, self:MovePosition( self.Caret, 1 ) }, "" ) )
 				local buffer = self:GetArea( { Vector2( self.Caret.x, self.Caret.y + 4 ), Vector2( self.Caret.x, 1 ) } )
-				if self.Caret.y % 4 == 1 and string_rep( " ", #( buffer ) ) == buffer and #( self.Rows[self.Caret.x] ) >= self.Caret.y + 4 - 1 then
+				if self.Caret.y % 4 == 1 and string_rep( " ", #( buffer ) ) == buffer and #( self.tRows[self.Caret.x] ) >= self.Caret.y + 4 - 1 then
 					self:SetCaret( self:SetArea( { self.Caret, self:MovePosition( self.Caret, 4 ) }, "" ) )
 				else
 					self:SetCaret( self:SetArea( { self.Caret, self:MovePosition( self.Caret, 1 ) }, "" ) )
@@ -455,7 +458,7 @@ function PANEL:_OnKeyCodeTyped( code )
 			end
 		elseif code == KEY_PAGEUP then 
 			self.Caret.x = math_max( self.Caret.x - math_ceil( self.Size.x / 2 ), 1 )
-			self.Caret.y = math_min( self.Caret.y, #self.Rows[self.Caret.x] + 1 )
+			self.Caret.y = math_min( self.Caret.y, #self.tRows[self.Caret.x] + 1 )
 			
 			self.Scroll.x = math_max( self.Scroll.x - math_ceil( self.Size.x / 2 ), 1 )
 
@@ -465,8 +468,8 @@ function PANEL:_OnKeyCodeTyped( code )
 				self.Start = self.Caret:Clone( )
 			end
 		elseif code == KEY_PAGEDOWN then
-			self.Caret.x = math_min( self.Caret.x + math_ceil( self.Size.x / 2 ), #self.Rows )
-			self.Caret.y = self.Caret.x == #self.Rows and 1 or math_min( self.Caret.y, #self.Rows[self.Caret.x] + 1 )
+			self.Caret.x = math_min( self.Caret.x + math_ceil( self.Size.x / 2 ), #self.tRows )
+			self.Caret.y = self.Caret.x == #self.tRows and 1 or math_min( self.Caret.y, #self.tRows[self.Caret.x] + 1 )
 
 			self.Scroll.x = self.Scroll.x + math_ceil( self.Size.x / 2 )
 
@@ -476,7 +479,7 @@ function PANEL:_OnKeyCodeTyped( code )
 				self.Start = self.Caret:Clone( )
 			end
 		elseif code == KEY_HOME then
-			local row = self.Rows[self.Caret.x]
+			local row = self.tRows[self.Caret.x]
 			local first_char = string_find( row, "%S" ) or #row + 1
 			self.Caret.y = self.Caret.y == first_char and 1 or first_char
 
@@ -486,7 +489,7 @@ function PANEL:_OnKeyCodeTyped( code )
 				self.Start = self.Caret:Clone( )
 			end
 		elseif code == KEY_END then
-			self.Caret.y = #self.Rows[self.Caret.x] + 1
+			self.Caret.y = #self.tRows[self.Caret.x] + 1
 
 			self:ScrollCaret( )
 
@@ -513,10 +516,10 @@ function PANEL:_OnKeyCodeTyped( code )
 					local Caret = self.Caret:Clone( ) 
 					
 					self.Start:Set( self.Start.x, 1 ) 
-					self.Caret:Set( Caret.x, #self.Rows[Caret.x] + 1 ) 
+					self.Caret:Set( Caret.x, #self.tRows[Caret.x] + 1 ) 
 					
-					local text = string_match( self.Rows[Caret.x], "^ ? ? ? ?(.*)$" ) 
-					local oldLength = #self.Rows[Caret.x] 
+					local text = string_match( self.tRows[Caret.x], "^ ? ? ? ?(.*)$" ) 
+					local oldLength = #self.tRows[Caret.x] 
 					
 					self:SetSelection( text ) 
 					
@@ -532,7 +535,7 @@ function PANEL:_OnKeyCodeTyped( code )
 					local Caret = self.Caret:Clone( ) 
 					
 					self.Start:Set( self.Start.x, 1 ) 
-					self.Caret:Set( Caret.x, #self.Rows[Caret.x] + 1 ) 
+					self.Caret:Set( Caret.x, #self.tRows[Caret.x] + 1 ) 
 					
 					self:Indent( ) 
 					
@@ -590,18 +593,18 @@ function PANEL:_OnTextChanged( )
 		end  
 	elseif text == 1 and AutoParam[text] then 
 		if 
-			self.Rows[self.Caret.x][self.Caret.y] == " " or 
-			self.Rows[self.Caret.x][self.Caret.y] == "" or 
-			self.Rows[self.Caret.x][self.Caret.y] == AutoParam[text][1] 
+			self.tRows[self.Caret.x][self.Caret.y] == " " or 
+			self.tRows[self.Caret.x][self.Caret.y] == "" or 
+			self.tRows[self.Caret.x][self.Caret.y] == AutoParam[text][1] 
 		then 
 			self:SetSelection( text .. AutoParam[text][1] ) 
 			self:SetCaret( self:MovePosition( self.Caret, -1 ) ) 
-		/*elseif SpecialCase[text] and self.Rows[self.Caret.x][self.Caret.y] == text then 
+		/*elseif SpecialCase[text] and self.tRows[self.Caret.x][self.Caret.y] == text then 
 			self:SetCaret( self:MovePosition( self.Caret, 1 ) ) */
 		else 
 			self:SetSelection( text )
 		end
-	/*elseif #text == 1 and SpecialCase[text] and self.Rows[self.Caret.x][self.Caret.y] == text then 
+	/*elseif #text == 1 and SpecialCase[text] and self.tRows[self.Caret.x][self.Caret.y] == text then 
 		self:SetCaret( self:MovePosition( self.Caret, 1 ) ) */
 	else
 		self:SetSelection( text )
@@ -627,7 +630,7 @@ function PANEL:OnMousePressed( code )
 				
 				self.Start = Vector2( cursor.x, 1 )
 				local s = self:ExpandAll( ) 
-				self.Caret = Vector2( cursor.x, #self.Rows[cursor.x]+1 )
+				self.Caret = Vector2( cursor.x, #self.tRows[cursor.x]+1 )
 				self:FoldAll( s )
 			else 
 				self.temp = true 
@@ -718,7 +721,7 @@ function PANEL:OnMouseWheeled( delta )
 	else 
 		self.Scroll:Add( - 4 * delta, 0 )
 		if self.Scroll.x < 1 then self.Scroll.x = 1 end
-		if self.Scroll.x > #self.Rows then self.Scroll.x = #self.Rows end
+		if self.Scroll.x > #self.tRows then self.Scroll.x = #self.tRows end
 		self.pScrollBar:SetScroll( self.Scroll.x - 1 )
 	end 
 end
@@ -755,8 +758,8 @@ function PANEL:CursorToCaret( )
 	
 	char = char + self.Scroll.y 
 	
-	if line > #self.Rows then line = #self.Rows end 
-	local length = #( istable( self.Rows[line] ) and self.Rows[line][1] or self.Rows[line] )
+	if line > #self.tRows then line = #self.tRows end 
+	local length = #( istable( self.tRows[line] ) and self.tRows[line][1] or self.tRows[line] )
 	if char > length + 1 then char = length + 1 end 
 	
 	return Vector2( line, char )
@@ -772,24 +775,24 @@ function PANEL:MovePosition( caret, offset )
 	local caret = caret:Clone( ) 
 	
 	if offset > 0 then
-		if istable( self.Rows[caret.x] ) and self.Rows[caret.x].Primary ~= caret.x then 
-			while istable( self.Rows[caret.x] ) do 
+		if istable( self.tRows[caret.x] ) and self.tRows[caret.x].Primary ~= caret.x then 
+			while istable( self.tRows[caret.x] ) do 
 				caret.x = caret.x + 1 
 			end 
 			caret.y = 1
 		else 
 			while true do
-				local length = #( istable( self.Rows[caret.x] ) and self.Rows[caret.x][1] or self.Rows[caret.x] ) - caret.y + 2
+				local length = #( istable( self.tRows[caret.x] ) and self.tRows[caret.x][1] or self.tRows[caret.x] ) - caret.y + 2
 				
 				if offset < length then
 					caret.y = caret.y + offset
 					break
-				elseif caret.x == #self.Rows then
+				elseif caret.x == #self.tRows then
 					caret.y = caret.y + length - 1
 					break
 				else 
-					if istable( self.Rows[caret.x + 1] ) then 
-						caret.x = caret.x + #self.Rows[caret.x + 1]
+					if istable( self.tRows[caret.x + 1] ) then 
+						caret.x = caret.x + #self.tRows[caret.x + 1]
 					else 
 						caret.x = caret.x + 1
 					end 
@@ -801,9 +804,9 @@ function PANEL:MovePosition( caret, offset )
 	elseif offset < 0 then
 		offset = -offset
 		
-		if istable( self.Rows[caret.x] ) and self.Rows[caret.x].Primary ~= caret.x then 
-			caret.x = self.Rows[caret.x].Primary
-			caret.y = #self.Rows[caret.x][1] + 1
+		if istable( self.tRows[caret.x] ) and self.tRows[caret.x].Primary ~= caret.x then 
+			caret.x = self.tRows[caret.x].Primary
+			caret.y = #self.tRows[caret.x][1] + 1
 		else 
 			while true do
 				if offset < caret.y then
@@ -813,16 +816,16 @@ function PANEL:MovePosition( caret, offset )
 					caret.y = 1
 					break
 				else
-					if istable( self.Rows[caret.x - 1] ) then 
-						caret.x = caret.x - #self.Rows[caret.x - 1]
+					if istable( self.tRows[caret.x - 1] ) then 
+						caret.x = caret.x - #self.tRows[caret.x - 1]
 					else 
 						caret.x = caret.x - 1
 					end 
 					offset = offset - caret.y
-					if istable( self.Rows[caret.x] ) then
-						caret.y = #self.Rows[caret.x][1] + 1 - offset
+					if istable( self.tRows[caret.x] ) then
+						caret.y = #self.tRows[caret.x][1] + 1 - offset
 					else 
-						caret.y = #self.Rows[caret.x] + 1 - offset
+						caret.y = #self.tRows[caret.x] + 1 - offset
 					end 
 				end
 			end
@@ -892,13 +895,13 @@ function PANEL:MakeSelection( selection )
 	
 	-- Should i do this?
 	/*
-	if istable( self.Rows[start.x] ) then 
-		start = Vector2( self.Rows[start.x].Primary, #self.Rows[self.Rows[start.x].Primary][1] )
+	if istable( self.tRows[start.x] ) then 
+		start = Vector2( self.tRows[start.x].Primary, #self.tRows[self.tRows[start.x].Primary][1] )
 	end 
 	
-	if istable( self.Rows[stop.x] ) then 
-		local x = self.Rows[start.x].Primary
-		stop = Vector2( self.Rows[x][#self.Rows[x]], 1 )
+	if istable( self.tRows[stop.x] ) then 
+		local x = self.tRows[start.x].Primary
+		stop = Vector2( self.tRows[x][#self.tRows[x]], 1 )
 	end 
 	*/
 	
@@ -906,7 +909,7 @@ function PANEL:MakeSelection( selection )
 end
 
 function PANEL:SelectAll( )
-	self.Caret = Vector2( #self.Rows, istable( self.Rows[#self.Rows] ) and #self.Rows[self.Rows[#self.Rows].Primary][1] or #self.Rows[#self.Rows] + 1 )
+	self.Caret = Vector2( #self.tRows, istable( self.tRows[#self.tRows] ) and #self.tRows[self.tRows[#self.tRows].Primary][1] or #self.tRows[#self.tRows] + 1 )
 	self.Start = Vector2( 1, 1 )
 	-- self:ScrollCaret( )
 end
@@ -920,18 +923,18 @@ function PANEL:GetArea( selection )
 		if self.Insert and start.y == stop.y then 
 			selection[2].y = selection[2].y + 1 
 			
-			text = string_sub( self.Rows[start.x], start.y, start.y )
+			text = string_sub( self.tRows[start.x], start.y, start.y )
 		else 
-			text = string_sub( self.Rows[start.x], start.y, stop.y - 1 )
+			text = string_sub( self.tRows[start.x], start.y, stop.y - 1 )
 		end 
 	else
-		text = string_sub( self.Rows[start.x], start.y )
+		text = string_sub( self.tRows[start.x], start.y )
 
 		for i = start.x + 1, stop.x - 1 do
-			text = text .. "\n" .. self.Rows[i]
+			text = text .. "\n" .. self.tRows[i]
 		end
 		
-		text =  text .. "\n" .. string_sub( self.Rows[stop.x], 1, stop.y - 1 )
+		text =  text .. "\n" .. string_sub( self.tRows[stop.x], 1, stop.y - 1 )
 	end 
 	
 	self:FoldAll( LinesToFold )
@@ -944,31 +947,31 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 	local start, stop = self:MakeSelection( selection )
 	local LinesToFold = { } 
 	
-	for line = 1, #self.Rows do
-		LinesToFold[line] = istable( self.Rows[line] )
-		if istable( self.Rows[line] ) then 
+	for line = 1, #self.tRows do
+		LinesToFold[line] = istable( self.tRows[line] )
+		if istable( self.tRows[line] ) then 
 			self:ExpandLine( line ) 
 		end 
 	end 
 	
 	if start != stop then
 		// Merge first and last line
-		self.Rows[start.x] = string_sub( self.Rows[start.x], 1, start.y - 1 ) .. string_sub( self.Rows[stop.x], stop.y )
+		self.tRows[start.x] = string_sub( self.tRows[start.x], 1, start.y - 1 ) .. string_sub( self.tRows[stop.x], stop.y )
 		
 		// Remove deleted lines
 		for i = start.x + 1, stop.x do
-			table_remove( self.Rows, start.x + 1 )
-			table_remove( self.FoldData, start.x + 1 )
+			table_remove( self.tRows, start.x + 1 )
+			table_remove( self.tFoldData, start.x + 1 )
 			table_remove( LinesToFold, start.x + 1 )
 		end
 	end
 	
 	if !text or text == "" then
-		self.pScrollBar:SetUp( self.Size.x, #self.Rows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ) )
+		self.pScrollBar:SetUp( self.Size.x, #self.tRows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ) )
 		self:CalculateScroll( )
 		self.PaintRows = { }
-		self:OnTextChanged( selection, text )
-		self:MakeFoldData( )
+		self:TextChanged( selection, text )
+		if self.bCodeFolding then self.tSyntax:MakeFoldData( ) end
 		
 		if isredo then
 			self.Undo[#self.Undo + 1] = { { start:Clone( ), start:Clone( ) }, 
@@ -992,24 +995,24 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 	// insert text
 	local rows = string_Explode( "\n", text )
 	
-	local remainder = string_sub( self.Rows[start.x], start.y )
-	self.Rows[start.x] = string_sub( self.Rows[start.x], 1, start.y - 1 ) .. rows[1]
+	local remainder = string_sub( self.tRows[start.x], start.y )
+	self.tRows[start.x] = string_sub( self.tRows[start.x], 1, start.y - 1 ) .. rows[1]
 	
 	for i = 2, #rows do
-		table_insert( self.Rows, start.x + i - 1, rows[i] )
+		table_insert( self.tRows, start.x + i - 1, rows[i] )
 		table_insert( LinesToFold, start.x + i - 1, false )
 	end
-	self.FoldData = { }
+	self.tFoldData = { }
 	
-	local stop = Vector2( start.x + #rows - 1, #self.Rows[start.x + #rows - 1] + 1 )
+	local stop = Vector2( start.x + #rows - 1, #self.tRows[start.x + #rows - 1] + 1 )
 	
-	self.Rows[stop.x] = self.Rows[stop.x] .. remainder
+	self.tRows[stop.x] = self.tRows[stop.x] .. remainder
 	
-	self.pScrollBar:SetUp( self.Size.x, #self.Rows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ))
+	self.pScrollBar:SetUp( self.Size.x, #self.tRows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ))
 	self:CalculateScroll( )
 	self.PaintRows = { }
-	self:OnTextChanged( selection, text )
-	self:MakeFoldData( )
+	self:TextChanged( selection, text )
+	if self.bCodeFolding then self.tSyntax:MakeFoldData( ) end
 	
 	if isredo then
 		self.Undo[#self.Undo + 1] = { { start:Clone( ), stop:Clone( ) }, 
@@ -1030,12 +1033,20 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 	end
 end
 
+function PANEL:TextChanged( tSelection, sText )
+	
+	if self.tSyntax and self.tSyntax.Parse then self.tSyntax:Parse() end 
+	
+	
+	if self.OnTextChanged then self:OnTextChanged( tSelection, sText ) end 
+end
+
 // Might need fixing
 function PANEL:Indent( Shift ) 
 	local oldSelection = { self:MakeSelection( self:Selection( ) ) } 
 	local Scroll = self.Scroll:Clone( ) 
 	local Start, End = oldSelection[1]:Clone( ), oldSelection[2]:Clone( ) 
-	local slen, elen = #self.Rows[Start.x], #self.Rows[End.x]
+	local slen, elen = #self.tRows[Start.x], #self.tRows[End.x]
 	
 	Start.y = 1 
 	if End.y ~= 1 then 
@@ -1057,8 +1068,8 @@ function PANEL:Indent( Shift )
 		self:SetSelection( "    " .. string_gsub( self:GetSelection( ), "\n", "\n    " ) ) 
 	end 
 	
-	self.Start = oldSelection[1]:Clone( ):Add( 0, #self.Rows[oldSelection[1].x] - slen )
-	self.Caret = oldSelection[2]:Clone( ):Add( 0, #self.Rows[oldSelection[2].x] - elen )
+	self.Start = oldSelection[1]:Clone( ):Add( 0, #self.tRows[oldSelection[1].x] - slen )
+	self.Caret = oldSelection[2]:Clone( ):Add( 0, #self.tRows[oldSelection[2].x] - elen )
 	
 	self.Scroll = Scroll:Clone( ) 
 	
@@ -1093,10 +1104,10 @@ end
 
 function PANEL:wordLeft( caret )
 	local tFolds = self:ExpandAll( )
-	local row = self.Rows[caret.x] 
+	local row = self.tRows[caret.x] 
 	if caret.y == 1 then
 		if caret.x == 1 then return caret end
-		return Vector2( caret.x-1, #self.Rows[caret.x-1] )
+		return Vector2( caret.x-1, #self.tRows[caret.x-1] )
 	end
 	local pos = string_match( string_sub( row, 1, caret.y - 2 ), "[^%w_]+()[%w_]+[^%w_]*$" )
 	caret.y = pos or 1
@@ -1106,9 +1117,9 @@ end
 
 function PANEL:wordRight( caret )
 	local tFolds = self:ExpandAll( )
-	local row = self.Rows[caret.x] 
+	local row = self.tRows[caret.x] 
 	if caret.y > #row then
-		if caret.x == #self.Rows then return caret end
+		if caret.x == #self.tRows then return caret end
 		return Vector2( caret.x + 1, 1 )
 	end
 	local pos = string_match( row, "%f[%w_]()", caret.y+1 )
@@ -1119,7 +1130,7 @@ end
 
 function PANEL:wordStart( caret )
 	local tFolds = self:ExpandAll( )
-	local line = self.Rows[caret.x] 
+	local line = self.tRows[caret.x] 
 	self:FoldAll( tFolds )
 	
 	for startpos, endpos in string_gmatch( line, "()[a-zA-Z0-9_]+()" ) do 
@@ -1133,7 +1144,7 @@ end
 
 function PANEL:wordEnd( caret )
 	local tFolds = self:ExpandAll( )
-	local line = self.Rows[caret.x] 
+	local line = self.tRows[caret.x] 
 	self:FoldAll( tFolds )
 	
 	for startpos, endpos in string_gmatch( line, "()[a-zA-Z0-9_]+()" ) do 
@@ -1148,247 +1159,16 @@ end
 /*---------------------------------------------------------------------------
 Code folding
 ---------------------------------------------------------------------------*/
-function PANEL:FindValidLines( ) 
-	local ValidLines = { } 
-	local bMultilineComment = false 
-	local bMultilineString = false 
-	local Row, Char = 1, 0 
-	local LinesToFold = self:ExpandAll( )
-	
-	while Row <= #self.Rows do 
-		local sStringType = false 
-		local Line = self.Rows[Row]
-		
-		while Char < #Line do 
-			Char = Char + 1
-			local Text = Line[Char]
-			
-			if bMultilineComment then 
-				if Text == "/" and Line[Char-1] == "*" then 
-					ValidLines[#ValidLines][2] = { Row, Char }
-					bMultilineComment = false 
-				end 
-				continue 
-			end 
-			
-			if bMultilineString then 
-				if Text == "'" and Line[Char-1] ~= "\\" then 
-					ValidLines[#ValidLines][2] = { Row, Char }
-					bMultilineString = nil 
-				end 
-				continue 
-			end 
-			
-			if sStringType then 
-				if Text == sStringType and Line[Char-1] ~= "\\" then 
-					ValidLines[#ValidLines][2] = { Row, Char }
-					sStringType = nil 
-				end 
-				continue 
-			end 
-			
-			if Text == "/" then 
-				if Line[Char+1] == "/" then // SingleLine comment
-					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
-					break 
-				elseif Line[Char+1] == "*" then // MultiLine Comment
-					bMultilineComment = true 
-					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
-					continue 
-				end 
-			end 
-			
-			if Text == "'" then 
-				if Line[Char-1] ~= "\\" then 
-					bMultilineString = true 
-					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
-				end 
-				continue 
-			end 
-			
-			if Text == '"' then 
-				if Line[Char-1] ~= "\\" then 
-					sStringType = Text 
-					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
-				end 
-			end 
-		end 
-		
-		Char = 0 
-		Row = Row + 1 
-	end 
-	
-	self:FoldAll( LinesToFold )
-	
-	return function( nLine, nStart ) 
-		for i = 1, #ValidLines do
-			local tStart, tEnd = ValidLines[i][1], ValidLines[i][2]
-			
-			if tStart[1] < nLine and tEnd[1] > nLine then 
-				return false 
-			end 
-			
-			if tStart[1] == tEnd[1] then
-				if tStart[1] == nLine then 
-			 		if tStart[2] <= nStart and tEnd[2] >= nStart then 
-			 			return false 
-			 		end 
-			 	end 
-			else 
-			 	if tStart[1] == nLine then 
-			 		if tStart[2] <= nStart then 
-			 			return false 
-			 		end 
-			 	elseif tEnd[1] == nLine then 
-			 		if tEnd[2] >= nStart then 
-			 			return false 
-			 		end 
-			 	end 
-			end 
-		end
-		
-		return true 
-	end 
-end 
-
-local ParamPairs = {
-	["{"] = { "{", "}", true }, 
-	["["] = { "[", "]", true }, 
-	["("] = { "(", ")", true }, 
-	
-	["}"] = { "}", "{", false }, 
-	["]"] = { "]", "[", false }, 
-	[")"] = { ")", "(", false }, 
-}
-
-function PANEL:FindMatchingParam( Row, Char ) 
-	if not self.Rows[Row] then return false end 
-	local LinesToFold = self:ExpandAll( )
-	local Param, EnterParam, ExitParam = ParamPairs[self.Rows[Row][Char]] 
-	
-	if ParamPairs[self.Rows[Row][Char-1]] and not ParamPairs[self.Rows[Row][Char-1]][3] then 
-		Char = Char - 1
-		Param = ParamPairs[self.Rows[Row][Char]] 
-	end 
-	
-	if not Param then 
-		Char = Char - 1
-		Param = ParamPairs[self.Rows[Row][Char]] 
-	end 
-	
-	if not Param then
-		self:FoldAll( LinesToFold ) 
-		return false 
-	end 
-	
-	EnterParam = Param[1]
-	ExitParam = Param[2]
-	
-	local line, pos, level = Row, Char, 0 
-	local ValidLines = self:FindValidLines( ) 
-	
-	if not ValidLines( line, pos ) then 
-		self:FoldAll( LinesToFold )
-		return false 
-	end 
-	
-	if Param[3] then -- Look forward 
-		while line <= #self.Rows do 
-			local Line = self.Rows[line]
-			while pos < #Line do 
-				pos = pos + 1
-				local Text = Line[pos]
-				
-				if not ValidLines( line, pos ) then continue end 
-				
-				if Text == EnterParam then 
-					level = level + 1 
-				elseif Text == ExitParam then 
-					if level > 0 then 
-						level = level - 1 
-					else 
-						self:FoldAll( LinesToFold )
-						return { Vector2( Row, Char ), Vector2( line, pos ) }
-					end 
-				end 
-			end 
-			pos = 0 
-			line = line + 1 
-		end 
-	else -- Look backwards 
-		while line > 0 do 
-			local Line = self.Rows[line]
-			while pos > 0 do 
-				pos = pos - 1 
-				
-				local Text = Line[pos] 
-				
-				if not ValidLines( line, pos ) then continue end 
-				
-				if Text == EnterParam then 
-					level = level + 1 
-				elseif Text == ExitParam then 
-					if level > 0 then 
-						level = level - 1 
-					else 
-						self:FoldAll( LinesToFold )
-						return { Vector2( line, pos ), Vector2( Row, Char ) }
-					end 
-				end 
-			end 
-			line = line - 1 
-			pos = #(self.Rows[line] or "") + 1
-		end 
-	end 
-	
-	self:FoldAll( LinesToFold )
-	
-	return false 
-end 
-
-// { FoldLevel, Folded, FoldOverride }
-function PANEL:MakeFoldData( nExit ) 
-	local LinesToFold = self:ExpandAll( )
-	local ValidLines = self:FindValidLines( ) 
-	local nLevel = 0
-	
-	for nLine = 1, #self.Rows do
-		if nLine == nExit then break end 
-		local text = self.Rows[nLine]
-		local last
-		self.FoldData[nLine] = self.FoldData[nLine] or { nLevel, false, false }
-		
-		for nStart, sType, nEnd in string.gmatch( text, "()([{}])()") do 
-			if not ValidLines( nLine, nStart ) then continue end 
-			nLevel = nLevel + ( sType == "{" and 1 or -1 ) 
-			last = sType
-		end 
-		
-		if last == "{" and self.FoldData[nLine][1] == nLevel then
-			self.FoldData[nLine][3] = true 
-		else 
-			self.FoldData[nLine][3] = false 
-		end
-		
-		if self.FoldData[nLine][1] > nLevel then 
-			self.FoldData[nLine][1] = nLevel 
-		end 
-	end
-	
-	self.FoldData[#self.Rows+1] = { 0, false, false }
-	
-	self:FoldAll( LinesToFold )
-end 
-
 function PANEL:GetFoldingOffset( nLine ) 
+	if not self.bCodeFolding then return 0 end 
 	local offset = 0 
 	local pos = 1
 	local infloop = 0
 	
 	while pos < nLine and infloop < 10000 do 
-		if istable( self.Rows[pos] ) then 
-			offset = offset + #self.Rows[pos] - 1
-			pos = pos + #self.Rows[pos] 
+		if istable( self.tRows[pos] ) then 
+			offset = offset + #self.tRows[pos] - 1
+			pos = pos + #self.tRows[pos] 
 		else 
 			pos = pos + 1
 		end 
@@ -1399,6 +1179,7 @@ function PANEL:GetFoldingOffset( nLine )
 end 
 
 function PANEL:ExpandAll( tOld ) 
+	if not self.bCodeFolding then return end 
 	if type( tOld ) == "table" then 
 		for i = 1, #tOld do 
 			self:ExpandLine( tOld[i] )
@@ -1407,8 +1188,8 @@ function PANEL:ExpandAll( tOld )
 	else  
 		local ExpandedLines = { }
 		
-		for line = 1, #self.Rows do
-			local Line = self.Rows[line]
+		for line = 1, #self.tRows do
+			local Line = self.tRows[line]
 			if type( Line ) == "table" and Line.Primary == line then 
 				ExpandedLines[#ExpandedLines+1] = line 
 				self:ExpandLine( line ) 
@@ -1420,6 +1201,7 @@ function PANEL:ExpandAll( tOld )
 end 
 
 function PANEL:FoldAll( tOld )
+	if not self.bCodeFolding then return end 
 	if type( tOld ) == "table" then 
 		for i = #tOld, 1, -1 do 
 			self:FoldLine( tOld[i] )
@@ -1429,11 +1211,11 @@ function PANEL:FoldAll( tOld )
 		local FoldedLines = { }
 		local last = 0
 		
-		if #self.FoldData < #self.Rows then self:MakeFoldData( ) end 
+		if #self.tFoldData < #self.tRows then self.tSyntax:MakeFoldData( ) end 
 		
-		for line = #self.Rows, 1, -1 do
-			local Line = self.Rows[line]
-			local Fold = self.FoldData[line]
+		for line = #self.tRows, 1, -1 do
+			local Line = self.tRows[line]
+			local Fold = self.tFoldData[line]
 			if Fold[1] < last or Fold[3] then 
 				FoldedLines[#FoldedLines+1] = line 
 				self:FoldLine( line ) 
@@ -1445,22 +1227,23 @@ function PANEL:FoldAll( tOld )
 end 
 
 function PANEL:FoldLine( nLine )
-	if istable( self.Rows[nLine] ) or not self.Rows[nLine] then return print( "Tried to fold already folded line!", nLine ) end 
-	if self.FoldData[nLine][1] == self.FoldData[nLine+1][1] and not self.FoldData[nLine][3] then return end 
-	if self.FoldData[nLine][1] > self.FoldData[nLine+1][1] then return end 
-	local Data = { self.Rows[nLine] } 
-	local FoldLevel = self.FoldData[nLine+1][1]
-	self.FoldData[nLine][2] = true
-	self.Rows[nLine] = Data 
+	if not self.bCodeFolding then return end 
+	if istable( self.tRows[nLine] ) or not self.tRows[nLine] then return print( "Tried to fold already folded line!", nLine ) end 
+	if self.tFoldData[nLine][1] == self.tFoldData[nLine+1][1] and not self.tFoldData[nLine][3] then return end 
+	if self.tFoldData[nLine][1] > self.tFoldData[nLine+1][1] then return end 
+	local Data = { self.tRows[nLine] } 
+	local FoldLevel = self.tFoldData[nLine+1][1]
+	self.tFoldData[nLine][2] = true
+	self.tRows[nLine] = Data 
 	Data.Primary = nLine 
 	
-	for i = nLine + 1, #self.Rows do 
-		if self.FoldData[i][1] >= FoldLevel or self.FoldData[nLine][3] then 
-			if self.FoldData[nLine][3] and self.FoldData[i][3] then break end 
-			if self.FoldData[i][3] and self.FoldData[i][1] == FoldLevel then break end 
-			if self.FoldData[i][1] < FoldLevel then break end 
-			Data[#Data+1] = self.Rows[i] 
-			self.Rows[i] = Data 
+	for i = nLine + 1, #self.tRows do 
+		if self.tFoldData[i][1] >= FoldLevel or self.tFoldData[nLine][3] then 
+			if self.tFoldData[nLine][3] and self.tFoldData[i][3] then break end 
+			if self.tFoldData[i][3] and self.tFoldData[i][1] == FoldLevel then break end 
+			if self.tFoldData[i][1] < FoldLevel then break end 
+			Data[#Data+1] = self.tRows[i] 
+			self.tRows[i] = Data 
 		else 
 			break 
 		end 
@@ -1468,19 +1251,20 @@ function PANEL:FoldLine( nLine )
 end
 
 function PANEL:ExpandLine( nLine )
-	self.FoldData[nLine][2] = false
-	local Data = self.Rows[nLine]
+	if not self.bCodeFolding then return end 
+	self.tFoldData[nLine][2] = false
+	local Data = self.tRows[nLine]
 	if not istable( Data ) then return print( "Tried to unfold invalid line", nLine, type( Data ) ) end 
 	
 	if Data.Primary == nLine then 
-		self.Rows[nLine] = Data[1]
+		self.tRows[nLine] = Data[1]
 		for i = 2, #Data do 
-			self.Rows[nLine+i-1] = Data[i]
+			self.tRows[nLine+i-1] = Data[i]
 		end
 	else 
 		local subfolds = false 
 		for i = 1, #Data do 
-			self.Rows[Data.Primary+i-1] = Data[i]
+			self.tRows[Data.Primary+i-1] = Data[i]
 			
 			if istable( Data[i] ) then 
 				if Data[i].Primary == Data.Primary+i-1 then 
@@ -1493,6 +1277,22 @@ function PANEL:ExpandLine( nLine )
 		
 		if subfolds then self:ExpandLine( nLine ) end 
 	end 
+end
+
+/*---------------------------------------------------------------------------
+Syntaxer functions
+---------------------------------------------------------------------------*/
+
+function PANEL:SetSyntax( tSyntaxer )
+	self.tSyntax = tSyntaxer
+end
+
+function PANEL:SetCodeFolding( bActive )
+	self.bCodeFolding = bActive
+end
+
+function PANEL:SetParamMatching( bActive )
+	self.bParamMatching = bActive
 end
 
 /*---------------------------------------------------------------------------
@@ -1514,7 +1314,7 @@ function PANEL:NextBookmark( )
 	
 	while true do 
 		pos = pos + 1 
-		if pos > #self.Rows then pos = 1 end 
+		if pos > #self.tRows then pos = 1 end 
 		if pos == tStart.x then break end 
 		if self.Bookmarks[pos] then 
 			self.Start = self.Bookmarks[pos][1] 
@@ -1531,7 +1331,7 @@ function PANEL:PreviousBookmark( )
 	
 	while true do 
 		pos = pos - 1
-		if pos <= 0 then pos = #self.Rows end 
+		if pos <= 0 then pos = #self.tRows end 
 		if pos == tStart.x then break end 
 		if self.Bookmarks[pos] then 
 			self.Start = self.Bookmarks[pos][1] 
@@ -1549,7 +1349,7 @@ function PANEL:Paint( w, h )
 	if not self.Font then return end 
 	surface_SetFont( self.Font ) 
 	
-	self.LineNumberWidth = 6 + self.FontWidth * string_len( tostring( math_min( self.Scroll.x, #self.Rows - self.Size.x + 1 ) + self.Size.x - 1 ) )
+	self.LineNumberWidth = 6 + self.FontWidth * string_len( tostring( math_min( self.Scroll.x, #self.tRows - self.Size.x + 1 ) + self.Size.x - 1 ) )
 	self.LinePadding = self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth
 	
 	h = h - (self.pHScrollBar.Enabled and 16 or 0)
@@ -1561,7 +1361,9 @@ function PANEL:Paint( w, h )
 	surface_SetDrawColor( 32, 32, 32, 255 )
 	surface_DrawRect( 0, 0, self.LinePadding, h )
 	
-	self.Params = self:FindMatchingParam( self.Caret.x, self.Caret.y ) 
+	if self.bParamMatching then 
+		self.Params = self.tSyntax:FindMatchingParam( self.Caret.x, self.Caret.y ) 
+	end 
 	
 	if self.MouseDown and self.MouseDown == MOUSE_LEFT then
 		self.Caret = self:CursorToCaret( )
@@ -1570,11 +1372,13 @@ function PANEL:Paint( w, h )
 	self.Scroll.x = math_floor( self.pScrollBar:GetScroll( ) + 1 )
 	self.Scroll.y = math_floor( self.pHScrollBar:GetScroll( ) + 1 )
 	
-	for k, v in pairs( self.FoldButtons ) do
-		if ValidPanel(v) then 
-			v:SetVisible( false )
-		end 
-	end
+	if self.bCodeFolding then 
+		for k, v in pairs( self.FoldButtons ) do
+			if ValidPanel(v) then 
+				v:SetVisible( false )
+			end 
+		end
+	end 
 	
 	self:DrawTextUnderlay( w, h ) 
 	self:DrawText( w, h ) 
@@ -1626,16 +1430,16 @@ function PANEL:DrawText( w, h )
 	while painted < self.Size.x + 2 do 
 		line = line + 1
 		
-		if istable( self.Rows[line] ) then 
-			if self.Rows[line].Primary ~= line then 
-				line = line + #self.Rows[line] - (line - self.Rows[line].Primary) - 1
+		if istable( self.tRows[line] ) then 
+			if self.tRows[line].Primary ~= line then 
+				line = line + #self.tRows[line] - (line - self.tRows[line].Primary) - 1
 				continue 
 			end 
-			local Data = self.Rows[line] 
-			self.Rows[line] = Data[1] 
+			local Data = self.tRows[line] 
+			self.tRows[line] = Data[1] 
 			self:DrawRow( line, painted, true )
-			self.Rows[line] = Data 
-			line = line + #self.Rows[line] - 1 
+			self.tRows[line] = Data 
+			line = line + #self.tRows[line] - 1 
 		else 
 			self:DrawRow( line, painted )
 		end 
@@ -1687,8 +1491,8 @@ local function MakeFoldButton( self )
 	end
 	
 	btn.Think = function( ) 
-		if not self.FoldData[btn.Row] then return end 
-		if self.FoldData[btn.Row][2] then 
+		if not self.tFoldData[btn.Row] then return end 
+		if self.tFoldData[btn.Row][2] then 
 			btn:SetMaterial( Material( "oskar/plus32.png" ) )
 			btn.Expanded = false 
 		else 
@@ -1701,34 +1505,35 @@ local function MakeFoldButton( self )
 end 
 
 function PANEL:DrawRow( Row, LinePos, bForceRepaint )
-	if Row > #self.Rows then return end
+	if Row > #self.tRows then return end
 	
 	draw_SimpleText( tostring( Row ), self.Font, self.BookmarkWidth + self.LineNumberWidth, self.FontHeight * ( LinePos ), C_white, TEXT_ALIGN_RIGHT ) 
-	self.PaintRows[Row] = (bForceRepaint and self:SyntaxColorLine( Row )) or self.PaintRows[Row] or self:SyntaxColorLine( Row ) 
+	-- self.PaintRows[Row] = (bForceRepaint and self:SyntaxColorLine( Row )) or self.PaintRows[Row] or self:SyntaxColorLine( Row ) 
+	self.PaintRows[Row] = self.tSyntax:GetSyntax( Row )
 	
 	if editor_debug_folding then 	
 		surface_SetDrawColor( 0, 200, 255 ) 
-		surface_DrawRect( self.LinePadding, self.FontHeight * LinePos, self.FontWidth * self.FoldData[Row][1], self.FontHeight )
+		surface_DrawRect( self.LinePadding, self.FontHeight * LinePos, self.FontWidth * self.tFoldData[Row][1], self.FontHeight )
 		
-		if Row < #self.Rows and self.FoldData[Row][1] < self.FoldData[Row+1][1] then 
+		if Row < #self.tRows and self.tFoldData[Row][1] < self.tFoldData[Row+1][1] then 
 			surface_SetDrawColor( 0, 160, 0 ) 
-			surface_DrawRect( self.LinePadding + self.FontWidth * self.FoldData[Row][1], self.FontHeight * LinePos, self.FontWidth * (self.FoldData[Row+1][1]-self.FoldData[Row][1]), self.FontHeight )
+			surface_DrawRect( self.LinePadding + self.FontWidth * self.tFoldData[Row][1], self.FontHeight * LinePos, self.FontWidth * (self.tFoldData[Row+1][1]-self.tFoldData[Row][1]), self.FontHeight )
 		end 
 		
-		if Row > 1 and Row <= #self.Rows and self.FoldData[Row-1][1] > self.FoldData[Row][1] then 
+		if Row > 1 and Row <= #self.tRows and self.tFoldData[Row-1][1] > self.tFoldData[Row][1] then 
 			surface_SetDrawColor( 160, 0, 0 ) 
-			surface_DrawRect( self.LinePadding + self.FontWidth * self.FoldData[Row][1], self.FontHeight * LinePos, self.FontWidth * (self.FoldData[Row-1][1]-self.FoldData[Row][1]), self.FontHeight )
+			surface_DrawRect( self.LinePadding + self.FontWidth * self.tFoldData[Row][1], self.FontHeight * LinePos, self.FontWidth * (self.tFoldData[Row-1][1]-self.tFoldData[Row][1]), self.FontHeight )
 		end 
 		
-		if Row > 1 and Row < #self.Rows and self.FoldData[Row][3] then 
+		if Row > 1 and Row < #self.tRows and self.tFoldData[Row][3] then 
 			surface_SetDrawColor( 160, 160, 0 ) 
-			surface_DrawRect( self.LinePadding + self.FontWidth * self.FoldData[Row][1], self.FontHeight * LinePos, self.FontWidth * 1, self.FontHeight )
+			surface_DrawRect( self.LinePadding + self.FontWidth * self.tFoldData[Row][1], self.FontHeight * LinePos, self.FontWidth * 1, self.FontHeight )
 		end 
 	end 
 	
 	// Setup buttons for codefolding
-	if Row < #self.Rows then 
-		if self.FoldData[Row][1] < self.FoldData[Row+1][1] or self.FoldData[Row][3] then 
+	if Row < #self.tRows and self.bCodeFolding then 
+		if self.tFoldData[Row][1] < self.tFoldData[Row+1][1] or self.tFoldData[Row][3] then 
 			if not ValidPanel( self.FoldButtons[Row] ) then 
 				self.FoldButtons[Row] = MakeFoldButton( self ) 
 			end 
@@ -1790,9 +1595,9 @@ function PANEL:PaintSelection( selection, color, outline )
 	local LinePos = line - self.Scroll.x - 1 - self:GetFoldingOffset( line )
 	
 	for Row = line, endline do 
-		if Row > #self.Rows then break end
-		if istable( self.Rows[Row] ) and self.Rows[Row].Primary ~= Row then continue end 
-		local length = istable( self.Rows[Row] ) and #self.Rows[Row][1] or #self.Rows[Row]
+		if Row > #self.tRows then break end
+		if istable( self.tRows[Row] ) and self.tRows[Row].Primary ~= Row then continue end 
+		local length = istable( self.tRows[Row] ) and #self.tRows[Row][1] or #self.tRows[Row]
 		length = length - self.Scroll.y + 1
 		LinePos = LinePos + 1
 		
@@ -1872,7 +1677,7 @@ function PANEL:PaintCursor( Caret )
 			local Insert = Caret.Insert or self.Insert 
 			Offset = Offset - self:GetFoldingOffset( Caret.x )
 			
-			if istable( self.Rows[Caret.x] ) and self.Rows[Caret.x].Primary ~= Caret.x then return end 
+			if istable( self.tRows[Caret.x] ) and self.tRows[Caret.x].Primary ~= Caret.x then return end 
 			 
 			if self.Insert or Caret.Insert then 
 				surface_DrawRect( ( Caret.y - self.Scroll.y ) * width + self.LinePadding, ( Offset + 1 ) * height, width, 1 )
@@ -1886,7 +1691,7 @@ end
 function PANEL:PaintStatus( )
 	surface_SetFont( "Trebuchet18" )
 	
-	local Line = "Length: " .. #self:GetCode( ) .. " Lines: " .. #self.Rows .. " Row: " .. self.Caret.x .. " Col: " .. self.Caret.y
+	local Line = "Length: " .. #self:GetCode( ) .. " Lines: " .. #self.tRows .. " Row: " .. self.Caret.x .. " Col: " .. self.Caret.y
 	
 	if self:HasSelection( ) then 
 		Line = Line .. " Sel: " .. #self:GetSelection( ) 
@@ -1914,13 +1719,13 @@ function PANEL:RemoveSelection( sID )
 	self.tCursors[sID] = nil 
 end 
 
-function PANEL:SyntaxColorLine( Row ) 
-	return { { self.Rows[Row], C_white } }
-end
+-- function PANEL:SyntaxColorLine( Row ) 
+-- 	return { { self.tRows[Row], C_white } }
+-- end
 
-function PANEL:UpdateSyntaxColors( )
-	self.PaintRows = { } 
-end
+-- function PANEL:UpdateSyntaxColors( )
+-- 	self.PaintRows = { } 
+-- end
 
 /*---------------------------------------------------------------------------
 Text setters / getters
@@ -1930,10 +1735,11 @@ function PANEL:SetCode( Text )
 	self.pScrollBar:SetScroll( 0 ) 
 	self.pHScrollBar:SetScroll( 0 ) 
 	
-	self.Rows = string_Explode( "\n", string_gsub( Text, "\t", "    ") ) 
-	self:MakeFoldData( )
+	self.tRows = string_Explode( "\n", string_gsub( Text, "\t", "    ") ) 
+	if self.bCodeFolding then self.tSyntax:MakeFoldData( ) end
 	
 	self.PaintRows = { } 
+	if self.tSyntax and self.tSyntax.Parse then self.tSyntax:Parse() end 
 	
 	self.Caret = Vector2( 1, 1 ) 
 	self.Start = Vector2( 1, 1 ) 
@@ -1945,14 +1751,14 @@ end
 function PANEL:GetCode( )
 	local LinesToFold = { } 
 	
-	for line = 1, #self.Rows do
-		if istable( self.Rows[line] ) then 
+	for line = 1, #self.tRows do
+		if istable( self.tRows[line] ) then 
 			LinesToFold[#LinesToFold+1] = line 
 			self:ExpandLine( line ) 
 		end 
 	end
 	
-	local code = string_gsub( table_concat( self.Rows, "\n" ), "\r", "" )
+	local code = string_gsub( table_concat( self.tRows, "\n" ), "\r", "" )
 	
 	for i = #LinesToFold, 1, -1 do 
 		self:FoldLine( LinesToFold[i] )
@@ -1961,19 +1767,19 @@ function PANEL:GetCode( )
 	return code
 end
 
-function PANEL:OnTextChanged( )
-	// Override 
-end
+-- function PANEL:OnTextChanged( )
+-- 	// Override 
+-- end
 
 /*---------------------------------------------------------------------------
 PerformLayout
 ---------------------------------------------------------------------------*/
 
 function PANEL:CalculateScroll( )
-	self.pScrollBar:SetUp( self.Size.x, #self.Rows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ) - self:GetFoldingOffset( #self.Rows ) ) 
+	self.pScrollBar:SetUp( self.Size.x, #self.tRows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ) - self:GetFoldingOffset( #self.tRows ) ) 
 	local LongestRow = 0 
-	for i = 1, #self.Rows do
-		LongestRow = math.max( LongestRow, #self.Rows[i] )
+	for i = 1, #self.tRows do
+		LongestRow = math.max( LongestRow, #self.tRows[i] )
 	end
 	self.LongestRow = LongestRow
 	self.pHScrollBar:SetUp( self.Size.y, LongestRow ) 

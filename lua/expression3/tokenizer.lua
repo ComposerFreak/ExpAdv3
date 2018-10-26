@@ -180,7 +180,7 @@ end
 
 function TOKENIZER.Throw(this, offset, msg, fst, ...)
 	if this.etokens then
-		this:NextPattern("^.-\n")) then
+		this:NextPattern("^.-\n")
 		this:CreateToken("err", "error");
 	end
 

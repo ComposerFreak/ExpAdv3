@@ -261,19 +261,40 @@ function PANEL:Init( )
 	
 	self.tbConsoleRows = { }
 	
-	self.tbConsoleEditor.SyntaxColorLine = function(_, row)
+	/*self.tbConsoleEditor.SyntaxColorLine = function(_, row)
 		if self.tbConsoleRows[row] then 
 			return self.tbConsoleRows[row]
 		end 
 		
 		return {self.tbConsoleRows[row], Color(255,255,255)}
-	end
+	end*/
 	
 	self:AddPrintOut( Color(255, 255, 0), "Expression 3 Console Initialized:" )
 	
 	hook.Run( "Expression3.AddGolemTabTypes", self )
 	
 	//self:AddCustomTab( bScope, sName, fCreate, fClose )
+	
+	self:AddCustomTab( true, "lua", function( self, ... )
+		local sCode, sPath, sName, sLanguage = unpack{...}
+		
+		local Editor = vgui.Create( "GOLEM_Editor" ) 
+		local Sheet = self.pnlTabHolder:AddSheet( "LUA", Editor, "fugue/script.png", function(pnl) self:CloseTab( pnl:GetParent( ), true ) end )
+		self.pnlTabHolder:SetActiveTab( Sheet.Tab )
+		Sheet.Panel:RequestFocus( )
+		-- Editor:SetSyntax( Golem.Syntax:Create( "Lua", Editor ) )
+		Golem.Syntax:Create( "Lua", Editor )
+		
+		Editor.Master = self 
+		
+		if sCode and sCode ~= "" then
+			Editor:SetCode( sCode )
+		end
+		
+		return Sheet
+	end, function( self )
+		-- Close
+	end )
 	
 	self:AddCustomTab( false, "options", function( self )
 		if self.Options then 
@@ -381,7 +402,7 @@ end
 	row[#row + 1] = {token, color}
 	
 	self.tbConsoleRows[#self.tbConsoleRows + 1] = row
-	self.tbConsoleEditor:SetCaret(Vector2( #self.tbConsoleEditor.Rows, 1 ));
+	self.tbConsoleEditor:SetCaret(Vector2( #self.tbConsoleEditor.tRows, 1 ));
 	self.tbConsoleEditor:SetSelection(line .. "\n");
 end]]
 
@@ -404,7 +425,7 @@ function PANEL:PrintLine(...)
 	
 	self.tbConsoleRows[#self.tbConsoleRows + 1] = r
 	
-	self.tbConsoleEditor:SetCaret(Vector2( #self.tbConsoleEditor.Rows, 1 ));
+	self.tbConsoleEditor:SetCaret(Vector2( #self.tbConsoleEditor.tRows, 1 ));
 	
 	self.tbConsoleEditor:SetSelection(l .. "\n");
 end
@@ -450,7 +471,7 @@ end
 /*---------------------------------------------------------------------------
 Syntax highlighter
 ---------------------------------------------------------------------------*/
-function PANEL:SetSyntaxColorLine( func )
+/*function PANEL:SetSyntaxColorLine( func )
 	self.SyntaxColorLine = func
 	for i = 1, #self.pnlTabHolder.Items do
 		if self.pnlTabHolder.Items[i].Tab.__type == "editor" then 
@@ -461,7 +482,7 @@ end
 
 function PANEL:GetSyntaxColorLine( ) 
 	return self.SyntaxColorLine 
-end
+end*/
 
 /*---------------------------------------------------------------------------
 Tab Management 2.0
@@ -476,7 +497,7 @@ end
 
 function PANEL:NewTab( sType, ... )
 	if sType == "editor" then 
-		local sCode, sPath, sName = unpack{...}
+		local sCode, sPath, sName, sLanguage = unpack{...}
 		if sPath and not string.EndsWith( sPath, ".txt" ) then sPath = sPath .. ".txt" end 
 		if sPath and not string.StartWith( sPath, "golem/" ) then sPath = "golem/" .. sPath end
 		if sPath and self.FileList[sPath] then 
@@ -493,14 +514,17 @@ function PANEL:NewTab( sType, ... )
 		local Sheet = self.pnlTabHolder:AddSheet( sName or "generic", Editor, "fugue/script.png", function(pnl) self:CloseTab( pnl:GetParent( ), true ) end )
 		self.pnlTabHolder:SetActiveTab( Sheet.Tab )
 		Sheet.Panel:RequestFocus( )
+		-- Editor:SetSyntax( Golem.Syntax:Create( sLanguage or "E3", Editor ) )
+		Golem.Syntax:Create( sLanguage or "E3", Editor )
+		
 		
 		Sheet.Tab.__type = "editor"
 		Editor.Master = self 
 		
-		local func = self:GetSyntaxColorLine( )
+		/*local func = self:GetSyntaxColorLine( )
 		if func ~= nil then
 			Sheet.Panel.SyntaxColorLine = func
-		end
+		end*/
 		
 		if sPath then
 			Sheet.Tab.FilePath = sPath
@@ -528,6 +552,19 @@ function PANEL:NewTab( sType, ... )
 			-- Menu:AddOption( "New File", function( ) self:NewTab( "editor" ) end )
 			
 			Menu:Open( )
+		end
+		
+		Editor.OnTextChanged = function( tSelection, sText )
+			timer.Destroy( "Golem_autosave" )
+			timer.Create( "Golem_autosave", 0.5, 1, function( )
+				local Tab = Sheet.Tab
+				if not ValidPanel( Tab ) or Tab.__type ~= "editor" then return end
+				local sCode = Tab:GetPanel( ):GetCode( )
+				local sPath = "golem_temp/_autosave_.txt"
+				
+				MakeFolders( sPath ) 
+				file.Write( sPath, sCode )
+			end )
 		end
 		
 		return Sheet 

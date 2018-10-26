@@ -1,11 +1,16 @@
 /*============================================================================================================================================
-	Expression 3 Syntax Highlighting
+	Lua syntax highlighter for the Golem editor
 	Author: Oskar
-	Credits: The authors of the E2 syntax highlighter 
 ============================================================================================================================================*/
 
-Golem.Syntaxer = Golem.Syntaxer or { First = true } 
-local Syntaxer = Golem.Syntaxer
+/*---------------------------------------------------------------------------
+TODO:
+	Global variable highlighting
+---------------------------------------------------------------------------*/
+
+
+Golem.Syntaxer_lua = Golem.Syntaxer_lua or { First = true } 
+local Syntaxer = Golem.Syntaxer_lua
 Syntaxer.First = true
 
 /********************************************************************************************************************************************/
@@ -22,53 +27,7 @@ local string_sub = string.sub
 /*============================================================================================================================================
 Build Syntaxer Tables
 ============================================================================================================================================*/
-function Syntaxer:BuildFunctionTable( )
-	local Functions = { }
-	local Libraries = { }
-	
-	for sName, tData in pairs( EXPR_LIBRARIES ) do
-		Libraries[sName] = { }
-		if tData._functions then 
-			for _, tFunc in pairs( tData._functions ) do
-				Functions[tFunc.name] = true
-				Libraries[sName][tFunc.name] = true 
-			end
-		end 
-	end
-	
-	self.Libraries = Libraries
-	self.Functions = Functions
-end
-
-function Syntaxer:BuildTokensTable( ) 
-	local Tokens = { } 
-	
-	for k,v in pairs( EXPR_TOKENS.EXPADV ) do
-		Tokens[#Tokens+1] = string_gsub( v[1], "[%-%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1" )
-	end
-	
-	self.Tokens = Tokens 
-end 
-
-function Syntaxer:BuildMethodsTable( )
-	local Methods = { } 
-	
-	for _, tData in pairs( EXPR_METHODS ) do
-		Methods[tData.name] = tData.class
-	end
-	
-	self.Methods = Methods 
-end
-
-function Syntaxer.Rebuild( )
-	Syntaxer:BuildFunctionTable( )
-	Syntaxer:BuildMethodsTable( )
-	Syntaxer:BuildTokensTable( )
-	Syntaxer.Variables = { } 
-	Syntaxer.VariableTypes = { } 
-	Syntaxer.UserClasses = { }
-	Syntaxer.UserFunctions = { } 
-	Syntaxer.UserClassMethods = { }
+function Syntaxer.Rebuild( ) --TODO
 end
 
 Syntaxer.Rebuild( ) -- For the editor reload command
@@ -77,38 +36,12 @@ hook.Add( "Expression3.LoadGolem", "Expression3", Syntaxer.Rebuild )
 /*============================================================================================================================================
 Syntaxer Functions
 ============================================================================================================================================*/
-local function istype( word, row )
-	local base = EXPR_LIB.GetClass( word )
-	if base and base.id ~= word then 
-		return base and true or false 
-	end 
-	if not base then 
-		return (Syntaxer.UserClasses[word] and (row and Syntaxer.UserClasses[word] <= row or true)) or false 
-	end 
-	return false 
-end
-
-local function isvar( word, row )
-	return (Syntaxer.Variables[word] and (row and Syntaxer.Variables[word] <= row or true)) or false 
-end
-
-local function fixtype( word ) 
-	local base = EXPR_LIB.GetClass( word or "" )
-	return base and base.name or word
-end 
-
 function Syntaxer:ResetTokenizer( Row )
 	self.nPosition = 0
 	self.sChar = ""
 	self.sTokenData = ""
 	self.bBlockComment = nil
 	self.bMultilineString = nil
-	
-	self.Variables = { } 
-	self.VariableTypes = { } 
-	self.UserClasses = { }
-	self.UserFunctions = { } 
-	self.UserClassMethods = { } 
 	
 	local tmp = self.Editor:ExpandAll( )
 	local tRows = self.Editor.Rows

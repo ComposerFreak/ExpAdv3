@@ -17,7 +17,7 @@ local DRED, DGREEN, DBLUE, DALPHA;
 local TRED, TGREEN, TBLUE, TALPHA;
 
 local function setFont(fontid, size)
-	if (not EGP.ValidFonts[fontid]) then fontid = 1 end
+	/*if (not EGP.ValidFonts[fontid]) then fontid = 1 end
 
 	local font = "WireEGP_" .. size .. "_" .. fontid;
 
@@ -39,7 +39,7 @@ local function setFont(fontid, size)
 
 	FONT = font;
 	FID = fontid;
-	FSIZE = size;
+	FSIZE = size;*/
 end
 
 local function resetRenderer()
