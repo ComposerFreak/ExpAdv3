@@ -3271,47 +3271,47 @@ end
 --[[
 ]]
 
-function COMPILER.Compile_INPORT(this, inst, token)
+function COMPILER.Compile_INPORT(this, inst, token, data)
 	if (this:GetOption("state") ~= EXPR_SERVER) then
 		this:Throw(token, "Wired input('s) must be defined server side.");
 	end
 
-	for _, token in pairs(inst.variables) do
+	for _, token in pairs(data.variables) do
 		local var = token.data;
 
 		if (var[1] ~= string_upper(var[1])) then
 			this:Throw(token, "Invalid name for wired input %s, name must be cammel cased");
 		end
 
-		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0);
+		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0);
 
 		if (info) then
 			info.prefix = "INPUT";
 		end
 
-		this.__directives.inport[var] = {class = inst.class, wire = inst.wire_type, func = inst.wire_func};
+		this.__directives.inport[var] = {class = data.class, wire = data.wire_type, func = data.wire_func};
 	end
 end
 
-function COMPILER.Compile_OUTPORT(this, inst, token)
+function COMPILER.Compile_OUTPORT(this, inst, token, data)
 	if (this:GetOption("state") ~= EXPR_SERVER) then
 		this:Throw(token, "Wired output('s) must be defined server side.");
 	end
 
-	for _, token in pairs(inst.variables) do
+	for _, token in pairs(data.variables) do
 		local var = token.data;
 
 		if (var[1] ~= string_upper(var[1])) then
 			this:Throw(token, "Invalid name for wired output %s, name must be cammel cased");
 		end
 
-		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0);
+		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0);
 
 		if (info) then
 			info.prefix = "OUTPUT";
 		end
 
-		this.__directives.outport[var] = {class = inst.class, wire = inst.wire_type, func = inst.wire_func, func_in = inst.wire_func2};
+		this.__directives.outport[var] = {class = data.class, wire = data.wire_type, func = data.wire_func, func_in = data.wire_func2};
 	end
 end
 
