@@ -655,7 +655,7 @@ function PARSER.Directive_INPUT(this, token, directive)
 		variables[#variables + 1] = this.__token;
 	end
 
-	return this:EndInstruction(inst, {variables = variables; wire_type = wire_in_class; wire_func = wire_in_func});
+	return this:EndInstruction(inst, {class = class_obj.id, variables = variables; wire_type = wire_in_class; wire_func = wire_in_func});
 end
 
 function PARSER.Directive_OUTPUT(this, token, directive)
@@ -683,7 +683,7 @@ function PARSER.Directive_OUTPUT(this, token, directive)
 		variables[#variables + 1] = this.__token;
 	end
 
-	return this:EndInstruction(inst, {variables = variables; wire_type = class_obj.wire_out_class; wire_func = class_obj.wire_out_func; wire_func2 = class_obj.wire_in_func});
+	return this:EndInstruction(inst, {class = class_obj.id, variables = variables; wire_type = class_obj.wire_out_class; wire_func = class_obj.wire_out_func; wire_func2 = class_obj.wire_in_func});
 end
 
 --[[
