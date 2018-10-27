@@ -10,6 +10,7 @@ local math = math
 
 local gradient_up = Material( "vgui/gradient-d" )
 local gradient_down = Material( "vgui/gradient-u" )
+local MakeFolders
 
 local SetSize = debug.getregistry( ).Panel.SetSize 
 
@@ -259,41 +260,11 @@ function PANEL:Init( )
 	Golem.Syntax:Create( "Console", self.tbConsoleEditor )
 	self.tbConsoleEditor.tbConsoleRows = { }
 	
-	
-	/*self.tbConsoleEditor.SyntaxColorLine = function(_, row)
-		if self.tbConsoleRows[row] then 
-			return self.tbConsoleRows[row]
-		end 
-		
-		return {self.tbConsoleRows[row], Color(255,255,255)}
-	end*/
-	
 	self:AddPrintOut( Color(255, 255, 0), "Expression 3 Console Initialized:" )
 	
 	hook.Run( "Expression3.AddGolemTabTypes", self )
 	
 	//self:AddCustomTab( bScope, sName, fCreate, fClose )
-	
-	self:AddCustomTab( true, "lua", function( self, ... )
-		local sCode, sPath, sName, sLanguage = unpack{...}
-		
-		local Editor = vgui.Create( "GOLEM_Editor" ) 
-		local Sheet = self.pnlTabHolder:AddSheet( "LUA", Editor, "fugue/script.png", function(pnl) self:CloseTab( pnl:GetParent( ), true ) end )
-		self.pnlTabHolder:SetActiveTab( Sheet.Tab )
-		Sheet.Panel:RequestFocus( )
-		-- Editor:SetSyntax( Golem.Syntax:Create( "Lua", Editor ) )
-		Golem.Syntax:Create( "Lua", Editor )
-		
-		Editor.Master = self 
-		
-		if sCode and sCode ~= "" then
-			Editor:SetCode( sCode )
-		end
-		
-		return Sheet
-	end, function( self )
-		-- Close
-	end )
 	
 	self:AddCustomTab( false, "options", function( self )
 		if self.Options then 
@@ -518,12 +489,8 @@ function PANEL:NewTab( sType, ... )
 		
 		
 		Sheet.Tab.__type = "editor"
+		Sheet.Tab.__lang = sLanguage or "E3"
 		Editor.Master = self 
-		
-		/*local func = self:GetSyntaxColorLine( )
-		if func ~= nil then
-			Sheet.Panel.SyntaxColorLine = func
-		end*/
 		
 		if sPath then
 			Sheet.Tab.FilePath = sPath
@@ -543,8 +510,10 @@ function PANEL:NewTab( sType, ... )
 			
 			Menu:AddSpacer( )
 			
-			Menu:AddOption( "Save", function( ) self:SaveFile( pnl.FilePath, false, pnl ) end )
-			-- Menu:AddOption( "Save As", function( ) end )
+			if not sLanguage or sLanguage == "E3" then 
+				Menu:AddOption( "Save", function( ) self:SaveFile( pnl.FilePath, false, pnl ) end )
+				-- Menu:AddOption( "Save As", function( ) end )
+			end 
 			
 			-- Menu:AddSpacer( )
 			
@@ -553,18 +522,20 @@ function PANEL:NewTab( sType, ... )
 			Menu:Open( )
 		end
 		
-		Editor.OnTextChanged = function( tSelection, sText )
-			timer.Destroy( "Golem_autosave" )
-			timer.Create( "Golem_autosave", 0.5, 1, function( )
-				local Tab = Sheet.Tab
-				if not ValidPanel( Tab ) or Tab.__type ~= "editor" then return end
-				local sCode = Tab:GetPanel( ):GetCode( )
-				local sPath = "golem_temp/_autosave_.txt"
-				
-				MakeFolders( sPath ) 
-				file.Write( sPath, sCode )
-			end )
-		end
+		if not sLanguage or sLanguage == "E3" then 
+			Editor.OnTextChanged = function( tSelection, sText )
+				timer.Destroy( "Golem_autosave" )
+				timer.Create( "Golem_autosave", 0.5, 1, function( )
+					local Tab = Sheet.Tab
+					if not ValidPanel( Tab ) or Tab.__type ~= "editor" then return end
+					local sCode = Tab:GetPanel( ):GetCode( )
+					local sPath = "golem_temp/_autosave_.txt"
+					
+					MakeFolders( sPath ) 
+					file.Write( sPath, sCode )
+				end )
+			end
+		end 
 		
 		return Sheet 
 	elseif self.tTabTypes[sType] then
@@ -583,7 +554,7 @@ function PANEL:CloseTab( pTab, bSave )
 	if pTab.__type == "editor" then 
 		local Editor = pTab:GetPanel( )
 		
-		if bSave and pTab.FilePath and pTab.FilePath ~= "" then // Ask about this?
+		if bSave and pTab.FilePath and pTab.FilePath ~= "" and pTab.__lang == "E3" then // Ask about this?
 			self:SaveFile( pTab.FilePath, false, pTab, true )
 		end
 		
@@ -691,7 +662,7 @@ local invalid_filename_chars = {
 	[","] = "",
 }
 
-local function MakeFolders( Path )
+function MakeFolders( Path )
 	local folder, filename, ext = string.match( Path, "^(.+)/([^%.]+)%.(.+)$" )
 	file.CreateDir( folder )
 end
@@ -914,7 +885,11 @@ function PANEL:DoValidate( Goto, Code, Native )
 			local name = instance.directives.name;
 			local nLua, traceTbl = instance.build();
 			
-			EXPR_LIB.ShowDebug(nLua);
+			-- EXPR_LIB.ShowDebug(nLua);
+			
+			local n = self:NewTab( "editor", nLua, false, "DEBUG", "Lua" )
+			n.Panel:SetCode( n.Panel.tSyntax:Format(nLua) ) 
+			
 
 		elseif (status) then
 			self.btnValidate:SetColor( Color( 50, 255, 50 ) );

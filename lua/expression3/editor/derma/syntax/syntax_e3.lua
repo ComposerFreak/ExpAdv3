@@ -161,6 +161,9 @@ function Syntax:MakeFoldData( nExit )
 	
 	self.dEditor.tFoldData[#self.dEditor.tRows+1] = { 0, false, false }
 	
+	-- print( "Printing E3 fold data" )
+	-- PrintTable( self.dEditor.tFoldData ) 
+	
 	self.dEditor:FoldAll( LinesToFold )
 end 
 

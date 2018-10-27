@@ -29,7 +29,7 @@ end
 Formating and folding
 ---------------------------------------------------------------------------*/
 
-function Syntax:FindValidLines( )
+function Syntax:FindValidLines( sTextOverride )
 	local LinesToFold = self.dEditor:ExpandAll( )
 	local tRows = self.dEditor.tRows
 	local MultilineComment
@@ -329,6 +329,187 @@ local keywords = {
 	["until"] 		= true,
 	["while"] 		= true,
 }
+
+/*---------------------------------------------------------------------------
+Formater
+---------------------------------------------------------------------------*/
+local function FindValidLinesFormat( Rows )
+	local ValidLines = { }
+	local MultilineComment
+	local Row, Char = 1, 0
+	
+	while Row <= #Rows do
+		local Line = Rows[Row]
+		while Char < #Line do
+			Char = Char + 1
+			local Text = Line[Char]
+			local sType = type( MultilineComment )
+			
+			if sType == "number" then -- End comment or string (]])
+				if string_match( string_sub( Line, 1, Char ), "%]" .. string_rep( "=", MultilineComment ) .. "%]$" ) then
+					ValidLines[#ValidLines][2] = { Row, Char }
+					MultilineComment = nil
+				end
+			elseif sType == "string" then -- End string 
+				if Text == MultilineComment and Line[Char-1] ~= "\\" then
+					ValidLines[#ValidLines][2] = { Row, Char }
+					MultilineComment = nil
+				end 
+			elseif sType == "boolean" and MultilineComment then -- End comment (*/)
+				if Text == "/" and Line[Char-1] == "*" then
+					ValidLines[#ValidLines][2] = { Row, Char }
+					MultilineComment = nil
+				end 
+			elseif string_match( Line, "^%[=*%[", Char ) then -- Multiline string ([[)
+				MultilineComment = #string_match( Line, "^%[(=*)%[", Char )
+				ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
+			elseif string_match( Line, "^[\"']", Char ) then -- Normal string (" or ')
+				MultilineComment = string_match( Line, "^([\"'])", Char )
+				ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
+			elseif string_match( Line, "^%-%-%[=*%[", Char ) then -- Multiline comment (--[[)
+				MultilineComment = #string_match( Line, "^%-%-%[(=*)%[", Char )
+				ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
+			elseif string_match( Line, "^%-%-", Char ) then -- Singleline comment (--)
+				ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
+				break
+			elseif Text == "/" then -- Test for comments
+				if Line[Char+1] == "/" then -- Singleline comment (//)
+					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
+					break
+				elseif Line[Char+1] == "*" then -- Multiline comment (/*)
+					MultilineComment = true
+					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
+				end
+			end
+		end
+				
+		Char = 0
+		Row = Row + 1
+	end
+	
+	return function( nLine, nStart ) 
+		for i = 1, #ValidLines do
+			local tStart, tEnd = ValidLines[i][1], ValidLines[i][2]
+			
+			if tStart[1] < nLine and tEnd[1] > nLine then 
+				return false 
+			end 
+			
+			if tStart[1] == tEnd[1] then
+				if tStart[1] == nLine then 
+			 		if tStart[2] <= nStart and tEnd[2] >= nStart then 
+			 			return false 
+			 		end 
+			 	end 
+			else 
+			 	if tStart[1] == nLine then 
+			 		if tStart[2] <= nStart then 
+			 			return false 
+			 		end 
+			 	elseif tEnd[1] == nLine then 
+			 		if tEnd[2] >= nStart then 
+			 			return false 
+			 		end 
+			 	end 
+			end 
+		end
+		
+		return true 
+	end, ValidLines
+end
+
+function Syntax:Format( Code )
+	local newcode = { }
+	local lines = string.Explode( "\n", Code )
+	local ValidLine, Lookup = FindValidLinesFormat( lines )
+	local indent = 0
+	local line = 1
+	local newline = false
+	
+	local i = 0
+	local outline = 1
+	while i < #lines do
+		i = i + 1
+		local char = 0
+		local nElse = 0 
+		local bWrite = true 
+		local exit = false 
+		local bNoTabs = false 
+		local predent = indent
+		local line = lines[i]
+		
+		for n = 1, #Lookup do
+			local tStart, tEnd = Lookup[n][1], Lookup[n][2] 
+			if i > tStart[1] and i < tEnd[1] then 
+				exit = true
+			end 
+			if i < tStart[1] and i == tEnd[1] then 
+				char = tEnd[2] - 1
+				bNoTabs = true
+			end 
+		end
+		
+		if #line > 0 and line[#line] ~= " " then line = line .. " " end 
+		
+		if exit then 
+			newcode[outline] = lines[i] 
+			outline = outline + 1
+			newline = true 
+		else 
+			if string_match( line, "^%s*$" ) then 
+				if not newline then 
+					newcode[outline] = string_rep( "\t", bNoTabs and 0 or indent ) 
+					outline = outline + 1
+					newline = true 
+				end 
+			else
+				while char < #line do 
+					char = char + 1
+					if ValidLine( i, char ) then 
+						if string_match( line, "^do[^%w]", char ) then 
+							indent = indent + 1
+						elseif string_match( line, "^then[^a-zA-Z0-9_]", char ) then 
+							indent = indent + 1
+						elseif string_match( line, "^repeat[^%w]", char ) then 
+							indent = indent + 1
+						elseif string_match( line, "^{", char ) then 
+							indent = indent + 1
+						elseif string_match( line, "^function[%s%(]", char ) then 
+							indent = indent + 1
+						elseif string_match( line, "^end[^%w]", char ) then
+							if nElse > 0 then 
+								nElse = nElse - 1
+								predent = predent + 1
+							end 
+							indent = indent - 1
+						elseif string_match( line, "^until[^%w]", char ) then 
+							indent = indent - 1
+						elseif string_match( line, "^}", char ) then 
+							indent = indent - 1
+						elseif string_match( line, "^elseif[^%w]", char ) then 
+							indent = indent - 1
+							predent = predent - 1
+						elseif string_match( line, "^else[^%w]", char ) then 
+							predent = predent - 1
+							nElse = nElse + 1 
+						end 
+					end 
+				end 
+				
+				if newline and (predent > indent or nElse > 0) then 
+					outline = outline - 1
+				end 
+				
+				newcode[outline] = string_rep( "\t", bNoTabs and 0 or math.min( predent, indent ) ) .. string.match( line, "^\t*(.*)$" ) 
+				outline = outline + 1
+				newline = false
+			end 
+		end 
+	end
+	
+	return table.concat( newcode, "\n" )
+end
+
 
 /*---------------------------------------------------------------------------
 Syntaxer

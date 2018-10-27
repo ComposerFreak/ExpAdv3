@@ -128,7 +128,7 @@ function PANEL:SetFont( sFont )
 	surface_SetFont( sFont )
 	self.FontWidth, self.FontHeight = surface_GetTextSize( " " )
 	
-	if self.bCodeFolding  then 
+	if self.bCodeFolding then 
 		self.FoldingWidth = self.FontHeight 
 		for k, v in pairs( self.FoldButtons ) do
 			if ValidPanel( v ) then 
@@ -1289,6 +1289,16 @@ end
 
 function PANEL:SetCodeFolding( bActive )
 	self.bCodeFolding = bActive
+	if bActive then 
+		self.FoldingWidth = self.FontHeight 
+		for k, v in pairs( self.FoldButtons ) do
+			if ValidPanel( v ) then 
+				v:SetSize( self.FontHeight, self.FontHeight )
+			end 
+		end
+	else 
+		self.FoldingWidth = 0
+	end 
 end
 
 function PANEL:SetParamMatching( bActive )
