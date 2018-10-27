@@ -2161,17 +2161,17 @@ end
 function COMPILER.Compile_IOF(this, inst, token, data)
 	local r, c = this:Compile(data.expr);
 
-	local userclass = this:GetClassOrInterface(inst.__cls.data);
+	local userclass = this:GetClassOrInterface(data.class);
 
 	if (not userclass or not this:GetClassOrInterface(r)) then
 		this:Throw(token, "Instanceof currently only supports user classes, sorry about that :D");
 	end
 
-	this.writeToBuffer(inst, string_format("CheckHash(%q,", userclass.hash));
+	this:writeToBuffer(inst, string_format("CheckHash(%q,", userclass.hash));
 
 	this:addInstructionToBuffer(inst, data.expr);
 
-	this.writeToBuffer(inst, ")");
+	this:writeToBuffer(inst, ")");
 
 	return "b", 1;
 end
@@ -2800,8 +2800,8 @@ function COMPILER.Compile_DELEGATE(this, inst, token, data)
 	if (info) then
 		info.signature = table_concat(data.parameters, ",");
 		info.parameters = data.parameters;
-		info.resultClass = data.resultClass;
-		info.resultCount = data.resultCount;
+		info.resultClass = data.result_class;
+		info.resultCount = data.result_count;
 	end
 
 	this:writeToBuffer(inst, "\nlocal %s;\n", data.variable);
@@ -3697,7 +3697,7 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, data)
 
 	this:AssignVariable(token, true, "this", userclass.name);
 
-	local signature = string_format("constructor(%s)", inst.signature);
+	local signature = string_format("constructor(%s)", data.signature);
 
 	this:writeToBuffer(inst, "\n%s[%q] = function(", userclass.name, signature);
 	
@@ -3715,6 +3715,8 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, data)
 
 	userclass.valid = true;
 	userclass.constructors[signature] = signature;
+
+	print("Added constructor: ", signature);
 
 	this:writeToBuffer(inst, "\nlocal this = setmetatable({vars = setmetatable({}, %s.vars)}, %s)\n", userclass.name, userclass.name);
 
@@ -3746,7 +3748,7 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, data)
 	if tArgs > 0 then this:writeToBuffer(inst, ","); end
 
 	for i = 1, tArgs do
-		local args = args[i];
+		local param = args[i];
 		this:writeToBuffer(inst, param[2]);
 		this:AssignVariable(token, true, param[2], param[1]);
 		if i < tArgs then this:writeToBuffer(inst, ","); end

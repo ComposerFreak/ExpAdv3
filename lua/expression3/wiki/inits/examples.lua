@@ -220,7 +220,7 @@ class exampleClass
     }
 }
 
-exampleClass example8 = new exampleClass(42);
+exampleClass example9 = new exampleClass(42);
 //The new keyword is used to call the constructor.
 
 //Classes may laso extend others.
@@ -257,10 +257,10 @@ class exampleClass3 implements exampleInterface
 
 }
 
-exampleClass3 example9 = new exampleClass3();
+exampleClass3 example10 = new exampleClass3();
 
 //Interfaces are useful, you can treat interfaces as a class reference for objects.
-exampleInterface example10 = (exampleClass3) example9;
+exampleInterface example11 = (exampleInterface) example9;
 
 //Instanceof allows us to check is an object is, extends or implements a specific class.
 system.out(example9 instanceof exampleInterface); //Spits out true.]])

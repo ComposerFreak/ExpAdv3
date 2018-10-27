@@ -1565,7 +1565,7 @@ function PARSER.Expression_17(this)
 
 		this:Require("typ", "class expected after instanceof");
 
-		return this:EndInstruction(inst, {expr = expr});
+		return this:EndInstruction(inst, {expr = expr, class = this.__token.data});
 	end
 
 	return expr;
