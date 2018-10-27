@@ -502,7 +502,6 @@ function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator, 
 
 	operators[op.signature] = op;
 
-	print("Registered E3 Operator: ", op.signature);
 	return op;
 end
 

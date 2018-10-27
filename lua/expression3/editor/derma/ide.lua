@@ -189,6 +189,7 @@ function PANEL:Init( )
 	self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( -1 ) end )
 	
 	self.tbRight:SetupButton( "Open user manual", "fugue/question.png", TOP, function( ) self:NewMenuTab( "wiki" ) end )
+	self.tbRight:SetupButton( "Open find & replace", "fugue/magnifier.png", TOP, function( ) self:NewMenuTab( "Search" ) end )
 	self.tbRight:SetupButton( "Options", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options" ) end )
 		
 	-- self.tbRight:SetupButton( "Visit the wiki", 	"fugue/home.png", 		BOTTOM, function( ) end )
@@ -300,6 +301,24 @@ function PANEL:Init( )
 		return Sheet 
 	end, function( self )
 		self.Wiki = nil
+	end )
+	
+	self:AddCustomTab( false, "Search", function( self )
+		if self.Search then 
+			self.pnlSideTabHolder:SetActiveTab( self.Search.Tab )
+			self.Search.Panel:RequestFocus( )
+			return self.Search
+		end 
+		
+		local Panel = vgui.Create( "GOLEM_FindReplace" ) 
+		local Sheet = self.pnlSideTabHolder:AddSheet( "", Panel, "fugue/magnifier.png", function(pnl) self:CloseMenuTab( pnl:GetParent( ), true ) end )
+		self.pnlSideTabHolder:SetActiveTab( Sheet.Tab )
+		self.Search = Sheet
+		Sheet.Panel:RequestFocus( )
+		
+		return Sheet 
+	end, function( self )
+		self.Search = nil
 	end )
 		
 	if not self:OpenOldTabs( ) then 

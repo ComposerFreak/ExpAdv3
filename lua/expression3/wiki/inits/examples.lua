@@ -260,7 +260,7 @@ class exampleClass3 implements exampleInterface
 exampleClass3 example10 = new exampleClass3();
 
 //Interfaces are useful, you can treat interfaces as a class reference for objects.
-exampleInterface example11 = (exampleInterface) example9;
+exampleInterface example11 = (exampleInterface) example10;
 
 //Instanceof allows us to check is an object is, extends or implements a specific class.
 system.out(example9 instanceof exampleInterface); //Spits out true.]])

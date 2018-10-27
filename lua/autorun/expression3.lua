@@ -58,6 +58,7 @@ if (SERVER) then
 	AddCSLuaFile( "expression3/editor/derma/filemenu.lua" );
 	AddCSLuaFile( "expression3/editor/derma/syntaxer.lua" );
 	AddCSLuaFile( "expression3/editor/derma/wiki.lua" );
+	AddCSLuaFile("expression3/editor/derma/findreplace.lua");
 	AddCSLuaFile("expression3/editor/expr_editor_lib.lua");
 
 	AddCSLuaFile("expression3/wiki.lua");
