@@ -41,7 +41,7 @@ local sDefaultScreenTab = [[
 /*
 	Generic Screen Code.
 	This code uses another E3-Gates Screen events,
-	providing an additonal permanter for the screens entity.
+	providing an additonal parameter for the screens entity.
 
 	Wiki: https://github.com/Rusketh/ExpAdv3/wiki or [?].
 */
@@ -156,12 +156,8 @@ function PANEL:Init( )
 			SetClipboardText( self.btnValidate:GetText( ) )
 		end )
 		
-		Menu:AddOption( "Validate and debug.", function( )
+		Menu:AddOption( "Validate Native Output.", function( )
 			self:DoValidate(true, nil, true)
-		end )
-		
-		Menu:AddOption( "Debug native output.", function( )
-			self:DoValidate(true, nil, true, true)
 		end )
 
 		Menu:Open( ) 
@@ -894,7 +890,7 @@ end
 /*---------------------------------------------------------------------------
 Code Validation
 ---------------------------------------------------------------------------*/
-function PANEL:DoValidate( Goto, Code, Debug, Native )
+function PANEL:DoValidate( Goto, Code, Native )
 	if (self.validator and not self.validator.finished) then
 		self.validator.stop();
 	end
@@ -908,10 +904,15 @@ function PANEL:DoValidate( Goto, Code, Debug, Native )
 
 	local cb = function(status, instance)
 
-		if (status and Debug) then
+		if (status and Native) then
 			self.btnValidate:SetColor( Color( 50, 255, 50 ) );
 			self.btnValidate:SetText( "Generated debug file." );
-			EXPR_LIB.ShowDebug(self.validator.tokenizer.__tokens, self.validator.parser.__tasks, Native);
+
+			local name = instance.directives.name;
+			local nLua, traceTbl = instance.build();
+			
+			EXPR_LIB.ShowDebug(nLua);
+
 		elseif (status) then
 			self.btnValidate:SetColor( Color( 50, 255, 50 ) );
 			self.btnValidate:SetText( "Validation sucessful" );
@@ -967,6 +968,10 @@ function PANEL:OnValidateError( Goto, Thrown )
 		end 
 	end
 	
+	if not Error then
+		Error = "!Missing Error Message!";
+	end
+
 	self.btnValidate:SetText( Error )
 	self.btnValidate:SetColor( Color( 255, 50, 50 ) )
 	self:AddPrintOut(Color(255,0,0), "Error: ", Error)

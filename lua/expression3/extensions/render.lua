@@ -50,8 +50,10 @@ local function resetRenderer()
 end
 
 if (CLIENT) then
-	resetRenderer();
-	hook.Add("Expression3.Entity.PostDrawScreen", "Expression3.Render.Reset", resetRenderer);
+	timer.Simple(1, function()
+		resetRenderer();
+		hook.Add("Expression3.Entity.PostDrawScreen", "Expression3.Render.Reset", resetRenderer);
+	end);
 end
 
 local function preDraw(ctx, textured)

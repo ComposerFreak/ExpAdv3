@@ -10,99 +10,109 @@
 	::Debugger::
 ]]
 
-local COLORS = {}
+local COLORS = {};
+COLORS.KEYWORD = Color(0, 0, 255);
+COLORS.OPERATOR = Color(255, 255, 255);
+COLORS.GENERIC = Color(200, 200, 200);
+COLORS.NATIVE = Color(150, 150, 0);
+COLORS.FUNCTION = Color(100, 100, 0);
+COLORS.STRING = Color(100, 100, 0);
 
-COLORS.Generic = Color(200, 200, 200);
-COLORS.Removed = Color(255, 0, 0);
-COLORS.Replaced = Color(150, 150, 0);
-COLORS.Before = Color(0, 150, 100);
-COLORS.After = Color(0, 100, 150);
+local KEYWORDS = {};
+KEYWORDS['for'] = true;
+KEYWORDS['in'] = true;
+KEYWORDS['do'] = true;
+KEYWORDS['if'] = true;
+KEYWORDS['not'] = true;
+KEYWORDS['and'] = true;
+KEYWORDS['or'] = true;
+KEYWORDS['elseif'] = true;
+KEYWORDS['else'] = true;
+KEYWORDS['end'] = true;
+KEYWORDS['break'] = true;
+KEYWORDS['continue'] = true;
+KEYWORDS['function'] = true;
+KEYWORDS['return'] = true;
+KEYWORDS['local'] = true;
 
-local function ProcessLines(tokens, alltasks, native)
-	local off = "";
-	local row = {};
+local OPERATOR = {};
+OPERATOR['{'] = true;
+OPERATOR['}'] = true;
+OPERATOR['('] = true;
+OPERATOR[')'] = true;
+OPERATOR['['] = true;
+OPERATOR[']'] = true;
+OPERATOR['#'] = true;
+OPERATOR['+'] = true;
+OPERATOR['-'] = true;
+OPERATOR['/'] = true;
+OPERATOR['*'] = true;
+OPERATOR['^'] = true;
+OPERATOR['%'] = true;
+OPERATOR['.'] = true;
+OPERATOR['='] = true;
+OPERATOR['=='] = true;
+OPERATOR['~='] = true;
+OPERATOR['>='] = true;
+OPERATOR['>'] = true;
+OPERATOR['<='] = true;
+OPERATOR['<'] = true;
+
+
+local function buildRows(native)
 	local rows = {};
 
-	for k = 1, #tokens do
-		local token = tokens[k];
-		local data = token.data;
-
-		if (token.orig) then
-			data = token.orig;
-		end
-
-		if (token.newLine) then
-			rows[#rows + 1] = row;
-			row = {{off, COLORS.Generic}};
-		end
-
-		if (token.depth and token.depth > 0) then
-			-- off = string.rep("    ", token.depth)
-			-- row[#row + 1] = {off, COLORS.Generic}
-		end
-
-		local tasks = alltasks[token.pos];
-
-		if (not tasks) then
-			row[#row + 1] = {data .. " ", COLORS.Generic};
-		else
-			if (tasks.prefix) then
-				for _, task in pairs(tasks.prefix) do
-					if (task.newLine) then
-						rows[#rows + 1] = row;
-						row = {{off, COLORS.Generic}};
-					end
-
-					row[#row + 1] = {task.str .. " ", COLORS.Before}
-				end
-			end
-
-			if (not tasks.remove) then
-				if (tasks.replace) then
-					row[#row + 1] = {tasks.replace.str .. " ", COLORS.Replaced}
+	for row, line in pairs(string.Explode("\n", native)) do
+		local inString;
+		local tokens = {};
+		
+		for _, token in pairs(string.Explode(" ", line)) do 
+			if token == "'" or token == '"' then
+				if inString and inString == token then
+					inString = nil;
 				else
-					row[#row + 1] = {data .. " ", COLORS.Generic}
+					inString = token;
 				end
-			elseif (not native) then
-				row[#row + 1] = {data .. " ", COLORS.Removed}
+
+				tokens[#tokens + 1] = {token, COLORS.STRING};
+			elseif inString then
+				tokens[#tokens + 1] = {token, COLORS.STRING};
+			elseif KEYWORDS[token] then
+				tokens[#tokens + 1] = {token, COLORS.KEYWORD};
+			elseif OPERATOR[token] then
+				tokens[#tokens + 1] = {token, COLORS.OPERATOR};
+			elseif _G[token] then
+				local tbl = _G[token];
+				local t = type(tbl);
+
+				if t == "function" then
+					tokens[#tokens + 1] = {token, COLORS.FUNCTION};
+				elseif tbl then
+					tokens[#tokens + 1] = {token, COLORS.NATIVE};
+				else
+					tokens[#tokens + 1] = {token, COLORS.GENERIC};
+				end
+			else
+				tokens[#tokens + 1] = {token, COLORS.GENERIC};
 			end
 
-			if (tasks.postfix) then
-				for _, task in pairs(tasks.postfix) do
-					if (task.newLine) then
-						rows[#rows + 1] = row;
-						row = {{off, COLORS.Generic}};
-					end
-
-					row[#row + 1] = {task.str .. " ", COLORS.After}
-				end
-			end
-		end
-	end
-
-	rows[#rows + 1] = row;
-
-
-	local allTokens = {};
-
-	for k, row in pairs(rows) do
-		for j, token in pairs(row) do
-			allTokens[#allTokens + 1] = token[1];
+			tokens[#tokens + 1] = {" ", COLORS.GENERIC};
 		end
 
-		allTokens[#allTokens + 1] = "\n";
+		rows[row] = tokens;
 	end
 
-	return rows, table.concat(allTokens, "");
+	return rows, native;
 end
 
-EXPR_LIB.ShowDebug = function(tokens, tasks, native)
+EXPR_LIB.ShowDebug = function(native, name)
 	if (Golem) then
 		local inst = Golem:GetInstance();
 		
-		local rows, text = ProcessLines(tokens, tasks, native);
+		local rows, text = buildRows(native);
 		
-		local sheet = inst:NewTab("editor", text, nil, "Debug");
+		name = name or "generic";
+		local sheet = inst:NewTab("editor", text);
 		
 		sheet.Panel._OnKeyCodeTyped = function() end;
 		sheet.Panel._OnTextChanged = function() end;
@@ -115,5 +125,15 @@ EXPR_LIB.ShowDebug = function(tokens, tasks, native)
 
 			return {{self.Rows[row], Color(255,255,255)}}
 		end;
+
+		local nFun = CompileString(text, "Expression 3 - Debugger", false);
+
+		if type(nFun)  ~= "string" then
+			inst.btnValidate:SetColor( Color( 50, 255, 50 ) );
+			inst.btnValidate:SetText( "Native Output, Validated Sucessfuly" );
+		elseif (nFun) then
+			inst:OnValidateError( false, nFun);
+			Golem.Print(Color(255, 255, 255), nFun);
+		end
 	end
 end

@@ -24,6 +24,8 @@
 
 local ext_core = EXPR_LIB.RegisterExtension("core");
 
+ext_core.enabled = true;
+
 local function eqM(a, b, ...)
 	for k, v in pairs({b, ...}) do
 		if (a ~= v) then
@@ -146,6 +148,7 @@ ext_core:RegisterOperator("not", "n", "b", 1, function (context, number) return 
 --[[
 	Class: STRING
 ]]
+
 
 local class_str = ext_core:RegisterClass("s", {"string"}, isstring, notnil);
 
@@ -377,11 +380,11 @@ end);
 			* When system.invoke is called, we take all parameters and convert to variant.
 	]]
 
-hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions", function(this, inst, token, expressions)
+hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions", function(this, inst, token, data)
 
 	-- We need to instruct the compiler what this actualy returns.
-	local class = expressions[1].token.data; -- Return class was arg 1.
-	local count = expressions[2].token.data; -- Return count was arg 2.
+	local class = data.expressions[1].token.data; -- Return class was arg 1.
+	local count = data.expressions[2].token.data; -- Return count was arg 2.
 
 	return class, count;
 end);
