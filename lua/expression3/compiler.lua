@@ -411,6 +411,8 @@ function COMPILER.GetOperator(this, operation, fst, ...)
 
 	local signature = string_format("%s(%s)", operation, table_concat({fst, ...},","));
 
+	print("Look up: " .. signature);
+
 	local Op = EXPR_OPERATORS[signature];
 
 	if (Op) then
@@ -1229,13 +1231,13 @@ end
 
 function COMPILER.Compile_GROUP(this, inst, token, data)
 
-	this:writeToBuffer("(");
+	this:writeToBuffer(inst, "(");
 
 	local r, c = this:Compile(data.expr);
 
 	this.addInstructionToBuffer(inst, data.expr);
 
-	this:writeToBuffer(")");
+	this:writeToBuffer(inst, ")");
 
 	return r, c;
 end
@@ -2297,7 +2299,7 @@ function COMPILER.Compile_PTRN(this, inst, token, data)
 	return "_ptr", 1
 end
 
-function COMPILER.Compile_CLS(this, inst, token, expressions)
+function COMPILER.Compile_CLS(this, inst, token, data)
 	this:writeToBuffer(inst, "\"" .. data.value .. "\"");
 	return "_cls", 1
 end
@@ -2642,7 +2644,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, data)
 	local tArgs = #args;
 
 	for k = 1, tArgs do
-		local pram = args[k];
+		local param = args[k];
 		local var = param[2];
 		local class = param[1];
 
@@ -2657,7 +2659,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, data)
 	this:writeToBuffer(inst, ")\n");
 
 	for k = 1, tArgs do
-		local pram = args[k];
+		local param = args[k];
 		local var = param[2];
 		local class = param[1];
 
@@ -3071,16 +3073,16 @@ function COMPILER.Compile_SET(this, inst, token, data)
 
 	local op;
 	local keepclass = false;
-	local cls = inst.class;
+	local cls = data.class;
 
-	if (cls and vExpr ~= cls.data) then
+	if (cls and vExpr ~= cls) then
 		this:Throw(token, "Can not assign %s onto %s, %s expected.", name(vExpr), name(vType), name(cls.data));
 	end
 
 	if (not cls) then
 		op = this:GetOperator("set", vType, iType, vExpr);
 	else
-		op = this:GetOperator("set", vType, iType, cls.data);
+		op = this:GetOperator("set", vType, iType, cls);
 
 		if (not op) then
 			keepclass = true;
@@ -3090,9 +3092,9 @@ function COMPILER.Compile_SET(this, inst, token, data)
 
 	if (not op) then
 		if (not cls) then
-			this:Throw(token, "No such set operation %s[%s] = ", name(vType), name(iType), name(vExpr));
+			this:Throw(token, "No such set operation %s[%s] = %s", name(vType), name(iType), name(vExpr));
 		else
-			this:Throw(token, "No such set operation %s[%s, %s] = ", name(vType), name(iType), name(cls.data), name(vExpr));
+			this:Throw(token, "No such set operation %s[%s, %s] = %s", name(vType), name(iType), name(cls), name(vExpr));
 		end
 	end
 
@@ -3115,7 +3117,7 @@ function COMPILER.Compile_SET(this, inst, token, data)
 	end
 
 	if (keepid) then
-		this:writeOperationCall(inst, op, value, index, string_format("%q", cls.data), expr);
+		this:writeOperationCall(inst, op, value, index, string_format("%q", cls), expr);
 	else
 		this:writeOperationCall(inst, op, value, index, expr);
 	end
@@ -3241,7 +3243,7 @@ end
 
 ]]
 
-function COMPILER.Compile_TRY(this, inst, token, expressions)
+function COMPILER.Compile_TRY(this, inst, token, data)
 	this:writeToBuffer(inst, "\nlocal ok, %s = pcall(function()\n", data.var.data);
 	
 	this:PushScope();

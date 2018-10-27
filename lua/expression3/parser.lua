@@ -563,7 +563,7 @@ function PARSER.Block_1(this, _end, lcb)
 
 		this:PopScope()
 
-		return this:EndInstruction(seq {stmts = {stmt}});
+		return this:EndInstruction(seq, {stmts = {stmt}});
 	end
 end
 
@@ -1223,6 +1223,7 @@ function PARSER.Statment_12(this, expr)
 	if (this:Accept("lsb")) then
 		local inst = this:StartInstruction("set", expr.token);
 
+		local class;
 		local expressions = {};
 
 		expressions[1] = expr;
@@ -1231,6 +1232,10 @@ function PARSER.Statment_12(this, expr)
 
 		if (this:Accept("com")) then
 			this:Require("typ", "Class expected for index operator, after coma (,).");
+
+			class = E3Class(this.__token.data);
+
+			if (class) then class = class.id; end
 		end
 
 		this:Require("rsb", "Right square bracket (]) expected to close index operator.");
@@ -1239,7 +1244,7 @@ function PARSER.Statment_12(this, expr)
 
 		expressions[3] = this:Expression_1();
 
-		return this:EndInstruction(inst, {expressions = expressions});
+		return this:EndInstruction(inst, {class = class, expressions = expressions});
 	end
 end
 
@@ -1646,11 +1651,13 @@ function PARSER.Expression_23(this)
 	if (this:Accept("cst")) then
 		local inst = this:StartInstruction("cast", this.__token);
 
-		this:ExcludeWhiteSpace("Cast operator ( (%s) ) must not be succeeded by whitespace", inst.type);
+		local class = this.__token.data;
+
+		this:ExcludeWhiteSpace("Cast operator ( (%s) ) must not be succeeded by whitespace", name(class));
 
 		local expr = this:Expression_1();
 
-		return this:EndInstruction(inst, {expr = expr});
+		return this:EndInstruction(inst, {class = class, expr = expr});
 	end
 
 	local previous = this.__token;
@@ -1659,16 +1666,18 @@ function PARSER.Expression_23(this)
 		local lpa = this.__token;
 
 		if (this:Accept("typ")) then
-			local typ = this.__token;
+			local token = this.__token;
+
+			local class = token.data;
 
 			if (this:Accept("rpa")) then
-				local inst = this:StartInstruction("cast", typ);
+				local inst = this:StartInstruction("cast", token);
 
-				this:ExcludeWhiteSpace("Cast operator ( (%s) ) must not be succeeded by whitespace", inst.type);
+				this:ExcludeWhiteSpace("Cast operator ( (%s) ) must not be succeeded by whitespace", name(class));
 
 				local expr = this:Expression_1();
 
-				return this:EndInstruction(inst, {expr = expr});
+				return this:EndInstruction(inst, {class = class, expr = expr});
 			end
 		end
 
@@ -1942,7 +1951,7 @@ function PARSER.Expression_Trailing(this, expr)
 				break;
 			end
 
-			expr = this:EndInstruction(inst, expressions);
+			expr = this:EndInstruction(inst, {expressions = expressions});
 		elseif (this:Accept("lpa")) then
 			local inst = this:StartInstruction("call", expr.token);
 

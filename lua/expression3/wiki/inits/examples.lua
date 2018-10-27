@@ -48,7 +48,7 @@ system.out(food2 instanceof food);]])
 
 	EXPR_WIKI.RegisterExample("syntaxes",
 [[/*
-	E3 - Example's 101
+    E3 - Example's 101
 */
 
 //The name directive is used to set the script name.
@@ -61,8 +61,8 @@ system.out(food2 instanceof food);]])
 //@include "example.txt";
 
 /*
-	Notice how we have commented out the include, single line comments begin '//'.
-	Whilst multi line comments are wrapped in (/* */).
+    Notice how we have commented out the include, single line comments begin '//'.
+    Whilst multi line comments are wrapped in c style comment tags.
 */
 
 //To define a varible we must prefix the definition with its type.
@@ -80,65 +80,68 @@ example2 = 30;
 //You are also able to increase and decrease a value using arithmatic assigments.
 example2, example3 += 1, 3; //1 is added to the value of example2 and 3 is added to the value of example3.
 
-//If statements are same as you would expect (&& is and) (|| is or).
-if (example1 && (example2 == 3 || example3 == 3))
-{
-	@output int Example;
-	/*The output directive creates an output variable.
-	this directive as well as the input directive can appear anywhere.
-	The variables created are always nested to the block they where defined in.*/
+//You can wrap code in a server block and it will only execute serverside.
+server {
+	//If statements are same as you would expect (&& is and) (|| is or).
+	if (example1 && (example2 == 3 || example3 == 3))
+	{
+	    @output int Example;
+	    /*The output directive creates an output variable.
+	    this directive as well as the input directive can appear anywhere.
+	    The variables created are always nested to the block they where defined in.*/
 
-	Example = (int) example1;
-	//The casting operator '(type) value' takes the value on the right and tries to convert it to the class on the left.
-}
-//E3 supports multi comparison operations, this allows you to check one object against a list of objects at once.
-elseif (example2 == [1,2,3,4])
-{
-	@input string MyString;
-	//The input directive works exactly like the output directive but creates an input instead.
+	    Example = (int) example1;
+	    //The casting operator '(type) value' takes the value on the right and tries to convert it to the class on the left.
+	}
+	//E3 supports multi comparison operations, this allows you to check one object against a list of objects at once.
+	elseif (example2 == [1,2,3,4])
+	{
+	    @input string MyString;
+	    //The input directive works exactly like the output directive but creates an input instead.
 
-	MyString = example4;
-	//Notice how input and output variable names have to be camel cased (1st letter is capitalized).
-}
-else
-{
-	int example5 = example1 ? example2 : exmple3;
-	//The ternary operator selects between the last 2 values based on the condition.
+	    MyString = example4;
+	    //Notice how input and output variable names have to be camel cased (1st letter is capitalized).
+	}
+	else
+	{
+	    int example5 = example1 ? example2 : exmple3;
+	    //The ternary operator selects between the last 2 values based on the condition.
+	}
 }
 
 //You can catch a script error using try catch, without your script crashing.
 try
 {
-	error myError = new error("Example of thrown error.");
-	//Some classes like errors and vectors use the 'new' keyword to create a new object.
+    error myError = new error("Example of thrown error.");
+    //Some classes like errors and vectors use the 'new' keyword to create a new object.
 
-	//You can also create and throw your own errors.
-	system.throw(myError);
+    //You can also create and throw your own errors.
+    system.throw(myError);
 }
 catch( theError )
 {
-	string msg = theError.message();
-	//To call a method on an object the syntax is object.method(...)
+    string msg = theError.message();
+    //To call a method on an object the syntax is object.method(...)
 
-	system.print("Caught Error:", msg);
-	//All functions are on libraries, the system library is where we find the print functions.
+    system.print("Caught Error:", msg);
+    //All functions are on libraries, the system library is where we find the print functions.
 }
 
 //For loops are as follows.
 for (int i = 1; 20; 2)
 {
-	system.out(i);
-	//system.out is used to print to your Golem console.
+    system.out(i);
+    //system.out is used to print to your Golem console.
 }
 
 //You can also do while loops.
 while (example2 < 40)
 {
-	example2 = example2 + 1;
+    example2 = example2 + 1;
 
-	//If ststaments can be preeced by a single statement, not just a block.
-	if( example2 == 4)
-		break; //Break is used to exit a loop.
+    //If ststaments can be preeced by a single statement, not just a block.
+    if( example2 == 4)
+        break; //Break is used to exit a loop.
 }
 
 table example6 = new table(1,2,3);
@@ -152,19 +155,19 @@ system.out(example6[1, int]);
 foreach (int key as int value in example6)
 //If you have no need for a key then 'int key as' is not needed.
 {
-	system.out("value ", value);
+    system.out("value ", value);
 
-	//Continue is used to break the current iteration and move onto the next.
-	continue;
+    system.out("key ", key);
 
-	system.out("key ", key);
+    //Continue is used to break the current iteration and move onto the next.
+    continue;
 }
 
 //You can define a function in two ways, firstly traditonal.
-function egFunction1(int a)
+function int egFunction1(int a)
 {
-	return a, a + 1, a + 2;
-	//You can return more than one value of the return class.
+    return a, a + 1, a + 2;
+    //You can return more than one value of the return class.
 }
 
 int a, b, c = egFunction1(1);
@@ -173,7 +176,7 @@ int a, b, c = egFunction1(1);
 //Secondly inline.
 function egFunction2 = function(int a, int b)
 {
-	return a + b;
+    return a + b;
 }
 
 //Functions defined inline, can not be called directly.
@@ -181,8 +184,8 @@ int example7 = system.invoke(number, 1, egFunction2, 2, 4);
 //System.invoke takes the expected return class as well as the anount of values returned before the function to invoke.
 
 //Delegates are used to define templates for functions.
-delegate egFunction3(int, int) {
-	return 1; //this is the ammount of values returned.
+delegate int egFunction3(int, int) {
+    return 1; //this is the ammount of values returned.
 }
 
 //You can then assign a function to this template.
@@ -194,27 +197,27 @@ int example8 = egFunction3(2, 4);
 //All user functions are first class.
 event.add("Think", "example", function()
 {
-	//This means you can tie a function to an event.
+    //This means you can tie a function to an event.
 });
 
 //E3 also has full object oriented programming.
 class exampleClass
 {
-	int atribute1 = 0;
-	//Classes support atributes.
+    int atribute1 = 0;
+    //Classes support atributes.
 
-	//Constructors are used to create a class.
-	exampleClass(int value)
-	{
-		this.atribute1 = value;
-	}
+    //Constructors are used to create a class.
+    exampleClass(int value)
+    {
+        this.atribute1 = value;
+    }
 
-	//As well as methods.
-	method int getValue()
-	{
-		return atribute1;
-		//This is method is redundant as you can do object.atribute1 from anywhere.
-	}
+    //As well as methods.
+    method int getValue()
+    {
+        return atribute1;
+        //This is method is redundant as you can do object.atribute1 from anywhere.
+    }
 }
 
 exampleClass example8 = new exampleClass(42);
@@ -223,34 +226,34 @@ exampleClass example8 = new exampleClass(42);
 //Classes may laso extend others.
 class anotherClass extends exampleClass
 {
-	anotherClass()
-	{
-		//Do nothing.
-	}
+    anotherClass()
+    {
+        //Do nothing.
+    }
 }
 
 //E3 also adds interfaces.
 interface exampleInterface
 {
-	//Iinterfaces are used to create templates for methods.
-	method int egMethod(int, int)
-	{
-		return 1; //This is the ammount of values returned.
-	}
+    //Iinterfaces are used to create templates for methods.
+    method int egMethod(int, int)
+    {
+        return 1; //This is the ammount of values returned.
+    }
 }
 
 class exampleClass3 implements exampleInterface
 {
-	exampleClass3()
-	{
-		//Do nothing.
-	}
+    exampleClass3()
+    {
+        //Do nothing.
+    }
 
-	//Is this interafce method is missing you will get an error.
-	method int egMethod(int a, int b)
-	{
-		return a / b;
-	}
+    //Is this interafce method is missing you will get an error.
+    method int egMethod(int a, int b)
+    {
+        return a / b;
+    }
 
 }
 
@@ -260,5 +263,5 @@ exampleClass3 example9 = new exampleClass3();
 exampleInterface example10 = (exampleClass3) example9;
 
 //Instanceof allows us to check is an object is, extends or implements a specific class.
-system.out(example9 instanceof exampleInterface);; //Spits out true.]])
+system.out(example9 instanceof exampleInterface); //Spits out true.]])
 end)
