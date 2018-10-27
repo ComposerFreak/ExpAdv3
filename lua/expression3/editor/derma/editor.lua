@@ -1551,6 +1551,11 @@ function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 	
 	local offset = -self.Scroll.y + 1
 	for i, cell in ipairs( self.PaintRows[Row] ) do
+		if not cell[1] then 
+			cell[1] = ""
+			cell[2] = C_white
+		end 
+		
 		local len = #cell[1]
 		if offset < 0 then
 			if len > -offset then

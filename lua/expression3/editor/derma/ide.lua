@@ -255,7 +255,10 @@ function PANEL:Init( )
 	self.pnlConsoleDivider:SetTopMin( 200 )
 	self.pnlConsoleDivider:SetBottomMin( 50 )
 	
-	self.tbConsoleRows = { }
+	
+	Golem.Syntax:Create( "Console", self.tbConsoleEditor )
+	self.tbConsoleEditor.tbConsoleRows = { }
+	
 	
 	/*self.tbConsoleEditor.SyntaxColorLine = function(_, row)
 		if self.tbConsoleRows[row] then 
@@ -397,7 +400,7 @@ end
 	
 	row[#row + 1] = {token, color}
 	
-	self.tbConsoleRows[#self.tbConsoleRows + 1] = row
+	self.tbConsoleEditor.tbConsoleRows[#self.tbConsoleEditor.tbConsoleRows + 1] = row
 	self.tbConsoleEditor:SetCaret(Vector2( #self.tbConsoleEditor.tRows, 1 ));
 	self.tbConsoleEditor:SetSelection(line .. "\n");
 end]]
@@ -419,7 +422,7 @@ function PANEL:PrintLine(...)
 		r[#r + 1] = {v, c};
 	end
 	
-	self.tbConsoleRows[#self.tbConsoleRows + 1] = r
+	self.tbConsoleEditor.tbConsoleRows[#self.tbConsoleEditor.tbConsoleRows + 1] = r
 	
 	self.tbConsoleEditor:SetCaret(Vector2( #self.tbConsoleEditor.tRows, 1 ));
 	

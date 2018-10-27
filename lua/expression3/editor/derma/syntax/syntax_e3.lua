@@ -260,7 +260,15 @@ function Syntax:FindMatchingParam( nRow, nChar )
 end 
 
 
+function Syntax:GetSyntax( nRow )
+	-- if not self.Syntaxer.tOutput then self.Syntaxer:Parse() end 
+	-- return self.Syntaxer.tOutput[nRow]
+	return { { self.dEditor.tRows[nRow], Color(255,255,255) } }
+end
 
+function Syntax:Parse( )
+	-- self.Syntaxer:Parse( ) 
+end
 
 
 

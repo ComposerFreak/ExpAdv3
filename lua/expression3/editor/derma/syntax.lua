@@ -9,12 +9,14 @@ local Syntax = Golem.Syntax
 local LangList = { }
 
 function Syntax:Add( sName, tData )
+	sName = string.lower( sName or "" )
 	if LangList[sName] then error( "Syntax already created." ) end 
 	LangList[sName] = tData 
 	print( "Adding syntax:", sName )
 end
 
 function Syntax:Create( sName, dEditor )
+	sName = string.lower( sName or "" )
 	if not LangList[sName] then error( "No syntax named " .. sName ) end 
 	local lang = setmetatable( { }, LangList[sName] )
 	
@@ -27,6 +29,7 @@ function Syntax:Create( sName, dEditor )
 end
 
 function Syntax:RegisterColors( sName, tColors )
+	sName = string.lower( sName or "" )
 	self.Colors[sName] = { sName, tColors } 
 end
 

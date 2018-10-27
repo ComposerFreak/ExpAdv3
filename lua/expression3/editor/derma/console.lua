@@ -7,7 +7,7 @@ function PANEL:Init( )
 end
 	--[[self:SetCursor( "beam" )
 	
-	self.Rows = { "" }
+	self.tRows = { "" }
 	self.FoldButtons = { }
 	self.FoldData = { {0, false, false} }
 	self.Undo = { } 
@@ -83,9 +83,9 @@ function PANEL:PrintLine(...)
 		r[#r + 1] = {v, c};
 	end
 	
-	self.Rows[#self.Rows + 1] = r
+	self.tRows[#self.tRows + 1] = r
 	
-	self:SetCaret(Vector2( #self.Rows, 1 ));
+	self:SetCaret(Vector2( #self.tRows, 1 ));
 	
 	self:SetSelection(l .. "\n");
 end

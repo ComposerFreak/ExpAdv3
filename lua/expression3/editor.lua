@@ -73,6 +73,7 @@ function Golem.Reload( )
 	include( "expression3/editor/derma/syntax.lua" ) 
 	include( "expression3/editor/derma/syntax/syntax_e3.lua" )
 	include( "expression3/editor/derma/syntax/syntax_lua.lua" )
+	include( "expression3/editor/derma/syntax/syntax_console.lua" )
 end
 
 function Golem.GetInstance( )
