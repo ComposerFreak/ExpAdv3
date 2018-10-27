@@ -741,6 +741,7 @@ end
 ]]
 
 function PARSER.Statment_0(this)
+	local sep;
 	local dirLine;
 
 	while this:Accept("dir") do
@@ -755,7 +756,7 @@ function PARSER.Statment_0(this)
 
 		local func = this["Directive_" .. string.upper(directive)]
 
-		if ( not func) then
+		if (not func) then
 			this:Throw(token, "No such directive @%s", directive);
 		end
 
@@ -1358,10 +1359,12 @@ function PARSER.Expression_7(this)
 				expressions[2] = this:Expression_1();
 
 				while this:Accept("com") do
-					expressions[#expressions + 1] = this:Expression_1()
+					expressions[#expressions + 1] = this:Expression_1();
 				end
 
 				expr = this:EndInstruction(inst, {expressions = expressions});
+
+				this:Require("rsb", "Right suare bracket required to close mutliple comparason list");
 			else
 				local inst = this:StartInstruction("eq", expr.token);
 
@@ -1383,10 +1386,12 @@ function PARSER.Expression_7(this)
 				expressions[2] = this:Expression_1();
 
 				while this:Accept("com") do
-					expressions[#expressions + 1] = this:Expression_1()
+					expressions[#expressions + 1] = this:Expression_1();
 				end
 
 				expr = this:EndInstruction(inst, {expressions = expressions});
+
+				this:Require("rsb", "Right suare bracket required to close mutliple comparason list");
 			else
 				local inst = this:StartInstruction("neq", expr.token);
 

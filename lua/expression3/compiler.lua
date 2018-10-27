@@ -126,7 +126,18 @@ local addNativeLua;
 function addNativeLua(instruction, outBuffer, traceTable, char, line)
 	--print("\nadding instruction to buffer: ", instruction.type);
 
+	if (not instruction) then
+		debug.Trace();
+		error( "addNativeLua got invalid instruction " .. type(instruction) , 0);
+	end
+
 	local inBuffer = instruction.buffer;
+
+	if (not inBuffer) then
+		debug.Trace();
+		error( "addNativeLua got invalid buffer " .. type(inBuffer) , 0);
+	end
+
 	local len = #inBuffer;
 
 	for key = 1, len do
@@ -1439,8 +1450,54 @@ function COMPILER.Compile_BAND(this, inst, token, data)
 	return op.result, op.rCount;
 end
 
---[[function COMPILER.Compile_EQ_MUL(inst, token, expressions)
-end]]
+function COMPILER.Compile_EQ_MUL(this, inst, token, data)
+	--(function(value) return operations; end)(value)
+
+	this:writeToBuffer(inst, "((function(eq_val) return ");
+
+	local expr1 = data.expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local total = #data.expressions;
+
+	for i = 2, total do
+
+		local expr2 = data.expressions[i];
+		local r2, c2 = this:Compile(expr2);
+		
+		local op = this:GetOperator("eq", r1, r2);
+
+		if (not op) then
+			this:Throw(token, "Comparison operator (==) does not support '%s == %s'", name(r1), name(r2));
+		elseif (not op.operator) then
+			this:writeToBuffer(inst, "(");
+
+			this:writeToBuffer(inst, "eq_val");
+
+			this:writeToBuffer(inst, "==");
+
+			this:addInstructionToBuffer(inst, expr2);
+
+			this:writeToBuffer(inst, ")");
+		else
+			this:writeOperationCall(inst, op, "eq_val", expr2);
+		end
+
+		this:CheckState(op.state, token, "Comparison operator (==) '%s == %s'", name(r1), name(r2));
+
+		if (i < total) then
+			this:writeToBuffer(inst, " or ");
+		end
+	end
+
+	this:writeToBuffer(inst, "; end) (");
+
+	this:addInstructionToBuffer(inst, expr1);
+
+	this:writeToBuffer(inst, "))");
+
+	return "b", 1;
+end
 
 function COMPILER.Compile_EQ(this, inst, token, data)
 	local expr1 = data.expr;
@@ -1462,7 +1519,7 @@ function COMPILER.Compile_EQ(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr2);
 
-		this:writeToBuffer(inst, "(");
+		this:writeToBuffer(inst, ")");
 	else
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
@@ -1472,8 +1529,54 @@ function COMPILER.Compile_EQ(this, inst, token, data)
 	return op.result, op.rCount;
 end
 
---[[function COMPILER.Compile_NEQ_MUL(inst, token, expressions)
-end]]
+function COMPILER.Compile_NEQ_MUL(this, inst, token, data)
+	--(function(value) return operations; end)(value)
+
+	this:writeToBuffer(inst, "((function(eq_val) return ");
+
+	local expr1 = data.expressions[1];
+	local r1, c1 = this:Compile(expr1);
+
+	local total = #data.expressions;
+
+	for i = 2, total do
+
+		local expr2 = data.expressions[i];
+		local r2, c2 = this:Compile(expr2);
+		
+		local op = this:GetOperator("neq", r1, r2);
+
+		if (not op) then
+			this:Throw(token, "Comparison operator (!=) does not support '%s != %s'", name(r1), name(r2));
+		elseif (not op.operator) then
+			this:writeToBuffer(inst, "(");
+
+			this:writeToBuffer(inst, "eq_val");
+
+			this:writeToBuffer(inst, "~=");
+
+			this:addInstructionToBuffer(inst, expr2);
+
+			this:writeToBuffer(inst, ")");
+		else
+			this:writeOperationCall(inst, op, "eq_val", expr2);
+		end
+
+		this:CheckState(op.state, token, "Comparison operator (!=) '%s != %s'", name(r1), name(r2));
+
+		if (i < total) then
+			this:writeToBuffer(inst, " and ");
+		end
+	end
+
+	this:writeToBuffer(inst, "; end) (");
+
+	this:addInstructionToBuffer(inst, expr1);
+
+	this:writeToBuffer(inst, "))");
+
+	return "b", 1;
+end
 
 function COMPILER.Compile_NEQ(this, inst, token, data)
 	local expr1 = data.expr;
@@ -1495,7 +1598,7 @@ function COMPILER.Compile_NEQ(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr2);
 
-		this:writeToBuffer(inst, "(");
+		this:writeToBuffer(inst, ")");
 	else
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
