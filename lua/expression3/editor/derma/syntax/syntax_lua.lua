@@ -172,7 +172,7 @@ function Syntax:MakeFoldData( nExit )
 		
 		nLevel = nLevel < 0 and 0 or nLevel
 		
-		if self.dEditor.tFoldData[nLine][1] ~= nLevel then 
+		if self.dEditor.tFoldData[nLine][1] >= nLevel then 
 			self.dEditor.tFoldData[nLine][1] = nLevel 
 		end 
 	end
