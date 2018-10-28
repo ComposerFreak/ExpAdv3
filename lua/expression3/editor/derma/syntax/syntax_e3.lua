@@ -25,6 +25,7 @@ function Syntax:Init( dEditor )
 	self:BuildTokensTable( )
 	self:BuildKeywordsTable( )
 	self:BuildClassTable( )
+	self:BuildLibraryMethods( ) 
 end
 
 /*---------------------------------------------------------------------------
@@ -334,11 +335,28 @@ function Syntax:BuildKeywordsTable( )
 	for k, v in pairs( EXPR_KEYWORDS.EXPADV ) do
 		self.tKeywords[k] = true
 	end
+	
+	self.tKeywords["function"] = true -- Special case
 end 
 
 function Syntax:BuildClassTable( )
+	self.tClasses = { }
 	
+	for k, v in pairs( EXPR_CLASSES ) do
+		self.tClasses[k] = true
+	end
 end
+
+function Syntax:BuildLibraryMethods( ) 
+	self.tLibrary = { } 
+	
+	for sLib, tData in pairs( EXPR_LIBRARIES ) do
+		self.tLibrary[sLib] = { } 
+		for k, v in pairs( tData._functions ) do
+			self.tLibrary[sLib][v.name] = true 
+		end
+	end
+end 
 
 /*---------------------------------------------------------------------------
 Syntaxer
@@ -383,6 +401,7 @@ function Syntax:AddToken( sTokenName, sBuffer )
 		sBuffer = self.sBuffer 
 		self.sBuffer = ""
 	end 
+	if not sBuffer or sBuffer == "" then return end 
 		
 	if self.tLastColor and color == self.tLastColor[2] then
 		self.tLastColor[1] = self.tLastColor[1] .. sBuffer
@@ -469,6 +488,23 @@ function Syntax:Parse( )
 				-- if keywords[self.sBuffer] then 
 				if self.tKeywords[self.sBuffer] then 
 					self:AddToken( "keyword" )
+				elseif self.tClasses[self.sBuffer] then 
+					self:AddToken( "typename" )
+				elseif self.tLibrary[self.sBuffer] then 
+					local lib = self.tLibrary[self.sBuffer]
+					self:AddToken( "library" )
+					self:SkipSpaces( )
+					if not self:NextPattern( "^%." ) then continue end 
+					self:AddToken( "operator" ) 
+					self:SkipSpaces( )
+					
+					if self:NextPattern( "^[a-z][a-zA-Z0-9]*" ) then 
+						if lib[self.sBuffer] then 
+							self:AddToken( "function" )
+						else 
+							self:AddToken( "notfound" )
+						end 
+					end 
 				else 
 					self:AddToken( "variable" )
 				end 
@@ -541,7 +577,7 @@ function Syntax:Parse( )
 				self:NextCharacter( )
 			end 
 			
-			self:AddToken( "white" ) 
+			self:AddToken( "notfound" ) 
 		end 
 	end
 end
