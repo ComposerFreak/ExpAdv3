@@ -19,7 +19,6 @@ Syntax.__index = Syntax
 
 function Syntax:Init( dEditor )
 	self.dEditor = dEditor
-	self.Syntaxer.dEditor = dEditor
 	dEditor:SetSyntax( self ) 
 	dEditor:SetCodeFolding( true ) 
 	dEditor:SetParamMatching( true )
@@ -29,7 +28,7 @@ end
 Formating and folding
 ---------------------------------------------------------------------------*/
 
-function Syntax:FindValidLines( sTextOverride )
+function Syntax:FindValidLines( )
 	local LinesToFold = self.dEditor:ExpandAll( )
 	local tRows = self.dEditor.tRows
 	local MultilineComment
@@ -277,151 +276,10 @@ function Syntax:FindMatchingParam( nRow, nChar )
 	return false 
 end 
 
-/*============================================================================================================================================
-	Syntax highlighting
-============================================================================================================================================*/
-
-/*---------------------------------------------------------------------------
-Colors
----------------------------------------------------------------------------*/
-local colors = { 
-	["comment"]      = Color( 128, 128, 128 ), 
-	["function"]     = Color(  80, 160, 240 ), 
-	["library"]      = Color(  80, 160, 240 ), 
-	["keyword"]      = Color(   0, 120, 240 ), 
-	["number"]       = Color(   0, 200,   0 ), 
-	["operator"]     = Color( 240,   0,   0 ), 
-	["string"]       = Color( 188, 188, 188 ), 
-	["variable"]     = Color(   0, 180,  80 ),  
-	["metamethod"]   = Color(   0, 200, 255 ),
-}
-
--- fallback for nonexistant entries: 
-setmetatable( colors, { __index = function( tbl, index ) return Color( 255, 255, 255 ) end } ) 
-Syntax.Colors = colors
-
-Golem.Syntax:RegisterColors( Syntax.sName, colors )
-
-/*---------------------------------------------------------------------------
-Keywords
----------------------------------------------------------------------------*/
-local keywords = {
-	["and"] 		= true,
-	["break"] 		= true,
-	["continue"] 	= true,
-	["do"] 			= true,
-	["else"] 		= true,
-	["elseif"] 		= true,
-	["end"] 		= true,
-	["false"] 		= true,
-	["for"] 		= true,
-	["function"] 	= true,
-	["if"] 			= true,
-	["in"] 			= true,
-	["local"] 		= true,
-	["nil"] 		= true,
-	["not"] 		= true,
-	["or"] 			= true,
-	["repeat"] 		= true,
-	["return"] 		= true,
-	["then"] 		= true,
-	["true"] 		= true,
-	["until"] 		= true,
-	["while"] 		= true,
-}
-
-/*---------------------------------------------------------------------------
-Formater
----------------------------------------------------------------------------*/
-local function FindValidLinesFormat( Rows )
-	local ValidLines = { }
-	local MultilineComment
-	local Row, Char = 1, 0
-	
-	while Row <= #Rows do
-		local Line = Rows[Row]
-		while Char < #Line do
-			Char = Char + 1
-			local Text = Line[Char]
-			local sType = type( MultilineComment )
-			
-			if sType == "number" then -- End comment or string (]])
-				if string_match( string_sub( Line, 1, Char ), "%]" .. string_rep( "=", MultilineComment ) .. "%]$" ) then
-					ValidLines[#ValidLines][2] = { Row, Char }
-					MultilineComment = nil
-				end
-			elseif sType == "string" then -- End string 
-				if Text == MultilineComment and Line[Char-1] ~= "\\" then
-					ValidLines[#ValidLines][2] = { Row, Char }
-					MultilineComment = nil
-				end 
-			elseif sType == "boolean" and MultilineComment then -- End comment (*/)
-				if Text == "/" and Line[Char-1] == "*" then
-					ValidLines[#ValidLines][2] = { Row, Char }
-					MultilineComment = nil
-				end 
-			elseif string_match( Line, "^%[=*%[", Char ) then -- Multiline string ([[)
-				MultilineComment = #string_match( Line, "^%[(=*)%[", Char )
-				ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
-			elseif string_match( Line, "^[\"']", Char ) then -- Normal string (" or ')
-				MultilineComment = string_match( Line, "^([\"'])", Char )
-				ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
-			elseif string_match( Line, "^%-%-%[=*%[", Char ) then -- Multiline comment (--[[)
-				MultilineComment = #string_match( Line, "^%-%-%[(=*)%[", Char )
-				ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
-			elseif string_match( Line, "^%-%-", Char ) then -- Singleline comment (--)
-				ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
-				break
-			elseif Text == "/" then -- Test for comments
-				if Line[Char+1] == "/" then -- Singleline comment (//)
-					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
-					break
-				elseif Line[Char+1] == "*" then -- Multiline comment (/*)
-					MultilineComment = true
-					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
-				end
-			end
-		end
-				
-		Char = 0
-		Row = Row + 1
-	end
-	
-	return function( nLine, nStart ) 
-		for i = 1, #ValidLines do
-			local tStart, tEnd = ValidLines[i][1], ValidLines[i][2]
-			
-			if tStart[1] < nLine and tEnd[1] > nLine then 
-				return false 
-			end 
-			
-			if tStart[1] == tEnd[1] then
-				if tStart[1] == nLine then 
-			 		if tStart[2] <= nStart and tEnd[2] >= nStart then 
-			 			return false 
-			 		end 
-			 	end 
-			else 
-			 	if tStart[1] == nLine then 
-			 		if tStart[2] <= nStart then 
-			 			return false 
-			 		end 
-			 	elseif tEnd[1] == nLine then 
-			 		if tEnd[2] >= nStart then 
-			 			return false 
-			 		end 
-			 	end 
-			end 
-		end
-		
-		return true 
-	end, ValidLines
-end
-
 function Syntax:Format( Code )
 	local newcode = { }
 	local lines = string.Explode( "\n", Code )
-	local ValidLine, Lookup = FindValidLinesFormat( lines )
+	local ValidLine, Lookup = self:FindValidLines( )
 	local indent = 0
 	local line = 1
 	local newline = false
@@ -510,14 +368,101 @@ function Syntax:Format( Code )
 	return table.concat( newcode, "\n" )
 end
 
+/*---------------------------------------------------------------------------
+Colors
+---------------------------------------------------------------------------*/
+local colors = { 
+	["comment"]      = Color( 128, 128, 128 ), 
+	["function"]     = Color(  80, 160, 240 ), 
+	["library"]      = Color(  80, 160, 240 ), 
+	["keyword"]      = Color(   0, 120, 240 ), 
+	["number"]       = Color(   0, 200,   0 ), 
+	["operator"]     = Color( 240,   0,   0 ), 
+	["string"]       = Color( 188, 188, 188 ), 
+	["variable"]     = Color(   0, 180,  80 ),  
+	["metamethod"]   = Color(   0, 200, 255 ),
+	["notfound"]     = Color( 240, 160,   0 ), 
+}
+
+-- fallback for nonexistant entries: 
+setmetatable( colors, { __index = function( tbl, index ) return Color( 255, 255, 255 ) end } ) 
+Syntax.Colors = colors
+
+Golem.Syntax:RegisterColors( Syntax.sName, colors )
+
+/*---------------------------------------------------------------------------
+Keywords
+---------------------------------------------------------------------------*/
+local keywords = {
+	["and"] 		= true,
+	["break"] 		= true,
+	["continue"] 	= true,
+	["do"] 			= true,
+	["else"] 		= true,
+	["elseif"] 		= true,
+	["end"] 		= true,
+	["false"] 		= true,
+	["for"] 		= true,
+	["function"] 	= true,
+	["if"] 			= true,
+	["in"] 			= true,
+	["local"] 		= true,
+	["nil"] 		= true,
+	["not"] 		= true,
+	["or"] 			= true,
+	["repeat"] 		= true,
+	["return"] 		= true,
+	["then"] 		= true,
+	["true"] 		= true,
+	["until"] 		= true,
+	["while"] 		= true,
+}
+
+/*---------------------------------------------------------------------------
+Operators
+---------------------------------------------------------------------------*/
+local operators = {
+	"..",
+	">=",
+	"<=",
+	"!=",
+	"~=",
+	"==",
+	"&&",
+	"||",
+	"+",
+	"-",
+	"*",
+	"/",
+	"^",
+	"%",
+	"=",
+	"<",
+	">",
+	"!",
+	"#",
+	"[",
+	"]",
+	"{",
+	"}",
+	"(",
+	")",
+	";",
+	".",
+	",",
+	":",
+}
+
+for i, v in ipairs( operators ) do
+	operators[i] = string_gsub( v, "[%-%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1" )
+end
+
+-- PrintTableGrep(operators)
 
 /*---------------------------------------------------------------------------
 Syntaxer
 ---------------------------------------------------------------------------*/
-local Syntaxer = { }
-Syntax.Syntaxer = Syntaxer
-
-function Syntaxer:NextCharacter( )
+function Syntax:NextCharacter( )
 	if not self.sChar then return end
 
 	self.sTokenData = self.sTokenData .. self.sChar
@@ -528,9 +473,11 @@ function Syntaxer:NextCharacter( )
 	else
 		self.sChar = nil
 	end
+	
+	return self.sChar ~= nil 
 end
 
-function Syntaxer:NextPattern( sPattern, bSkip )
+function Syntax:NextPattern( sPattern, bSkip )
 	if not self.sChar then return false end
 	local startpos, endpos, text = string_find( self.sLine, sPattern, self.nPosition  )
 	
@@ -551,13 +498,14 @@ function Syntaxer:NextPattern( sPattern, bSkip )
 	return bSkip and text or true 
 end
 
-function Syntaxer:AddToken( sTokenName, sTokenData )
+function Syntax:AddToken( sTokenName, sTokenData )
 	local color = colors[sTokenName]
 	if not sTokenData then 
 		sTokenData = self.sTokenData 
 		self.sTokenData = ""
 	end 
-		
+	if not sTokenData or sTokenData == "" then return end 
+	
 	if self.tLastColor and color == self.tLastColor[2] then
 		self.tLastColor[1] = self.tLastColor[1] .. sTokenData
 	else
@@ -566,14 +514,18 @@ function Syntaxer:AddToken( sTokenName, sTokenData )
 	end
 end
 
-
-function Syntaxer:SkipSpaces( )
-	self:NextPattern( " *" )
+function Syntax:SkipSpaces( )
+	if self.sTokenData and self.sTokenData ~= "" then 
+		print( string.format( "Unflushed %q on line %d char %d", self.sTokenData, self.nRow, self.nPosition ) )
+	end 
+	
+	while self.sChar and self.sChar == " " do
+		self:NextCharacter( )
+	end 
 	self:AddToken( "operator" )
 end
 
-
-function Syntaxer:ResetTokenizer( )
+function Syntax:ResetTokenizer( )
 	self.nPosition = 0
 	self.sChar = ""
 	self.sTokenData = ""
@@ -587,12 +539,31 @@ function Syntaxer:ResetTokenizer( )
 	self:Parse( ) 
 end
 
-function Syntaxer:Parse( )
-	self.tOutput, self.tLastColor = { }, nil 
-	local tRows = self.dEditor.tRows
+function Syntax:InfProtect( )
+	self.nLoops = self.nLoops + 1
+	if SysTime( ) > self.nExpire then 
+		ErrorNoHalt( "Code took to long to parse (" .. self.nLoops .. ")\n" )
+		return false 
+	end
+	return true 
+end
+
+function Syntax:Parse( )
+	self.bBlockComment = nil
+	self.bMultilineString = nil
 	
-	for i = 1, #tRows do
-		self.sLine = tRows[i]
+	self.tOutput = { }
+	self.tLastColor = nil 
+	
+	self.nLoops = 0 
+	self.nExpire = SysTime( ) + 0.1 
+	
+	local tmp = self.dEditor:ExpandAll( )
+	self.tRows = table.Copy( self.dEditor.tRows )
+	self.dEditor:FoldAll( tmp )
+	
+	for i = 1, #self.tRows do
+		self.sLine = self.tRows[i]
 		self.nRow = i 
 		self.tLastColor = nil 
 		self.tOutput[i] = { }
@@ -601,7 +572,7 @@ function Syntaxer:Parse( )
 		self.sChar = ""
 		self.sTokenData = ""
 		
-		self:NextCharacter( )
+		-- self:NextCharacter( )
 		
 		if self.bBlockComment then 
 			local sType = type( self.bBlockComment ) 
@@ -647,24 +618,26 @@ function Syntaxer:Parse( )
 			end
 		end 
 		
-		while self.sChar do 
+		-- while self.sChar and self:InfProtect( ) do 
+		while self.sChar and self:InfProtect( ) do 
 			self:SkipSpaces( ) 
-			if not self.sChar then break end 
 			
-			-- if self:NextPattern( "^[a-z]+" ) then 
+			-- self:NextCharacter( )
+			
+			-- local spaces = self:NextPattern( " *", true ) 
+			-- if spaces and spaces ~= "" then self:AddToken( "operator", spaces ) end 
+			
 			if self:NextPattern( "^[a-zA-Z_][_A-Za-z0-9]*" ) then 
 				if keywords[self.sTokenData] then 
 					self:AddToken( "keyword" )
-				elseif istable(_G[self.sTokenData]) then 
-					self:AddToken( "library" )
-				elseif isfunction(_G[self.sTokenData]) then 
-					self:AddToken( "function" )
+				-- elseif istable(_G[self.sTokenData]) then 
+				-- 	self:AddToken( "library" )
+				-- elseif isfunction(_G[self.sTokenData]) then 
+				-- 	self:AddToken( "function" )
 				else 
 					-- TODO: Make it highlight global/local functions and variables
 					self:AddToken( "variable" )
 				end 
-			-- elseif self:NextPattern( "^[a-zA-Z_][_A-Za-z0-9]*" ) then 
-			-- 	self:AddToken( "variable" )
 			elseif self:NextPattern( "^0x[%x]+" ) then -- Hexadecimal numbers
 				self:AddToken( "number" )
 			elseif self:NextPattern( "^[%d][%d%.e]*" ) then -- Normal numbers
@@ -729,21 +702,30 @@ function Syntaxer:Parse( )
 				else 
 					self:AddToken( "operator" )
 				end
+			else
+				local exit = false
+				for i = 1, #operators do 
+					if self:NextPattern( operators[i] ) then 
+						self:AddToken( "operator" ) 
+						exit = true
+						break
+					end 
+				end 
+				if exit then continue end 
+				self:NextCharacter()
 			end 
 			
-			self:NextCharacter( )
-			self:AddToken( "white" ) -- Todo
+			self:AddToken( "white" )
+			-- self:NextCharacter( )
 		end 
 	end
+	
+	-- PrintTableGrep( self.tOutput )
 end
 
 function Syntax:GetSyntax( nRow )
-	if not self.Syntaxer.tOutput then self.Syntaxer:Parse() end 
-	return self.Syntaxer.tOutput[nRow]
-end
-
-function Syntax:Parse( )
-	self.Syntaxer:Parse( ) 
+	if not self.tOutput then self:Parse() end 
+	return self.tOutput[nRow] or { { self.dEditor.tRows[nRow], Color(255,255,255) } }
 end
 
 

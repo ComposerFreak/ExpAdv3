@@ -71,7 +71,6 @@ function PANEL:Init( )
 	self.FoldingWidth = 16 
 	self.FontHeight = 0 
 	self.FontWidth = 0
-	self.CaretRow = 0
 	self.LinePadding = 0 
 	
 	self.Insert = false 

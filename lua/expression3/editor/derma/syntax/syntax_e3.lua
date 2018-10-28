@@ -1,5 +1,5 @@
 /*============================================================================================================================================
-	Component for E3 syntax highlighting for Golem
+	Component for EA3 syntax highlighting for Golem
 	Author: Oskar
 ============================================================================================================================================*/
 
@@ -7,6 +7,7 @@ local string_match = string.match
 local string_rep = string.rep 
 local string_sub = string.sub 
 local string_gsub = string.gsub 
+local string_find = string.find
 
 local type = type 
 local pairs = pairs 
@@ -16,15 +17,19 @@ Syntax.__index = Syntax
 
 function Syntax:Init( dEditor )
 	self.dEditor = dEditor
+	
 	self.dEditor:SetSyntax( self ) 
 	self.dEditor:SetCodeFolding( true ) 
 	self.dEditor:SetParamMatching( true )
+	
+	self:BuildTokensTable( )
+	self:BuildKeywordsTable( )
+	self:BuildClassTable( )
 end
 
 /*---------------------------------------------------------------------------
 Formating and folding
 ---------------------------------------------------------------------------*/
-
 function Syntax:FindValidLines( )
 	local ValidLines = { } 
 	local bMultilineComment = false 
@@ -259,15 +264,301 @@ function Syntax:FindMatchingParam( nRow, nChar )
 	return false 
 end 
 
+/*---------------------------------------------------------------------------
+Directives
+---------------------------------------------------------------------------*/
+local Directives = {
+	["name"] 			= true,
+	["model"] 			= true,
+	["input"] 			= true,
+	["output"] 			= true,
+	["include"] 		= true,
+}
 
-function Syntax:GetSyntax( nRow )
-	-- if not self.Syntaxer.tOutput then self.Syntaxer:Parse() end 
-	-- return self.Syntaxer.tOutput[nRow]
-	return { { self.dEditor.tRows[nRow], Color(255,255,255) } }
+/*---------------------------------------------------------------------------
+Colors
+---------------------------------------------------------------------------*/
+local colors = { 
+	["comment"]      = Color( 128, 128, 128 ), 
+	["function"]     = Color(  80, 160, 240 ), 
+	["library"]      = Color(  80, 160, 240 ), 
+	["keyword"]      = Color(   0, 120, 240 ), 
+	["notfound"]     = Color( 240, 160,   0 ), 
+	["number"]       = Color(   0, 200,   0 ), 
+	["operator"]     = Color( 240,   0,   0 ), 
+	["string"]       = Color( 188, 188, 188 ), 
+	["typename"]     = Color( 140, 200,  50 ), 
+	["userfunction"] = Color( 102, 122, 102 ), 
+	["variable"]     = Color(   0, 180,  80 ), 
+	["directive"]    = Color(  89, 135, 126 ),  
+	["prediction"]   = Color( 0xe3, 0xb5, 0x2d ), 
+	["metamethod"]   = Color( 0x00, 0xc8, 0xff ), 
+}
+-- fallback for nonexistant entries: 
+setmetatable( colors, { __index = function( tbl, index ) return Color( 255, 255, 255 ) end } ) 
+
+Golem.Syntax:RegisterColors( Syntax.sName, colors )
+
+/*---------------------------------------------------------------------------
+Build data
+---------------------------------------------------------------------------*/
+/*
+all locations:
+EXPR_LIB
+EXPR_OPERATORS
+EXPR_CAST_OPERATORS
+
+
+Maybe: 
+EXPR_METHODS
+EXPR_CLASSES
+
+
+100% usefull
+EXPR_LIBRARIES 
+EXPR_TOKENS 
+EXPR_KEYWORDS 
+*/
+
+function Syntax:BuildTokensTable( )
+	self.tTokens = { }
+	
+	for k, v in pairs( EXPR_TOKENS.EXPADV ) do
+		self.tTokens[#self.tTokens+1] = string_gsub( v[1], "[%-%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1" )
+	end
+end
+
+function Syntax:BuildKeywordsTable( ) 
+	self.tKeywords = { } 
+	
+	for k, v in pairs( EXPR_KEYWORDS.EXPADV ) do
+		self.tKeywords[k] = true
+	end
+end 
+
+function Syntax:BuildClassTable( )
+	
+end
+
+/*---------------------------------------------------------------------------
+Syntaxer
+---------------------------------------------------------------------------*/
+function Syntax:NextCharacter( )
+	if not self.sChar then return end
+
+	self.sBuffer = self.sBuffer .. self.sChar
+	self.nPosition = self.nPosition + 1
+
+	if self.nPosition <= #self.sLine then
+		self.sChar = self.sLine[self.nPosition]
+	else
+		self.sChar = nil
+	end
+end
+
+function Syntax:NextPattern( sPattern, bSkip )
+	if not self.sChar then return false end
+	local startpos, endpos, text = string_find( self.sLine, sPattern, self.nPosition  )
+	
+	if startpos ~= self.nPosition then return false end 
+	text = text or string_sub( self.sLine, startpos, endpos ) 
+	
+	if not bSkip then 
+		self.sBuffer = self.sBuffer .. text
+	end 
+	
+	self.nPosition = endpos + 1
+	if self.nPosition <= #self.sLine then
+		self.sChar = self.sLine[self.nPosition]
+	else
+		self.sChar = nil
+	end
+	
+	return bSkip and text or true 
+end
+
+function Syntax:AddToken( sTokenName, sBuffer )
+	local color = colors[sTokenName]
+	if not sBuffer then 
+		sBuffer = self.sBuffer 
+		self.sBuffer = ""
+	end 
+		
+	if self.tLastColor and color == self.tLastColor[2] then
+		self.tLastColor[1] = self.tLastColor[1] .. sBuffer
+	else
+		self.tOutput[self.nRow][#self.tOutput[self.nRow] + 1] = { sBuffer, color }
+		self.tLastColor = self.tOutput[self.nRow][#self.tOutput[self.nRow]]
+	end
+end
+
+function Syntax:SkipSpaces( )
+	if self.sBuffer and self.sBuffer ~= "" then 
+		print( string.format( "Unflushed %q on line %d char %d", self.sBuffer, self.nRow, self.nPosition ) )
+	end 
+	
+	while self.sChar and self.sChar == " " do
+		self:NextCharacter( )
+	end 
+	self:AddToken( "operator" )
+end
+
+
+function Syntax:InfProtect( )
+	self.nLoops = self.nLoops + 1
+	if SysTime( ) > self.nExpire then 
+		ErrorNoHalt( "Code took to long to parse (" .. self.nLoops .. ")\n" )
+		return false 
+	end
+	return true 
 end
 
 function Syntax:Parse( )
-	-- self.Syntaxer:Parse( ) 
+	self.bBlockComment = nil
+	self.bMultilineString = nil
+	
+	self.tOutput = { }
+	self.tLastColor = nil 
+	
+	self.nLoops = 0 
+	self.nExpire = SysTime( ) + 0.1 
+	
+	local tmp = self.dEditor:ExpandAll( )
+	self.tRows = table.Copy( self.dEditor.tRows )
+	self.dEditor:FoldAll( tmp )
+	
+	for i = 1, #self.tRows do
+		self.nPosition = 0
+		self.nRow = i 
+		
+		self.sChar = ""
+		self.sBuffer = ""
+		self.sLine = self.tRows[i]
+		
+		self.tLastColor = nil 
+		self.tOutput[i] = { }
+		
+		self:NextCharacter( )
+		
+		if self.bBlockComment then
+			if self:NextPattern( ".-%*/" ) then
+				self.bBlockComment = nil
+			else
+				self:NextPattern( ".*" )
+			end
+			
+			self:AddToken( "comment" )
+		elseif self.bMultilineString then
+			while self.sChar do -- Find the ending '
+				if self.sChar == "'" then
+					self.bMultilineString = nil
+					self:NextCharacter( )
+					break
+				end
+				if self.sChar == "\\" then self:NextCharacter( ) end
+				self:NextCharacter( )
+			end
+			
+			self:AddToken( "string" )
+		end
+		
+		while self.sChar and self:InfProtect( ) do 
+			self:SkipSpaces( )
+			
+			if self:NextPattern( "^[a-zA-Z][_A-Za-z0-9]*" ) then 
+				-- if keywords[self.sBuffer] then 
+				if self.tKeywords[self.sBuffer] then 
+					self:AddToken( "keyword" )
+				else 
+					self:AddToken( "variable" )
+				end 
+			elseif self:NextPattern( "^0x[%x]+" ) then -- Hexadecimal numbers
+				self:AddToken( "number" )
+			elseif self:NextPattern( "^[%d][%d%.e]*" ) then -- Normal numbers
+				self:AddToken( "number" )
+			elseif self:NextPattern( "^@[a-zA-Z][a-zA-Z0-9_]*" ) then 
+				local dir = string_sub( self.sBuffer, 2 )
+				if Directives[dir] then 
+					self:AddToken( "directive" )
+					self:SkipSpaces( ) 
+					continue 
+				end 
+				self:AddToken( "notfound" )
+			elseif self.sChar == '"' or self.sChar == "'" then -- Single line string
+				local sType = self.sChar
+				self.bMultilineString = sType == "'"
+				self:NextCharacter( )
+				
+				while self.sChar do 
+					if self.sChar == sType then 
+						if sType == "'" then 
+							self.bMultilineString = nil
+						end 
+						break 
+					end
+					if self.sChar == "\\" then self:NextCharacter( ) end
+					self:NextCharacter( )
+				end
+				
+				self:NextCharacter( ) 
+				self:AddToken( "string" ) 
+			elseif self.sChar == "/" then 
+				self:NextCharacter( ) 
+				
+				if self.sChar == "*" then -- Multi line comment type /*
+					self.bBlockComment = true
+					while self.sChar do 
+						if self.sChar == "*" then 
+							self:NextCharacter( ) 
+							if self.sChar == "/" then 
+								self:NextCharacter( ) 
+								self:AddToken( "comment" ) 
+								self.bBlockComment = false
+								break 
+							end 
+						end 
+						
+						self:NextCharacter( ) 
+					end 	
+					self:AddToken( "comment" ) 
+				elseif self.sChar == "/" then -- Single line comment type //
+					self:NextPattern( ".*" )
+					self:AddToken( "comment" )
+				else 
+					self:AddToken( "operator" )
+				end
+			else
+				local exit = false
+				for i = 1, #self.tTokens do 
+					if self:NextPattern( self.tTokens[i] ) then 
+						self:AddToken( "operator" ) 
+						exit = true
+						break
+					end 
+				end 
+				if exit then continue end 
+				
+				self:NextCharacter( )
+			end 
+			
+			self:AddToken( "white" ) 
+		end 
+	end
+end
+
+
+
+
+
+
+
+
+
+
+function Syntax:GetSyntax( nRow )
+	if not self.tOutput then self:Parse() end 
+	return self.tOutput[nRow]
+	-- return { { self.dEditor.tRows[nRow], Color(255,255,255) } }
 end
 
 

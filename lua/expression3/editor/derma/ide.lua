@@ -499,21 +499,26 @@ function PANEL:NewTab( sType, ... )
 			sName = sPath and string.match( sPath, "/([^%./]+%.txt)$" ) or "generic"
 		end
 		
+		sLanguage = sLanguage or "E3"
+		
 		local Editor = vgui.Create( "GOLEM_Editor" ) 
 		local Sheet = self.pnlTabHolder:AddSheet( sName or "generic", Editor, "fugue/script.png", function(pnl) self:CloseTab( pnl:GetParent( ), true ) end )
 		self.pnlTabHolder:SetActiveTab( Sheet.Tab )
 		Sheet.Panel:RequestFocus( )
-		-- Editor:SetSyntax( Golem.Syntax:Create( sLanguage or "E3", Editor ) )
-		Golem.Syntax:Create( sLanguage or "E3", Editor )
+		-- Editor:SetSyntax( Golem.Syntax:Create( sLanguage, Editor ) )
+		Golem.Syntax:Create( sLanguage, Editor )
 		
 		
 		Sheet.Tab.__type = "editor"
-		Sheet.Tab.__lang = sLanguage or "E3"
+		Sheet.Tab.__lang = sLanguage
+		Sheet.Tab.__shouldsave = sLanguage == "E3"
+		
 		Editor.Master = self 
 		
 		if sPath then
 			Sheet.Tab.FilePath = sPath
 			self.FileList[sPath] = Sheet.Tab
+			Sheet.Tab:SetTooltip( sPath )
 		end
 		
 		if sCode and sCode ~= "" then
@@ -529,7 +534,7 @@ function PANEL:NewTab( sType, ... )
 			
 			Menu:AddSpacer( )
 			
-			if not sLanguage or sLanguage == "E3" then 
+			if sLanguage == "E3" then 
 				Menu:AddOption( "Save", function( ) self:SaveFile( pnl.FilePath, false, pnl ) end )
 				-- Menu:AddOption( "Save As", function( ) end )
 			end 
@@ -541,20 +546,18 @@ function PANEL:NewTab( sType, ... )
 			Menu:Open( )
 		end
 		
-		if not sLanguage or sLanguage == "E3" then 
-			Editor.OnTextChanged = function( tSelection, sText )
-				timer.Destroy( "Golem_autosave" )
-				timer.Create( "Golem_autosave", 0.5, 1, function( )
-					local Tab = Sheet.Tab
-					if not ValidPanel( Tab ) or Tab.__type ~= "editor" then return end
-					local sCode = Tab:GetPanel( ):GetCode( )
-					local sPath = "golem_temp/_autosave_.txt"
-					
-					MakeFolders( sPath ) 
-					file.Write( sPath, sCode )
-				end )
-			end
-		end 
+		Editor.OnTextChanged = function( tSelection, sText )
+			timer.Destroy( "Golem_autosave" )
+			timer.Create( "Golem_autosave", 0.5, 1, function( )
+				local Tab = Sheet.Tab
+				if not ValidPanel( Tab ) or Tab.__type ~= "editor" or Tab.__lang ~= E3 then return end
+				local sCode = Tab:GetPanel( ):GetCode( )
+				local sPath = "golem_temp/_autosave_.txt"
+				
+				MakeFolders( sPath ) 
+				file.Write( sPath, sCode )
+			end )
+		end
 		
 		return Sheet 
 	elseif self.tTabTypes[sType] then
@@ -648,6 +651,7 @@ function PANEL:GetCode( pTab )
 	pTab = pTab or self.pnlTabHolder:GetActiveTab( )
 	if not pTab then return end
 	if not ValidPanel( pTab ) then return end
+	if pTab.__type ~= "editor" then return end 
 	return pTab:GetPanel( ):GetCode( ), pTab.FilePath, pTab:GetName( ) 
 end
 
@@ -706,7 +710,7 @@ function PANEL:SaveFile( sPath, bSaveAs, pTab, bNoSound )
 		sPath = pTab.FilePath
 	end
 	
-	if pTab.__type ~= "editor" then return end 
+	if pTab.__type ~= "editor" or not pTab.__shouldsave then return end 
 	
 	if bSaveAs or not sPath then
 		local FileMenu = vgui.Create( "GOLEM_FileMenu" )
@@ -776,7 +780,7 @@ local function TempID( )
 end 
 
 function PANEL:SaveTempFile( Tab )
-	if not ValidPanel( Tab ) or Tab.__type ~= "editor" then return end
+	if not ValidPanel( Tab ) or Tab.__type ~= "editor" or not Tab.__shouldsave then return end
 	local sCode = Tab:GetPanel( ):GetCode( )
 	local sPath = Tab.TempFile or "golem_temp/" .. TempID( ) .. ".txt"
 	MakeFolders( sPath )
@@ -796,7 +800,9 @@ end
 function PANEL:SaveTabs( )
 	local strtabs = { }
 	for i = 1, #self.pnlTabHolder.Items do 
-		if self.pnlTabHolder.Items[i].Tab.Panel.Global then continue end 
+		local Tab = self.pnlTabHolder.Items[i].Tab
+		if Tab.Panel.Global then continue end 
+		if not Tab.__shouldsave then continue end 
 		local FilePath = self.pnlTabHolder.Items[i].Tab.FilePath
 		if not FilePath or FilePath == "" then
 			FilePath = self:SaveTempFile( self.pnlTabHolder.Items[i].Tab )
