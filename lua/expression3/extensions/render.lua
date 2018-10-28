@@ -11,19 +11,19 @@
 	``````````````````````
 ]]
 
-local FONT, FID, FSIZE;
+local FONT, FSIZE;
 local TEXTURE, MATERIAL;
 local DRED, DGREEN, DBLUE, DALPHA;
 local TRED, TGREEN, TBLUE, TALPHA;
 
-local function setFont(fontid, size)
-	/*if (not EGP.ValidFonts[fontid]) then fontid = 1 end
+E3Fonts = {};
 
-	local font = "WireEGP_" .. size .. "_" .. fontid;
+local function setFont(basefont, size)
+	local font = "WireEGP_" .. size .. "_" .. basefont;
 
-	if (not EGP.ValidFonts_Lookup[font]) then
+	if (not E3Fonts[font]) then
 		local fontTable = {
-			font = EGP.ValidFonts[fontid],
+			font = basefont,
 			size = size,
 			weight = 800,
 			antialias = true,
@@ -32,28 +32,23 @@ local function setFont(fontid, size)
 
 		surface.CreateFont(font, fontTable);
 
-		EGP.ValidFonts[#EGP.ValidFonts + 1]= font;
-
-		EGP.ValidFonts_Lookup[font] = true
+		E3Fonts[font] = font;
 	end
 
 	FONT = font;
-	FID = fontid;
-	FSIZE = size;*/
+	FSIZE = size;
 end
 
 local function resetRenderer()
 	DRED, DGREEN, DBLUE, DALPHA = 255, 255, 255, 255;
 	TRED, TGREEN, TBLUE, TALPHA = 0, 0, 0, 255;
 	TEXTURE, MATERIAL = 0, Material("");
-	setFont(1, 12);
+	setFont("Arial", 12);
 end
 
 if (CLIENT) then
-	timer.Simple(1, function()
-		resetRenderer();
-		hook.Add("Expression3.Entity.PostDrawScreen", "Expression3.Render.Reset", resetRenderer);
-	end);
+	resetRenderer();
+	hook.Add("Expression3.Entity.PostDrawScreen", "Expression3.Render.Reset", resetRenderer);
 end
 
 local function preDraw(ctx, textured)
@@ -135,7 +130,7 @@ extension:RegisterFunction("render", "getColor", "", "c", 1, function()
 	return Color(DRED, DGREEN, DBLUE, DALPHA);
 end, true);
 
-extension:RegisterFunction("render", "setFont", "n,n", "", 0, setFont, true);
+extension:RegisterFunction("render", "setFont", "s,n", "", 0, setFont, true);
 
 --[[
 	Materials and Textures
