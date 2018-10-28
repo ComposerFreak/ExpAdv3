@@ -411,8 +411,6 @@ function COMPILER.GetOperator(this, operation, fst, ...)
 
 	local signature = string_format("%s(%s)", operation, table_concat({fst, ...},","));
 
-	print("Look up: " .. signature);
-
 	local Op = EXPR_OPERATORS[signature];
 
 	if (Op) then
@@ -450,7 +448,7 @@ function COMPILER.Compile(this, inst)
 
 		this.cur_instruction = inst;
 
-		local type, count = fun(this, inst, inst.token, inst.data);
+		local type, count, price = fun(this, inst, inst.token, inst.data);
 
 		this.cur_instruction = preInst;
 
@@ -459,10 +457,12 @@ function COMPILER.Compile(this, inst)
 			inst.rCount = count or 1;
 		end
 
+		inst.price = price or EXPR_LOW;
+
 		inst.compiled = true;
 	end
 
-	return inst.result, inst.rCount, inst;
+	return inst.result, inst.rCount, inst.price;
 end
 
 --[[
@@ -601,28 +601,44 @@ function COMPILER.Compile_ROOT(this, inst, token, data)
 	local stmts = data.stmts;
 
 	if stmts then
+		local price = 0;
+
 		for i = 1, #stmts do
-			this:Compile(stmts[i]);
+			local r, c, p = this:Compile(stmts[i]);
+			price = price + p;
+		end
+
+		this:writeToBuffer(inst, "\n --PRICE: " .. price .. "\n");
+
+		for i = 1, #stmts do
 			this:addInstructionToBuffer(inst, stmts[i]);
 		end
 	end
 
 	this:writeToBuffer(inst, "\nend\n");
 
-	return "", 0;
+	return "", 0, 0;
 end
 
 function COMPILER.Compile_SEQ(this, inst, token, data)
 	local stmts = data.stmts;
 	
 	if stmts then
+		local price = 0;
+
 		for i = 1, #stmts do
-			this:Compile(stmts[i]);
+			local r, c, p = this:Compile(stmts[i]);
+			price = price + p;
+		end
+
+		this:writeToBuffer(inst, "\n --PRICE: " .. price .. "\n");
+
+		for i = 1, #stmts do
 			this:addInstructionToBuffer(inst, stmts[i]);
 		end
 	end
 
-	return "", 0;
+	return "", 0, 0;
 end
 
 function COMPILER.Compile_IF(this, inst, token, data)
@@ -769,7 +785,7 @@ function COMPILER.Compile_SERVER(this, inst, token, data)
 
 	this:writeToBuffer(inst, "end\n");
 
-	return "", 0;
+	return "", 0, 1;
 end
 
 function COMPILER.Compile_CLIENT(this, inst, token, data)
@@ -791,7 +807,7 @@ function COMPILER.Compile_CLIENT(this, inst, token, data)
 
 	this:writeToBuffer(inst, "end\n");
 
-	return "", 0;
+	return "", 0, 1;
 end
 
 --[[
@@ -800,11 +816,14 @@ end
 function COMPILER.Compile_GLOBAL(this, inst, token, data)
 	local tArgs = #data.expressions;
 
+	local price = 1;
 	local results = {};
 
 	for i = 1, tArgs do
 		local arg = data.expressions[i];
-		local r, c = this:Compile(arg);
+		local r, c, p = this:Compile(arg);
+
+		prive = price + p;
 
 		if (not data.variables[i]) then
 			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
@@ -870,19 +889,22 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 
 	this:writeToBuffer(inst, ";\n");
 
-	return "", 0;
+	return "", 0, price;
 end
 
 function COMPILER.Compile_LOCAL(this, inst, token, data)
 	local tArgs = #data.expressions;
 
+	local price = 1;
 	local results = {};
 
 	this:writeToBuffer(inst, "local");
 
 	for i = 1, tArgs do
 		local arg = data.expressions[i];
-		local r, c = this:Compile(arg);
+		local r, c, p = this:Compile(arg);
+
+		price = price + p;
 
 		if (not data.variables[i]) then
 			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
@@ -942,10 +964,12 @@ function COMPILER.Compile_LOCAL(this, inst, token, data)
 
 	this:writeToBuffer(inst, "\n");
 
-	return "", 0;
+	return "", 0, price;
 end
 
 function COMPILER.Compile_ASS(this, inst, token, data)
+	local price = 1;
+
 	this:writeToBuffer(inst, "\n");
 
 	local vars = data.variables;
@@ -983,7 +1007,10 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
 		end
 
-		local r, c = this:Compile(arg);
+		local r, c, p = this:Compile(arg);
+
+		price = price + p;
+
 		local class, scope, info = this:AssignVariable(var, false, var.data, r);
 
 		this:addInstructionToBuffer(inst, arg);
@@ -1028,19 +1055,23 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 		end
 	end
 
-	return "", 0;
+	return "", 0, price;
 end
 
 --[[
 ]]
 
 function COMPILER.Compile_AADD(this, inst, token, data)
+	local price = 1;
+
 	for k = 1, #data.variables do
 		local token = data.variables[k];
 		local var = token.data;
 
 		local expr = data.expressions[k];
-		local r, c = this:Compile(expr);
+		local r, c, p = this:Compile(expr);
+
+		price = price + p;
 
 		local class, scope, info = this:GetVariable(var, nil, false);
 
@@ -1082,17 +1113,25 @@ function COMPILER.Compile_AADD(this, inst, token, data)
 			this:writeToBuffer(inst, ";\n");
 		end
 
+		price = price + op.price;
+
 		this:AssignVariable(token, false, token.data, op.result);
 	end
+
+	return nil, nil, price;
 end
 
 function COMPILER.Compile_ASUB(this, inst, token, data)
+	local price = 1;
+
 	for k = 1, #data.variables do
 		local token = data.variables[k];
 		local var = token.data;
 
 		local expr = data.expressions[k];
-		local r, c = this:Compile(expr);
+		local r, c, p = this:Compile(expr);
+
+		price = price + p;
 
 		local class, scope, info = this:GetVariable(var, nil, false);
 
@@ -1128,19 +1167,27 @@ function COMPILER.Compile_ASUB(this, inst, token, data)
 			this:writeToBuffer(inst, ";\n");
 		end
 
+		price = price + op.price;
+
 		this:AssignVariable(token, false, token.data, op.result);
 	end
+
+	return nil, nil, price;
 end
 
 
 
 function COMPILER.Compile_ADIV(this, inst, token, data)
+	local price = 1;
+
 	for k = 1, #data.variables do
 		local token = data.variables[k];
 		local var = token.data;
 
 		local expr = data.expressions[k];
-		local r, c = this:Compile(expr);
+		local r, c, p = this:Compile(expr);
+
+		price = price + p;
 
 		local class, scope, info = this:GetVariable(var, nil, false);
 
@@ -1176,17 +1223,25 @@ function COMPILER.Compile_ADIV(this, inst, token, data)
 			this:writeToBuffer(inst, ";\n");
 		end
 
+		price = price + op.price;
+
 		this:AssignVariable(token, false, token.data, op.result);
 	end
+
+	return nil, nil, price;
 end
 
 function COMPILER.Compile_AMUL(this, inst, token, data)
+	local price = 1;
+
 	for k = 1, #data.variables do
 		local token = data.variables[k];
 		local var = token.data;
 
 		local expr = data.expressions[k];
-		local r, c = this:Compile(expr);
+		local r, c, p = this:Compile(expr);
+
+		price = price + p;
 
 		local class, scope, info = this:GetVariable(var, nil, false);
 
@@ -1222,8 +1277,12 @@ function COMPILER.Compile_AMUL(this, inst, token, data)
 			this:writeToBuffer(inst, ";\n");
 		end
 
+		price = price + op.price;
+
 		this:AssignVariable(token, false, token.data, op.result);
 	end
+
+	return nil, nil, price;
 end
 
 --[[
@@ -1233,24 +1292,24 @@ function COMPILER.Compile_GROUP(this, inst, token, data)
 
 	this:writeToBuffer(inst, "(");
 
-	local r, c = this:Compile(data.expr);
+	local r, c, p = this:Compile(data.expr);
 
 	this.addInstructionToBuffer(inst, data.expr);
 
 	this:writeToBuffer(inst, ")");
 
-	return r, c;
+	return r, c, p;
 end
 
 function COMPILER.Compile_TEN(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local expr3 = data.expr3;
-	local r3, c3 = this:Compile(expr3);
+	local r3, c3, p3 = this:Compile(expr3);
 
 	local op = this:GetOperator("ten", r1, r2, r3);
 
@@ -1274,18 +1333,20 @@ function COMPILER.Compile_TEN(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2, expr3);
 	end
 
+	local price = p1 + p2 + p3 + op.price;
+
 	this:CheckState(op.state, token, "Tenary operator (A ? B : C)");
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 
 function COMPILER.Compile_OR(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("or", r1, r2);
 
@@ -1316,17 +1377,19 @@ function COMPILER.Compile_OR(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Logical or operator (||) '%s || %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_AND(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("and", r1, r2);
 
@@ -1357,17 +1420,19 @@ function COMPILER.Compile_AND(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Logical and operator (&&) '%s && %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_BXOR(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("bxor", r1, r2);
 
@@ -1387,17 +1452,19 @@ function COMPILER.Compile_BXOR(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Binary xor operator (^^) '%s ^^ %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_BOR(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("bor", r1, r2);
 
@@ -1417,17 +1484,19 @@ function COMPILER.Compile_BOR(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Binary xor operator (|) '%s | %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_BAND(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("band", r1, r2);
 
@@ -1447,9 +1516,11 @@ function COMPILER.Compile_BAND(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Binary xor operator (&) '%s & %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_EQ_MUL(this, inst, token, data)
@@ -1458,15 +1529,15 @@ function COMPILER.Compile_EQ_MUL(this, inst, token, data)
 	this:writeToBuffer(inst, "((function(eq_val) return ");
 
 	local expr1 = data.expressions[1];
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, price = this:Compile(expr1);
 
 	local total = #data.expressions;
 
 	for i = 2, total do
 
 		local expr2 = data.expressions[i];
-		local r2, c2 = this:Compile(expr2);
-		
+		local r2, c2, p2 = this:Compile(expr2);
+
 		local op = this:GetOperator("eq", r1, r2);
 
 		if (not op) then
@@ -1484,6 +1555,8 @@ function COMPILER.Compile_EQ_MUL(this, inst, token, data)
 		else
 			this:writeOperationCall(inst, op, "eq_val", expr2);
 		end
+		
+		price = price + p2 + op.price;
 
 		this:CheckState(op.state, token, "Comparison operator (==) '%s == %s'", name(r1), name(r2));
 
@@ -1498,15 +1571,15 @@ function COMPILER.Compile_EQ_MUL(this, inst, token, data)
 
 	this:writeToBuffer(inst, "))");
 
-	return "b", 1;
+	return "b", 1, price;
 end
 
 function COMPILER.Compile_EQ(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("eq", r1, r2);
 
@@ -1526,9 +1599,11 @@ function COMPILER.Compile_EQ(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Comparison operator (==) '%s == %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_NEQ_MUL(this, inst, token, data)
@@ -1537,14 +1612,14 @@ function COMPILER.Compile_NEQ_MUL(this, inst, token, data)
 	this:writeToBuffer(inst, "((function(eq_val) return ");
 
 	local expr1 = data.expressions[1];
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, price = this:Compile(expr1);
 
 	local total = #data.expressions;
 
 	for i = 2, total do
 
 		local expr2 = data.expressions[i];
-		local r2, c2 = this:Compile(expr2);
+		local r2, c2, p2 = this:Compile(expr2);
 		
 		local op = this:GetOperator("neq", r1, r2);
 
@@ -1564,6 +1639,8 @@ function COMPILER.Compile_NEQ_MUL(this, inst, token, data)
 			this:writeOperationCall(inst, op, "eq_val", expr2);
 		end
 
+		price = price + p2 + op.price;
+
 		this:CheckState(op.state, token, "Comparison operator (!=) '%s != %s'", name(r1), name(r2));
 
 		if (i < total) then
@@ -1577,15 +1654,15 @@ function COMPILER.Compile_NEQ_MUL(this, inst, token, data)
 
 	this:writeToBuffer(inst, "))");
 
-	return "b", 1;
+	return "b", 1, price;
 end
 
 function COMPILER.Compile_NEQ(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("neq", r1, r2);
 
@@ -1605,17 +1682,19 @@ function COMPILER.Compile_NEQ(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Comparison operator (!=) '%s != %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_LTH(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("lth", r1, r2);
 
@@ -1635,17 +1714,19 @@ function COMPILER.Compile_LTH(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Comparison operator (<) '%s < %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_LEQ(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("leg", r1, r2);
 
@@ -1665,17 +1746,19 @@ function COMPILER.Compile_LEQ(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Comparison operator (<=) '%s <= %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_GTH(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("gth", r1, r2);
 
@@ -1695,17 +1778,19 @@ function COMPILER.Compile_GTH(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Comparison operator (>) '%s > %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_GEQ(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("geq", r1, r2);
 
@@ -1725,17 +1810,19 @@ function COMPILER.Compile_GEQ(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Comparison operator (>=) '%s >= %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_BSHL(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("bshl", r1, r2);
 
@@ -1755,17 +1842,19 @@ function COMPILER.Compile_BSHL(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Binary shift operator (<<) '%s << %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_BSHR(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("bshr", r1, r2);
 
@@ -1785,9 +1874,11 @@ function COMPILER.Compile_BSHR(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Binary shift operator (>>) '%s >> %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 --[[
@@ -1795,10 +1886,10 @@ end
 
 function COMPILER.Compile_ADD(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("add", r1, r2);
 
@@ -1822,17 +1913,19 @@ function COMPILER.Compile_ADD(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Addition operator (+) '%s + %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_SUB(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("sub", r1, r2);
 
@@ -1852,17 +1945,19 @@ function COMPILER.Compile_SUB(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Subtraction operator (-) '%s - %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_DIV(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("div", r1, r2);
 
@@ -1882,17 +1977,19 @@ function COMPILER.Compile_DIV(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Division operator (/) '%s / %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_MUL(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("mul", r1, r2);
 
@@ -1912,17 +2009,19 @@ function COMPILER.Compile_MUL(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Multiplication operator (*) '%s * %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_EXP(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("exp", r1, r2);
 
@@ -1942,17 +2041,19 @@ function COMPILER.Compile_EXP(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Exponent operator (^) '%s ^ %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_MOD(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local expr2 = data.expr2;
-	local r2, c2 = this:Compile(expr2);
+	local r2, c2, p2 = this:Compile(expr2);
 
 	local op = this:GetOperator("mod", r1, r2);
 
@@ -1972,14 +2073,16 @@ function COMPILER.Compile_MOD(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
 
+	local price = p1 + p2 + op.price;
+
 	this:CheckState(op.state, token, "Modulus operator (%) '%s % %s'", name(r1), name(r2));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, price;
 end
 
 function COMPILER.Compile_NEG(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local op = this:GetOperator("neg", r1);
 
@@ -1995,12 +2098,12 @@ function COMPILER.Compile_NEG(this, inst, token, data)
 
 	this:CheckState(op.state, token, "Negation operator (-A) '-%s'", name(r1));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, (p1 + op.price);
 end
 
 function COMPILER.Compile_NOT(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local op = this:GetOperator("not", r1);
 
@@ -2016,12 +2119,12 @@ function COMPILER.Compile_NOT(this, inst, token, data)
 
 	this:CheckState(op.state, token, "Not operator (!A) '!%s'", name(r1));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, (p1 + op.price);
 end
 
 function COMPILER.Compile_LEN(this, inst, token, data)
 	local expr1 = data.expr;
-	local r1, c1 = this:Compile(expr1);
+	local r1, c1, p1 = this:Compile(expr1);
 
 	local op = this:GetOperator("len", r1);
 
@@ -2037,7 +2140,7 @@ function COMPILER.Compile_LEN(this, inst, token, data)
 
 	this:CheckState(op.state, token, "Length operator (#A) '#%s'", name(r1));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, (p1 + op.price);
 end
 
 function COMPILER.Compile_DELTA(this, inst, token, expressions)
@@ -2081,7 +2184,7 @@ function COMPILER.Compile_DELTA(this, inst, token, expressions)
 
 	this:CheckState(op.state, token, "Delta operator ($) '$%s'", name(c));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, op.price;
 end
 
 function COMPILER.Compile_CHANGED(this, inst, token, data)
@@ -2125,7 +2228,7 @@ function COMPILER.Compile_CHANGED(this, inst, token, data)
 
 	this:CheckState(op.state, token, "Changed operator (~) '~%s'", name(c));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, op.price;
 end
 
 function COMPILER.Expression_IS(this, expr)
@@ -2137,6 +2240,7 @@ function COMPILER.Expression_IS(this, expr)
 		elseif (not op.operator) then
 			expr.result = op.type;
 			expr.rCount = op.count;
+			expr.price = expr.price + op.price;
 
 			return true, expr;
 		else
@@ -2148,6 +2252,7 @@ function COMPILER.Expression_IS(this, expr)
 
 			expr.result = op.type;
 			expr.rCount = op.count;
+			expr.price = expr.price + op.price;
 
 			return true, expr;
 		end
@@ -2159,7 +2264,7 @@ function COMPILER.Expression_IS(this, expr)
 end
 
 function COMPILER.Compile_IOF(this, inst, token, data)
-	local r, c = this:Compile(data.expr);
+	local r, c, p = this:Compile(data.expr);
 
 	local userclass = this:GetClassOrInterface(data.class);
 
@@ -2173,7 +2278,7 @@ function COMPILER.Compile_IOF(this, inst, token, data)
 
 	this:writeToBuffer(inst, ")");
 
-	return "b", 1;
+	return "b", 1, EXPR_LOW;
 end
 
 function COMPILER.CastUserType(this, left, right)
@@ -2203,6 +2308,7 @@ function COMPILER.CastUserType(this, left, right)
 	return {
 		result = left,
 		rCount = 1,
+		price = EXPR_LOW;
 	};
 	-- hashtable[extends][class] = is isinstance of.
 end
@@ -2235,6 +2341,7 @@ function COMPILER.CastExpression(this, type, expr)
 
 	expr.result = op.result;
 	expr.rCount = op.rCount;
+	expr.price = expr.price + op.price;
 
 	return true, expr;
 end
@@ -2250,7 +2357,7 @@ function COMPILER.Compile_CAST(this, inst, token, data)
 		this:Throw(token, "Type of %s can not be cast to type of %s.", name(expr.result), name(data.class))
 	end
 
-	return expr.result, expr.rCount;
+	return expr.result, expr.rCount, expr.price;
 end
 
 function COMPILER.Compile_VAR(this, inst, token, data)
@@ -2271,7 +2378,7 @@ function COMPILER.Compile_VAR(this, inst, token, data)
 		this:Throw(token, "Variable %s does not exist.", data.variable);
 	end
 
-	return c, 1;
+	return c, 1, EXPR_LOW;
 end
 
 function COMPILER.Compile_BOOL(this, inst, token, data)
@@ -2281,37 +2388,37 @@ function COMPILER.Compile_BOOL(this, inst, token, data)
 		this:writeToBuffer(inst, "false");
 	end
 
-	return "b", 1
+	return "b", 1, EXPR_MIN;
 end
 
 function COMPILER.Compile_NUM(this, inst, token, data)
 	this:writeToBuffer(inst, data.value);
-	return "n", 1
+	return "n", 1, EXPR_MIN;
 end
 
 function COMPILER.Compile_STR(this, inst, token, data)
 	this:writeToBuffer(inst, data.value);
-	return "s", 1
+	return "s", 1, EXPR_MIN;
 end
 
 function COMPILER.Compile_PTRN(this, inst, token, data)
 	this:writeToBuffer(inst, data.value);
-	return "_ptr", 1
+	return "_ptr", 1, EXPR_MIN;
 end
 
 function COMPILER.Compile_CLS(this, inst, token, data)
 	this:writeToBuffer(inst, "\"" .. data.value .. "\"");
-	return "_cls", 1
+	return "_cls", 1, EXPR_MIN;
 end
 
 function COMPILER.Compile_NIL(this, inst, token)
 	this:writeToBuffer(inst, "NIL");
-	return "", 1
+	return "", 1, EXPR_MIN;
 end
 
 function COMPILER.Compile_COND(this, inst, token, data)
 	local expr = data.expr;
-	local r, c = this:Compile(expr);
+	local r, c, p = this:Compile(expr);
 
 	if (r == "b") then
 		this:addInstructionToBuffer(inst, expr);
@@ -2322,7 +2429,7 @@ function COMPILER.Compile_COND(this, inst, token, data)
 
 	if (not op and this:CastExpression("b", expr)) then
 		this:addInstructionToBuffer(inst, expr);
-		return r, "b";
+		return r, "b", expr.price;
 	end
 
 	if (not op) then
@@ -2333,13 +2440,15 @@ function COMPILER.Compile_COND(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr);
 	end
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, (op.price + p);
 end
 
 function COMPILER.Compile_NEW(this, inst, token, data)
 	local op;
 	local ids = {};
 	local total = #data.expressions;
+
+	local price = 0;
 
 	local classname = data.class
 	local cls = E3Class(classname);
@@ -2356,8 +2465,10 @@ function COMPILER.Compile_NEW(this, inst, token, data)
 		local constructors = cls.constructors;
 
 		for k, expr in pairs(data.expressions) do
-			local r, c = this:Compile(expr);
+			local r, c, p = this:Compile(expr);
+
 			ids[#ids + 1] = r;
+			price = price + p;
 
 			if (k == total) then
 				if (c > 1) then
@@ -2409,7 +2520,7 @@ function COMPILER.Compile_NEW(this, inst, token, data)
 
 		this:writeToBuffer(inst, ")");
 
-		return userclass.name, 1;
+		return userclass.name, 1, price;
 	end
 
 	if (not op) then
@@ -2428,7 +2539,7 @@ function COMPILER.Compile_NEW(this, inst, token, data)
 		error("Attempt to inject " .. op.signature .. " but operator was incorrect " .. type(op.operator) .. ".");
 	end
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, (price + op.price);
 end
 
 local function getMethod(mClass, userclass, method, ...)
@@ -2456,15 +2567,18 @@ function COMPILER.Compile_METH(this, inst, token, data)
 	local method = data.method;
 	local userclass = this:GetUserClass(mClass);
 
+	local price = 0;
 
 	if (total == 1) then
 		op = getMethod(mClass, userclass, method);
 	else
 		for k, expr in pairs(expressions) do
 			if (k > 1) then
-				local r, c = this:Compile(expr);
+				local r, c, p = this:Compile(expr);
 
 				ids[#ids + 1] = r;
+
+				price = price + p;
 
 				if (k == total) then
 					if (c > 1) then
@@ -2511,7 +2625,7 @@ function COMPILER.Compile_METH(this, inst, token, data)
 
 	if (userclass) then
 		this:writeOperationCall2(userclass.name, inst, op, vargs, unpack(expressions));
-		return op.result, op.count;
+		return op.result, op.count, (op.price + price);
 	end
 
 	this:CheckState(op.state, token, "Method %s.%s(%s)", name(mClass), method, names(ids));
@@ -2533,7 +2647,7 @@ function COMPILER.Compile_METH(this, inst, token, data)
 		error("Attempt to inject " .. op.signature .. " but operator was incorrect, got " .. type(op.operator));
 	end
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, (op.price + price);
 end
 
 function COMPILER.Compile_FUNC(this, inst, token, data)
@@ -2549,13 +2663,17 @@ function COMPILER.Compile_FUNC(this, inst, token, data)
 	local ids = {};
 	local total = #data.expressions;
 
+	local price = 0;
+
 	if (total == 0) then
 		op = lib._functions[data.name .. "()"];
 	else
 		for k, expr in pairs(data.expressions) do
-			local r, c = this:Compile(expr);
+			local r, c, p = this:Compile(expr);
 
 			ids[#ids + 1] = r;
+
+			price = price + p;
 
 			if (k == total) then
 				if (c > 1) then
@@ -2602,10 +2720,12 @@ function COMPILER.Compile_FUNC(this, inst, token, data)
 	this:CheckState(op.state, token, "Function %s.%s(%s).", data.library.data, data.name, names(ids, ","));
 
 	if (data.library.data == "system") then
-		local res, count = hook.Run("Expression3.PostCompile.System." .. data.name, this, inst, token, data);
+		local res, count, prc = hook.Run("Expression3.PostCompile.System." .. data.name, this, inst, token, data);
+
+		price = price + (prc or 0);
 
 		if (res and count) then
-			return res, count;
+			return res, count, price;
 		end
 	end
 
@@ -2629,7 +2749,7 @@ function COMPILER.Compile_FUNC(this, inst, token, data)
 		error("Attempt to inject " .. signature .. " but operator was incorrect " .. type(op.operator) .. ".");
 	end
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, (op.price + price);
 end
 
 --[[
@@ -2693,7 +2813,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, data)
 
 	this:writeToBuffer(inst, "\nend,\nresult = %q, count = %i, scr = CONTEXT}", result, count);
 
-	return "f", 1;
+	return "f", 1, EXPR_LOW;
 end
 
 --[[
@@ -2707,10 +2827,15 @@ function COMPILER.Compile_RETURN(this, inst, token, data)
 	local result = this:GetOption("retunClass");
 	local count = this:GetOption("retunCount");
 
+	local price = 0;
+
 	local results = {};
 
 	for _, expr in pairs(data.expressions) do
-		local r, c = this:Compile(expr);
+		local r, c, p = this:Compile(expr);
+
+		price = price + p;
+
 		results[#results + 1] = {r, c};
 	end
 
@@ -2773,6 +2898,8 @@ function COMPILER.Compile_RETURN(this, inst, token, data)
 	if (count ~= outCount) then
 		this:Throw(expr.token, "Can not return %i %s('s) here, %i %s('s) expected.", name(outCount), name(outClass), count, name(outClass));
 	end
+
+	return nil, nil, price;
 end
 
 function COMPILER.Compile_BREAK(this, inst, token)
@@ -2781,6 +2908,8 @@ function COMPILER.Compile_BREAK(this, inst, token)
 	end
 
 	this:writeToBuffer(inst, "\nbreak\n;");
+
+	return nil, nil, EXPR_MIN;
 end
 
 function COMPILER.Compile_CONTINUE(this, inst, token)
@@ -2789,6 +2918,8 @@ function COMPILER.Compile_CONTINUE(this, inst, token)
 	end
 
 	this:writeToBuffer(inst, "\ncontinue\n;");
+
+	return nil, nil, EXPR_MIN;
 end
 
 --[[
@@ -2805,6 +2936,8 @@ function COMPILER.Compile_DELEGATE(this, inst, token, data)
 	end
 
 	this:writeToBuffer(inst, "\nlocal %s;\n", data.variable);
+
+	return nil, nil, EXPR_MIN;
 end
 
 function COMPILER.Compile_FUNCT(this, inst, token, data)
@@ -2873,6 +3006,8 @@ function COMPILER.Compile_FUNCT(this, inst, token, data)
 	end
 
 	this:writeToBuffer(inst, "\nend,\nresult = %q, count = %i, scr = CONTEXT};\n", data.resultClass, count);
+
+	return nil, nil, EXPR_MIN;
 end
 
 --[[
@@ -2883,14 +3018,16 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 	local tArgs = #args;
 
 	local expr = args[1];
-	local res, count = this:Compile(expr);
+	local res, count, price = this:Compile(expr);
 
 	local prms = {};
 
 	if (tArgs > 1) then
 		for i = 2, tArgs do
 			local arg = args[i];
-			local r, c = this:Compile(arg);
+			local r, c, p = this:Compile(arg);
+
+			price = price + p;
 
 			prms[#prms + 1] = r;
 
@@ -2944,7 +3081,7 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 
 			this:writeToBuffer(inst, ")");
 
-			return info.resultClass, info.resultCount;
+			return info.resultClass, info.resultCount, (price + EXPR_MIN);
 		end
 	end
 
@@ -2984,7 +3121,7 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 
 	this:writeOperationCall(inst, op, unpack(args));
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, (op.price + price);
 end
 
 --[[
@@ -2993,9 +3130,9 @@ end
 function COMPILER.Compile_GET(this, inst, token, data)
 	local expressions = data.expressions;
 	local value = expressions[1];
-	local vType = this:Compile(value);
+	local vType, vCount, vPrice = this:Compile(value);
 	local index = expressions[2];
-	local iType = this:Compile(index);
+	local iType, iCount, iPrice = this:Compile(index);
 
 	local op;
 	local keepid = false;
@@ -3043,7 +3180,7 @@ function COMPILER.Compile_GET(this, inst, token, data)
 
 		this:writeToBuffer(inst, "]");
 
-		return op.result, op.rCount;
+		return op.result, op.rCount, (op.price + vPrice + iPrice);
 	end
 
 	if (keepid) then
@@ -3053,23 +3190,23 @@ function COMPILER.Compile_GET(this, inst, token, data)
 	end
 
 	if (cls) then
-		return cls.data, 1;
+		return cls.data, 1, (op.price + vPrice + iPrice);
 	end
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, (op.price + vPrice + iPrice);
 end
 
 function COMPILER.Compile_SET(this, inst, token, data)
 	local expressions = data.expressions;
 
 	local value = expressions[1];
-	local vType = this:Compile(value);
+	local vType, vCount, p1 = this:Compile(value);
 
 	local index = expressions[2];
-	local iType = this:Compile(index);
+	local iType, iCount, p2 = this:Compile(index);
 
 	local expr = expressions[3];
-	local vExpr = this:Compile(expr);
+	local vExpr, c, p3 = this:Compile(expr);
 
 	local op;
 	local keepclass = false;
@@ -3113,7 +3250,7 @@ function COMPILER.Compile_SET(this, inst, token, data)
 
 		this:writeToBuffer(inst, ";\n");
 
-		return op.result, op.rCount;
+		return op.result, op.rCount, (op.price + p1 + p2 + p3);
 	end
 
 	if (keepid) then
@@ -3122,7 +3259,7 @@ function COMPILER.Compile_SET(this, inst, token, data)
 		this:writeOperationCall(inst, op, value, index, expr);
 	end
 
-	return op.result, op.rCount;
+	return op.result, op.rCount, (op.price + p1 + p2 + p3);
 end
 
 --[[
@@ -3136,23 +3273,26 @@ function COMPILER.Compile_FOR(this, inst, token, data)
 	this:writeToBuffer(inst, "\nfor %s = ", var);
 
 	local start = expressions[1];
-	local tStart = this:Compile(start);
+	local tStart, cStart, p1 = this:Compile(start);
 	this:addInstructionToBuffer(inst, start);
 
 	this:writeToBuffer(inst, ",");
 
 	local _end = expressions[2];
-	local tEnd = this:Compile(_end);
+	local tEnd, cEnd, p2 = this:Compile(_end);
 	this:addInstructionToBuffer(inst, _end);
-
+	
+	local price = p1 + p2;
 	local step = expressions[3];
 
 	if (step) then
-		local tStep = this:Compile(step);
+		local tStep, cStep, p3 = this:Compile(step);
 
 		if (class ~= "n" or tStart  ~= "n" or tEnd ~= "n" or tEnd ~= "n" or tStep ~= "n") then
 			this:Throw(token, "No such loop 'for(%s i = %s; %s; %s)'.", name(class), name(tStart), name(tEnd), name(tStep));
 		end
+
+		price = price + p3;
 
 		this:writeToBuffer(inst, ",");
 
@@ -3172,12 +3312,14 @@ function COMPILER.Compile_FOR(this, inst, token, data)
 	this:PopScope();
 
 	this:writeToBuffer(inst, "\nend\n");
+
+	return nil, nil, price;
 end
 
 function COMPILER.Compile_WHILE(this, inst, token, data)
 	this:writeToBuffer(inst, "\nwhile ");
 
-	this:Compile(data.condition);
+	local r, c, p = this:Compile(data.condition);
 	this:addInstructionToBuffer(inst, data.condition);
 
 	this:writeToBuffer(inst, " do\n");
@@ -3189,10 +3331,16 @@ function COMPILER.Compile_WHILE(this, inst, token, data)
 	this:PopScope();
 
 	this:writeToBuffer(inst, "\nend\n");
+
+	-- Add the price for the conditon to the price of the block,
+	-- to ensure that its always accounted for, regardless of step count!
+	data.block.price = data.block.price + 1;
+
+	return nil, nil, p;
 end
 
 function COMPILER.Compile_EACH(this, inst, token, data)
-	local r, c = this:Compile(data.expr);
+	local r, c, p = this:Compile(data.expr);
 	local op = this:GetOperator("itor", r);
 
 	if not op then
@@ -3237,6 +3385,8 @@ function COMPILER.Compile_EACH(this, inst, token, data)
 	this:PopScope();
 
 	this:writeToBuffer(inst, "\nend\n");
+
+	return nil, nil, (op.price + p);
 end
 
 --[[
@@ -3250,20 +3400,20 @@ function COMPILER.Compile_TRY(this, inst, token, data)
 		this:SetOption("canReturn", false);
 		this:SetOption("loop", false);
 
-	this:Compile(data.block1);
-	this:addInstructionToBuffer(inst, data.block1);
+		this:Compile(data.block1);
+		this:addInstructionToBuffer(inst, data.block1);
 
 	this:PopScope();
 
 	this:writeToBuffer(inst, "\nend\n); if (not ok and %s.state == 'runtime') then\n", data.var.data);
 
 	this:PushScope();
-	this:SetOption("loop", false);
+		this:SetOption("loop", false);
 
-	this:AssignVariable(token, true, data.var.data, "_er", nil);
+		this:AssignVariable(token, true, data.var.data, "_er", nil);
 
-	this:Compile(data.block2);
-	this:addInstructionToBuffer(inst, data.block2);
+		this:Compile(data.block2);
+		this:addInstructionToBuffer(inst, data.block2);
 
 	this:PopScope();
 
@@ -3324,15 +3474,20 @@ end
 local function Inclucde_ROOT(this, inst, token, data)
 	this:writeToBuffer(inst, "\ndo --START INCLUDE\n")
 	
+	local price = 0;
+
 	local stmts = data.stmts;
 
 	for i = 1, #stmts do
-		this:Compile(stmts[i]);
+		local r, c, p = this:Compile(stmts[i]);
+
+		price = price + p;
+
 		this:addInstructionToBuffer(inst, stmts[i]);
 	end
 
 	this:writeToBuffer(inst, "\nend --END INCLUDE\n")
-	return "", 0;
+	return "", 0, price;
 end
 
 function COMPILER.Compile_INCLUDE(this, inst, token, file_path)
@@ -3551,7 +3706,7 @@ end
 
 function COMPILER.Compile_FEILD(this, inst, token, data)
 	local expr = data.expr;
-	local type = this:Compile(expr);
+	local type, count, price = this:Compile(expr);
 	local userclass = this:GetUserClass(type);
 
 	local var = data.var.data;
@@ -3588,18 +3743,22 @@ function COMPILER.Compile_FEILD(this, inst, token, data)
 
 	this:writeToBuffer(inst, var);
 
-	return info.class, 1;
+	return info.class, 1, (price + EXPR_MIN);
 end
 
 function COMPILER.Compile_DEF_FEILD(this, inst, token, data)
 	local tArgs = #data.expressions;
 	local userclass = this:GetOption("userclass");
 
+	local price = 0;
+
 	local results = {};
 
 	for i = 1, tArgs do
 		local arg = data.expressions[i];
-		local r, c = this:Compile(arg);
+		local r, c, p = this:Compile(arg);
+
+		price = price + p;
 
 		if (not data.variables[i]) then
 			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
@@ -3642,7 +3801,7 @@ function COMPILER.Compile_DEF_FEILD(this, inst, token, data)
 
 	this.__defined = {};
 
-	return "", 0;
+	return "", 0, price;
 end
 
 function COMPILER.Compile_SET_FEILD(this, inst, token, data)
@@ -3650,8 +3809,8 @@ function COMPILER.Compile_SET_FEILD(this, inst, token, data)
 	local info;
 	local atribute = data.var.data;
 	local expressions = data.expressions;
-	local r1, c1 = this:Compile(expressions[1]);
-	local r2, c2 = this:Compile(expressions[2]);
+	local r1, c1, p1 = this:Compile(expressions[1]);
+	local r2, c2, p2 = this:Compile(expressions[2]);
 	local cls = E3Class(r1);
 
 	if (not cls) then
@@ -3683,7 +3842,7 @@ function COMPILER.Compile_SET_FEILD(this, inst, token, data)
 
 	this:writeToBuffer(inst, ";\n");
 
-	return info.class, 1;
+	return info.class, 1, (p1 + p2);
 end
 
 --[[
@@ -3716,8 +3875,6 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, data)
 	userclass.valid = true;
 	userclass.constructors[signature] = signature;
 
-	print("Added constructor: ", signature);
-
 	this:writeToBuffer(inst, "\nlocal this = setmetatable({vars = setmetatable({}, %s.vars)}, %s)\n", userclass.name, userclass.name);
 
 	if data.block then
@@ -3728,6 +3885,8 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, data)
 	this:PopScope();
 
 	this:writeToBuffer(inst, "\nreturn this;\nend\n");
+
+	return nil, nil, EXPR_LOW;
 end
 
 function COMPILER.Compile_DEF_METHOD(this, inst, token, data)
@@ -3797,6 +3956,8 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, data)
 	end
 
 	this:writeToBuffer(inst, "\nend\n");
+
+	return nil, nil, EXPR_LOW;
 end
 
 function COMPILER.Compile_TOSTR(this, inst, token, expressions)
@@ -3822,6 +3983,8 @@ function COMPILER.Compile_TOSTR(this, inst, token, expressions)
 	this:PopScope();
 
 	this:writeToBuffer(inst, "\nend\n");
+
+	return nil, nil, EXPR_LOW;
 end
 
 --[[
@@ -3878,7 +4041,7 @@ function COMPILER.Compile_INTERFACE(this, inst, token, data)
 
 	this:PopScope();
 
-	return "", 0;
+	return "", 0, EXPR_LOW;
 end
 
 function COMPILER.Compile_INTERFACE_METHOD(this, inst, token, data)
@@ -3900,6 +4063,8 @@ function COMPILER.Compile_INTERFACE_METHOD(this, inst, token, data)
 	meth.count = count;
 
 	interface.methods[meth.sig] = meth;
+
+	return nil, nil, EXPR_LOW;
 end
 
 function COMPILER.GetClassOrInterface(this, name, scope, nonDeep)

@@ -467,7 +467,7 @@ end
 --[[
 ]]
 
-function PARSER.StartInstruction(this, _type, token)
+function PARSER.StartInstruction(this, _type, token, perfhandler)
 
 	if (not istable(token)) then
 		debug.Trace();
@@ -482,6 +482,7 @@ function PARSER.StartInstruction(this, _type, token)
 
 	local inst = {};
 	inst.type = _type;
+	inst.perfhandler = perfhandler;
 
 	inst.rCount = 0;
 	inst.result = "void";
@@ -525,7 +526,7 @@ end
 ]]
 
 function PARSER.Root(this)
-	local seq = this:StartInstruction("root", this.__tokens[1]);
+	local seq = this:StartInstruction("root", this.__tokens[1], true);
 
 	local stmts = this:Statements(false);
 
@@ -537,7 +538,7 @@ function PARSER.Block_1(this, _end, lcb)
 
 	if (this:Accept("lcb")) then
 		local stmts;
-		local seq = this:StartInstruction("seq", this.__token);
+		local seq = this:StartInstruction("seq", this.__token, true);
 
 		if (not this:CheckToken("rcb")) then
 			this:PushScope()

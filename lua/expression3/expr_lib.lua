@@ -235,6 +235,21 @@ local classIDs;
 local loadClasses = false;
 
 --[[
+	Prices are currently not used for anything, but might be switching over soon.
+]]
+
+EXPR_MIN = 1;
+EXPR_LOW = 10;
+EXPR_MED = 25;
+EXPR_HIGH = 50;
+
+local PRICE = EXPR_LOW;
+
+function EXPR_LIB.SetPrice(price)
+	PRICE = price;
+end
+
+--[[
 
 ]]
 
@@ -287,6 +302,7 @@ function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 	class.name = string.lower(name);
 	class.base = "o";
 	class.state = STATE;
+	class.price = PRICE;
 
 	class.isType = isType;
 	class.isValid = isValid;
@@ -377,6 +393,7 @@ function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeCont
 	op.name = name;
 	op.class = cls.id;
 	op.state = STATE;
+	op.price = PRICE;
 	op.parameter = signature;
 	op.signature = string.format("%s(%s)", cls.id, signature);
 	op.result = cls.id;
@@ -421,6 +438,7 @@ function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method, ex
 	meth.name = name;
 	meth.class = cls.id;
 	meth.state = STATE;
+	meth.price = PRICE;
 	meth.parameter = signature;
 	meth.signature = string.format("%s.%s(%s)", cls.id, name, signature);
 	meth.result = res.id;
@@ -492,6 +510,7 @@ function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator, 
 	local op = {};
 	op.name = operation;
 	op.state = STATE;
+	op.price = PRICE;
 	op.parameter = signature;
 	op.signature = string.format("%s(%s)", operation, signature);
 	op.result = res.id;
@@ -531,6 +550,7 @@ function EXPR_LIB.RegisterCastingOperator(type, parameter, operator, excludeCont
 	local op = {};
 	op.parameter = signature;
 	op.state = STATE;
+	op.price = PRICE;
 	op.signature = string.format("(%s)%s", type, signature);
 	op.result = res.id;
 	op.rCount = 1;
@@ -590,6 +610,7 @@ function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _funct
 	local op = {};
 	op.name = name;
 	op.state = STATE;
+	op.price = PRICE;
 	op.parameter = signature;
 	op.signature = string.format("%s(%s)", name, signature);
 	op.result = res.id;
@@ -687,6 +708,7 @@ function EXPR_LIB.RegisterExtension(name)
 	ext.name = name;
 	ext.classes = {};
 	ext.state = EXPR_SHARED;
+	ext.price = EXPR_LOW;
 	ext.constructors = {};
 	ext.methods = {};
 	ext.atributes = {};
@@ -703,12 +725,20 @@ function EXPR_LIB.GetExtensionMetatable()
 	return Extension;
 end
 
+function Extension.SetPrice(this, price)
+	this.price = price;
+end
+
 function Extension.SetServerState(this)
 	this.state = EXPR_SERVER;
 end
 
 function Extension.SetSharedState(this)
 	this.state = EXPR_SHARED;
+end
+
+function Extension.SetClientState(this)
+	this.state = EXPR_CLIENT;
 end
 
 function Extension.SetClientState(this)
@@ -742,27 +772,27 @@ function Extension.RegisterWiredOutport(this, class, wiretype, func)
 end
 
 function Extension.RegisterConstructor(this, class, parameter, constructor, excludeContext)
-	local entry = {class, parameter, constructor, excludeContext, this.state};
+	local entry = {class, parameter, constructor, excludeContext, this.state, this.price};
 	this.constructors[#this.constructors + 1] = entry;
 end
 
 function Extension.RegisterMethod(this, class, name, parameter, type, count, method, excludeContext)
-	local entry = {class, name, parameter, type, count, method, excludeContext, this.state};
+	local entry = {class, name, parameter, type, count, method, excludeContext, this.state, this.price};
 	this.methods[#this.methods + 1] = entry;
 end
 
 function Extension.RegisterAtribute(this, class, atribute, type, native)
-	local entry = {class, atribute, type, native, this.state};
+	local entry = {class, atribute, type, native, this.state, this.price};
 	this.atributes[#this.atributes + 1] = entry;
 end
 
 function Extension.RegisterOperator(this, operation, parameter, type, count, operator, excludeContext)
-	local entry = {operation, parameter, type, count, operator, excludeContext, this.state};
+	local entry = {operation, parameter, type, count, operator, excludeContext, this.state, this.price};
 	this.operators[#this.operators + 1] = entry;
 end
 
 function Extension.RegisterCastingOperator(this, type, parameter, operator, excludeContext)
-	local entry = {type, parameter, operator, excludeContext, this.state};
+	local entry = {type, parameter, operator, excludeContext, this.state, this.price};
 	this.castOperators[#this.castOperators + 1] = entry;
 end
 
@@ -772,7 +802,7 @@ function Extension.RegisterLibrary(this, name)
 end
 
 function Extension.RegisterFunction(this, library, name, parameter, type, count, _function, excludeContext)
-	local entry = {library, name, parameter, type, count, _function, excludeContext, this.state};
+	local entry = {library, name, parameter, type, count, _function, excludeContext, this.state, this.price};
 	this.functions[#this.functions + 1] = entry;
 end
 
@@ -799,6 +829,7 @@ function Extension.EnableExtension(this)
 	hook.Add("Expression3.LoadClasses", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.classes) do
 			STATE = v[5];
+			PRICE = v[6];
 
 			if (not v[0]) then
 				local op = this:CheckRegistration(EXPR_LIB.RegisterClass, v[1], v[2], v[3], v[4]);
@@ -817,6 +848,8 @@ function Extension.EnableExtension(this)
 	hook.Add("Expression3.LoadConstructors", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.constructors) do
 			STATE = v[5];
+			PRICE = v[6];
+
 			local op = this:CheckRegistration(EXPR_LIB.RegisterConstructor, v[1], v[2], v[3], v[4]);
 			op.extension = this.name;
 			constructors[op.signature] = op;
@@ -830,6 +863,8 @@ function Extension.EnableExtension(this)
 	hook.Add("Expression3.LoadMethods", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.methods) do
 			STATE = v[8];
+			PRICE = v[9];
+
 			local op = this:CheckRegistration(EXPR_LIB.RegisterMethod, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
 			op.extension = this.name;
 			methods[op.signature] = op;
@@ -841,6 +876,8 @@ function Extension.EnableExtension(this)
 	hook.Add("Expression3.LoadAtributes", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.atributes) do
 			STATE = v[5];
+			PRICE = v[6];
+
 			local atr = this:CheckRegistration(EXPR_LIB.RegisterAtribute, v[1], v[2], v[3], v[4]);
 			atr.extension = this.name;
 			atributes[atr.atribute] = atr;
@@ -852,6 +889,8 @@ function Extension.EnableExtension(this)
 	hook.Add("Expression3.LoadOperators", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.operators) do
 			STATE = v[7];
+			PRICE = v[8];
+
 			local op = this:CheckRegistration(EXPR_LIB.RegisterOperator, v[1], v[2], v[3], v[4], v[5], v[6]);
 			op.extension = this.name;
 			operators[op.signature] = op;
@@ -859,6 +898,8 @@ function Extension.EnableExtension(this)
 
 		for _, v in pairs(this.castOperators) do
 			STATE = v[5];
+			PRICE = v[6];
+
 			local op = this:CheckRegistration(EXPR_LIB.RegisterCastingOperator, v[1], v[2], v[3], v[4]);
 			op.extension = this.name;
 			operators[op.signature] = op;
@@ -876,6 +917,8 @@ function Extension.EnableExtension(this)
 	hook.Add("Expression3.LoadFunctions", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.functions) do
 			STATE = v[8];
+			PRICE = v[9];
+
 			local op = this:CheckRegistration(EXPR_LIB.RegisterFunction, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
 			op.extension = this.name;
 			functions[op.signature] = op;
