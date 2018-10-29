@@ -841,22 +841,22 @@ function PANEL:ScrollCaret( )
 		self.Scroll.x = self.Caret.x - 1 - Offset
 		if self.Scroll.x < 1 then self.Scroll.x = 1 end
 	end
-
+	
 	if self.Caret.x - self.Scroll.x > self.Size.x - 1 then
 		self.Scroll.x = self.Caret.x - self.Size.x + 1 - Offset
 		if self.Scroll.x < 1 then self.Scroll.x = 1 end
 	end
-
+	
 	if self.Caret.y - self.Scroll.y < 4 then
 		self.Scroll.y = self.Caret.y - 4
 		if self.Scroll.y < 1 then self.Scroll.y = 1 end
 	end
-
+	
 	if self.Caret.y - 1 - self.Scroll.y > self.Size.y - 4 then
 		self.Scroll.y = self.Caret.y - 1 - self.Size.y + 4
 		if self.Scroll.y < 1 then self.Scroll.y = 1 end
 	end
-
+	
 	self.pScrollBar:SetScroll( self.Scroll.x - 1 )
 	self.pHScrollBar:SetScroll( self.Scroll.y - 1 )
 end
@@ -1168,9 +1168,19 @@ function PANEL:GetFoldingOffset( nLine )
 		if istable( self.tRows[pos] ) then 
 			offset = offset + #self.tRows[pos] - 1
 			pos = pos + #self.tRows[pos] 
+		elseif self.tFoldData[pos] and self.tFoldData[pos][2] then 
+			local level = self.tFoldData[pos+1][1]
+			pos = pos + 1
+			while level <= self.tFoldData[pos][1] and infloop < 10000  do 
+				if self.tFoldData[pos][3] then break end 
+				pos = pos + 1
+				offset = offset + 1
+				infloop = infloop + 1
+			end 
 		else 
 			pos = pos + 1
 		end 
+		
 		infloop = infloop + 1
 	end 
 	
@@ -1181,7 +1191,7 @@ function PANEL:ExpandAll( tOld )
 	if not self.bCodeFolding then return end 
 	if type( tOld ) == "table" then 
 		for i = 1, #tOld do 
-			self:ExpandLine( tOld[i] )
+			self:ExpandLine( tOld[i], true )
 		end 
 		return true 
 	else  
@@ -1191,7 +1201,7 @@ function PANEL:ExpandAll( tOld )
 			local Line = self.tRows[line]
 			if type( Line ) == "table" and Line.Primary == line then 
 				ExpandedLines[#ExpandedLines+1] = line 
-				self:ExpandLine( line ) 
+				self:ExpandLine( line, true ) 
 			end 
 		end
 		
@@ -1203,7 +1213,7 @@ function PANEL:FoldAll( tOld )
 	if not self.bCodeFolding then return end 
 	if type( tOld ) == "table" then 
 		for i = #tOld, 1, -1 do 
-			self:FoldLine( tOld[i] )
+			self:FoldLine( tOld[i], true )
 		end 
 		return true 
 	else 
@@ -1217,7 +1227,7 @@ function PANEL:FoldAll( tOld )
 			local Fold = self.tFoldData[line]
 			if Fold[1] < last or Fold[3] then 
 				FoldedLines[#FoldedLines+1] = line 
-				self:FoldLine( line ) 
+				self:FoldLine( line, true ) 
 			end 
 		end
 		
@@ -1225,14 +1235,14 @@ function PANEL:FoldAll( tOld )
 	end 
 end 
 
-function PANEL:FoldLine( nLine )
+function PANEL:FoldLine( nLine, bInternal )
 	if not self.bCodeFolding then return end 
 	if istable( self.tRows[nLine] ) or not self.tRows[nLine] then return print( "Tried to fold already folded line!", nLine ) end 
 	if self.tFoldData[nLine][1] == self.tFoldData[nLine+1][1] and not self.tFoldData[nLine][3] then return end 
 	if self.tFoldData[nLine][1] > self.tFoldData[nLine+1][1] then return end 
 	local Data = { self.tRows[nLine] } 
 	local FoldLevel = self.tFoldData[nLine+1][1]
-	self.tFoldData[nLine][2] = true
+	if not bInternal then self.tFoldData[nLine][2] = true end 
 	self.tRows[nLine] = Data 
 	Data.Primary = nLine 
 	
@@ -1249,9 +1259,9 @@ function PANEL:FoldLine( nLine )
 	end 
 end
 
-function PANEL:ExpandLine( nLine )
+function PANEL:ExpandLine( nLine, bInternal )
 	if not self.bCodeFolding then return end 
-	self.tFoldData[nLine][2] = false
+	if not bInternal then self.tFoldData[nLine][2] = false end 
 	local Data = self.tRows[nLine]
 	if not istable( Data ) then return print( "Tried to unfold invalid line", nLine, type( Data ) ) end 
 	
@@ -1733,14 +1743,6 @@ function PANEL:RemoveSelection( sID )
 	self.tCursors[sID] = nil 
 end 
 
--- function PANEL:SyntaxColorLine( Row ) 
--- 	return { { self.tRows[Row], C_white } }
--- end
-
--- function PANEL:UpdateSyntaxColors( )
--- 	self.PaintRows = { } 
--- end
-
 /*---------------------------------------------------------------------------
 Text setters / getters
 ---------------------------------------------------------------------------*/
@@ -1780,10 +1782,6 @@ function PANEL:GetCode( )
 	
 	return code
 end
-
--- function PANEL:OnTextChanged( )
--- 	// Override 
--- end
 
 /*---------------------------------------------------------------------------
 PerformLayout
