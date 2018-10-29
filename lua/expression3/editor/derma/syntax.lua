@@ -11,14 +11,14 @@ local LangList = { }
 function Syntax:Add( sName, tData )
 	if LangList[sName] then error( "Syntax already created." ) end 
 	LangList[sName] = tData 
-	print( "Adding syntax:", sName )
+	-- print( "Adding syntax:", sName )
 end
 
 function Syntax:Create( sName, dEditor )
 	if not LangList[sName] then error( "No syntax named " .. sName ) end 
 	local lang = setmetatable( { }, LangList[sName] )
 	
-	print( "Loading syntax:", sName )
+	-- print( "Loading syntax:", sName )
 	
 	lang:Init( dEditor )
 	

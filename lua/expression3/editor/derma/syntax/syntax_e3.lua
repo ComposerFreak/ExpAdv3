@@ -22,10 +22,16 @@ function Syntax:Init( dEditor )
 	self.dEditor:SetCodeFolding( true ) 
 	self.dEditor:SetParamMatching( true )
 	
+	self.tInterfaces = { }
+	self.tVariables = { }
+	self.tUserFunctions = { }
+	self.tFunctions = { } 
+	
 	self:BuildTokensTable( )
 	self:BuildKeywordsTable( )
 	self:BuildClassTable( )
 	self:BuildLibraryMethods( ) 
+	self:BuildClassMethods( )
 end
 
 /*---------------------------------------------------------------------------
@@ -288,12 +294,12 @@ local colors = {
 	["number"]       = Color(   0, 200,   0 ), 
 	["operator"]     = Color( 240,   0,   0 ), 
 	["string"]       = Color( 188, 188, 188 ), 
-	["typename"]     = Color( 140, 200,  50 ), 
+	["class"]        = Color( 140, 200,  50 ), 
 	["userfunction"] = Color( 102, 122, 102 ), 
 	["variable"]     = Color(   0, 180,  80 ), 
 	["directive"]    = Color(  89, 135, 126 ),  
-	["prediction"]   = Color( 0xe3, 0xb5, 0x2d ), 
-	["metamethod"]   = Color( 0x00, 0xc8, 0xff ), 
+	-- ["prediction"]   = Color( 0xe3, 0xb5, 0x2d ), 
+	-- ["metamethod"]   = Color( 0x00, 0xc8, 0xff ), 
 }
 -- fallback for nonexistant entries: 
 setmetatable( colors, { __index = function( tbl, index ) return Color( 255, 255, 255 ) end } ) 
@@ -310,15 +316,15 @@ EXPR_OPERATORS
 EXPR_CAST_OPERATORS
 
 
-Maybe: 
+Maybe useful: 
 EXPR_METHODS
-EXPR_CLASSES
 
 
-100% usefull
-EXPR_LIBRARIES 
+100% useful
 EXPR_TOKENS 
 EXPR_KEYWORDS 
+EXPR_CLASSES
+EXPR_LIBRARIES 
 */
 
 function Syntax:BuildTokensTable( )
@@ -336,7 +342,9 @@ function Syntax:BuildKeywordsTable( )
 		self.tKeywords[k] = true
 	end
 	
-	self.tKeywords["function"] = true -- Special case
+	-- Special cases
+	-- self.tKeywords["function"] = true
+	self.tKeywords["this"] = true
 end 
 
 function Syntax:BuildClassTable( )
@@ -357,6 +365,24 @@ function Syntax:BuildLibraryMethods( )
 		end
 	end
 end 
+
+local function fixclass( word )
+	local base = EXPR_LIB.GetClass( word or "" )
+	return base and base.name or word
+end
+
+function Syntax:BuildClassMethods( )
+	self.tMethods = { }
+	
+	for _, tData in pairs( EXPR_METHODS ) do 
+		local class = fixclass(tData.class)
+		self.tMethods[class] = self.tMethods[class] or { }
+		self.tMethods[class][tData.name] = true 
+		self.tFunctions[tData.name] = true 
+	end 
+	
+	-- PrintTableGrep( self.tMethods )
+end
 
 /*---------------------------------------------------------------------------
 Syntaxer
@@ -413,15 +439,18 @@ end
 
 function Syntax:SkipSpaces( )
 	if self.sBuffer and self.sBuffer ~= "" then 
-		print( string.format( "Unflushed %q on line %d char %d", self.sBuffer, self.nRow, self.nPosition ) )
+		print( string.format( "Unflushed %q on line %d char %d in tab %q", self.sBuffer, self.nRow, self.nPosition, self.dEditor.Tab:GetName( ) ) )
 	end 
 	
 	while self.sChar and self.sChar == " " do
 		self:NextCharacter( )
 	end 
-	self:AddToken( "operator" )
+	self:AddToken( "notfound" )
 end
 
+function Syntax:AddUserFunction( nRow, sName ) 
+	self.tUserFunctions[sName] = nRow
+end 
 
 function Syntax:InfProtect( )
 	self.nLoops = self.nLoops + 1
@@ -485,13 +514,273 @@ function Syntax:Parse( )
 			self:SkipSpaces( )
 			
 			if self:NextPattern( "^[a-zA-Z][_A-Za-z0-9]*" ) then 
-				-- if keywords[self.sBuffer] then 
-				if self.tKeywords[self.sBuffer] then 
+				local word = self.sBuffer 
+				
+				// Special keywords that needs extra work
+				if word == "function" or word == "delegate" then 
+					local inline = false
+					if word == "function" then 
+						// Check to see if we are defining a inline function or accessing a function from a table.
+						local match = self:NextPattern( " *[%]%(]", true )
+						if match then 
+							if match:sub(-1) == "(" then 
+								self:AddToken( "keyword" ) 
+								self:AddToken( "operator", match )
+								self.sBuffer = ""
+								inline = true
+							elseif match:sub(-1) == "]" then 
+								self:AddToken( "class" ) 
+								self:AddToken( "operator", match )
+								continue 
+							end 
+						// Check if we are assigning a function to a variable
+						elseif string_match( self.sLine, "^ +[a-zA-Z][a-zA-Z0-9_]* *=", self.nPosition ) then 
+							self:AddToken( "class" ) 
+							self:NextPattern( "^ +[a-zA-Z][a-zA-Z0-9_]*" ) 
+							self:AddUserFunction( self.nRow, string.Trim(self.sBuffer) ) 
+							self:AddToken( "userfunction" )
+							continue 
+						end 
+					end 
+					
+					if not inline then 
+						self:AddToken( "keyword" ) 
+						self:SkipSpaces( ) 
+						
+						// We are defining a new fundction, time to check for return type
+						if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
+							if self.tClasses[self.sBuffer] then 
+								self:AddToken( "class" )
+							else 
+								self:AddToken( "notfound" )
+							end 
+						end 
+						
+						self:SkipSpaces( )
+						
+						// Next up is the name of the function
+						if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
+							self:AddUserFunction( self.nRow, self.sBuffer ) 
+							self:AddToken( "userfunction" ) 
+						end 
+						
+						self:NextPattern( " *%( *" ) 
+						self:AddToken( "operator" )
+					else 
+						self:SkipSpaces( )
+					end 
+					
+					// Time to catch all variables that the function can have
+					while self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) do 
+						local sType = ""
+						if self.tClasses[self.sBuffer] then 
+							sType = self.sBuffer
+							self:AddToken( "class" )
+						else 
+							self:AddToken( "notfound" )
+						end 
+						
+						self:SkipSpaces( )
+						
+						if word == "function" then 
+							self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" )
+							self.tVariables[self.sBuffer] = { self.nRow, sType }
+							self:AddToken( "variable" ) 
+						end 
+						
+						if not self:NextPattern( " *, *" ) then break end 
+						self:AddToken( "operator" ) 
+					end 
+					
+					continue 
+				end 
+				
+				if word == "method" then 
+					self:AddToken( "keyword" ) 
+					self:SkipSpaces( ) 
+					
+					if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
+						if self.tClasses[self.sBuffer] then 
+							self:AddToken( "class" )
+						else 
+							self:AddToken( "notfound" )
+						end 
+					end 
+					
+					self:SkipSpaces( )
+					
+					self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" )
+					if self.sCurrentClassDefine then
+						self.tMethods[self.sCurrentClassDefine][self.sBuffer] = true 
+						self:AddUserFunction( self.nRow, self.sBuffer )
+						-- self.tFunctions[self.sBuffer] = true 
+					end 
+					self:AddToken( "userfunction" ) 
+					
+					self:NextPattern( " *%( *" ) 
+					self:AddToken( "operator" )
+					
+					while self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) do 
+						local sType = ""
+						if self.tClasses[self.sBuffer] then 
+							sType = self.sBuffer
+							self:AddToken( "class" )
+						else 
+							self:AddToken( "notfound" )
+						end 
+						
+						self:SkipSpaces( )
+						self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" )
+						self.tVariables[self.sBuffer] = { self.nRow, sType }
+						self:AddToken( "variable" ) 
+							
+						if not self:NextPattern( " *, *" ) then break end 
+						self:AddToken( "operator" ) 
+					end 
+					
+					continue 
+				end 
+				
+				if word == "class" then 
+					self:AddToken( "keyword" ) 
+					self:SkipSpaces( )
+					
+					self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" )
+					self.tClasses[self.sBuffer] = true
+					self.tMethods[self.sBuffer] = { }
+					self.sCurrentClassDefine = self.sBuffer 
+					self:AddToken( "class" )
+					
+					self:SkipSpaces( ) 
+					
+					if self:NextPattern( "extends" ) then 
+						self:AddToken( "keyword" ) 
+						self:SkipSpaces( ) 
+						
+						if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
+							if self.tClasses[self.sBuffer] then
+								self:AddToken( "class" ) 
+							else 
+								self:AddToken( "notfound" ) 
+							end 
+						end 
+					end 
+					
+					self:SkipSpaces( )
+					
+					if self:NextPattern( "implements" ) then 
+						self:AddToken( "keyword" ) 
+						self:SkipSpaces( )
+						
+						self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) 
+						if self.tInterfaces[self.sBuffer] then  
+							self:AddToken( "class" )
+						else 
+							self:AddToken( "notfound" )
+						end 
+					end 
+					
+					continue
+				end 
+				
+				if word == "interface" then 
 					self:AddToken( "keyword" )
-				elseif self.tClasses[self.sBuffer] then 
-					self:AddToken( "typename" )
-				elseif self.tLibrary[self.sBuffer] then 
-					local lib = self.tLibrary[self.sBuffer]
+					self:SkipSpaces( ) 
+					
+					self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" )
+					self.tInterfaces[self.sBuffer] = true
+					self:AddToken( "class" )
+					
+					continue 
+				end 
+				
+				if word == "catch" then 
+					self:AddToken( "keyword" )
+					self:SkipSpaces( ) 
+					
+					if self:NextPattern( "%(" ) then 
+						self:AddToken( "operator" )
+						self:SkipSpaces( ) 
+						
+						if self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) then 
+							self.tVariables[self.sBuffer] = { self.nRow, "error" }
+							self:AddToken( "variable" ) 
+						end 
+					end 
+					
+					continue 
+				end 
+				
+				
+				if word == "new" then 
+					self:AddToken( "keyword" ) 
+					self:SkipSpaces( ) 
+					
+					if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then 
+						if self.tClasses[self.sBuffer] then 
+							self:AddToken( "class" )
+						else 
+							self:AddToken( "notfound" )
+						end 
+					end 
+					continue 
+				end 
+								
+				if self.tKeywords[word] then 
+					self:AddToken( "keyword" )
+					continue 
+				end 
+				
+				if self.tClasses[word] or self.tInterfaces[word] then 
+					local match = self:NextPattern( " *[%]%(]", true )
+					if match then 
+						if match:sub(-1) == "(" then 
+							self:AddToken( "function" ) 
+							self:AddToken( "operator", match )
+							continue 
+						elseif match:sub(-1) == "]" then 
+							self:AddToken( "class" ) 
+							self:AddToken( "operator", match )
+							continue 
+						end 
+					end 
+					
+					self:AddToken( "class" )
+					self:SkipSpaces( ) 
+				
+					if self:NextPattern( "%(" ) then 
+						self:AddToken( "operator" )
+						self:SkipSpaces( )
+						while self:NextPattern( "([a-zA-Z][a-zA-Z0-9_]*)" ) do 
+							self:AddToken( "typename" ) 
+							self:SkipSpaces( ) 
+							
+							if not self:NextPattern( "([a-zA-Z][a-zA-Z0-9_]*)" ) then break end 
+							
+							self.tVariables[self.sBuffer] = { self.nRow, word}
+							self:AddToken( "variable" ) 
+							
+							self:SkipSpaces( )
+							
+							if not self:NextPattern( "," ) then break end 
+							
+							self:AddToken( "operator" ) 
+							self:SkipSpaces( )
+						end 
+					else 
+						while self:NextPattern( "([a-zA-Z][a-zA-Z0-9_]*)" ) do 
+							self.tVariables[self.sBuffer] = { self.nRow, word }
+							self:AddToken( "variable" ) 
+							
+							if not self:NextPattern( " *, *" ) then break end 
+							self:AddToken( "operator" ) 
+						end
+					end 
+					continue
+				end 
+				
+				if self.tLibrary[word] then 
+					local lib = self.tLibrary[word]
 					self:AddToken( "library" )
 					self:SkipSpaces( )
 					if not self:NextPattern( "^%." ) then continue end 
@@ -505,9 +794,40 @@ function Syntax:Parse( )
 							self:AddToken( "notfound" )
 						end 
 					end 
-				else 
-					self:AddToken( "variable" )
+					continue 
 				end 
+				
+				if self.tVariables[word] and self.nRow >= self.tVariables[word][1] then 
+					self:AddToken( "variable" ) 
+					self:SkipSpaces( ) 
+					
+					if self:NextPattern( "^%." ) then 
+						self:AddToken( "operator" )
+						self:SkipSpaces( ) 
+						
+						if self:NextPattern( "^[a-z][a-zA-Z0-9]*" ) then 
+							local s = self.sBuffer 
+							
+							if self.tMethods[self.tVariables[word][2]][s] then 
+								self:AddToken( "function" ) 
+							end 
+						end 
+					end 
+					
+					self:AddToken( "notfound" )
+					continue 
+				end 
+				
+				if self.tUserFunctions[self.sBuffer] and self.tUserFunctions[self.sBuffer] <= self.nRow then 
+					self:AddToken( "userfunction" ) 
+					continue 
+				end 
+				
+				if self.tFunctions[word] then 
+					self:AddToken( "function" )
+					continue 
+				end 
+				
 			elseif self:NextPattern( "^0x[%x]+" ) then -- Hexadecimal numbers
 				self:AddToken( "number" )
 			elseif self:NextPattern( "^[%d][%d%.e]*" ) then -- Normal numbers
