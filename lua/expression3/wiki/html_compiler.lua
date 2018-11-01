@@ -141,7 +141,7 @@ function EXPR_WIKI.COMPILER.Function(data)
 		<head>
 			<title>]]..name..[[ - E3 Wiki</title>
 		</head>
-		<body background="http://i.imgur.com/2RcWmro.png">
+		<body background="http://wiki.garrysmod.com/skins/garrysmod/bg.png">
 			
 	]]
 	

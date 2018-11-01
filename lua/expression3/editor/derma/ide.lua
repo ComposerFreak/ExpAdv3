@@ -189,12 +189,12 @@ function PANEL:Init( )
 	self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( -1 ) end )
 	
 	self.tbRight:SetupButton( "Open user manual", "fugue/question.png", TOP, function( ) self:NewMenuTab( "wiki" ) end )
-	self.tbRight:SetupButton( "Open find & replace", "fugue/magnifier.png", TOP, function( ) self:NewMenuTab( "Search" ) end )
+	self.tbRight:SetupButton( "Open find & replace", "fugue/magnifier.png", TOP, function( ) self.pnlSearch:Toggle() end )
 	self.tbRight:SetupButton( "Options", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options" ) end )
 		
 	-- self.tbRight:SetupButton( "Visit the wiki", 	"fugue/home.png", 		BOTTOM, function( ) end )
 	
-	self.pnlSideTabHolder = vgui.Create( "GOLEM_PropertySheet", self )
+	self.pnlSideTabHolder = vgui.Create( "GOLEM_PropertySheet", self );
 	self.pnlSideTabHolder:Dock( LEFT )
 	self.pnlSideTabHolder:DockMargin( 5, 5, 0, 5 )
 	self.pnlSideTabHolder:SetPadding( 0 )
@@ -235,7 +235,7 @@ function PANEL:Init( )
 	self.pnlTabHolder:Dock( FILL )
 	self.pnlTabHolder:DockMargin( 0, 0, 0, 5 )
 	self.pnlTabHolder:SetPadding( 0 )
-	
+
 	self.pnlTabHolder.btnNewTab.DoClick = function( btn ) 
 		self:NewTab( "editor", sDefaultScript(), nil, "generic" )
 	end
@@ -303,7 +303,7 @@ function PANEL:Init( )
 		self.Wiki = nil
 	end )
 	
-	self:AddCustomTab( false, "Search", function( self )
+	--[[-self:AddCustomTab( false, "Search", function( self )
 		if self.Search then 
 			self.pnlSideTabHolder:SetActiveTab( self.Search.Tab )
 			self.Search.Panel:RequestFocus( )
@@ -319,12 +319,18 @@ function PANEL:Init( )
 		return Sheet 
 	end, function( self )
 		self.Search = nil
-	end )
-		
+	end )]]
+	
 	if not self:OpenOldTabs( ) then 
 		self:NewTab( "editor", sDefaultScript() )
-	end 
-	
+	end
+
+	self.pnlSearch = vgui.Create("GOLEM_SearchBox", self.pnlTabHolder);
+	self.pnlSearch:InvalidateLayout( );
+	self.pnlSearchOptions = self.pnlSearch:GetOptions(self.pnlTabHolder);
+	self.pnlSearchOptions:SetSize(100, 24);
+	self.pnlSearch:Close(true);
+
 	self:NewMenuTab( "options" )
 	
 	Golem.Font.OnFontChange = function( Font, sFontID )
