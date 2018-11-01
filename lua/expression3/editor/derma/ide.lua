@@ -473,6 +473,14 @@ function PANEL:GetSyntaxColorLine( )
 	return self.SyntaxColorLine 
 end*/
 
+function PANEL:UpdateSyntaxColors( )
+	for i = 1, #self.pnlTabHolder.Items do
+		if self.pnlTabHolder.Items[i].Tab.__type == "editor" then 
+			self.pnlTabHolder.Items[i].Panel.tSyntax:Parse( ) 
+		end 
+	end
+end
+
 /*---------------------------------------------------------------------------
 Tab Management 2.0
 ---------------------------------------------------------------------------*/
