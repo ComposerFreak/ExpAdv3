@@ -39,6 +39,29 @@ function PANEL:SetupButton( sName, sMaterial, nDock, fDoClick )
 		btn.DoClick = fDoClick 
 	end 
 	return btn 
+end
+
+function PANEL:SetupCheckBox( sOn, sOff, sMaterialT, sMaterialC, nDock, fChangedValue ) 
+	local btn = self:Add( "GOLEM_CheckBox" ) 
+	btn:Dock( nDock ) 
+	btn:SetPadding( 5 ) 
+	btn:SetIconFading( false )
+	btn:SetIconCentered( false )
+	btn:SetTextCentered( false )
+	btn:DrawButton( true )
+	btn:SetTooltip( sOff ) 
+	btn:SetTick( Material( sMaterialT ) )
+	btn:SetCross( Material( sMaterialC ) )
+	btn:SetFlat( true )
+	btn:SetColor( Color( 70, 70, 70 ) )
+	-- btn:SetColor( Color( 40, 80, 160 ) )
+	
+	function btn:ChangedValue(v)
+		btn:SetTooltip( v and sOn or sOff );
+		if fChangedValue then fChangedValue(btn, v); end
+	end
+	
+	return btn 
 end 
 
 

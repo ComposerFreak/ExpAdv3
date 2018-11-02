@@ -67,7 +67,9 @@ function Golem.Reload( )
 	include( "expression3/editor/derma/propertysheet.lua" )
 	include( "expression3/editor/derma/toolbar.lua" )
 	include( "expression3/editor/derma/filemenu.lua" )
+	include( "expression3/editor/derma/checkbox.lua" )
 	include( "expression3/editor/derma/findreplace.lua" )
+	include("expression3/editor/derma/console2.lua");
 
 	include( "expression3/editor/derma/syntaxer.lua" )
 	
@@ -105,7 +107,25 @@ end
 
 function Golem.Print(...)
 	if Golem.Instance then
-		return Golem.Instance:AddPrintOut(...)
+		return Golem.Instance:PrintLine(...)
+	end
+end
+
+function Golem.AddRow(...)
+	if Golem.Instance then
+		return Golem.Instance:AddRow(...)
+	end
+end
+
+function Golem.Warning(...)
+	if Golem.Instance then
+		return Golem.Instance:Warning(...)
+	end
+end
+
+function Golem.Info(...)
+	if Golem.Instance then
+		return Golem.Instance:Info(...)
 	end
 end
 

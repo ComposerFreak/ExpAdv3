@@ -5,109 +5,19 @@
 ============================================================================================================================================*/
 
 --[[
-	Check Box
-]]
-
-local CHECK = {};
-
-local tick = Material("fugue\\tick.png");
-local cross = Material("fugue\\cross-button.png");
-
-function CHECK:Init()
-	self.bChecked = false;
-	self:SetTick(tick);
-	self:SetCross(cross);
-	self:SetMaterial( self.cross );
-end
-
-function CHECK:SetTick(tick)
-	self.tick = tick;
-	if (bChecked) then self:SetMaterial(tick); end
-end
-
-function CHECK:SetCross(cross)
-	self.cross = cross;
-	if (not bChecked) then self:SetMaterial(cross); end
-end
-
-
-function CHECK:DoClick()
-	self.bChecked = not self.bChecked;
-	self:SetMaterial( self.bChecked and self.tick or self.cross );
-	self:ChangedValue(self.bChecked);
-end
-
-function CHECK:getValue()
-	return self.bChecked;
-end
-
-function CHECK:ChangedValue(bChecked)
-
-end
-
-vgui.Register("GOLEM_CheckBox", CHECK, "GOLEM_ImageButton");
-
---[[
-	Check Box but with a label.
-]]
-
-local CHECKLABEL = {};
-
-function CHECKLABEL:Init()
-	self.button = self:Add("GOLEM_CheckBox");
-	self.button:SetSize(22, 22);
-	self.button:Dock(LEFT);
-
-	self.label = self:Add("DLabel");
-	self.label:SetHeight(22);
-	self.label:Dock(FILL);
-
-	function self.button.ChangedValue(this, bChecked)
-		self:ChangedValue(bChecked);
-	end
-	
-end
-
-function CHECKLABEL:SetText(text)
-	self.label:SetText(text);
-	self.label:SizeToContentsX();
-	self:PerformLayout();
-end
-
-function CHECKLABEL:SetTick(tick)
-	self.button:SetTick(tick);
-end
-
-function CHECKLABEL:SetCross(cross)
-	self.button:SetCross(cross);
-end
-
-function CHECKLABEL:Paint()
-	
-end
-
-function CHECKLABEL:GetValue()
-	return self.button:GetValue();
-end
-
-function CHECKLABEL:ChangedValue(bChecked)
-
-end
-
-vgui.Register("GOLEM_CheckBoxLabel", CHECKLABEL, "DPanel");
-
---[[
 	Search Box
 ]]
 
 local SEARCH = {};
 
 function SEARCH:Init()
+
 	self.bWholeWord = false;
 	self.bMatchCase = false;
 	self.bAllowRegex = false;
 	self.bWrapAround = false;
-
+	
+	self:SetZPos(999);
 	self:SetSize(300, 50);
 
 	self.query_text = self:Add("DTextEntry");
@@ -115,18 +25,23 @@ function SEARCH:Init()
 
 	self.replace_text = self:Add("DTextEntry");
 	self.replace_text:SetDrawBackground(false);
+
 	self.find_prev = self:Add("GOLEM_ImageButton");
 	self.find_prev:SetMaterial( Material("fugue\\arrow-090.png") );
+	self.find_prev:SetTooltip("Find previous.");
 
 	self.find_next = self:Add("GOLEM_ImageButton");
 	self.find_next:SetMaterial( Material("fugue\\arrow-270.png") );
+	self.find_next:SetTooltip("Find next.");
 
 	self.find_all = self:Add("GOLEM_ImageButton");
 	self.find_all:SetMaterial( Material("fugue\\arrow-retweet.png") );
+	self.find_all:SetTooltip("Replace all.");
 
 	self.replace_check = self:Add("GOLEM_CheckBox");
-	self.replace_check:SetCross(Material("fugue\\quill.png"));
-	self.replace_check:SetTick(Material("fugue\\binocular.png"));
+	self.replace_check:SetCross(Material("fugue\\binocular.png"));
+	self.replace_check:SetTick(Material("fugue\\quil.png"));
+	self.replace_check:SetTooltip("Toggle Find and Replace");
 
 	function self.replace_check.ChangedValue(this, bChecked)
 		if (bChecked) then self:ShowReplace(); else self:HideReplace(); end
@@ -166,7 +81,15 @@ function SEARCH:Open(noanim)
 	local y = 10;
 	if (noanim) then self:SetPos(x, y);
 	else self:MoveTo(x, y, 0.2, 0.2); end
-	self.options:MoveTo(pw - self.options:GetWide() - 30, ph - h - 20, 0.2, 0.2);
+	
+	if (self.btnOptions) then
+		for i = 1, 5 do
+			local btn = self.btnOptions[i];
+			btn:SetEnabled(true);
+			btn:SetVisible(true);
+		end
+	end
+
 	self.bOpen = true;
 end
 
@@ -175,9 +98,18 @@ function SEARCH:Close(noanim)
 	local w, h = self:GetSize();
 	local x = pw - w - 20;
 	local y = -h - 10;
+
 	if (noanim) then self:SetPos(x, y);
 	else self:MoveTo(x, y, 0.2, 0.2); end
-	self.options:MoveTo(pw - self.options:GetWide() - 30, ph + 10, 0.2, 0.2);
+	
+	if (self.btnOptions) then
+		for i = 1, 5 do
+			local btn = self.btnOptions[i];
+			btn:SetEnabled(false);
+			btn:SetVisible(false);
+		end
+	end
+
 	self.bOpen = false;
 end
 
@@ -185,9 +117,8 @@ function SEARCH:Toggle()
 	if ( self.bOpen ) then self:Close(); else self:Open(); end
 end
 
-function SEARCH:GetOptions(parent)
-	self.options = vgui.Create("GOLEM_SearchOptions", parent);
-	return self.options;
+function SEARCH:SetOptions(options)
+	self.btnOptions = options;
 end
 
 function SEARCH:ShowReplace()
@@ -223,65 +154,40 @@ function SEARCH:Paint()
 	end
 end
 
-vgui.Register("GOLEM_SearchBox", SEARCH, "DPanel");
+function SEARCH:GetSelection()
+	local editor = Golem.GetInstance();
+	local bInSelection = editor.searchOptSelection:GetValue();
+	local bMatchCase = editor.searchOpCase:GetValue();
 
---[[
-	Options Menu
-]]
+	local code = editor:GetCode();
 
+	if ( bInSelection ) then
+		code = editor:GetArea( editor:MakeSelection( {editor.Start, editor.Carret} ) );
+	end
 
-local OPTIONS = {};
+	if (bMatchCase) then
+		code = string.lower(code);
+	end
 
-function OPTIONS:Init()
-	self:DockPadding(5, 5, 5, 5);
-
-	self.allowRegex = self:Add("GOLEM_CheckBox");
-	self.allowRegex:SetCross(Material("fugue\\regular-expression-search-match.png"));
-	self.allowRegex:SetTick(Material("fugue\\regular-expression.png"));
-	self.allowRegex:Dock(LEFT);
-
-	self.matchCase = self:Add("GOLEM_CheckBox");
-	self.matchCase:SetCross(Material("fugue\\edit-superscript.png"));
-	self.matchCase:SetTick(Material("fugue\\edit-lowercase.png"));
-	self.matchCase:Dock(LEFT);
---
-	self.wholeWord = self:Add("GOLEM_CheckBox");
-	self.wholeWord:SetCross(Material("fugue\\selection-select-input.png"));
-	self.wholeWord:SetTick(Material("fugue\\selection-select.png"));
-	self.wholeWord:Dock(LEFT);
-
-	self.inSelection = self:Add("GOLEM_CheckBox");
-	self.inSelection:SetCross(Material("fugue\\selection-input.png"));
-	self.inSelection:SetTick(Material("fugue\\selection.png"));
-	self.inSelection:Dock(LEFT);
---
-	self.wrapWround = self:Add("GOLEM_CheckBox");
-	self.wrapWround:SetCross(Material("fugue\\arrow-circle.png"));
-	self.wrapWround:SetTick(Material("fugue\\arrow-return-000-left.png"))
-	self.wrapWround:Dock(LEFT);
+	return code;
 end
 
-function OPTIONS:getQuery( )
-	return self.search_box:GetValue();
+function SEARCH:GetQuery()
+	local query = self.query_text:GetValue();
+	local bMatchCase = editor.searchOpCase:GetValue();
+
+	if (bMatchCase) then
+		query = string.lower(query);
+	end
+
+	return query;
 end
 
-function OPTIONS:getReplace( )
-	return self.replace_box:GetValue();
+function SEARCH:FindNext(code, query, maxResults)
+	local bAllowRegex = editor.searchOptRegex:GetValue();
+	local s, e = string.find(code, query, bAllowRegex);
 end
 
-function OPTIONS:PerformLayout(w, h)
-	local pw, ph = self:GetParent():GetSize();
-	self:SetPos(pw - w - 30, ph - h - 40);
-end
-
-function OPTIONS:Paint()
-	local w, h = self:GetSize();
-
-	draw.RoundedBox( 6, 0, 0, w, h, Color( 100, 100, 100, 255 ) );
-end
-
-
-vgui.Register("GOLEM_SearchOptions", OPTIONS, "EditablePanel");
 
 --[[
 function OPTIONS:Search( query, replace, all )
@@ -438,3 +344,5 @@ local Offset = 2
 	end
 	
 ]]
+
+vgui.Register("GOLEM_SearchBox", SEARCH, "DPanel");

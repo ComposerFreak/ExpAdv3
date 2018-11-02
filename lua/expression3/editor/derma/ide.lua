@@ -188,11 +188,21 @@ function PANEL:Init( )
 	self.tbRight:SetupButton( "Increase font size.", "fugue/edit-size-up.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( 1 ) end )
 	self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( -1 ) end )
 	
+	self.tbRight:SetupButton( "Options", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options" ) end )
 	self.tbRight:SetupButton( "Open user manual", "fugue/question.png", TOP, function( ) self:NewMenuTab( "wiki" ) end )
 	self.tbRight:SetupButton( "Open find & replace", "fugue/magnifier.png", TOP, function( ) self.pnlSearch:Toggle() end )
-	self.tbRight:SetupButton( "Options", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options" ) end )
-		
+
+	
+	self.searchOptRegex = self.tbRight:SetupCheckBox( "Allow regex.", "Disalow regex.", "fugue\\regular-expression.png", "fugue\\regular-expression-search-match.png", TOP, function( )  end );
+	self.searchOpCase = self.tbRight:SetupCheckBox( "Match case.", "Do not match case.", "fugue\\edit-lowercase.png", "fugue\\edit-superscript.png", TOP, function( ) end );
+	self.searchOptWhole = self.tbRight:SetupCheckBox( "Match whole word.", "No match whole world.", "fugue\\selection-select.png", "fugue\\selection-select-input.png", TOP, function( ) end );
+	self.searchOptSelection = self.tbRight:SetupCheckBox( "Find in selection.", "Find in script.", "fugue\\selection.png", "fugue\\selection-input.png",  TOP, function( ) end );
+	self.searchOptWrap = self.tbRight:SetupCheckBox( "Wrap around", "No wrap around", "fugue\\arrow-return-000-left.png", "fugue\\arrow-circle.png", TOP, function( ) end );
+	self.searchOptions = { self.searchOptRegex, self.searchOpCase, self.searchOptWhole, self.searchOptSelection, self.searchOptWrap, self.searchOptions };
+
 	-- self.tbRight:SetupButton( "Visit the wiki", 	"fugue/home.png", 		BOTTOM, function( ) end )
+
+
 	
 	self.pnlSideTabHolder = vgui.Create( "GOLEM_PropertySheet", self );
 	self.pnlSideTabHolder:Dock( LEFT )
@@ -243,7 +253,7 @@ function PANEL:Init( )
 	self.tbConsoleHolder = vgui.Create( "DPanel", self ) 
 	self.tbConsoleHolder.Paint = function( pnl, w, h ) end
 	
-	self.tbConsoleEditor = vgui.Create( "GOLEM_Console", self.tbConsoleHolder )
+	self.tbConsoleEditor = vgui.Create( "GOLEM_Console2", self.tbConsoleHolder )--vgui.Create( "GOLEM_Console", self.tbConsoleHolder )
 	self.tbConsoleEditor:Dock( BOTTOM )
 	self.tbConsoleEditor:SetTall( 125 )
 	self.tbConsoleEditor.bEditable = false
@@ -258,11 +268,12 @@ function PANEL:Init( )
 	self.pnlConsoleDivider:SetBottomMin( 50 )
 	
 	
-	Golem.Syntax:Create( "Console", self.tbConsoleEditor )
+	--[[Golem.Syntax:Create( "Console", self.tbConsoleEditor )
 	self.tbConsoleEditor.tbConsoleRows = { }
 	
 	self:AddPrintOut( Color(255, 255, 0), "Expression 3 Console Initialized:" )
-	
+	]]
+
 	hook.Run( "Expression3.AddGolemTabTypes", self )
 	
 	//self:AddCustomTab( bScope, sName, fCreate, fClose )
@@ -303,32 +314,13 @@ function PANEL:Init( )
 		self.Wiki = nil
 	end )
 	
-	--[[-self:AddCustomTab( false, "Search", function( self )
-		if self.Search then 
-			self.pnlSideTabHolder:SetActiveTab( self.Search.Tab )
-			self.Search.Panel:RequestFocus( )
-			return self.Search
-		end 
-		
-		local Panel = vgui.Create( "GOLEM_FindReplace" ) 
-		local Sheet = self.pnlSideTabHolder:AddSheet( "", Panel, "fugue/magnifier.png", function(pnl) self:CloseMenuTab( pnl:GetParent( ), true ) end )
-		self.pnlSideTabHolder:SetActiveTab( Sheet.Tab )
-		self.Search = Sheet
-		Sheet.Panel:RequestFocus( )
-		
-		return Sheet 
-	end, function( self )
-		self.Search = nil
-	end )]]
-	
 	if not self:OpenOldTabs( ) then 
 		self:NewTab( "editor", sDefaultScript() )
 	end
 
 	self.pnlSearch = vgui.Create("GOLEM_SearchBox", self.pnlTabHolder);
+	self.pnlSearch:SetOptions(self.searchOptions);
 	self.pnlSearch:InvalidateLayout( );
-	self.pnlSearchOptions = self.pnlSearch:GetOptions(self.pnlTabHolder);
-	self.pnlSearchOptions:SetSize(100, 24);
 	self.pnlSearch:Close(true);
 
 	self:NewMenuTab( "options" )
@@ -361,107 +353,37 @@ Console
 ---------------------------------------------------------------------------*/
 function PANEL:HideConsole()
 	if (self.bConsoleVisible) then
-		--self.tbConsoleHolder:SetTall( 22 )
-		--self.tbConsoleEditor:SetVisible(false)
 		self.bConsoleVisible = false
 	end
 end
 
 function PANEL:ShowConsole()
 	if (not self.bConsoleVisible) then
-		--self.tbConsoleHolder:SetTall( 150 )
-		--self.tbConsoleEditor:SetVisible(true)
 		self.bConsoleVisible = true;
 	end
 end
 
-
---[[function PANEL:AddPrintOut(...)
-	local row = {};
-	local line = "";
-	local token = "";
-	local color = Color(255, 255, 255);
-	
-	for k, v in pairs({...}) do
-		if (istable(v)) then
-			row[#row + 1] = {token, color};
-			token = "";
-			color = v;
-		else
-			v = tostring(v);
-			line = line .. v;
-			token = token .. v;
-		end
-	end
-	
-	row[#row + 1] = {token, color}
-	
-	self.tbConsoleEditor.tbConsoleRows[#self.tbConsoleEditor.tbConsoleRows + 1] = row
-	self.tbConsoleEditor:SetCaret(Vector2( #self.tbConsoleEditor.tRows, 1 ));
-	self.tbConsoleEditor:SetSelection(line .. "\n");
-end]]
-
 function PANEL:PrintLine(...)
-	local r = {};
-	local l = "";
-	local c = Color(255, 255, 255);
-	
-	for k, v in pairs({...}) do
-		
-		if (istable(v)) then
-			c = v;
-			continue;
-		end
-		
-		l = l .. v;
-		
-		r[#r + 1] = {v, c};
-	end
-	
-	self.tbConsoleEditor.tbConsoleRows[#self.tbConsoleEditor.tbConsoleRows + 1] = r
-	
-	self.tbConsoleEditor:SetCaret(Vector2( #self.tbConsoleEditor.tRows, 1 ));
-	
-	self.tbConsoleEditor:SetSelection(l .. "\n");
+	self.tbConsoleEditor:WriteLine("", ...);
 end
 
-function PANEL:AddPrintOut(...)
-	local r = {};
-	local c = Color(255, 255, 255);
-	
-	for k, v in pairs({...}) do
-		if (istable(v)) then
-			c = v;
-			r[#r + 1] = v;
-			continue;
-		end
-		
-		if (not isstring(v)) then
-			v = tostring(v);
-		end
-		
-		local lines = string.Explode("\n", v);
-		
-		if (#lines == 1) then
-			r[#r + 1] = v;
-			continue;
-		end
-		
-		r[#r + 1] = lines[1];
-		
-		self:PrintLine(unpack(r));
-		
-		if (#lines > 2) then
-			for i = 2, #lines - 1 do
-				self:PrintLine(c, lines[i]);
-			end
-		end
-		
-		r = {c, lines[#lines]}
-	end
-	
-	self:PrintLine(unpack(r));
+function PANEL:AddRow(left, ...)
+	self.tbConsoleEditor:WriteLine(left, ...);
 end
+
+function PANEL:Warning(...)
+	self.tbConsoleEditor:WriteLine({Color(255, 0, 0), "Warning:"}, ...);
+end
+
+function PANEL:Info(...)
+	self.tbConsoleEditor:WriteLine({Color(255, 255, 255), "Info:"}, ...);
+end
+
+function PANEL:GetConsole(...)
+	return self.tbConsoleEditor;
+end
+
+
 
 /*---------------------------------------------------------------------------
 Syntax highlighter
@@ -927,7 +849,7 @@ function PANEL:DoValidate( Goto, Code, Native )
 			self.btnValidate:SetText( "Validation sucessful" );
 		elseif (instance.state == "internal") then
 			self:OnValidateError( false, "Internal error (see console)." )
-			Golem.Print(Color(255, 255, 255), "Internal error: ", instance.msg)
+			Golem.Warning(Color(255, 255, 255), "Internal error: ", instance.msg)
 		else
 			self:OnValidateError( Goto, instance )
 		end
@@ -983,7 +905,7 @@ function PANEL:OnValidateError( Goto, Thrown )
 
 	self.btnValidate:SetText( Error )
 	self.btnValidate:SetColor( Color( 255, 50, 50 ) )
-	self:AddPrintOut(Color(255,0,0), "Error: ", Error)
+	self:Warning("Error: ", Error)
 end
 
 /*---------------------------------------------------------------------------
