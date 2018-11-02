@@ -238,14 +238,14 @@ function PANEL:_OnKeyCodeTyped( code )
 						table_insert( self.tRows, stop.x, data ) 
 						self.Start:Add( -1, 0 )
 						self.Caret:Add( -1, 0 )
-						self.PaintRows = { }
+						self.tSyntax:Parse( )
 						self:ScrollCaret( )
 					end 
 				elseif self.Caret.x > 1 then 
 					local data = table_remove( self.tRows, self.Caret.x ) 
 					self:SetCaret( self.Caret:Add( -1, 0 ) ) 
 					table_insert( self.tRows, self.Caret.x, data )
-					self.PaintRows = { }
+					self.tSyntax:Parse( )
 				end 
 			else 
 				self.Scroll.x = self.Scroll.x - 1
@@ -261,14 +261,14 @@ function PANEL:_OnKeyCodeTyped( code )
 						table_insert( self.tRows, start.x, data ) 
 						self.Start:Add( 1, 0 )
 						self.Caret:Add( 1, 0 )
-						self.PaintRows = { }
+						self.tSyntax:Parse( )
 						self:ScrollCaret( )
 					end 
 				elseif self.Caret.x < #self.tRows then 
 					local data = table_remove( self.tRows, self.Caret.x ) 
 					self:SetCaret( self.Caret:Add( 1, 0 ) ) 
 					table_insert( self.tRows, self.Caret.x, data )
-					self.PaintRows = { }
+					self.tSyntax:Parse( )
 				end 
 			else 
 				self.Scroll.x = self.Scroll.x + 1
@@ -968,7 +968,7 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 	if !text or text == "" then
 		self.pScrollBar:SetUp( self.Size.x, #self.tRows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ) )
 		self:CalculateScroll( )
-		self.PaintRows = { }
+		self.tSyntax:Parse( )
 		self:TextChanged( selection, text )
 		if self.bCodeFolding then self.tSyntax:MakeFoldData( ) end
 		
@@ -1009,7 +1009,7 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 	
 	self.pScrollBar:SetUp( self.Size.x, #self.tRows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ))
 	self:CalculateScroll( )
-	self.PaintRows = { }
+	self.tSyntax:Parse( )
 	self:TextChanged( selection, text )
 	if self.bCodeFolding then self.tSyntax:MakeFoldData( ) end
 	
@@ -1033,10 +1033,7 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 end
 
 function PANEL:TextChanged( tSelection, sText )
-	
-	if self.tSyntax and self.tSyntax.Parse then self.tSyntax:Parse() end 
-	
-	
+	self.tSyntax:Parse( )
 	if self.OnTextChanged then self:OnTextChanged( tSelection, sText ) end 
 end
 
@@ -1754,8 +1751,7 @@ function PANEL:SetCode( Text )
 	self.tRows = string_Explode( "\n", string_gsub( Text, "\t", "    ") ) 
 	if self.bCodeFolding then self.tSyntax:MakeFoldData( ) end
 	
-	self.PaintRows = { } 
-	if self.tSyntax and self.tSyntax.Parse then self.tSyntax:Parse() end 
+	self.tSyntax:Parse( )
 	
 	self.Caret = Vector2( 1, 1 ) 
 	self.Start = Vector2( 1, 1 ) 
