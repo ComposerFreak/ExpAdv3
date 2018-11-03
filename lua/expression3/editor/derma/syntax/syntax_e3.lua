@@ -12,7 +12,7 @@ local string_find = string.find
 local type = type 
 local pairs = pairs 
 
-local Syntax = { sName = "E3" }
+local Syntax = { sName = "e3" }
 Syntax.__index = Syntax
 
 function Syntax:Init( dEditor )

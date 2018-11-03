@@ -330,7 +330,6 @@ function PANEL:Init( )
 			if not self.pnlTabHolder.Items[i].Tab.__type == "editor" then continue end 
 			self.pnlTabHolder.Items[i].Panel:SetFont( sFontID )
 		end
-		self.tbConsoleEditor:SetFont( sFontID ) 
 	end 
 	
 	local w, h, x, y = cookie.GetNumber( "golem_w", math.min( 1000, ScrW( ) * 0.8 ) ), cookie.GetNumber( "golem_h", math.min( 800, ScrH( ) * 0.8 ) ), cookie.GetNumber( "golem_x", ScrW( ) * 0.1 ), cookie.GetNumber( "golem_y", ScrH( ) * 0.1 ) 
@@ -435,7 +434,7 @@ function PANEL:NewTab( sType, ... )
 			sName = sPath and string.match( sPath, "/([^%./]+%.txt)$" ) or "generic"
 		end
 		
-		sLanguage = sLanguage or "E3"
+		sLanguage = sLanguage or "e3"
 		
 		local Editor = vgui.Create( "GOLEM_Editor" ) 
 		local Sheet = self.pnlTabHolder:AddSheet( sName or "generic", Editor, "fugue/script.png", function(pnl) self:CloseTab( pnl:GetParent( ), true ) end )
@@ -447,7 +446,7 @@ function PANEL:NewTab( sType, ... )
 		
 		Sheet.Tab.__type = "editor"
 		Sheet.Tab.__lang = sLanguage
-		Sheet.Tab.__shouldsave = sLanguage == "E3"
+		Sheet.Tab.__shouldsave = sLanguage == "e3"
 		
 		Editor.Master = self 
 		
@@ -470,7 +469,7 @@ function PANEL:NewTab( sType, ... )
 			
 			Menu:AddSpacer( )
 			
-			if sLanguage == "E3" then 
+			if sLanguage == "e3" then 
 				Menu:AddOption( "Save", function( ) self:SaveFile( pnl.FilePath, false, pnl ) end )
 				-- Menu:AddOption( "Save As", function( ) end )
 			end 
@@ -486,7 +485,7 @@ function PANEL:NewTab( sType, ... )
 			timer.Destroy( "Golem_autosave" )
 			timer.Create( "Golem_autosave", 0.5, 1, function( )
 				local Tab = Sheet.Tab
-				if not ValidPanel( Tab ) or Tab.__type ~= "editor" or Tab.__lang ~= E3 then return end
+				if not ValidPanel( Tab ) or Tab.__type ~= "editor" or Tab.__lang ~= "e3" then return end
 				local sCode = Tab:GetPanel( ):GetCode( )
 				local sPath = "golem_temp/_autosave_.txt"
 				
@@ -512,7 +511,7 @@ function PANEL:CloseTab( pTab, bSave )
 	if pTab.__type == "editor" then 
 		local Editor = pTab:GetPanel( )
 		
-		if bSave and pTab.FilePath and pTab.FilePath ~= "" and pTab.__lang == "E3" then // Ask about this?
+		if bSave and pTab.FilePath and pTab.FilePath ~= "" and pTab.__lang == "e3" then // Ask about this?
 			self:SaveFile( pTab.FilePath, false, pTab, true )
 		end
 		
@@ -848,7 +847,7 @@ function PANEL:DoValidate( Goto, Code, Native )
 			
 			-- EXPR_LIB.ShowDebug(nLua);
 			
-			local n = self:NewTab( "editor", nLua, false, "DEBUG", "Lua" )
+			local n = self:NewTab( "editor", nLua, false, "DEBUG", "lua" )
 			n.Panel:SetCode( n.Panel.tSyntax:Format(nLua) ) 
 			
 

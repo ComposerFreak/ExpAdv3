@@ -14,7 +14,7 @@ local string_gmatch = string.gmatch
 local type = type 
 local pairs = pairs 
 
-local Syntax = { sName = "Lua" }
+local Syntax = { sName = "lua" }
 Syntax.__index = Syntax
 
 function Syntax:Init( dEditor )
