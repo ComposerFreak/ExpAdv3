@@ -10,8 +10,17 @@
 	::AutoRun::
 ]]
 
-if (SERVER) then
+EXPR_ROOT = "";
+local _, addons = file.Find("addons\\*", "GAME");
+for _, addon in pairs( addons ) do
+	if file.Exists( string.format("addons\\%s\\lua\\autorun\\expression3.lua", addon), "GAME" ) then
+		EXPR_ROOT = string.format("addons\\%s\\", addon);
+		break;
+	end
+end
 
+print("E3 Root directory:", EXPR_ROOT);
+if (SERVER) then
 	AddCSLuaFile();
 
 	AddCSLuaFile("expression3/expr_lib.lua");

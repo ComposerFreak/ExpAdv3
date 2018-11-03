@@ -47,6 +47,10 @@ function SEARCH:Init()
 		if (bChecked) then self:ShowReplace(); else self:HideReplace(); end
 	end
 
+	function self.find_next.DoClick(this)
+		self:RunFind();
+	end
+
 	self:HideReplace();
 end
 
@@ -184,10 +188,21 @@ function SEARCH:GetQuery()
 end
 
 function SEARCH:FindNext(code, query, maxResults)
+	local editor = Golem.GetInstance();
+
 	local bAllowRegex = editor.searchOptRegex:GetValue();
-	local s, e = string.find(code, query, bAllowRegex);
+	local s, e = string.find(code, query, !bAllowRegex);
+
+	if (not (s and e)) then return; end
+	
+	editor:Warning("Found: ", s, " - ", e);
 end
 
+function SEARCH:RunFind()
+	local query = self:GetQuery();
+	local code = self:GetSelection();
+	self:FindNext(code, query, 10);
+end
 
 --[[
 function OPTIONS:Search( query, replace, all )

@@ -885,13 +885,19 @@ end
 
 function PANEL:OnValidateError( Goto, Thrown )
 	local Error;
+	local Warning = {};
 
 	if (istable(Thrown)) then
 		if (string.sub(Thrown.msg, -1) == ".") then
 			Thrown.msg = string.sub(Thrown.msg, 1, -2);
 		end
 
+		Warning[1] = Thrown.msg;
 		Error = string.format("%s, at line %i char %i.", Thrown.msg, Thrown.line, Thrown.char);
+
+		Warning[2] = Color(100, 10, 10);
+
+		Warning[3] = { "", " at line ", Thrown.line, " char ", Thrown.char, "."};
 
 		if (Thrown.file) then
 			Error = string.format("%s in %s.txt", string.sub(Error, 1, -2), Thrown.file);
@@ -902,18 +908,24 @@ function PANEL:OnValidateError( Goto, Thrown )
 	end
 	
 	if Goto then
-		if Thrown and (Thrown.line > 1 or Thrown.char > 1) then 
+		if Thrown and (Thrown.line > 1 or Thrown.char > 1) then
+			Warning[3][1] = function()
+			print("CLICKED THIS")
+				self.pnlTabHolder:GetActiveTab( ):GetPanel( ):SetCaret( Vector2( Thrown.line, Thrown.char ) );
+			end;
 			self.pnlTabHolder:GetActiveTab( ):GetPanel( ):SetCaret( Vector2( Thrown.line, Thrown.char ) )
 		end 
 	end
 	
 	if not Error then
 		Error = "!Missing Error Message!";
+		Warning[1] = Error;
 	end
 
 	self.btnValidate:SetText( Error )
 	self.btnValidate:SetColor( Color( 255, 50, 50 ) )
-	self:Warning("Error: ", Error)
+
+	self:Warning("Compiler Error", Warning);
 end
 
 /*---------------------------------------------------------------------------
