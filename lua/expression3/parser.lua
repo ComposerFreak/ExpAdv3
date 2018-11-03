@@ -537,19 +537,22 @@ function PARSER.Block_1(this, _end, lcb)
 	this:ExcludeWhiteSpace( "Further input required at end of code, incomplete statement" )
 
 	if (this:Accept("lcb")) then
+		print("ACCEPTED: LCB!");
+
 		local stmts;
 		local seq = this:StartInstruction("seq", this.__token, true);
 
 		if (not this:CheckToken("rcb")) then
-			this:PushScope()
+			this:PushScope();
 
 			stmts = this:Statements(true);
 
 			this:PopScope();
 		end
 
+		print("CHECK FOR: rcb / " .. this.__token.type);
 		if (not this:Accept("rcb")) then
-			this:Throw(this.__token, "Right curly bracket (}) missing, to close block");
+			this:Throw(this.__token, "Right curly bracket (}) missing, to close block got " .. this.__token.type);
 		end
 
 		return this:EndInstruction(seq, {stmts = stmts});
@@ -822,7 +825,19 @@ function PARSER.Statment_2(this)
 
 		local block = this:Block_1(false, "then");
 
-		local els = this:Statment_3();
+		local eif;
+		local nif = this:Statment_3();
+
+		if (nif) then
+			eif = { nif };
+
+			while nif do
+				nif = this:Statment_3();
+				eif[#eif + 1] = nif;
+			end
+		end
+
+		eif[#eif + 1] = this:Statment_4();
 
 		return this:EndInstruction(inst, {condition = condition; block = block; eif = eif});
 	end
@@ -838,9 +853,7 @@ function PARSER.Statment_3(this)
 
 		local block = this:Block_1(false, "then");
 
-		local eif = this:Statment_3();
-
-		return this:EndInstruction(inst, {condition = condition; block = block; eif = eif});
+		return this:EndInstruction(inst, {condition = condition; block = block;});
 	end
 
 	return this:Statment_4();
@@ -855,6 +868,8 @@ function PARSER.Statment_4(this)
 		return this:EndInstruction(inst, {block = block});
 	end
 end
+
+
 
 --[[
 ]]
