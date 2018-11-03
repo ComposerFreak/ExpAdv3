@@ -13,7 +13,6 @@ local code = [[
 
 			.defright {
 				position:fixed;
-				right:0;
 				left: 100;
 			};
 
@@ -28,7 +27,7 @@ local code = [[
 
 			<div name = "E3_Main" style = "height:100%;position:fixed;z-index:2;top:0;right:0;left:0;padding-top:20px;">
 
-				<table id = "E3table">
+				<table id = "E3table" >
 					<tr>
 						<th class = "defleft" name = "E3_TLeft" ></th>
 						<th class = "defright" name = "E3_TRight" ></th>
@@ -181,6 +180,8 @@ local CONSOLE = { }
 function CONSOLE:Init()
 
 	self.fid = 0;
+	self.mcache = {};
+
 	self:Dock(FILL);
 	self:SetHTML(code);
 	self:SetAllowLua(true);
@@ -223,14 +224,24 @@ function CONSOLE:WriteText(where, line)
 	self:Call( string.format("E3Console.writeText.%s(%q);", where, line) );
 end
 
+function CONSOLE:ToBase64(path)
+	if not file.Exists("materials\\" .. path, "GAME") then return path; end
+
+	if self.mcache[path] then return self.mcache[path]; end
+
+	local file = file.Open("materials\\" .. path, "rb", "GAME");
+
+	local b64 = "data:image/jpeg;base64," .. util.Base64Encode( file:Read( file:Size() ) );
+
+	file:Close();
+
+	self.mcache[path] = b64;
+
+	return b64;
+end
+
 function CONSOLE:WriteImage(where, path, size)
-	print("Image Before:", path);
-
-	if file.Exists("materials/" .. path, "GAME") then path = string.format( "%s\\materials\\%s", EXPR_ROOT, path ); end --util.RelativePathToFull( 
-
-	print("Image After:", path);
-
-	self:Call( string.format("E3Console.writeImage.%s(%q, %i);", where, path, size or 16) );
+	self:Call( string.format("E3Console.writeImage.%s(%q, %i);", where, self:ToBase64(path), size or 16) );
 end
 
 function CONSOLE:BeginCB(where, func)
@@ -276,6 +287,16 @@ function CONSOLE:WriteValues(where, values)
 				self:WriteImage(where, value.image, value.size);
 				continue;
 			end
+
+			if (value.font) then
+				self:setFontFace(where, value.font);
+			end
+
+			if (value.size) then
+				self:setSize(where, value.size);
+			end
+
+			if #value == 0 then continue; end
 
 			self:WriteValues(where, value);
 			continue;
