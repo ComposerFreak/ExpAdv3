@@ -9,6 +9,7 @@ local code = [[
 
 			.defleft {
 				width:100px;
+				vertical-align: text-top;
 			};
 
 			.defright {
@@ -19,13 +20,13 @@ local code = [[
 		</style>
 
 		<body>
-			<div name = "E3_Left" style = "height:100%;width:100px;position:fixed;z-index:1;top:0;left:0;padding-top:20px;padding-left:5;">
+			<div name = "E3_Left" style = "height:100%;width:100px;position:fixed;z-index:1;top:0;left:0;padding-top:20;padding-left:5;">
 			</div>
 
-			<div name = "E3_Right" style = "height:100%;position:fixed;z-index:1;top:0;right:0;left:100;padding-top:20px;padding-left:5;">
+			<div name = "E3_Right" style = "height:100%;position:fixed;z-index:1;top:0;right:0;left:100;padding-top:20;padding-left:5;">
 			</div>
 
-			<div name = "E3_Main" style = "height:100%;position:fixed;z-index:2;top:0;right:0;left:0;padding-top:20px;">
+			<div id = "E3_Main" style = "position:fixed;z-index:2;top:0;right:0;left:0;bottom:30;padding-top:20;overflow-y:scroll;">
 
 				<table id = "E3table" >
 					<tr>
@@ -34,6 +35,10 @@ local code = [[
 					</tr>
 				</table>
 
+			</div>
+
+			<div style = "position:fixed;z-index:2;left:0;bottom:0;width:100%;heigh:30px;">
+				<input type="text" style = "width:100%;background-color:transparent;border:none;" >
 			</div>
 		</body>
 
@@ -168,6 +173,9 @@ local code = [[
 
 				E3Console.bufl = "";
 				E3Console.bufr = "";
+
+				var element = document.getElementById("E3_Main");
+				element.scrollTop = element.scrollHeight - element.clientHeight;
 			};
 
 	</script>

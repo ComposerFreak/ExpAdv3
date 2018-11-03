@@ -225,7 +225,6 @@ function PARSER.SetUserObject(this, name, scope)
 		scope = this.__scopeID;
 	end
 
-	print("SetUserObject",name, scope)
 	if (not name) then debug.Trace() end
 
 	local class = {};
@@ -537,8 +536,6 @@ function PARSER.Block_1(this, _end, lcb)
 	this:ExcludeWhiteSpace( "Further input required at end of code, incomplete statement" )
 
 	if (this:Accept("lcb")) then
-		print("ACCEPTED: LCB!");
-
 		local stmts;
 		local seq = this:StartInstruction("seq", this.__token, true);
 
@@ -550,7 +547,6 @@ function PARSER.Block_1(this, _end, lcb)
 			this:PopScope();
 		end
 
-		print("CHECK FOR: rcb / " .. this.__token.type);
 		if (not this:Accept("rcb")) then
 			this:Throw(this.__token, "Right curly bracket (}) missing, to close block got " .. this.__token.type);
 		end
