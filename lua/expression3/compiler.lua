@@ -662,7 +662,7 @@ function COMPILER.Compile_IF(this, inst, token, data)
 
 	this:addInstructionToBuffer(inst, condition);
 
-	this:writeToBuffer(inst, ") then");
+	this:writeToBuffer(inst, ") then\n");
 
 	this:PushScope();
 
@@ -674,19 +674,22 @@ function COMPILER.Compile_IF(this, inst, token, data)
 
 	local eif = data.eif;
 
-	if (eif) then
-		this:Compile(eif);
+	if (eif and #eif > 0) then
 
-		this:addInstructionToBuffer(inst, eif);
+		for i = 1, #eif do
+			local stmt = eif[i];
+			this:Compile(stmt);
+			this:addInstructionToBuffer(inst, stmt);
+		end
 	end
 
-	this:writeToBuffer(inst, "end\n");
+	this:writeToBuffer(inst, "\nend\n");
 
 	return "", 0;
 end
 
 function COMPILER.Compile_ELSEIF(this, inst, token, data)
-	this:writeToBuffer(inst, "elseif (");
+	this:writeToBuffer(inst, "\nelseif (");
 
 	local condition = data.condition;
 
@@ -706,7 +709,7 @@ function COMPILER.Compile_ELSEIF(this, inst, token, data)
 
 	this:addInstructionToBuffer(inst, condition);
 
-	this:writeToBuffer(inst, ") then");
+	this:writeToBuffer(inst, ") then\n");
 
 	this:PushScope();
 
@@ -728,7 +731,7 @@ function COMPILER.Compile_ELSEIF(this, inst, token, data)
 end
 
 function COMPILER.Compile_ELSE(this, inst, token, data)
-	this:writeToBuffer(inst, "else\n");
+	this:writeToBuffer(inst, "\nelse\n");
 
 	this:PushScope();
 
