@@ -3,7 +3,7 @@
 	Author: Oskar
 ============================================================================================================================================*/
 
-local Syntax = { sName = "Console" }
+local Syntax = { sName = "console" }
 Syntax.__index = Syntax
 
 function Syntax:Init( dEditor )

@@ -848,7 +848,7 @@ function PANEL:DoValidate( Goto, Code, Native )
 			-- EXPR_LIB.ShowDebug(nLua);
 			
 			local n = self:NewTab( "editor", nLua, false, "DEBUG", "lua" )
-			n.Panel:SetCode( n.Panel.tSyntax:Format(nLua) ) 
+			-- n.Panel:SetCode( n.Panel.tSyntax:Format(nLua) ) 
 			
 
 		elseif (status) then

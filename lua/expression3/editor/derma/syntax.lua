@@ -45,8 +45,6 @@ function Syntax:Create( sName, dEditor )
 	if not tLangList[sName] then error( "No syntax named " .. sName ) end 
 	local lang = setmetatable( { }, tLangList[sName] )
 	
-	print( "Loading syntax:", sName )
-	
 	lang:Init( dEditor )
 	
 	return lang
@@ -78,7 +76,6 @@ local function command( pPly, sCommand, tArg, sArg )
 			local def = Syntax.Colors[tArg[2]].Defaults[tArg[3]]
 			
 			Syntax:SetColor( tArg[2], tArg[3], Color( tonumber( r ) or def.r, tonumber( g ) or def.g, tonumber( b ) or def.b )  )
-			-- print( tArg[2], tArg[3], Color( tonumber( r ) or def.r, tonumber( g ) or def.g, tonumber( b ) or def.b )  )
 		end 
 	end 
 end
@@ -89,7 +86,7 @@ local tCommands = {
 	"color",
 }
 
-
+-- TODO: Move font over to use this command
 local function cmdhelp( sCommand, sArg )
 	local tOut = { }
 	sArg = string.TrimLeft( sArg )
@@ -106,7 +103,15 @@ local function cmdhelp( sCommand, sArg )
 	if tArg[1] == "color" then 
 		if tArg[2] and tArg[2] ~= "" then 
 			for name, data in pairs( Syntax.Colors ) do
-				if string.StartWith( name, tArg[2] ) then 
+				if name == tArg[2] then 
+					for token, color in pairs( data.Colors ) do
+						if token == tArg[3] then
+							tOut[#tOut+1] = sCommand .. " color " .. name .. " " .. token .. string.format( " %d_%d_%d", color.r, color.g, color.b )
+						elseif string.StartWith( token, tArg[3] or "" ) then 
+							tOut[#tOut+1] = sCommand .. " color " .. name .. " " .. token
+						end 
+					end
+				elseif string.StartWith( name, tArg[2] ) then 
 					tOut[#tOut+1] = sCommand .. " color " .. name 
 				end 
 			end
@@ -115,49 +120,6 @@ local function cmdhelp( sCommand, sArg )
 				tOut[#tOut+1] = sCommand .. " color " .. name 
 			end
 		end 
-		
-		
-		/*if not tArg[2] or tArg[2] == "" then 
-			for name, _ in pairs( Syntax.Colors ) do
-				tOut[#tOut+1] = sCommand .. " color " .. name 
-			end 
-			
-			-- tOut[#tOut+1] = sCommand .. " color reset"
-		else 
-			local sToken = string.lower( tArg[2] )
-			
-			for name, _ in pairs( Syntax.Colors ) do
-				if string.StartWith( string.lower( name ), sToken ) then 
-					if not tArg[3] then 
-						-- for tokenname, color in pairs( Syntax.Colors[name].Colors ) do
-						-- 	tOut[#tOut+1] = sCommand .. " color " .. name .. " " .. tokenname
-						-- end
-						
-						
-						-- tOut[#tOut+1] = sCommand .. " color " .. name .. " reset"
-					elseif sToken == name:lower() then 
-						local sColor = string.lower( tArg[3]  )
-						
-						for tokenname, color in pairs( Syntax.Colors[name].Colors ) do
-							if string.lower( tokenname ) == sColor then 
-								tOut[#tOut+1] = sCommand .. " color " .. name .. " " .. tokenname .. string.format( " %d_%d_%d", color.r, color.g, color.b )
-							elseif string.StartWith( string.lower( tokenname ), sColor ) then 
-								tOut[#tOut+1] = sCommand .. " color " .. name .. " " .. tokenname
-							end 
-						end
-						
-						if string.StartWith( "reset", sColor ) then 
-							tOut[#tOut+1] = sCommand .. " color " .. name .. " reset"
-						end 
-					end 
-				end 
-			end
-			
-			-- if string.StartWith( "reset", sToken ) then 
-			-- 	tOut[#tOut+1] = sCommand .. " color reset"
-			-- end 
-			
-		end */
 		
 		return tOut
 	-- elseif tArg[1] == "font_size" then 
@@ -170,8 +132,7 @@ local function cmdhelp( sCommand, sArg )
 		end 
 	end
 	
-	
-	return tOut //{ sCommand .. " " .. sArg } 
+	return tOut
 end
 
 concommand.Add( "golem", command, cmdhelp, "Utility command for the Golem Editor", FCVAR_CLIENTCMD_CAN_EXECUTE + FCVAR_SERVER_CANNOT_QUERY )
