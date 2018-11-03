@@ -1744,9 +1744,11 @@ end
 Text setters / getters
 ---------------------------------------------------------------------------*/
 
-function PANEL:SetCode( Text ) 
+function PANEL:SetCode( Text, bFormat ) 
 	self.pScrollBar:SetScroll( 0 ) 
 	self.pHScrollBar:SetScroll( 0 ) 
+	
+	if bFormat and self.tSyntax.Format then Text = self.tSyntax:Format( Text ) end 
 	
 	self.tRows = string_Explode( "\n", string_gsub( Text, "\t", "    ") ) 
 	if self.bCodeFolding then self.tSyntax:MakeFoldData( ) end

@@ -421,7 +421,7 @@ end
 
 function PANEL:NewTab( sType, ... )
 	if sType == "editor" then 
-		local sCode, sPath, sName, sLanguage = unpack{...}
+		local sCode, sPath, sName, sLanguage, bFormat = unpack{...}
 		if sPath and not string.EndsWith( sPath, ".txt" ) then sPath = sPath .. ".txt" end 
 		if sPath and not string.StartWith( sPath, "golem/" ) then sPath = "golem/" .. sPath end
 		if sPath and self.FileList[sPath] then 
@@ -440,7 +440,6 @@ function PANEL:NewTab( sType, ... )
 		local Sheet = self.pnlTabHolder:AddSheet( sName or "generic", Editor, "fugue/script.png", function(pnl) self:CloseTab( pnl:GetParent( ), true ) end )
 		self.pnlTabHolder:SetActiveTab( Sheet.Tab )
 		Sheet.Panel:RequestFocus( )
-		-- Editor:SetSyntax( Golem.Syntax:Create( sLanguage, Editor ) )
 		Golem.Syntax:Create( sLanguage, Editor )
 		
 		
@@ -457,7 +456,7 @@ function PANEL:NewTab( sType, ... )
 		end
 		
 		if sCode and sCode ~= "" then
-			Editor:SetCode( sCode )
+			Editor:SetCode( sCode, bFormat )
 		end
 		
 		Sheet.Tab.DoRightClick = function( pnl )
@@ -485,7 +484,7 @@ function PANEL:NewTab( sType, ... )
 			timer.Destroy( "Golem_autosave" )
 			timer.Create( "Golem_autosave", 0.5, 1, function( )
 				local Tab = Sheet.Tab
-				if not ValidPanel( Tab ) or Tab.__type ~= "editor" or Tab.__lang ~= "e3" then return end
+				if not ValidPanel( Tab ) or Tab.__type ~= "editor" or not Tab.__shouldsave then return end
 				local sCode = Tab:GetPanel( ):GetCode( )
 				local sPath = "golem_temp/_autosave_.txt"
 				
@@ -845,12 +844,7 @@ function PANEL:DoValidate( Goto, Code, Native )
 			local name = instance.directives.name;
 			local nLua, traceTbl = instance.build();
 			
-			-- EXPR_LIB.ShowDebug(nLua);
-			
-			local n = self:NewTab( "editor", nLua, false, "DEBUG", "lua" )
-			-- n.Panel:SetCode( n.Panel.tSyntax:Format(nLua) ) 
-			
-
+			self:NewTab( "editor", nLua, false, "DEBUG", "lua", true )
 		elseif (status) then
 			self.btnValidate:SetColor( Color( 50, 255, 50 ) );
 			self.btnValidate:SetText( "Validation sucessful" );

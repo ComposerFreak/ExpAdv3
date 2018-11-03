@@ -144,6 +144,7 @@ function Syntax:MakeFoldData( nExit )
 				nBracket = nBracket + 1
 			elseif sType == "elseif" then 
 				nLevel = nLevel - 1
+				nElse = nElse + 1
 			elseif sType == "else" then 
 				-- nLevel = nLevel - 1
 				nElse = nElse + 1
@@ -358,7 +359,7 @@ function Syntax:Format( Code )
 					outline = outline - 1
 				end 
 				
-				newcode[outline] = string_rep( "\t", bNoTabs and 0 or math.min( predent, indent ) ) .. string.match( line, "^\t*(.*)$" ) 
+				newcode[outline] = string_rep( "\t", bNoTabs and 0 or math.min( predent, indent ) ) .. string.match( line, "^[\t ]*(.*)$" ) 
 				outline = outline + 1
 				newline = false
 			end 
