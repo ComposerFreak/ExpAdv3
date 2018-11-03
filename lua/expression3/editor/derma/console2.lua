@@ -357,15 +357,19 @@ function CONSOLE:Warn(level, ...)
 
 	level = level or 0;
 	
-	if level > 1 then
-		left[1] = {image = "fugue/blue-folder-horizontal.png", size = 16}
+	if level == 1 then 
+		left[1] = {image = "fugue/question.png", size = 16}
+	elseif level == 2 then
+		left[1] = {image = "fugue/exclamation-circle.png", size = 16}
+	elseif level == 3 then 
+		left[1] = {image = "fugue/exclamation-red.png", size = 16}
 	end
-
+	
 	if level == 3 then
 		self:SetBackGroundColorL(200, 50, 50);
 		self:SetBackGroundColorR(200, 50, 50);
 	end
-
+	
 	left[#left + 1] = Color(255, 255, 255);
 	left[#left + 1] = "Warning";
 
