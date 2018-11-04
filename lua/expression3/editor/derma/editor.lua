@@ -59,7 +59,6 @@ function PANEL:Init( )
 	self.tFoldData = { {0, false, false} }
 	self.Undo = { } 
 	self.Redo = { } 
-	self.PaintRows = { }
 	self.Bookmarks = { } 
 	
 	self.tCursors = { } 
@@ -1698,8 +1697,6 @@ function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 	if Row > #self.tRows then return end
 	
 	draw_SimpleText( tostring( Row ), self.Font, self.BookmarkWidth + self.LineNumberWidth, self.FontHeight * ( LinePos ), C_white, TEXT_ALIGN_RIGHT ) 
-	-- self.PaintRows[Row] = (bForceRepaint and self:SyntaxColorLine( Row )) or self.PaintRows[Row] or self:SyntaxColorLine( Row ) 
-	self.PaintRows[Row] = self.tSyntax:GetSyntax( Row )
 	
 	if editor_debug_folding then 	
 		surface_SetDrawColor( 0, 200, 255 ) 
@@ -1740,10 +1737,26 @@ function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 	end 
 	
 	local offset = -self.Scroll.y + 1
-	for i, cell in ipairs( self.PaintRows[Row] ) do
+	for i, cell in ipairs( self.tSyntax:GetSyntax( Row ) ) do
 		if not cell[1] then 
 			cell[1] = ""
 			cell[2] = C_white
+		end 
+		
+		if cell[3] then 
+			local mat = cell[4]
+			if type( mat ) == "IMaterial" then 
+				local w, h = mat:Width( ), mat:Height( )
+				local x, y = 0, (LinePos + 1) * self.FontHeight - self.FontHeight/2 - h/2
+				
+				if offset >= 0 then 
+					x = offset * self.FontWidth + self.LinePadding
+					
+					surface_SetDrawColor( 255, 255, 255, 255 ) 
+					surface_SetMaterial( mat ) 
+					surface_DrawTexturedRect( x, y, w, h ) 
+				end 
+			end 
 		end 
 		
 		local len = #cell[1]

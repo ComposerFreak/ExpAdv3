@@ -428,7 +428,7 @@ function Syntax:AddToken( sTokenName, sBuffer )
 		self.sBuffer = ""
 	end 
 	if not sBuffer or sBuffer == "" then return end 
-		
+	
 	if self.tLastColor and color == self.tLastColor[2] then
 		self.tLastColor[1] = self.tLastColor[1] .. sBuffer
 	else
