@@ -19,17 +19,18 @@ end
 		end 
 		
 		return {self.tbConsoleRows[row], Color(255,255,255)}
-	end*/
+	end*/]]--
 
 function Syntax:GetSyntax( nRow )
-	if self.dEditor.tbConsoleRows[nRow] then 
-		return self.dEditor.tbConsoleRows[nRow]
+	if self.dEditor.tFormat[nRow] then 
+		return self.dEditor.tFormat[nRow]
 	end 
-	return { { self.dEditor.tbConsoleRows[nRow], Color(255,255,255) } }
+	
+	return { { self.dEditor.tRows[nRow], Color(255,255,255) } }
 end
 
 function Syntax:Parse( )
-end]]
+end
 
 
 Golem.Syntax:Add( Syntax.sName, Syntax ) 

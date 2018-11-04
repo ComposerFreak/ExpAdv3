@@ -1,26 +1,35 @@
 local PANEL = {};
 
 function PANEL:Init( )
-	self.nLine = 0;
-	self.tRows = { };
-	self.BaseClass.Init(self)
+	self.BaseClass.Init(self);
 
-	self:NewLine();
+	self.nLine = 0;
+	self.row = {};
+	self.format = {};
+
+	self.tRows = { };
+	self.tFormat = {};
+
+	--self:NewLine();
+	self:SetEditable(false);
 	self:SetDefaultTextColor(Color(255, 255, 255));
 
 	Golem.Syntax:Create( "console", self );
 	
-	self.pTextEntry.OnKeyCodeTyped = function( _, code ) end
 end
 
 function PANEL:NewLine()
-	self.row = { };
 	self.nLine = self.nLine + 1;
-	self.tRows[ self.nLine ] = self.row;
+	self.tRows[ self.nLine ] = table.concat(self.row, "");
+	self.tFormat[ self.nLine ] = self.format;
+
+	self.row = {};
+	self.tFormat = {};
 end
 
 function PANEL:Write(str)
-	self.row[#self.row + 1] = { str, self.cTextColor };
+	self.row[#self.row + 1] = str;
+	self.format[#self.row] = {str, self.cTextColor};
 end
 
 function PANEL:SetColor(col)
@@ -28,7 +37,9 @@ function PANEL:SetColor(col)
 end
 
 function PANEL:WriteImage(image, size)
-
+	local str = "  ";
+	self.row[#self.row + 1] = str;
+	self.format[#self.row] = { str, self.cTextColor, true, Material(image) };
 end
 
 function PANEL:WriteTable(values)
@@ -51,7 +62,9 @@ function PANEL:WriteTable(values)
 			continue;
 		end
 
-		if not isstring(value) then value = tostring(value) end
+		if not isstring(value) then
+			value = tostring(value)
+		end
 
 		local lines = string.Explode("\n", value);
 		local tLines = #lines;
@@ -72,6 +85,30 @@ function PANEL:WriteLine(...)
 	self:NewLine();
 end
 
+function PANEL:Warn(level, ...)
+	local left = {};
+	local right = {...};
+
+	level = level or 0;
+	
+	if level == 1 then 
+		left[1] = {image = "fugue/question.png", size = 16}
+	elseif level == 2 then
+		left[1] = {image = "fugue/exclamation-circle.png", size = 16}
+	elseif level == 3 then 
+		left[1] = {image = "fugue/exclamation-red.png", size = 16}
+	end
+	
+	if level == 3 then
+		self:SetBackGroundColorL(200, 50, 50);
+		self:SetBackGroundColorR(200, 50, 50);
+	end
+	
+	left[#left + 1] = Color(255, 255, 255);
+	left[#left + 1] = "Warning";
+
+	self:WriteLine(left, right)
+end
 
 function PANEL:GetDefaultTextColor()
 	return self.cDefTextColor;
