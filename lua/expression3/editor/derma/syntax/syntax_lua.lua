@@ -28,9 +28,9 @@ end
 Formating and folding
 ---------------------------------------------------------------------------*/
 
-function Syntax:FindValidLines( )
+function Syntax:FindValidLines( tLines )
 	local LinesToFold = self.dEditor:ExpandAll( )
-	local tRows = self.dEditor.tRows
+	local tRows = tLines or self.dEditor.tRows
 	local MultilineComment
 	local ValidLines = { }
 	local Row, Char = 1, 0
@@ -144,6 +144,7 @@ function Syntax:MakeFoldData( nExit )
 				nBracket = nBracket + 1
 			elseif sType == "elseif" then 
 				nLevel = nLevel - 1
+				nElse = nElse + 1
 			elseif sType == "else" then 
 				-- nLevel = nLevel - 1
 				nElse = nElse + 1
@@ -279,7 +280,7 @@ end
 function Syntax:Format( Code )
 	local newcode = { }
 	local lines = string.Explode( "\n", Code )
-	local ValidLine, Lookup = self:FindValidLines( )
+	local ValidLine, Lookup = self:FindValidLines( lines )
 	local indent = 0
 	local line = 1
 	local newline = false
@@ -306,7 +307,7 @@ function Syntax:Format( Code )
 				bNoTabs = true
 			end 
 		end
-		
+				
 		if #line > 0 and line[#line] ~= " " then line = line .. " " end 
 		
 		if exit then 
@@ -351,6 +352,8 @@ function Syntax:Format( Code )
 							predent = predent - 1
 							nElse = nElse + 1 
 						end 
+					else 
+						print( i, char, line )
 					end 
 				end 
 				
@@ -358,7 +361,7 @@ function Syntax:Format( Code )
 					outline = outline - 1
 				end 
 				
-				newcode[outline] = string_rep( "\t", bNoTabs and 0 or math.min( predent, indent ) ) .. string.match( line, "^\t*(.*)$" ) 
+				newcode[outline] = string_rep( "\t", bNoTabs and 0 or math.min( predent, indent ) ) .. string.match( line, "^[\t ]*(.*)$" ) 
 				outline = outline + 1
 				newline = false
 			end 

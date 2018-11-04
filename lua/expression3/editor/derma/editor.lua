@@ -74,6 +74,7 @@ function PANEL:Init( )
 	self.LinePadding = 0 
 	
 	self.Insert = false 
+	self.bEditable = true
 	
 	self.pTextEntry = self:Add( "TextEntry" ) 
 	self.pTextEntry:SetMultiline( true )
@@ -192,6 +193,7 @@ function PANEL:_OnKeyCodeTyped( code )
 	local shift = input_IsKeyDown( KEY_LSHIFT ) or input_IsKeyDown( KEY_RSHIFT )
 	local control = input_IsKeyDown( KEY_LCONTROL ) or input_IsKeyDown( KEY_RCONTROL )
 	
+	
 	-- allow ctrl-ins and shift-del ( shift-ins, like ctrl-v, is handled by vgui )
 	if not shift and control and code == KEY_INSERT then
 		shift, control, code = true, false, KEY_C
@@ -200,6 +202,169 @@ function PANEL:_OnKeyCodeTyped( code )
 	end 
 	
 	local tFolds = self:ExpandAll( )
+	
+	
+	-- Watered down version for display only
+	if not self.bEditable then 
+		if control then 
+			if code == KEY_C then 
+				if self:HasSelection( ) then
+					local clipboard = self:GetSelection( )
+					clipboard = string_gsub( clipboard, "\n", "\r\n" )
+					SetClipboardText( clipboard )
+				end
+			elseif code == KEY_UP then 
+				self.Scroll.x = self.Scroll.x - 1
+				if self.Scroll.x < 1 then self.Scroll.x = 1 end
+				self.pScrollBar:SetScroll( self.Scroll.x -1 )
+			elseif code == KEY_DOWN then 
+				self.Scroll.x = self.Scroll.x + 1
+				self.pScrollBar:SetScroll( self.Scroll.x -1 )
+			elseif code == KEY_LEFT then
+				if self:HasSelection( ) and not shift then
+					self.Start = self.Caret:Clone( )
+				else
+					self.Caret = self:wordLeft( self.Caret )
+				end
+			
+				self:ScrollCaret( )
+			
+				if not shift then
+					self.Start = self.Caret:Clone( )
+				end
+			elseif code == KEY_RIGHT then
+				if self:HasSelection( ) and not shift then
+					self.Start = self.Caret:Clone( )
+				else
+					self.Caret = self:wordRight( self.Caret )
+				end
+			
+				self:ScrollCaret( )
+			
+				if not shift then
+					self.Start = self.Caret:Clone( )
+				end
+			elseif code == KEY_HOME then
+				self.Caret = Vector2( 1, 1 )
+				
+				self:ScrollCaret( )
+				
+				if not shift then
+					self.Start = self.Caret:Clone( )
+				end
+			elseif code == KEY_END then
+				self.Caret = Vector2( #self.tRows, 1 )
+				
+				self:ScrollCaret( )
+				
+				if not shift then
+					self.Start = self.Caret:Clone( )
+				end
+			end 
+		else -- control
+			if code == KEY_UP then 
+				if self.Caret.x > 1 then
+					self:FoldAll( tFolds )
+					self.Caret.x = self.Caret.x - 1
+					
+					if istable( self.tRows[self.Caret.x] ) and self.tRows[self.Caret.x].Primary ~= self.Caret.x then 
+						self.Caret.x = self.tRows[self.Caret.x].Primary 
+					end
+					
+					if self.Caret.x < 1 then self.Caret.x = 1 end 
+					
+					local length = #self.tRows[self.Caret.x]
+					if self.Caret.y > length + 1 then
+						self.Caret.y = length + 1
+					end
+					tFolds = self:ExpandAll( )
+				end
+				
+				self:ScrollCaret( )
+				if not shift then
+					self.Start = self.Caret:Clone( )
+				end
+			elseif code == KEY_DOWN then 
+				if self.Caret.x < #self.tRows then
+					self:FoldAll( tFolds )
+					self.Caret.x = self.Caret.x + 1
+					
+					if istable( self.tRows[self.Caret.x] ) and self.tRows[self.Caret.x].Primary ~= self.Caret.x then 
+						self.Caret.x = #self.tRows[self.Caret.x] + self.tRows[self.Caret.x].Primary 
+					end 
+					
+					if self.Caret.x > #self.tRows then self.Caret.x = #self.tRows end 
+					
+					local length = #self.tRows[self.Caret.x]
+					if self.Caret.y > length + 1 then
+						self.Caret.y = length + 1
+					end
+					tFolds = self:ExpandAll( )
+				end
+				
+				self:ScrollCaret( )
+				if not shift then
+					self.Start = self.Caret:Clone( )
+				end
+			elseif code == KEY_LEFT then 
+				self.Caret = self:MovePosition( self.Caret, -1 )
+				self:ScrollCaret( )
+				if not shift then
+					self.Start = self.Caret:Clone( )
+				end 
+			elseif code == KEY_RIGHT then
+				self.Caret = self:MovePosition( self.Caret, 1 )
+				self:ScrollCaret( )
+				if not shift then
+					self.Start = self.Caret:Clone( )
+				end 
+			elseif code == KEY_PAGEUP then 
+				self.Caret.x = math_max( self.Caret.x - math_ceil( self.Size.x / 2 ), 1 )
+				self.Caret.y = math_min( self.Caret.y, #self.tRows[self.Caret.x] + 1 )
+				
+				self.Scroll.x = math_max( self.Scroll.x - math_ceil( self.Size.x / 2 ), 1 )
+
+				self:ScrollCaret( )
+
+				if not shift then
+					self.Start = self.Caret:Clone( )
+				end
+			elseif code == KEY_PAGEDOWN then
+				self.Caret.x = math_min( self.Caret.x + math_ceil( self.Size.x / 2 ), #self.tRows )
+				self.Caret.y = self.Caret.x == #self.tRows and 1 or math_min( self.Caret.y, #self.tRows[self.Caret.x] + 1 )
+
+				self.Scroll.x = self.Scroll.x + math_ceil( self.Size.x / 2 )
+
+				self:ScrollCaret( )
+
+				if not shift then
+					self.Start = self.Caret:Clone( )
+				end
+			elseif code == KEY_HOME then
+				local row = self.tRows[self.Caret.x]
+				local first_char = string_find( row, "%S" ) or #row + 1
+				self.Caret.y = self.Caret.y == first_char and 1 or first_char
+
+				self:ScrollCaret( )
+
+				if not shift then
+					self.Start = self.Caret:Clone( )
+				end
+			elseif code == KEY_END then
+				self.Caret.y = #self.tRows[self.Caret.x] + 1
+
+				self:ScrollCaret( )
+
+				if not shift then
+					self.Start = self.Caret:Clone( )
+				end
+			end 
+		end 
+		
+		self:FoldAll( tFolds )
+		
+		return 
+	end 
 	
 	if control then
 		if code == KEY_A then
@@ -552,6 +717,7 @@ end
 
 -- TODO: Add options to turn on and off the different auto param functionality
 function PANEL:_OnTextChanged( ) 
+	if not self.bEditable then return end 
 	local ctrlv = false
 	local text = self.pTextEntry:GetValue( )
 	self.pTextEntry:SetText( "" )
@@ -609,6 +775,10 @@ function PANEL:_OnTextChanged( )
 		self:SetSelection( text )
 	end 
 	self:ScrollCaret( ) 
+end
+
+function PANEL:SetEditable( bValue )
+	self.bEditable = bValue 
 end
 
 /*---------------------------------------------------------------------------
@@ -686,23 +856,27 @@ function PANEL:OnMouseReleased( code )
 					SetClipboardText( clipboard ) 
 				end ) 
 				
-				Menu:AddOption( "Cut", function( ) 
-					local clipboard = self:GetSelection( ) 
-					clipboard = string_gsub( clipboard, "\n", "\r\n" ) 
-					SetClipboardText( clipboard ) 
-					self:SetSelection( "" ) 
-				end ) 
-				
-				Menu:AddOption( "Indent", function( ) 
-					self:Indent( )
-				end ) 
-				
-				Menu:AddOption( "Outdent", function( ) 
-					self:Indent( true )
-				end ) 
+				if self.bEditable then 
+					Menu:AddOption( "Cut", function( ) 
+						local clipboard = self:GetSelection( ) 
+						clipboard = string_gsub( clipboard, "\n", "\r\n" ) 
+						SetClipboardText( clipboard ) 
+						self:SetSelection( "" ) 
+					end ) 
+					
+					Menu:AddOption( "Indent", function( ) 
+						self:Indent( )
+					end ) 
+					
+					Menu:AddOption( "Outdent", function( ) 
+						self:Indent( true )
+					end ) 
+				end 
 			end 
 			
-			Menu:AddOption( "Paste", function( ) self.pTextEntry:Paste( ) end ) 
+			if self.bEditable then 
+				Menu:AddOption( "Paste", function( ) self.pTextEntry:Paste( ) end ) 
+			end 
 			
 			Menu:AddSpacer( ) 
 			Menu:AddOption( "Select All", function( ) self:SelectAll( ) end )
@@ -1744,9 +1918,11 @@ end
 Text setters / getters
 ---------------------------------------------------------------------------*/
 
-function PANEL:SetCode( Text ) 
+function PANEL:SetCode( Text, bFormat ) 
 	self.pScrollBar:SetScroll( 0 ) 
 	self.pHScrollBar:SetScroll( 0 ) 
+	
+	if bFormat and self.tSyntax.Format then Text = self.tSyntax:Format( Text ) end 
 	
 	self.tRows = string_Explode( "\n", string_gsub( Text, "\t", "    ") ) 
 	if self.bCodeFolding then self.tSyntax:MakeFoldData( ) end
