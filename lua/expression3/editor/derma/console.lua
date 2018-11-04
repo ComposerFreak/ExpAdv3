@@ -1,78 +1,84 @@
 local PANEL = {};
 
 function PANEL:Init( )
+	self.nLine = 0;
+	self.tRows = { };
 	self.BaseClass.Init(self)
-	self.pTextEntry.OnKeyCodeTyped = function( _, code ) end
+
+	self:NewLine();
+	self:SetDefaultTextColor(Color(255, 255, 255));
 
 	Golem.Syntax:Create( "console", self );
-	self.tbConsoleRows = { };
+	
+	self.pTextEntry.OnKeyCodeTyped = function( _, code ) end
+end
+
+function PANEL:NewLine()
+	self.row = { };
+	self.nLine = self.nLine + 1;
+	self.tRows[ self.nLine ] = self.row;
+end
+
+function PANEL:Write(str)
+	self.row[#self.row + 1] = { str, self.cTextColor };
+end
+
+function PANEL:SetColor(col)
+	self.cTextColor = col;
+end
+
+function PANEL:WriteImage(image, size)
+
+end
+
+function PANEL:WriteTable(values)
+	local tValues = #values;
+
+	for i = 1, tValues do
+		local value = values[i];
+
+		if IsColor(value) then
+			self:SetColor(value);
+			continue;
+		end
+
+		if istable(value) then
+			if value.image then
+				self:WriteImage(value.image, value.size);
+			else
+				self:WriteTable(value);
+			end
+			continue;
+		end
+
+		if not isstring(value) then value = tostring(value) end
+
+		local lines = string.Explode("\n", value);
+		local tLines = #lines;
+
+		for j = 1, tLines do
+			self:Write(lines[j]);
+
+			if tLines > 1 and j < tLines then
+				self:NewLine();
+			end
+		end
+	end
 end
 
 function PANEL:WriteLine(...)
-
-end	
-
---[[
-function PANEL:PrintLine(...)
-	local r = {};
-	local l = "";
-	local c = Color(255, 255, 255);
-	
-	for k, v in pairs({...}) do
-		
-		if (istable(v)) then
-			c = v;
-			continue;
-		end
-		
-		l = l .. v;
-		
-		r[#r + 1] = {v, c};
-	end
-	
-	self.tRows[#self.tRows + 1] = r
-	
-	self:SetCaret(Vector2( #self.tRows, 1 ));
-	
-	self:SetSelection(l .. "\n");
+	self.cTextColor = self.cDefTextColor;
+	self:WriteTable( { ... } );
+	self:NewLine();
 end
 
-function PANEL:AddPrintOut(...)
-	local r = {};
-	local c = Color(255, 255, 255);
-	
-	for k, v in pairs({...}) do
-		if (istable(v)) then
-			c = v;
-			r[#r + 1] = v;
-			continue;
-		end
-		
-		if (not isstring(v)) then
-			v = tostring(v);
-		end
-		
-		local lines = string.Explode("\n", v);
-		
-		if (#lines == 1) then
-			r[#r + 1] = v;
-			continue;
-		end
-		
-		r[#r + 1] = lines[1];
-		
-		self:PrintLine(unpack(r));
-		
-		if (#lines > 2) then
-			for i = 2, #lines - 1 do
-				self:PrintLine(c, lines[i]);
-			end
-		end
-		
-		r = {c, lines[#lines]}
-	end
-	
-	self:PrintLine(unpack(r));
-end]]
+
+function PANEL:GetDefaultTextColor()
+	return self.cDefTextColor;
+end
+
+function PANEL:SetDefaultTextColor(c)
+	self.cDefTextColor = c;
+end
 
 vgui.Register( "GOLEM_Console", PANEL, "GOLEM_Editor" );

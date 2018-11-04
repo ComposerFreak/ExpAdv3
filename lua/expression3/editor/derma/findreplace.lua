@@ -158,22 +158,69 @@ function SEARCH:Paint()
 	end
 end
 
-function SEARCH:GetSelection()
+function SEARCH:GetCode()
 	local editor = Golem.GetInstance();
-	local bInSelection = editor.searchOptSelection:GetValue();
-	local bMatchCase = editor.searchOpCase:GetValue();
-
 	local code = editor:GetCode();
-
-	if ( bInSelection ) then
-		code = editor:GetArea( editor:MakeSelection( {editor.Start, editor.Carret} ) );
-	end
+	local bMatchCase = editor.searchOpCase:GetValue();
 
 	if (bMatchCase) then
 		code = string.lower(code);
 	end
 
-	return code;
+	return code, editor.tRows;
+end
+
+
+function SEARCH:ToTextPos(lines, line, char)
+	local p = 0;
+	
+	for l = 1, #lines do
+		local line = lines[l];
+		local len = #line;
+
+		if l < line then
+			p = p + len + 1;
+		elseif l == line then
+			p = (len < char) and len or char;
+		else
+			break;
+		end
+	end
+
+	return p;
+end
+
+function SEARCH:PosToLineChar(code, pos)
+	code = string.sub(code, 1, pos);
+	local lines = string.Explode("\n", code);
+
+	local p = 0;
+	for l = 1, #lines do
+		local line = lines[l];
+		local len = #line;
+
+		p = p + len;
+
+		if p == pos then
+			return l, len;
+		else
+			p = p + 1;
+		end
+	end
+
+	return 0, 0;
+end
+
+function SEARCH:GetSelection(code)
+	local editor = Golem.GetInstance();
+	local bInSelection = editor.searchOptSelection:GetValue();
+
+	local start = self:ToTextPos(editor.tRows, editor.Start.x, editor.Start.y)
+	if ( bInSelection ) then
+		return start, start, self:ToTextPos(editor.tRows, editor.Carret.x, editor.Carret.y);
+	end
+
+	return start, 1, #code;
 end
 
 function SEARCH:GetQuery()
@@ -198,10 +245,47 @@ function SEARCH:FindNext(code, query, maxResults)
 	editor:Warning("Found: ", s, " - ", e);
 end
 
-function SEARCH:RunFind()
+function SEARCH:GetResults()
 	local query = self:GetQuery();
-	local code = self:GetSelection();
-	self:FindNext(code, query, 10);
+	local code, lines = self:GetCode();
+	local caret, start, finish = self:GetSelection(code);
+
+	local editor = Golem.GetInstance();
+	local bAllowRegex = editor.searchOptRegex:GetValue();
+	local s, f = string.find(code, query, start, !bAllowRegex);
+
+	if not (s and f) then return false; end
+	if f > finish then return false; end
+
+	local off = start;
+	local first = 0;
+	local results = {};
+
+	while off < finish do
+		local s, f, m = string.find(code, query, off, !bAllowRegex);
+
+		if not (s and f) then break; end
+		if f > finish then break; end
+
+		off = f + 1;
+
+		local sl, sc = self:PosToLineChar(code, s);
+		local fl, fc = self:PosToLineChar(code, f);
+
+		results[#results + 1] = { {s, sl, sc}, {f, fl, fc}, m };
+		if first < caret and s > caret then first = #results; end
+	end
+
+	return #results > 0, results, first;
+end
+
+function SEARCH:RunFind(GotoNext, ReplaceNext, ReplaceAll)
+	local found, results, first = self:GetResults();
+
+	if not found then return; end
+	
+	
+
 end
 
 --[[

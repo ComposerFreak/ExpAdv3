@@ -13,7 +13,7 @@ function Syntax:Init( dEditor )
 	dEditor:SetParamMatching( false )
 end
 
-/*self.tbConsoleEditor.SyntaxColorLine = function(_, row)
+--[[self.tbConsoleEditor.SyntaxColorLine = function(_, row)
 		if self.tbConsoleRows[row] then 
 			return self.tbConsoleRows[row]
 		end 
@@ -29,7 +29,7 @@ function Syntax:GetSyntax( nRow )
 end
 
 function Syntax:Parse( )
-end
+end]]
 
 
 Golem.Syntax:Add( Syntax.sName, Syntax ) 
