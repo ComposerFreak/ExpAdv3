@@ -87,11 +87,11 @@ function PANEL:WriteLine(...)
 	self:NewLine();
 end
 
-function PANEL:Warn(level, ...)
+function PANEL:Warn(...)
 	local left = {};
 	local right = {...};
 
-	level = level or 0;
+	level = level or 2;
 	
 	if level == 1 then 
 		left[1] = {image = "fugue/question.png", size = 16}

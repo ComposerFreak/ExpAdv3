@@ -1303,14 +1303,7 @@ function PANEL:wordStart( caret )
 	local line = self.tRows[caret.x] 
 	self:FoldAll( tFolds )
 	
-	if istable(line) then 
-		print( self )
-		PrintTable( self.tRows[caret.x] )
-		
-		return 
-	end 
-	
-	if string_match( string_sub( line, caret.y-1, caret.y+1 ), "[^%w][^%w]" ) then 
+	if string_match( string_sub( line, caret.y-1, caret.y ), "[^%w][^%w]" ) then 
 		local pos = string_match( string_sub( line, 1, caret.y ), ".+()%f[^%w]" ) 
 		pos = (pos or 1)
 		return Vector2( caret.x, pos )
@@ -1326,7 +1319,7 @@ function PANEL:wordEnd( caret )
 	local line = self.tRows[caret.x] 
 	self:FoldAll( tFolds )
 	
-	if string_match( string_sub( line, caret.y-1, caret.y+1 ), "[^%w][^%w]" ) then 
+	if string_match( string_sub( line, caret.y-1, caret.y ), "[^%w][^%w]" ) then 
 		local pos = string_match( line, "()%f[%w]", caret.y )
 		pos = pos or (#line + 1)
 		return Vector2( caret.x, pos )
@@ -1608,18 +1601,6 @@ function PANEL:DrawTextUnderlay( w, h )
 			1 
 		) 
 	end
-	
-	/* Code for debugging 
-	-- local a = self:wordLeft(self.Caret,true)
-	-- local b = self:wordRight(self.Caret,true) 
-	
-	local a = self:wordStart(self.Caret)
-	local b = self:wordEnd(self.Caret) 
-	
-	if a and b then 
-		self:PaintSelection( {a,b}, Color( 100, 100, 100, 200 ) )
-	end 
-	//*/
 end
 
 function PANEL:DrawText( w, h )
