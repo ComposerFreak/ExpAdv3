@@ -13,14 +13,6 @@ function Syntax:Init( dEditor )
 	dEditor:SetParamMatching( false )
 end
 
---[[self.tbConsoleEditor.SyntaxColorLine = function(_, row)
-		if self.tbConsoleRows[row] then 
-			return self.tbConsoleRows[row]
-		end 
-		
-		return {self.tbConsoleRows[row], Color(255,255,255)}
-	end*/]]--
-
 function Syntax:GetSyntax( nRow )
 	if self.dEditor.tFormat[nRow] then 
 		return self.dEditor.tFormat[nRow]

@@ -3,28 +3,29 @@ local PANEL = {};
 function PANEL:Init( )
 	self.BaseClass.Init(self);
 
-	self.nLine = 0;
+	self.nLine = 1;
 	self.row = {};
 	self.format = {};
-
-	self.tRows = { };
+	
 	self.tFormat = {};
 
 	--self:NewLine();
 	self:SetEditable(false);
 	self:SetDefaultTextColor(Color(255, 255, 255));
 
-	Golem.Syntax:Create( "console", self );
+	-- Golem.Syntax:Create( "console", self );
 	
 end
 
 function PANEL:NewLine()
-	self.nLine = self.nLine + 1;
 	self.tRows[ self.nLine ] = table.concat(self.row, "");
-	self.tFormat[ self.nLine ] = self.format;
-
+	self.tFormat[ self.nLine ] = table.Copy(self.format)
+	
+	-- PrintTableGrep(self.tFormat)
+	
 	self.row = {};
-	self.tFormat = {};
+	self.format = {};
+	self.nLine = self.nLine + 1;
 end
 
 function PANEL:Write(str)
@@ -37,7 +38,7 @@ function PANEL:SetColor(col)
 end
 
 function PANEL:WriteImage(image, size)
-	local str = "  ";
+	local str = string.rep(" ",math.ceil(size/self.FontWidth));
 	self.row[#self.row + 1] = str;
 	self.format[#self.row] = { str, self.cTextColor, true, Material(image) };
 end
@@ -47,7 +48,8 @@ function PANEL:WriteTable(values)
 
 	for i = 1, tValues do
 		local value = values[i];
-
+		
+		
 		if IsColor(value) then
 			self:SetColor(value);
 			continue;
@@ -105,7 +107,7 @@ function PANEL:Warn(level, ...)
 	end
 	
 	left[#left + 1] = Color(255, 255, 255);
-	left[#left + 1] = "Warning";
+	left[#left + 1] = "Warning ";
 
 	self:WriteLine(left, right)
 end

@@ -1271,30 +1271,31 @@ function PANEL:DoRedo( )
 	end
 end
 
-function PANEL:wordLeft( caret )
+function PANEL:wordLeft( caret, bNoMove )
 	local tFolds = self:ExpandAll( )
 	local row = self.tRows[caret.x] 
 	if caret.y == 1 then
 		if caret.x == 1 then return caret end
 		return Vector2( caret.x-1, #self.tRows[caret.x-1] )
 	end
-	local pos = string_match( string_sub( row, 1, caret.y - 2 ), "[^%w_]+()[%w_]+[^%w_]*$" )
-	caret.y = pos or 1
+	local pos = string_match( string_sub( row, 1, caret.y - 2 ), ".+()%f[%p ]" ) 
+	if pos then pos = pos + 1 end 
+	if not bNoMove then caret.y = pos or 1 end
 	self:FoldAll( tFolds )
-	return caret
+	return Vector2( caret.x, pos or 1 )
 end
 
-function PANEL:wordRight( caret )
+function PANEL:wordRight( caret, bNoMove )
 	local tFolds = self:ExpandAll( )
 	local row = self.tRows[caret.x] 
 	if caret.y > #row then
 		if caret.x == #self.tRows then return caret end
 		return Vector2( caret.x + 1, 1 )
 	end
-	local pos = string_match( row, "%f[%w_]()", caret.y+1 )
-	caret.y = pos or ( #row + 1 )
+	local pos = string_match( row, "%f[%p ]()", caret.y+1 )
+	if not bNoMove then caret.y = pos or ( #row + 1 ) end 
 	self:FoldAll( tFolds )
-	return caret
+	return Vector2( caret.x, pos or ( #row + 1 ) )
 end
 
 function PANEL:wordStart( caret )
@@ -1302,13 +1303,22 @@ function PANEL:wordStart( caret )
 	local line = self.tRows[caret.x] 
 	self:FoldAll( tFolds )
 	
-	for startpos, endpos in string_gmatch( line, "()[a-zA-Z0-9_]+()" ) do 
-		if startpos <= caret.y and endpos >= caret.y then 
-			return Vector2( caret.x, startpos )
-		end 
+	if istable(line) then 
+		print( self )
+		PrintTable( self.tRows[caret.x] )
+		
+		return 
 	end 
 	
-	return Vector2( caret.x, 1 )
+	if string_match( string_sub( line, caret.y-1, caret.y+1 ), "[^%w][^%w]" ) then 
+		local pos = string_match( string_sub( line, 1, caret.y ), ".+()%f[^%w]" ) 
+		pos = (pos or 1)
+		return Vector2( caret.x, pos )
+	else
+		local pos = string_match( string_sub( line, 1, caret.y ), ".+()%f[%w]" ) 
+		pos = (pos or 1)
+		return Vector2( caret.x, pos )
+	end 
 end
 
 function PANEL:wordEnd( caret )
@@ -1316,13 +1326,15 @@ function PANEL:wordEnd( caret )
 	local line = self.tRows[caret.x] 
 	self:FoldAll( tFolds )
 	
-	for startpos, endpos in string_gmatch( line, "()[a-zA-Z0-9_]+()" ) do 
-		if startpos <= caret.y and endpos >= caret.y then 
-			return Vector2( caret.x, endpos )
-		end 
+	if string_match( string_sub( line, caret.y-1, caret.y+1 ), "[^%w][^%w]" ) then 
+		local pos = string_match( line, "()%f[%w]", caret.y )
+		pos = pos or (#line + 1)
+		return Vector2( caret.x, pos )
+	else
+		local pos = string_match( line, "()%f[^%w]", caret.y )
+		pos = pos or (#line + 1)
+		return Vector2( caret.x, pos )
 	end 
-	
-	return Vector2( caret.x, caret.y )
 end
 
 /*---------------------------------------------------------------------------
@@ -1596,6 +1608,18 @@ function PANEL:DrawTextUnderlay( w, h )
 			1 
 		) 
 	end
+	
+	/* Code for debugging 
+	-- local a = self:wordLeft(self.Caret,true)
+	-- local b = self:wordRight(self.Caret,true) 
+	
+	local a = self:wordStart(self.Caret)
+	local b = self:wordEnd(self.Caret) 
+	
+	if a and b then 
+		self:PaintSelection( {a,b}, Color( 100, 100, 100, 200 ) )
+	end 
+	//*/
 end
 
 function PANEL:DrawText( w, h )

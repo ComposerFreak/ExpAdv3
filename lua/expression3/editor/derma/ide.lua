@@ -256,7 +256,6 @@ function PANEL:Init( )
 	self.tbConsoleEditor = vgui.Create( "GOLEM_Console", self.tbConsoleHolder )--vgui.Create( "GOLEM_Console", self.tbConsoleHolder )
 	self.tbConsoleEditor:Dock( BOTTOM )
 	self.tbConsoleEditor:SetTall( 125 )
-	self.tbConsoleEditor.bEditable = false
 	self.bConsoleVisible = true
 
 	self.pnlConsoleDivider = vgui.Create( "DVerticalDivider", self )
@@ -268,6 +267,7 @@ function PANEL:Init( )
 	self.pnlConsoleDivider:SetBottomMin( 50 )
 	
 	
+	Golem.Syntax:Create( "console", self.tbConsoleEditor )
 	--[[Golem.Syntax:Create( "Console", self.tbConsoleEditor )
 	self.tbConsoleEditor.tbConsoleRows = { }
 	
@@ -330,6 +330,7 @@ function PANEL:Init( )
 			if not self.pnlTabHolder.Items[i].Tab.__type == "editor" then continue end 
 			self.pnlTabHolder.Items[i].Panel:SetFont( sFontID )
 		end
+		self.tbConsoleEditor:SetFont( sFontID ) 
 	end 
 	
 	local w, h, x, y = cookie.GetNumber( "golem_w", math.min( 1000, ScrW( ) * 0.8 ) ), cookie.GetNumber( "golem_h", math.min( 800, ScrH( ) * 0.8 ) ), cookie.GetNumber( "golem_x", ScrW( ) * 0.1 ), cookie.GetNumber( "golem_y", ScrH( ) * 0.1 ) 
@@ -850,7 +851,7 @@ function PANEL:DoValidate( Goto, Code, Native )
 			self.btnValidate:SetText( "Validation sucessful" );
 		elseif (instance.state == "internal") then
 			self:OnValidateError( false, "Internal error (see console)." )
-			Golem.Warning(Color(255, 255, 255), "Internal error: ", instance.msg)
+			self:Warning(Color(255, 255, 255), "Internal error: ", instance.msg)
 		else
 			self:OnValidateError( Goto, instance )
 		end
@@ -918,7 +919,8 @@ function PANEL:OnValidateError( Goto, Thrown )
 	if func then func(); end
 	self.btnValidate:SetColor( Color( 255, 50, 50 ) )
 	self.btnValidate:SetText( string.format("%s %s", message, location) );
-	self:Warning( 1, Color(255, 0, 0), "Compiler Error", Color(255, 255, 255), ":\n", message, " ", { func, location } );
+	-- self:Warning( 1, Color(255, 0, 0), "Compiler Error", Color(255, 255, 255), ":\n", message, " ", { func, location } );
+	self:Warning( Color(255, 0, 0), "Compiler Error", Color(255, 255, 255), ": ", message, " ", location );
 end
 
 /*---------------------------------------------------------------------------
