@@ -253,7 +253,7 @@ function PANEL:Init( )
 	self.tbConsoleHolder = vgui.Create( "DPanel", self ) 
 	self.tbConsoleHolder.Paint = function( pnl, w, h ) end
 	
-	self.tbConsoleEditor = vgui.Create( "GOLEM_Console2", self.tbConsoleHolder )--vgui.Create( "GOLEM_Console", self.tbConsoleHolder )
+	self.tbConsoleEditor = vgui.Create( "GOLEM_Console", self.tbConsoleHolder )--vgui.Create( "GOLEM_Console", self.tbConsoleHolder )
 	self.tbConsoleEditor:Dock( BOTTOM )
 	self.tbConsoleEditor:SetTall( 125 )
 	self.tbConsoleEditor.bEditable = false
@@ -371,7 +371,7 @@ function PANEL:AddRow(left, ...)
 end
 
 function PANEL:Warning(...)
-	self.tbConsoleEditor:WriteLine({Color(255, 0, 0), "Warning:"}, ...);
+	self.tbConsoleEditor:Warn(...);
 end
 
 function PANEL:Info(...)
@@ -883,48 +883,48 @@ function PANEL:DoValidate( Goto, Code, Native )
 end
 
 function PANEL:OnValidateError( Goto, Thrown )
-	local Error;
-	local Warning = {};
+	local line, char = 0, 0;
+	local message = "";
+	local file;
+	local func = "";
 
-	if (istable(Thrown)) then
-		if (string.sub(Thrown.msg, -1) == ".") then
-			Thrown.msg = string.sub(Thrown.msg, 1, -2);
+	if ( istable(Thrown) ) then
+		message = Thrown.msg;
+
+		if (string.sub(message, -1) == ".") then
+			message = string.sub(message, 1, -2);
 		end
-
-		Warning[1] = Thrown.msg;
-		Error = string.format("%s, at line %i char %i.", Thrown.msg, Thrown.line, Thrown.char);
-
-		Warning[2] = Color(100, 10, 10);
-
-		Warning[3] = { "", " at line ", Thrown.line, " char ", Thrown.char, "."};
 
 		if (Thrown.file) then
-			Error = string.format("%s in %s.txt", string.sub(Error, 1, -2), Thrown.file);
+			file = Thrown.file;
 		end
-	else
-		Error = Thrown
-		Thrown = nil
-	end
-	
-	if Goto then
-		if Thrown and (Thrown.line > 1 or Thrown.char > 1) then
-			Warning[3][1] = function()
-			print("CLICKED THIS")
-				self.pnlTabHolder:GetActiveTab( ):GetPanel( ):SetCaret( Vector2( Thrown.line, Thrown.char ) );
-			end;
-			self.pnlTabHolder:GetActiveTab( ):GetPanel( ):SetCaret( Vector2( Thrown.line, Thrown.char ) )
-		end 
-	end
-	
-	if not Error then
-		Error = "!Missing Error Message!";
-		Warning[1] = Error;
+
+		line = Thrown.line or line;
+		char = Thrown.char or char;
 	end
 
-	self.btnValidate:SetText( Error )
+	local location = "";
+
+	if ( Goto ) then
+		func = function()
+			local inst = self.pnlTabHolder:GetActiveTab( ):GetPanel( );
+			inst:RequestFocus();
+			inst:SetCaret( Vector2( line, char ) );
+		end;
+
+		if line and char then
+			location = string.format("at line %i char %i", line, char);
+		end
+
+		if file then
+			location = string.format("%s in %s.txt", location, Thrown.file);
+		end
+	end
+
+	if func then func(); end
 	self.btnValidate:SetColor( Color( 255, 50, 50 ) )
-
-	self:Warning("Compiler Error", Warning);
+	self.btnValidate:SetText( string.format("%s %s", message, location) );
+	self:Warning( 1, Color(255, 0, 0), "Compiler Error", Color(255, 255, 255), ":\n", message, " ", { func, location } );
 end
 
 /*---------------------------------------------------------------------------
