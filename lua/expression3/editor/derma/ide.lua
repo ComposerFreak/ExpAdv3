@@ -881,7 +881,7 @@ function PANEL:OnValidateError( Goto, Thrown )
 	local line, char = 0, 0;
 	local message = "";
 	local file;
-	local func = "";
+	local func;
 
 	if ( istable(Thrown) ) then
 		message = Thrown.msg;
