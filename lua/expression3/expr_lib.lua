@@ -274,6 +274,15 @@ end
 --[[
 ]]
 
+EXPR_LIB.PERMS = { };
+
+function EXPR_LIB.RegisterPermission(name, image, desc)
+	EXPR_LIB.PERMS[name] = {name, image, desc};
+end
+
+--[[
+
+]]
 function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 	if (not loadClasses) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register class %s outside of Hook::Expression3.LoadClasses }}", name);
@@ -706,6 +715,7 @@ function EXPR_LIB.RegisterExtension(name)
 	local ext = {};
 
 	ext.name = name;
+	ext.perms = {};
 	ext.classes = {};
 	ext.state = EXPR_SHARED;
 	ext.price = EXPR_LOW;
@@ -743,6 +753,10 @@ end
 
 function Extension.SetClientState(this)
 	this.state = EXPR_CLIENT;
+end
+
+function Extension.RegisterPermission(this, name, image, desc)
+	this.perms[#this.perms+1] = {name, image, desc};
 end
 
 function Extension.RegisterClass(this, id, name, isType, isValid)
@@ -823,6 +837,12 @@ local enabledExtensions = {};
 
 function Extension.EnableExtension(this)
 	this.enabled = true;
+
+	hook.Add("Expression3.LoadPerms", "Expression3.Extention." .. this.name, function()
+		for _, v in pairs(this.perms) do
+			EXPR_LIB.RegisterPermission(v[1], v[2], v[3]);
+		end
+	end);
 
 	local classes = {};
 
@@ -925,7 +945,7 @@ function Extension.EnableExtension(this)
 		end
 	end);
 
-	hook.Add("Expression3.BuildExtensionData","Expression3.Extension." .. this.name, function()
+	hook.Add("Expression3.BuildExtensionData", "Expression3.Extension." .. this.name, function()
 		this.classes = classes;
 		this.constructors = constructors;
 		this.methods = methods;
@@ -1024,6 +1044,8 @@ function EXPR_LIB.Initialize()
 	include("expression3/extensions/core.lua");
 
 	hook.Run("Expression3.RegisterExtensions");
+
+	hook.Run("Expression3.LoadPerms");
 
 	classes = {};
 	classIDs = {};

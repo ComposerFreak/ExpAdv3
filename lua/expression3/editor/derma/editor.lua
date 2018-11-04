@@ -784,6 +784,10 @@ end
 Mouse stuff
 ---------------------------------------------------------------------------*/
 
+function PANEL:ClickText( cursor )
+	return false;
+end
+
 function PANEL:OnMousePressed( code )
 	if self.MouseDown then return end 
 	
@@ -793,7 +797,9 @@ function PANEL:OnMousePressed( code )
 	if code == MOUSE_LEFT then 
 		local cursor = self:CursorToCaret( ) 
 		if self.LastClick and CurTime( ) - self.LastClick < 0.3 and ( self.Caret == cursor or self.LastCursor == cursor ) then 
-			if self.temp then 
+			if self:ClickText( cursor ) then
+				-- Do nothing.
+			elseif self.temp then 
 				self.temp = nil 
 				
 				self.Start = Vector2( cursor.x, 1 )

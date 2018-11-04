@@ -6,8 +6,10 @@ function PANEL:Init( )
 	self.nLine = 1;
 	self.row = {};
 	self.format = {};
-	
+	self.funcs = {};
+
 	self.tFormat = {};
+	self.tFuncs = {};
 
 	--self:NewLine();
 	self:SetEditable(false);
@@ -17,20 +19,48 @@ function PANEL:Init( )
 	
 end
 
+function PANEL:ClickText( cursor )
+	local format = self.tFormat[cursor.x];
+	local funcs = self.tFuncs[cursor.x];
+	if not funcs then return false; end
+
+	local fun;
+	local pos = 0;
+
+	for k = 1, #format do
+		local len = #format[k][1];
+
+		if (cursor.y >= pos) and (cursor.y <= (pos + len)) then
+			fun = funcs[k];
+			break;
+		else
+			pos = pos + len;
+		end
+	end
+
+	if not fun then return false; end
+
+	fun();
+
+	return true;
+end
+
 function PANEL:NewLine()
 	self.tRows[ self.nLine ] = table.concat(self.row, "");
-	self.tFormat[ self.nLine ] = table.Copy(self.format)
-	
-	-- PrintTableGrep(self.tFormat)
+	self.tFormat[ self.nLine ] = table.Copy(self.format);
+	self.tFuncs[ self.nLine ] = self.funcs;
+	PrintTable(self.tFuncs)
 	
 	self.row = {};
 	self.format = {};
+	self.funcs = {};
 	self.nLine = self.nLine + 1;
 end
 
 function PANEL:Write(str)
 	self.row[#self.row + 1] = str;
 	self.format[#self.row] = {str, self.cTextColor};
+	if self.fClick then self.funcs[#self.row] = self.fClick;  end
 end
 
 function PANEL:SetColor(col)
@@ -41,15 +71,22 @@ function PANEL:WriteImage(image, size)
 	local str = string.rep(" ",math.ceil(size/self.FontWidth));
 	self.row[#self.row + 1] = str;
 	self.format[#self.row] = { str, self.cTextColor, true, Material(image) };
+	if self.fClick then self.funcs[#self.row] = self.fClick; end
 end
 
 function PANEL:WriteTable(values)
 	local tValues = #values;
+	local oc = self.cTextColor;
+	local of = self.fClick;
 
 	for i = 1, tValues do
 		local value = values[i];
 		
-		
+		if isfunction(value) then
+			self.fClick = value;
+			continue;
+		end
+
 		if IsColor(value) then
 			self:SetColor(value);
 			continue;
@@ -79,6 +116,9 @@ function PANEL:WriteTable(values)
 			end
 		end
 	end
+
+	self.fClick = of;
+	self.cTextColor = oc;
 end
 
 function PANEL:WriteLine(...)
@@ -87,7 +127,7 @@ function PANEL:WriteLine(...)
 	self:NewLine();
 end
 
-function PANEL:Warn(...)
+function PANEL:Warn(level, ...)
 	local left = {};
 	local right = {...};
 
@@ -101,10 +141,10 @@ function PANEL:Warn(...)
 		left[1] = {image = "fugue/exclamation-red.png", size = 16}
 	end
 	
-	if level == 3 then
-		self:SetBackGroundColorL(200, 50, 50);
-		self:SetBackGroundColorR(200, 50, 50);
-	end
+	--if level == 3 then
+	--	self:SetBackGroundColorL(200, 50, 50);
+	--	self:SetBackGroundColorR(200, 50, 50);
+	--end
 	
 	left[#left + 1] = Color(255, 255, 255);
 	left[#left + 1] = "Warning ";

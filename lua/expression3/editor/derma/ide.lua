@@ -851,7 +851,7 @@ function PANEL:DoValidate( Goto, Code, Native )
 			self.btnValidate:SetText( "Validation sucessful" );
 		elseif (instance.state == "internal") then
 			self:OnValidateError( false, "Internal error (see console)." )
-			self:Warning(Color(255, 255, 255), "Internal error: ", instance.msg)
+			self:Warning(3, Color(255, 255, 255), "Internal error: ", instance.msg)
 		else
 			self:OnValidateError( Goto, instance )
 		end
@@ -902,9 +902,11 @@ function PANEL:OnValidateError( Goto, Thrown )
 
 	if ( Goto ) then
 		func = function()
-			local inst = self.pnlTabHolder:GetActiveTab( ):GetPanel( );
-			inst:RequestFocus();
-			inst:SetCaret( Vector2( line, char ) );
+			timer.Simple(0.1, function()
+				local inst = self.pnlTabHolder:GetActiveTab( ):GetPanel( );
+				inst:RequestFocus();
+				inst:SetCaret( Vector2( line, char ) );
+			end);
 		end;
 
 		if line and char then
@@ -920,7 +922,7 @@ function PANEL:OnValidateError( Goto, Thrown )
 	self.btnValidate:SetColor( Color( 255, 50, 50 ) )
 	self.btnValidate:SetText( string.format("%s %s", message, location) );
 	-- self:Warning( 1, Color(255, 0, 0), "Compiler Error", Color(255, 255, 255), ":\n", message, " ", { func, location } );
-	self:Warning( Color(255, 0, 0), "Compiler Error", Color(255, 255, 255), ": ", message, " ", location );
+	self:Warning(2, Color(255, 0, 0), "Compiler Error", Color(255, 255, 255), ": ", message, " ", { func, location } );
 end
 
 /*---------------------------------------------------------------------------

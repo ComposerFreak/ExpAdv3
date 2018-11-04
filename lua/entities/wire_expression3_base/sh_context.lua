@@ -95,15 +95,69 @@ end
 
 function CONTEXT.New()
 	local tbl = {};
+	
+	tbl.perms = {};
 
 	tbl.cpu_total = 0;
 	tbl.cpu_average = 0;
 	tbl.cpu_samples = {};
 	tbl.cpu_warning = false;
-	
 	return setmetatable(tbl, CONTEXT);
 end
 
+
+--[[
+	PERMISSIONS:
+]]
+
+function CONTEXT:SetPerm(player, perm, value)
+	local id = player:AccountID();
+	local perms = self.perms[id];
+
+	if (not perms) then
+		perms = { };
+		self.perms[id] = perms;
+	end
+
+	perms[perm] = value;
+end
+
+function CONTEXT:HasPerm(player, perm)
+	if (self.player == player) then return true; end
+
+	local id = player:AccountID();
+	local perms = self.perms[id];
+
+	if (not perms) then return false; end
+
+	return perms[perm] or false;
+end
+
+function CONTEXT:CanUseEntity(entity)
+	local owner;
+
+	if (entity.CPPIGetOwner) then
+		owner = entity:CPPIGetOwner();
+	end
+
+	if (not owner) and (entity.GetPlayer) then
+		owner = entity:GetPlayer();
+	end
+
+	if (not owner) then return false; end
+
+	return self:HasPerm(owner, "Prop-Control");
+end
+
+function EXPR_LIB.SetPermissionsForEntity(entity, player, perm, value)
+	if (not entity.context) then return; end
+
+	if (SERVER) then
+		player:SendLua( string.format("EXPR_LIB.SetPermissionsForEntity(Entity(%i), Player(%i), %q, %s)", entity:EntIndex(), player:UserID(), perm, value and "true" or "false" ) );
+	end
+
+	entity.context:SetPerm(player, perm, value);
+end
 
 --[[
 	CPU Benchmarking / Quota
