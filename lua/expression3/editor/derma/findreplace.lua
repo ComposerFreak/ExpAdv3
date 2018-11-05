@@ -54,6 +54,10 @@ function SEARCH:Init()
 	self:HideReplace();
 end
 
+function SEARCH:SetEditor(ide)
+	self.pEditor = ide;
+end
+
 function SEARCH:PerformLayout( )
 	local w, h = self:GetSize();
 
@@ -158,25 +162,36 @@ function SEARCH:Paint()
 	end
 end
 
-function SEARCH:GetCode()
-	local editor = Golem.GetInstance();
-	local code = editor:GetCode();
-	local bMatchCase = editor.searchOpCase:GetValue();
+function SEARCH:GetCode(ide)
+	local code = ide:GetCode();
+	local bMatchCase = self.pEditor.searchOpCase:GetValue();
 
 	if (bMatchCase) then
 		code = string.lower(code);
 	end
 
-	return code, editor.tRows;
+	return code, self.pEditor.tRows;
 end
 
+
+function SEARCH:GetIDE( )
+	local pTab = self.pEditor.pnlTabHolder:GetActiveTab( )
+	
+	if not pTab then return end
+	
+	if not ValidPanel( pTab ) then return end
+	
+	if pTab.__type ~= "editor" then return end 
+	
+	return pTab:GetPanel( );
+end
 
 function SEARCH:ToTextPos(lines, line, char)
 	local p = 0;
 	
 	for l = 1, #lines do
-		local line = lines[l];
-		local len = #line;
+		local row = lines[l];
+		local len = #row;
 
 		if l < line then
 			p = p + len + 1;
@@ -211,13 +226,13 @@ function SEARCH:PosToLineChar(code, pos)
 	return 0, 0;
 end
 
-function SEARCH:GetSelection(code)
-	local editor = Golem.GetInstance();
-	local bInSelection = editor.searchOptSelection:GetValue();
+function SEARCH:GetSelection(ide, code)
+	local bInSelection = self.pEditor.searchOptSelection:GetValue();
 
-	local start = self:ToTextPos(editor.tRows, editor.Start.x, editor.Start.y)
+	local start = self:ToTextPos(ide.tRows, ide.Start.x, ide.Start.y)
+
 	if ( bInSelection ) then
-		return start, start, self:ToTextPos(editor.tRows, editor.Carret.x, editor.Carret.y);
+		return start, start, self:ToTextPos(ide.tRows, ide.Caret.x, ide.Caret.y);
 	end
 
 	return start, 1, #code;
@@ -225,7 +240,7 @@ end
 
 function SEARCH:GetQuery()
 	local query = self.query_text:GetValue();
-	local bMatchCase = editor.searchOpCase:GetValue();
+	local bMatchCase = self.pEditor.searchOpCase:GetValue();
 
 	if (bMatchCase) then
 		query = string.lower(query);
@@ -235,23 +250,21 @@ function SEARCH:GetQuery()
 end
 
 function SEARCH:FindNext(code, query, maxResults)
-	local editor = Golem.GetInstance();
-
-	local bAllowRegex = editor.searchOptRegex:GetValue();
+	
+	local bAllowRegex = self.pEditor.searchOptRegex:GetValue();
 	local s, e = string.find(code, query, !bAllowRegex);
 
 	if (not (s and e)) then return; end
 	
-	editor:Warning("Found: ", s, " - ", e);
+	self.pEditor:Warning("Found: ", s, " - ", e);
 end
 
-function SEARCH:GetResults()
+function SEARCH:GetResults(ide)
 	local query = self:GetQuery();
-	local code, lines = self:GetCode();
-	local caret, start, finish = self:GetSelection(code);
+	local code, lines = self:GetCode(ide);
+	local caret, start, finish = self:GetSelection(ide, code);
 
-	local editor = Golem.GetInstance();
-	local bAllowRegex = editor.searchOptRegex:GetValue();
+	local bAllowRegex = self.pEditor.searchOptRegex:GetValue();
 	local s, f = string.find(code, query, start, !bAllowRegex);
 
 	if not (s and f) then return false; end
@@ -279,27 +292,38 @@ function SEARCH:GetResults()
 	return #results > 0, results, first;
 end
 
-function SEARCH:RunFind(GotoNext, ReplaceNext, ReplaceAll)
-	local found, results, first = self:GetResults();
+function SEARCH:RunFind(ReplaceNext, ReplaceAll)
+	local ide = self:GetIDE();
+	if not ide then return; end
 
-	if not found then return; end
+	local found, results, first = self:GetResults(ide);
+
+	if not found then
+		Golem.Print("No results where found.");
+		return false;
+	end
 	
-	
+	Golem.Print(#results, " results where found.");
+
+	for i = 1, #results do
+		local v = results[i];
+		Golem.Print(i, " result: ", v[1], ", ", v[2], " = ", v[3]);
+	end
 
 end
 
 --[[
 function OPTIONS:Search( query, replace, all )
-	local editor = Golem.GetInstance();
+	local self.pEditor = Golem.GetInstance();
 
-	local start = editor.Start;
-	local finish = Vector2( #editor.Rows, #editor.Rows[ #editor.Rows ] );
+	local start = self.pEditor.Start;
+	local finish = Vector2( #self.pEditor.Rows, #self.pEditor.Rows[ #self.pEditor.Rows ] );
 
 	if ( bInSelection ) then
-		finish = editor.Carret;
+		finish = self.pEditor.Carret;
 	end
 
-	local origonal = editor:GetCode();
+	local origonal = self.pEditor:GetCode();
 
 	if ( !bCaseSensative ) then
 		query = string.lower(query);

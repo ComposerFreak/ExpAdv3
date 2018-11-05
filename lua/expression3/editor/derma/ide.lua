@@ -319,6 +319,7 @@ function PANEL:Init( )
 	end
 
 	self.pnlSearch = vgui.Create("GOLEM_SearchBox", self.pnlTabHolder);
+	self.pnlSearch:SetEditor(self);
 	self.pnlSearch:SetOptions(self.searchOptions);
 	self.pnlSearch:InvalidateLayout( );
 	self.pnlSearch:Close(true);
