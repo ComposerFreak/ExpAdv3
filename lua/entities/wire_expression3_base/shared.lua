@@ -28,31 +28,6 @@ ENT.Expression3 	= true;
 	Validate / Set Code
 ]]
 
---[[function ENT:Validate(script, files)
-	local Toker = EXPR_TOKENIZER.New();
-
-	Toker:Initialize("EXPADV", script);
-
-	local ok, res = Toker:Run();
-
-	if ok then
-		local Parser = EXPR_PARSER.New();
-
-		Parser:Initialize(res, files);
-
-		ok, res = Parser:Run();
-
-		if ok then
-			local Compiler = EXPR_COMPILER.New();
-
-			Compiler:Initialize(res, files);
-
-			ok, res = Compiler:Run();
-		end
-	end
-
-	return ok, res;
-end]]-- Replaced \|/
 
 function ENT:SetCode(script, files, run)
 	self:ShutDown();
@@ -460,8 +435,6 @@ if (CLIENT) then
 end
 
 function ENT:UpdateQuotaValues()
-	local r = self:IsRunning();
-
 	local context = self.context;
 
 	if (SERVER) then
@@ -490,3 +463,104 @@ function ENT:Think()
 
 	hook.Run("Expression3.Entity.Think", self, self.context);
 end
+
+--[[
+	Network Messages
+]]
+
+if SERVER then
+	util.AddNetworkString("Expression3.EntMessage");
+end
+
+function ENT:SendNetMessage(name, target, ...)
+	net.Start("Expression3.EntMessage");
+	
+	net.WriteEntity(self);
+	
+	net.WriteString(name);
+	
+	if CLIENT then net.WriteEntity(target); end
+	
+	net.WriteTable( {...} );
+
+	if CLIENT then
+		net.SendToServer();
+	else
+		net.Send(target);
+	end
+end
+
+function ENT:ReceiveNetMessage(name, target, values)
+	local cb = self["Net" .. name];
+
+	-- No CB?, Forward this to the cleint for now.
+	if not cb then return true; end 
+
+	return cb(self, target, values);
+end
+
+net.Receive("Expression3.EntMessage", function()
+	local target;
+
+	local entity = net.ReadEntity();
+
+	local name = net.ReadString();
+
+	if SERVER then target = net.ReadEntity(); end
+
+	local values = net.ReadTable();
+
+	if not IsValid(entity) or not entity.ReceiveNetMessage then return; end
+
+	local sendToClient = entity:ReceiveNetMessage(name, target, values);
+
+	if SERVER and sendToClient then
+	
+		net.Start("Expression3.EntMessage");
+		
+		net.WriteEntity(self);
+		
+		net.WriteString(name);
+		
+		net.WriteTable( values );
+
+		net.Send(target);
+	end
+end);
+
+--[[
+	Chat Messages
+]]
+
+EXPR_PRINT_GOLEM = 0;
+EXPR_PRINT_CHAT = 1;
+
+function ENT:SendToOwner( type, ... )
+	if type == EXPR_PRINT_CHAT then
+		self:StartNetMessage("ChatMessage", self.player, ...);
+	else
+		self:StartNetMessage("GolemMessage", self.player, ...);
+	end
+end
+
+function ENT:NetChatMessage(target, values)
+
+	if SERVER then
+		-- TODO: Permission checks :D
+		return true;
+	end
+
+	chat.AddText( unpack(values) );
+end
+
+
+function ENT:NetGolemMessage(target, values)
+
+	if SERVER then
+		-- TODO: Permission checks :D
+		return true;
+	end
+
+	Golem.Print( unpack(values) ); 
+end
+
