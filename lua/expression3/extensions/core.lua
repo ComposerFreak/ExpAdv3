@@ -48,10 +48,16 @@ local class_nil = ext_core:RegisterClass("nil", {"void"}, isnil, isnil);
 	Class: CLASS
 ]]
 
-local class_type = ext_core:RegisterClass("cls", {"type"}, isstring, isnil);
+local class_type = ext_core:RegisterClass("cls", {"type", "class"}, isstring, isnil);
 
 ext_core:RegisterOperator("neq", "cls,cls", "b", 1);
 ext_core:RegisterOperator( "eq", "cls,cls", "b", 1);
+
+--[[ Would work, but not keeping it because it could break invoke.
+Class objects are to defined at compile time and not to movable objects!
+ext_core:RegisterCastingOperator("s", "cls", function(cls)
+	return cls;
+end, false)]]
 
 --[[
 	Class: BOOLEAN

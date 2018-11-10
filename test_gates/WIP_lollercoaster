@@ -1,0 +1,27 @@
+/*
+  * The E3 Lolercoaster,
+  * Origonal E2 made by Divran,
+  * E3 made by Rusketh.
+  */
+
+@name "LollerCoaster";
+@input bool active;
+@input wirelink pod;
+
+for (int i = 1; 2)
+{
+  hologram holo = hololib.create("hqicosphere2");
+  holo.setMaterial("models/debug/debugwhite");
+  holo.setColor(new color(75, 75, 75));
+  holo.setSize(new vector(5, 5, 5) / 12);
+  holo.setID(i);
+}
+
+for (int i = 3; 30)
+{
+  hologram holo = hololib.create();
+  holo.setMaterial("models/debug/debugwhite");
+  holo.setColor(new color(100, 30, 0, 0));
+  holo.setSize(new vector(5, 45, 2) / 12);
+  holo.setID(i);
+}
