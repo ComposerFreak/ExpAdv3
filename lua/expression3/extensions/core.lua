@@ -26,30 +26,6 @@ local ext_core = EXPR_LIB.RegisterExtension("core");
 
 ext_core.enabled = true;
 
-local function eqM(a, b, ...)
-	for k, v in pairs({b, ...}) do
-		if (a ~= v) then
-			continue;
-		end
-
-		return true;
-	end
-
-	return false;
-end
-
-local function neqM(a, b, ...)
-	for k, v in pairs({b, ...}) do
-		if (a ~= v) then
-			continue;
-		end
-
-		return false;
-	end
-
-	return true;
-end
-
 --[[
 ]]
 
@@ -76,9 +52,6 @@ local class_type = ext_core:RegisterClass("cls", {"type"}, isstring, isnil);
 
 ext_core:RegisterOperator("neq", "cls,cls", "b", 1);
 ext_core:RegisterOperator( "eq", "cls,cls", "b", 1);
-
-ext_core:RegisterOperator("eq*", "cls,cls", "b", 1, eqM, true);
-ext_core:RegisterOperator("neq*", "cls,cls", "b", 1, neqM, true);
 
 --[[
 	Class: BOOLEAN
@@ -137,8 +110,6 @@ ext_core:RegisterOperator("lth", "n,n", "b", 1);
 ext_core:RegisterOperator("leg", "n,n", "b", 1);
 ext_core:RegisterOperator("gth", "n,n", "b", 1);
 ext_core:RegisterOperator("geq", "n,n", "b", 1);
-ext_core:RegisterOperator("eq*", "n,n", "b", 1, eqM, true);
-ext_core:RegisterOperator("neq*", "n,n", "b", 1, neqM, true);
 
 ext_core:RegisterOperator("ten", "b,n,n", "n", 1);
 ext_core:RegisterOperator( "is", "n", "b", 1, tobool, true);
@@ -165,8 +136,6 @@ ext_core:RegisterOperator("lth", "s,s", "b", 1);
 ext_core:RegisterOperator("leg", "s,s", "b", 1);
 ext_core:RegisterOperator("gth", "s,s", "b", 1);
 ext_core:RegisterOperator("geq", "s,s", "b", 1);
-ext_core:RegisterOperator("eq*", "s,s", "b", 1, eqM, true);
-ext_core:RegisterOperator("neq*", "s,s", "b", 1, neqM, true);
 ext_core:RegisterOperator("get", "s,n", "s", 1);
 
 ext_core:RegisterOperator("ten", "b,s,s", "s", 1);
@@ -312,13 +281,7 @@ ext_core:RegisterFunction("system", "print", "...", "", 0, function(context, ...
 		values[#values + 1] = func_tostring(context, v[1], v[2]);
 	end
 
-	if (SERVER) then
-		context.entity:SendToOwner(false, unpack(values));
-	end
-
-	if (CLIENT) then
-		chat.AddText(unpack(values));
-	end
+	context.entity:SendToOwner(EXPR_PRINT_CHAT, unpack(values));
 end);
 
 ---------------------
@@ -355,13 +318,7 @@ end
 ext_core:RegisterFunction("system", "printTable", "t", "", 0, function(context, t)
 	local s = tblString(t.tbl, pntbl:GetInt())[1]
 
-	if (SERVER) then
-		context.entity:SendToOwner(false, s);
-	end
-
-	if (CLIENT) then
-		chat.AddText(s);
-	end
+	context.entity:SendToOwner(EXPR_PRINT_GOLEM, s);
 end);
 
 ext_core:RegisterFunction("system", "out", "...", "", 0, function(context, ...)
@@ -371,7 +328,7 @@ ext_core:RegisterFunction("system", "out", "...", "", 0, function(context, ...)
 		values[#values + 1] = func_tostring(context, v[1], v[2])
 	end
 
-	context.entity:SendToOwner(true, unpack(values));
+	context.entity:SendToOwner(EXPR_PRINT_GOLEM, unpack(values));
 end);
 
 	--[[

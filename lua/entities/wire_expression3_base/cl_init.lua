@@ -142,17 +142,3 @@ function ENT:GetOverlayData()
 		"CL warning:" .. tostring(self:GetClientWarning()),
 	}, "\n")};
 end
-
---[[
-]]
-
-function ENT:SendToOwner(bConsole, ...)
-	local owner = self.player; --:GetPlayer();
-
-	if (owner == LocalPlayer()) then
-		Golem.Print(...);
-	else
-		local const = bConsole and EXPR_CONSOLE or EXPR_CHAT;
-		EXPR_LIB.SendToClient(owner, self, const, ...);
-	end
-end

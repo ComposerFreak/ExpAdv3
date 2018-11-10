@@ -86,14 +86,6 @@ end
 --[[
 ]]
 
-function ENT:SendToOwner(bConsole, ...)
-	local const = bConsole and EXPR_CONSOLE or EXPR_CHAT;
-	EXPR_LIB.SendToPlayer(self:CPPIGetOwner(), self, const, ...);
-end
-
---[[
-]]
-
 local function SortPorts( PortA, PortB )
 	local TypeA = PortA.wire or "NORMAL"
 	local TypeB = PortB.wire or "NORMAL"

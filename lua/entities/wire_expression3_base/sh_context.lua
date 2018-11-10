@@ -1,11 +1,11 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
 
 	::Context::
 ]]
@@ -34,7 +34,7 @@ function CONTEXT.Trace(this, level, max)
 
 	for i = level + 1, level + max do
 		local info = debug.getinfo( i, "Sln" );
-		
+
 		if (not info) then
 			continue;
 		end
@@ -66,7 +66,7 @@ function CONTEXT.Throw(this, msg, fst, ...)
 	if (fst) then
 		msg = string.format(msg, fst, ...);
 	end
-	
+
 	local err = {};
 	err.state = "runtime";
 	err.char = 0;
@@ -78,7 +78,7 @@ function CONTEXT.Throw(this, msg, fst, ...)
 
 	if (err.stack) then
 		local trace = err.stack[1];
-		
+
 		if (trace) then
 			err.line = trace[1];
 			err.char = trace[2];
@@ -95,7 +95,7 @@ end
 
 function CONTEXT.New()
 	local tbl = {};
-	
+
 	tbl.perms = {};
 
 	tbl.cpu_total = 0;
@@ -195,7 +195,7 @@ end
 
 function CONTEXT:AddSample(sample)
 	local samples, size = self.cpu_samples, #self.cpu_samples
-		
+
 	if (size >= self:MaxSampleSize()) then
 		for i = 1, size do
 			samples[i] = samples[i + 1];
@@ -240,7 +240,7 @@ function CONTEXT:UpdateQuotaValues()
 		local average = self:GetBufferAverage()
 
 		local hard = self:GetHardQuota();
-		
+
 		if self.cpu_warning then
 			if self.cpu_total < hard * 0.75 then
 				self.cpu_warning = false;
@@ -270,7 +270,7 @@ function CONTEXT:PreExecute()
 	-- http://www.usablestats.com/calcs/tinv
 	-- Degrees of Freedom = BufferN - 1
 	-- One-sided
-	-- Proportion of Area = 1 - x where x is a percentage that represents a level of significance. 
+	-- Proportion of Area = 1 - x where x is a percentage that represents a level of significance.
 	-- A higher significance means it is harder to quota but you are more sure that the limit has been exceeded.
 	-- A lower significance means it is easier to quota but you are less sure that the limit has been exceeded.
 	-- The default value for x is 0.99
@@ -327,5 +327,10 @@ function CONTEXT:PostExecute()
 	__exe = nil;
 end
 
+--[[
+	API Call to add additonal methods
+]]
+
+hook.Run("Expression3.ExtendContext", CONTEXT);
 
 EXPR_CONTEXT = CONTEXT;

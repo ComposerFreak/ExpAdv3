@@ -36,6 +36,9 @@
 		Expression3.CloseGolem							-> this is called when the editor closes.
 		Expression3.AddGolemTabTypes					-> This is called when custom tab types should be registered on the editor. -> (Editor)
 		Expression3.LoadWiki							-> This is called when its time to register the helpers to the wiki.
+		Expression3.ExtendBaseEntity					-> Called during the creation of the base entity table, can be used to register new methods onto the base entity, -> (table entitytbl);
+		Expression3.ExtendContext							-> Called during the creation of the base context table, can be used to register new methods onto the base context,, -> (table basse context);
+
 
 
 	::IMPORTANT::
@@ -72,6 +75,12 @@
 		OutPut:		_Ops["v(n,n,n)"](1,2,3);
 
 	::EXPR_LIB::
+		EXPR_LIB.SetPrice(int price)
+			Sets the price of the methods / functions / constructors your defining, this is currently unused but will be used if we need to change the way e3 manages performance.
+
+		EXPR_LIB.RegisterPermission(string name, string image, string desc)
+			Registers a new permission node, this allows you to add player granted access for a gate.
+
 		EXPR_LIB.RegisterClass(string short name, string class name, string class boolean = function(object) isType, boolean = function(object) isValid)
 			Registers a new class with expression 3.
 
@@ -110,10 +119,8 @@
 			bxor	(type1, type2)			type1 ^^ type2
 			bor		(type1, type2)			type1 | type2
 			band	(type1, type2) 			type1 & type2
-			eq*		(type1, ...)			type1 == [...]
 			neq		(type1, type2)			type1 != type2
 			eq		(type1, type2)			type1 == type2
-			neq*	(type1, ...)			type1 != [...]
 			lth		(type1, type2)			type1 < type2
 			leg		(type1, type2)			type1 <= type2
 			gth		(type1, type2)			type1 > type2
@@ -147,6 +154,9 @@
 			This will allow you to add to the api without manually using the required events.
 
 	::Extension::
+		Extension:SetPrice(int price)
+			Sets the price of the method, function, constructors your about to define. This works the same way as EXPR_LIB.SetPrice(int) and is also unused.
+
 		Extension:RegisterClass(string short name, string class name, boolean = function(object) isType, boolean = function(object) isValid)
 			Calls EXPR_LIB.RegisterClass(...) at the correct time with all given valid parameter.
 
@@ -214,6 +224,8 @@ if (not CLIENT) then
 	util.AddNetworkString("Expression3.RequestUpload");
 
 	util.AddNetworkString("Expression3.SendToClient");
+
+	util.AddNetworkString("Expression3.InitializedClient");
 end
 
 --[[
@@ -1058,7 +1070,7 @@ function EXPR_LIB.Initialize()
 	loadConstructors = true;
 	hook.Run("Expression3.LoadConstructors");
 	loadConstructors = false;
-	
+
 	methods = {};
 	loadMethods = true;
 	hook.Run("Expression3.LoadMethods");
@@ -1111,171 +1123,6 @@ function EXPR_LIB.Initialize()
 	include("expression3/debuger.lua");
 
 	--MsgN("Expression 3 has loaded.");
-end
-
-
---[[
-	:::TRANSMITION OF DATA:::
-	'''''''''''''''''''''''''
-]]
-
-EXPR_CHAT = 0
-EXPR_CONSOLE = 1
-
-if (SERVER) then
-	util.AddNetworkString("Expression3.Print");
-	util.AddNetworkString("Expression3.RelayToClient");
-	util.AddNetworkString("Expression3.InitializedClient");
-
-	function EXPR_LIB.SendToPlayer(ply, ent, const, ...)
-		local t = {...};
-
-		net.Start("Expression3.Print");
-			net.WriteEntity(ent);
-			net.WriteInt(const, 3);
-			net.WriteInt(#t, 16);
-
-			for _, v in pairs(t) do
-				if (not IsColor(v)) then
-					net.WriteBit(0);
-					net.WriteString(tostring(v));
-				else
-					net.WriteBit(1);
-					net.WriteInt(v.r, 16);
-					net.WriteInt(v.g, 16);
-					net.WriteInt(v.b, 16);
-				end
-			end
-
-		net.Send(ply);
-	end
-
-	function EXPR_LIB.SendToChat(ply, ent, ...)
-		return EXPR_LIB.SendToPlayer(ply, ent, EXPR_CHAT, ...);
-	end
-
-	function EXPR_LIB.SendToConsole(ply, ent, ...)
-		return EXPR_LIB.SendToPlayer(ply, ent, EXPR_CONSOLE, ...);
-	end
-
-	net.Receive("Expression3.RelayToClient", function(len, ply)
-		local ent = net.ReadEntity();
-		local trg = net.ReadEntity();
-		local const = net.ReadInt(3);
-		local count = net.ReadInt(16);
-		local output = {};
-
-		for i = 1, count do
-			if (net.ReadBit() == 0) then
-				output[i] = net.ReadString();
-			else
-				output[i] = Color(
-					net.ReadInt(16),
-					net.ReadInt(16),
-					net.ReadInt(16)
-				);
-			end
-		end
-
-		if (IsValid(trg)) then
-			net.Start("Expression3.RelayToClient");
-				net.WriteEntity(ent);
-				net.WriteEntity(ply);
-				net.WriteInt(const, 3);
-				net.WriteInt(count, 16);
-
-				for _, v in pairs(output) do
-					if (not istable(v)) then
-						net.WriteBit(0);
-						net.WriteString(tostring(v));
-					else
-						net.WriteBit(1);
-						net.WriteInt(v.r, 16);
-						net.WriteInt(v.g, 16);
-						net.WriteInt(v.b, 16);
-					end
-				end
-
-			net.Send(trg);
-		end
-	end)
-
-end
-
-if (CLIENT) then
-	net.Receive("Expression3.Print", function()
-		local ent = net.ReadEntity();
-		local const = net.ReadInt(3);
-		local count = net.ReadInt(16);
-		local output = {};
-
-		for i = 1, count do
-			if (net.ReadBit() == 0) then
-				output[i] = net.ReadString();
-			else
-				output[i] = Color(
-					net.ReadInt(16),
-					net.ReadInt(16),
-					net.ReadInt(16)
-				);
-			end
-		end
-
-		-- Might pass this to the entity instead later.
-
-		if (const == EXPR_CHAT) then
-			chat.AddText(unpack(output));
-		elseif (const == EXPR_CONSOLE) then
-			-- TODO: Console tab per entity :D
-			Golem.Print(tostring(ent), ":", unpack(output));
-		end
-	end)
-
-	function EXPR_LIB.SendToClient(ply, ent, const, ...)
-		local t = {...};
-
-		net.Start("Expression3.RelayToClient");
-			net.WriteEntity(ent);
-			net.WriteEntity(ply);
-			net.WriteInt(const, 3);
-			net.WriteInt(#t, 16);
-
-			for _, v in pairs(t) do
-				if (not IsColor(v)) then
-					net.WriteBit(0);
-					net.WriteString(tostring(v));
-				else
-					net.WriteBit(1);
-					net.WriteInt(v.r, 16);
-					net.WriteInt(v.g, 16);
-					net.WriteInt(v.b, 16);
-				end
-			end
-
-		net.SendToServer();
-	end
-
-	net.Receive("Expression3.RelayToClient", function()
-		local ent = net.ReadEntity();
-		local frm = net.ReadEntity();
-		local const = net.ReadInt(3);
-		local count = net.ReadInt(16);
-		local output = {};
-
-		for i = 1, count do
-			if (net.ReadBit() == 0) then
-				output[i] = net.ReadString();
-			else
-				output[i] = Color(
-					net.ReadInt(16),
-					net.ReadInt(16),
-					net.ReadInt(16)
-				);
-			end
-		end
-
-		-- Todo: Pass this to entity :D
-	end)
 end
 
 --[[

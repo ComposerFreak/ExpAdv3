@@ -1,11 +1,11 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
 
 	::Expression 3 Base::
 ]]
@@ -34,7 +34,7 @@ function ENT:SetCode(script, files, run)
 
 	self.script = script;
 	self.files = files;
-	
+
 	-- local ok, res = self:Validate(script, files);
 
 	if (self.validator and not self.validator.finished) then
@@ -127,7 +127,7 @@ function ENT:BuildEnv(context, instance)
 		env._CONST	= instance.constructors;
 		env._METH	= instance.methods;
 		env._FUN	= instance.functions;
-	
+
 	-- Fucntions we need
 		env.invoke  = EXPR_LIB.Invoke;
 		env.setmetatable = setmetatable;
@@ -225,7 +225,7 @@ function ENT:Execute(func, ...) -- This is the new one.
 		while true do
 
 			local info = debug.getinfo(i, "Sln");
-			
+
 			if ( !info ) then
 				break;
 			end
@@ -276,7 +276,7 @@ end
 
 function ENT:WriteToLogger(...)
 	local log, logger = {...}, self.Logger;
-	
+
 	if (not logger) then
 		self.Logger = log;
 		return;
@@ -474,13 +474,13 @@ end
 
 function ENT:SendNetMessage(name, target, ...)
 	net.Start("Expression3.EntMessage");
-	
+
 	net.WriteEntity(self);
-	
+
 	net.WriteString(name);
-	
+
 	if CLIENT then net.WriteEntity(target); end
-	
+
 	net.WriteTable( {...} );
 
 	if CLIENT then
@@ -494,7 +494,7 @@ function ENT:ReceiveNetMessage(name, target, values)
 	local cb = self["Net" .. name];
 
 	-- No CB?, Forward this to the cleint for now.
-	if not cb then return true; end 
+	if not cb then return true; end
 
 	return cb(self, target, values);
 end
@@ -515,13 +515,13 @@ net.Receive("Expression3.EntMessage", function()
 	local sendToClient = entity:ReceiveNetMessage(name, target, values);
 
 	if SERVER and sendToClient then
-	
+
 		net.Start("Expression3.EntMessage");
-		
+
 		net.WriteEntity(self);
-		
+
 		net.WriteString(name);
-		
+
 		net.WriteTable( values );
 
 		net.Send(target);
@@ -532,22 +532,29 @@ end);
 	Chat Messages
 ]]
 
+if SERVER then
+	util.AddNetworkString("SendToChat");
+	util.AddNetworkString("SendToGolem");
+end
+
+EXPR_LIB.RegisterPermission("SendToChat", "", "This gate is allowed to send messages to your chatbox.")
+EXPR_LIB.RegisterPermission("SendToGolem", "", "This gate is allowed to send messages to your Golem console.")
+
 EXPR_PRINT_GOLEM = 0;
 EXPR_PRINT_CHAT = 1;
 
 function ENT:SendToOwner( type, ... )
 	if type == EXPR_PRINT_CHAT then
-		self:StartNetMessage("ChatMessage", self.player, ...);
+		self:SendNetMessage("ChatMessage", self.player, ...);
 	else
-		self:StartNetMessage("GolemMessage", self.player, ...);
+		self:SendNetMessage("GolemMessage", self.player, ...);
 	end
 end
 
 function ENT:NetChatMessage(target, values)
 
 	if SERVER then
-		-- TODO: Permission checks :D
-		return true;
+		return self.context:HasPerm(target, "SendToChat");
 	end
 
 	chat.AddText( unpack(values) );
@@ -557,10 +564,14 @@ end
 function ENT:NetGolemMessage(target, values)
 
 	if SERVER then
-		-- TODO: Permission checks :D
-		return true;
+		return self.context:HasPerm(target, "SendToGolem");
 	end
 
-	Golem.Print( unpack(values) ); 
+	Golem.Print( unpack(values) );
 end
 
+--[[
+	API Call to add additonal methods
+]]
+
+hook.Run("Expression3.ExtendBaseEntity", ENT);
