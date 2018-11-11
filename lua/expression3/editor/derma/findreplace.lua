@@ -55,6 +55,10 @@ function SEARCH:Init()
 		self:FindPrev();
 	end
 
+	function self.query_text.OnEnter(this)
+		self:FindNext();
+	end
+
 	function self.find_all.DoClick(this)
 		self:FindAll();
 	end
@@ -95,6 +99,7 @@ function SEARCH:Open(noanim)
 	local w, h = self:GetSize();
 	local x = pw - w - 20;
 	local y = 10;
+
 	if (noanim) then self:SetPos(x, y);
 	else self:MoveTo(x, y, 0.2, 0.2); end
 
@@ -105,6 +110,8 @@ function SEARCH:Open(noanim)
 			btn:SetVisible(true);
 		end
 	end
+
+	self.query_text:RequestFocus();
 
 	self.bOpen = true;
 end
@@ -214,6 +221,10 @@ function SEARCH:GetQuery()
 	return query;
 end
 
+function SEARCH:GetReplacement()
+	return self.replace_text:GetValue();
+end
+
 function SEARCH:CaretToPos(ide, caret)
 	local tRows = ide.tRows;
 
@@ -265,6 +276,7 @@ function SEARCH:FindResults(maxResults)
 	local bInSelection = self.pEditor.searchOptSelection:GetValue();
 	local bAllowRegex = self.pEditor.searchOptRegex:GetValue();
 	local bMatchWhole = self.pEditor.searchOptWhole:GetValue();
+	local bWrapAround = self.pEditor.searchOptWrap:GetValue();
 
 	local startPos = ide.Start;
 	local endPos = Vector2(#ide.tRows, #ide.tRows[#ide.tRows]);
@@ -273,11 +285,9 @@ function SEARCH:FindResults(maxResults)
 		endPos = ide.Caret;
 	end
 
-	local offset = self:CaretToPos(ide, startPos);
+	local caretPos = self:CaretToPos(ide, startPos);
+	local offset = caretPos;
 	local maxoffset = self:CaretToPos(ide, endPos);
-
-	Golem.Print("Start Pos: ", tostring(startPos), " - ", offset);
-	Golem.Print("End Pos: ", tostring(endPos), " - ", maxoffset);
 
 	local tempStart, tempStop = string.find(code, query, 1, !bAllowRegex);
 
@@ -295,24 +305,33 @@ function SEARCH:FindResults(maxResults)
 		local start, stop = string.find(code, query, offset, !bAllowRegex);
 
 		if (not start or not stop) then
-			break;
+			if (bWrapAround and not bInSelection) then
+				bWrapAround = false;
+				maxoffset = caretPos;
+				offset = 0;
+				continue;
+			else
+				break;
+			end
 		end
 
+		stop = stop + 1;
+
 		local newStart = self:PosToCaret(ide, start);
-		local newStop = self:PosToCaret(ide, start);
+		local newStop = self:PosToCaret(ide, stop);
 
 		if (bMatchWhole) then
 
 			local wordStart = ide:wordStart(newStart);
-			local wordStop = ide:wordend(newStop);
+			local wordStop = ide:wordEnd(newStop);
 
-			if (wordStart == newStart and wordStop == (newStop + Vector2(0, 1))) then
+			if (wordStart == newStart and wordStop == newStop) then
 				results[#results + 1] = { newStart, newStop, string.sub(code, start, stop) };
 			end
 
 			offset = start + 1;
 		else
-			results[#results + 1] = { newStart, newStop, string.sub(code, start, stop) };
+			results[#results + 1] = { newStart, newStop, string.sub(code, start, stop - 1) };
 			offset = start + 1;
 		end
 
@@ -330,39 +349,61 @@ function SEARCH:FindNext()
 	local results = self:FindResults(10);
 
 	if (not results) then
-		Golem.Print("Search returned no results!");
+		Golem.Print({image = "fugue\\binocular.png", size = 16}, Color(100, 100, 100), "Search returned no results!");
 	else
-		local result = results[1];
-		Golem.Print("Found ", result[3], " at line ", result[1].x, " char ", result[1].y);
+		self:DoFindReplace(results[1]);
 	end
-
-	--TODO: Oskar make this function do more then just print in to the console.
 end
 
 function SEARCH:FindPrev()
 	local results = self:FindResults();
 
 	if (not results) then
-		Golem.Print("Search returned no results!");
+		Golem.Print({image = "fugue\\binocular.png", size = 16}, Color(100, 100, 100), "Search returned no results!");
 	else
-		local result = results[#results];
-		Golem.Print("Found ", result[3], " at line ", result[1].x, " char ", result[1].y);
+		self:DoFindReplace(results[#results]);
+	end
+end
+
+function SEARCH:DoFindReplace(result, noPrint)
+	local ide = self:GetIDE();
+
+	if (self.bReplace) then
+		local with = self:GetReplacement();
+
+		ide:SetArea( { ide:MakeSelection({ result[1], result[2] }) }, with);
+
+		if (not noPrint) then
+			Golem.Print({image = "fugue\\binocular.png", size = 16}, Color(100, 100, 100), "Replaced ", Color(50, 100, 50), result[3], Color(100, 100, 100), " at line ", result[1].x, " char ", result[1].y, ".");
+		end
+	else
+		if (not noPrint) then
+			Golem.Print({image = "fugue\\quil.png", size = 16}, Color(100, 100, 100), "Found ", Color(50, 100, 50), result[3], Color(100, 100, 100), " at line ", result[1].x, " char ", result[1].y, ".");
+		end
 	end
 
-	--TODO: Oskar make this function do more then just print in to the console.
+	ide:SetCaret(result[1]);
+	ide:ScrollCaret();
+	ide:RequestFocus();
 end
 
 function SEARCH:FindAll()
 	local results = self:FindResults();
 
 	if (not results) then
-		Golem.Print("Search returned no results!");
+		Golem.Print({image = "fugue\\binocular.png", size = 16}, Color(100, 100, 100), "Search returned no results!");
 	else
-		Golem.Print("Search returned ", #results, " results!");
+		Golem.Print({image = "fugue\\binocular.png", size = 16}, Color(100, 100, 100), "Search returned ", #results, " results!");
 
 		for i = 1, #results do
-			local result = results[i];
-			Golem.Print(i, " - Found ", result[3], " at line ", result[1].x, " char ", result[1].y);
+			self:DoFindReplace(results[i], true);
+		end
+
+		if (self.bReplace) then
+			Golem.Print({image = "fugue\\quil.png", size = 16}, Color(100, 100, 100), "Replaced ", Color(50, 100, 50), #results, Color(100, 100, 100), " results.");
+		else
+			--This wont happen as the button only exists when replacing D:
+			Golem.Print({image = "fugue\\binocular.png", size = 16}, Color(100, 100, 100), "Found ", Color(50, 100, 50), #results, Color(100, 100, 100), " results.");
 		end
 	end
 
@@ -370,133 +411,5 @@ function SEARCH:FindAll()
 end
 
 
-
-
-
-
-
-
-
-
-
-
-
-
---[[function SEARCH:ToTextPos(lines, line, char)
-	local p = 0;
-
-	for l = 1, #lines do
-		local row = lines[l];
-		local len = #row;
-
-		if l < line then
-			p = p + len + 1;
-		elseif l == line then
-			p = (len < char) and len or char;
-		else
-			break;
-		end
-	end
-
-	return p;
-end
-
-function SEARCH:PosToLineChar(code, pos)
-	code = string.sub(code, 1, pos);
-	local lines = string.Explode("\n", code);
-
-	local p = 0;
-	for l = 1, #lines do
-		local line = lines[l];
-		local len = #line;
-
-		p = p + len;
-
-		if p == pos then
-			return l, len;
-		else
-			p = p + 1;
-		end
-	end
-
-	return 0, 0;
-end
-
-function SEARCH:GetSelection(ide, code)
-	local bInSelection = self.pEditor.searchOptSelection:GetValue();
-
-	local start = self:ToTextPos(ide.tRows, ide.Start.x, ide.Start.y)
-
-	if ( bInSelection ) then
-		return start, start, self:ToTextPos(ide.tRows, ide.Caret.x, ide.Caret.y);
-	end
-
-	return start, 1, #code;
-end
-
-
-
-function SEARCH:FindNext(code, query, maxResults)
-
-	local bAllowRegex = self.pEditor.searchOptRegex:GetValue();
-	local s, e = string.find(code, query, !bAllowRegex);
-
-	if (not (s and e)) then return; end
-
-	self.pEditor:Warning("Found: ", s, " - ", e);
-end
-
-function SEARCH:GetResults(ide)
-	local query = self:GetQuery();
-	local code, lines = self:GetCode(ide);
-	local caret, start, finish = self:GetSelection(ide, code);
-
-	local bAllowRegex = self.pEditor.searchOptRegex:GetValue();
-	local s, f = string.find(code, query, start, !bAllowRegex);
-
-	if not (s and f) then return false; end
-	if f > finish then return false; end
-
-	local off = start;
-	local first = 0;
-	local results = {};
-
-	while off < finish do
-		local s, f, m = string.find(code, query, off, !bAllowRegex);
-
-		if not (s and f) then break; end
-		if f > finish then break; end
-
-		off = f + 1;
-
-		local sl, sc = self:PosToLineChar(code, s);
-		local fl, fc = self:PosToLineChar(code, f);
-
-		results[#results + 1] = { {s, sl, sc}, {f, fl, fc}, m };
-		if first < caret and s > caret then first = #results; end
-	end
-
-	return #results > 0, results, first;
-end
-
-function SEARCH:RunFind(ReplaceNext, ReplaceAll)
-	local ide = self:GetIDE();
-	if not ide then return; end
-
-	local found, results, first = self:GetResults(ide);
-
-	if not found then
-		Golem.Print("No results where found.");
-		return false;
-	end
-
-	Golem.Print(#results, " results where found.");
-
-	for i = 1, #results do
-		local v = results[i];
-		Golem.Print(i, " result: ", v[1], ", ", v[2], " = ", v[3]);
-	end
-
-end]]
 
 vgui.Register("GOLEM_SearchBox", SEARCH, "DPanel");

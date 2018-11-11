@@ -16,7 +16,7 @@ function PANEL:Init( )
 	self:SetDefaultTextColor(Color(255, 255, 255));
 
 	-- Golem.Syntax:Create( "console", self );
-	
+
 end
 
 function PANEL:ClickText( cursor )
@@ -49,8 +49,7 @@ function PANEL:NewLine()
 	self.tRows[ self.nLine ] = table.concat(self.row, "");
 	self.tFormat[ self.nLine ] = table.Copy(self.format);
 	self.tFuncs[ self.nLine ] = self.funcs;
-	PrintTable(self.tFuncs)
-	
+
 	self.row = {};
 	self.format = {};
 	self.funcs = {};
@@ -81,7 +80,7 @@ function PANEL:WriteTable(values)
 
 	for i = 1, tValues do
 		local value = values[i];
-		
+
 		if isfunction(value) then
 			self.fClick = value;
 			continue;
@@ -132,20 +131,20 @@ function PANEL:Warn(level, ...)
 	local right = {...};
 
 	level = level or 2;
-	
-	if level == 1 then 
+
+	if level == 1 then
 		left[1] = {image = "fugue/question.png", size = 16}
 	elseif level == 2 then
 		left[1] = {image = "fugue/exclamation-circle.png", size = 16}
-	elseif level == 3 then 
+	elseif level == 3 then
 		left[1] = {image = "fugue/exclamation-red.png", size = 16}
 	end
-	
+
 	--if level == 3 then
 	--	self:SetBackGroundColorL(200, 50, 50);
 	--	self:SetBackGroundColorR(200, 50, 50);
 	--end
-	
+
 	left[#left + 1] = Color(255, 255, 255);
 	left[#left + 1] = "Warning ";
 
