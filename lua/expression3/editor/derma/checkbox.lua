@@ -37,7 +37,7 @@ function CHECK:DoClick()
 	self:ChangedValue(self.bChecked);
 end
 
-function CHECK:GSetValue()
+function CHECK:GetValue()
 	return self.bChecked;
 end
 
@@ -65,7 +65,7 @@ function CHECKLABEL:Init()
 	function self.button.ChangedValue(this, bChecked)
 		self:ChangedValue(bChecked);
 	end
-	
+
 end
 
 function CHECKLABEL:SetText(text)
@@ -83,7 +83,7 @@ function CHECKLABEL:SetCross(cross)
 end
 
 function CHECKLABEL:Paint()
-	
+
 end
 
 function CHECKLABEL:GetValue()

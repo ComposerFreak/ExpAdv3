@@ -25,3 +25,15 @@ for (int i = 3; 30)
   holo.setSize(new vector(5, 45, 2) / 12);
   holo.setID(i);
 }
+
+table cars = entlib.findByModel("models/XQM/coastertrain2seat.mdl");
+
+if ( #cars > 0 )
+{
+    //TODO: exlude objects not owned by this gates owner.
+    //TODO: sort by distance.
+}
+
+foreach (entity car : cars)
+  if (car.mass() != 5000)
+    car.setMass(5000);
