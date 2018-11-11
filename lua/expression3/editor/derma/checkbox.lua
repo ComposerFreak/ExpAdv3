@@ -41,6 +41,15 @@ function CHECK:GetValue()
 	return self.bChecked;
 end
 
+function CHECK:SetValue(b, noChanged)
+	self.bChecked = b;
+	self:SetMaterial( self.bChecked and self.tick or self.cross );
+
+	if (not noChanged) then
+		self:ChangedValue(self.bChecked);
+	end
+end
+
 function CHECK:ChangedValue(bChecked)
 
 end

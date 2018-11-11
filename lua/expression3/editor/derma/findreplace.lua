@@ -40,7 +40,7 @@ function SEARCH:Init()
 
 	self.replace_check = self:Add("GOLEM_CheckBox");
 	self.replace_check:SetCross(Material("fugue\\binocular.png"));
-	self.replace_check:SetTick(Material("fugue\\quil.png"));
+	self.replace_check:SetTick(Material("fugue\\quill.png"));
 	self.replace_check:SetTooltip("Toggle Find and Replace");
 
 	function self.replace_check.ChangedValue(this, bChecked)
@@ -151,6 +151,8 @@ function SEARCH:ShowReplace()
 	self.find_all:SetEnabled(true);
 	self.find_all:SetVisible(true);
 
+	self.replace_check:SetValue(true, true);
+
 	self.bReplace = true;
 end
 
@@ -160,6 +162,8 @@ function SEARCH:HideReplace()
 
 	self.find_all:SetEnabled(false);
 	self.find_all:SetVisible(false);
+
+	self.replace_check:SetValue(false, true);
 
 	self.bReplace = false;
 end
@@ -382,7 +386,7 @@ function SEARCH:DoFindReplace(result, noPrint)
 		end
 	else
 		if (not noPrint) then
-			Golem.Print({image = "fugue\\quil.png", size = 16}, Color(100, 100, 100), "Found ", Color(50, 100, 50), result[3], Color(100, 100, 100), " at line ", result[1].x, " char ", result[1].y, ".");
+			Golem.Print({image = "fugue\\quill.png", size = 16}, Color(100, 100, 100), "Found ", Color(50, 100, 50), result[3], Color(100, 100, 100), " at line ", result[1].x, " char ", result[1].y, ".");
 		end
 	end
 
@@ -404,7 +408,7 @@ function SEARCH:FindAll()
 		end
 
 		if (self.bReplace) then
-			Golem.Print({image = "fugue\\quil.png", size = 16}, Color(100, 100, 100), "Replaced ", Color(50, 100, 50), #results, Color(100, 100, 100), " results.");
+			Golem.Print({image = "fugue\\quill.png", size = 16}, Color(100, 100, 100), "Replaced ", Color(50, 100, 50), #results, Color(100, 100, 100), " results.");
 		else
 			--This wont happen as the button only exists when replacing D:
 			Golem.Print({image = "fugue\\binocular.png", size = 16}, Color(100, 100, 100), "Found ", Color(50, 100, 50), #results, Color(100, 100, 100), " results.");
