@@ -15,8 +15,13 @@ function PANEL:Init( )
 	self:SetEditable(false);
 	self:SetDefaultTextColor(Color(255, 255, 255));
 
-	-- Golem.Syntax:Create( "console", self );
+	function self:PaintStatus() end
 
+end
+
+function PANEL:ScrollToBottom()
+	self:SetCaret( Vector2( #self.tRows, #self.tRows[#self.tRows] ) );
+	self:ScrollCaret();
 end
 
 function PANEL:ClickText( cursor )
@@ -124,6 +129,7 @@ function PANEL:WriteLine(...)
 	self.cTextColor = self.cDefTextColor;
 	self:WriteTable( { ... } );
 	self:NewLine();
+	self:ScrollToBottom();
 end
 
 function PANEL:Warn(level, ...)
