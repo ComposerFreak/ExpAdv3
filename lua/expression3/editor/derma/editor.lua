@@ -192,7 +192,6 @@ function PANEL:_OnKeyCodeTyped( code )
 	local shift = input_IsKeyDown( KEY_LSHIFT ) or input_IsKeyDown( KEY_RSHIFT )
 	local control = input_IsKeyDown( KEY_LCONTROL ) or input_IsKeyDown( KEY_RCONTROL )
 
-
 	-- allow ctrl-ins and shift-del ( shift-ins, like ctrl-v, is handled by vgui )
 	if not shift and control and code == KEY_INSERT then
 		shift, control, code = true, false, KEY_C
@@ -392,6 +391,19 @@ function PANEL:_OnKeyCodeTyped( code )
 				local clipboard = self:GetSelection( )
 				clipboard = string_gsub( clipboard, "\n", "\r\n" )
 				SetClipboardText( clipboard )
+			end
+		elseif code == KEY_F or code == KEY_H then
+			local query = self:GetSelection();
+			local search = self.Master.pnlSearch;
+
+			if (query ~= "") then
+				search:SetQuery(query);
+			end
+
+			search:Open();
+
+			if (code == KEY_H) then
+				search:ShowReplace();
 			end
 		elseif code == KEY_UP then
 			if shift then

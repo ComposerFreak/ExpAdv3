@@ -221,6 +221,10 @@ function SEARCH:GetQuery()
 	return query;
 end
 
+function SEARCH:SetQuery(text)
+	self.query_text:SetValue(text or "");
+end
+
 function SEARCH:GetReplacement()
 	return self.replace_text:GetValue();
 end
