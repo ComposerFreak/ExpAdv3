@@ -483,10 +483,24 @@ function ENT:SendNetMessage(name, target, ...)
 
 	net.WriteTable( {...} );
 
+	local context = EXPR_LIB.GetExecuting();
+
+	if context then
+		local usage = context.net_total + net.BytesWritten();
+
+		if usage > context:GetNetQuota() then
+			context:Throw("Network que overflow.");
+		end
+
+		context.net_total = usage;
+	end
+
 	if CLIENT then
 		net.SendToServer();
-	else
+	elseif target then
 		net.Send(target);
+	else
+		net.Broadcast();
 	end
 end
 

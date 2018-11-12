@@ -165,17 +165,19 @@ end
 ]]
 
 local len = 100;
-local soft, hard;
+local soft, hard, net;
 
 if (SERVER) then
 	hard = CreateConVar("e3_hardquota", 500, { FCVAR_REPLICATED }, "Absolute max usage quota per one tick.");
-	soft = CreateConVar("e3_softquota", 300, { FCVAR_REPLICATED }, "The max average usage quota."); -- was 100
+	soft = CreateConVar("e3_softquota", 300, { FCVAR_REPLICATED }, "The max average usage quota.");
+	net = CreateConVar("e3_netquota", 64000, { FCVAR_REPLICATED }, "The max net usage quota in kb.");
 	--len = CreateConVar("e3_maxbuffersize", 100, { FCVAR_REPLICATED }, "Window width of the CPU time quota moving average.");
 end
 
 if (CLIENT) then
 	hard = CreateClientConVar("e3_hardquota", 500, false, false);
-	soft = CreateClientConVar("e3_softquota", 300, false, false); -- was 100;
+	soft = CreateClientConVar("e3_softquota", 300, false, false);
+	net = CreateConVar("e3_netquota", 64000, false, false);
 	--len = CreateClientConVar("e3_maxbuffersize", 100, false, false);
 end
 
@@ -189,6 +191,10 @@ end
 
 function CONTEXT:GetHardQuota()
 	return hard:GetInt() * 0.0001;
+end
+
+function CONTEXT:GetNetQuota()
+	return net:GetInt();
 end
 
 --
@@ -246,6 +252,8 @@ function CONTEXT:UpdateQuotaValues()
 				self.cpu_warning = false;
 			end
 		end
+
+		self.net_total = 0;
 
 		self.cpu_total = 0;
 

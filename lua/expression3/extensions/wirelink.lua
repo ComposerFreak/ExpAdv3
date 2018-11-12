@@ -135,3 +135,5 @@ end
 --[[
   To do HighSpeed functions :D
 ]]
+
+ext_wl:EnableExtension();
