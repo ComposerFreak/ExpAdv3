@@ -438,18 +438,18 @@ function ENT:UpdateQuotaValues()
 	local context = self.context;
 
 	if (SERVER) then
-		self:SetServerAverageCPU((r and context.cpu_average or 0) * 1000);
-		self:SetServerTotalCPU((r and context.cpu_total or 0) * 1000);
-		self:SetServerWarning(r and context.cpu_warning or false);
+		self:SetServerAverageCPU((context and context.cpu_average or 0) * 1000);
+		self:SetServerTotalCPU(contextr and context.cpu_total or 0) * 1000);
+		self:SetServerWarning(context and context.cpu_warning or false);
 	end
 
 	if (CLIENT) then
-		self:SetClientAverageCPU((r and context.cpu_average or 0) * 1000);
-		self:SetClientTotalCPU((r and context.cpu_total or 0) * 1000);
-		self:SetClientWarning(r and context.cpu_warning or false);
+		self:SetClientAverageCPU((context and context.cpu_average or 0) * 1000);
+		self:SetClientTotalCPU((context and context.cpu_total or 0) * 1000);
+		self:SetClientWarning(context and context.cpu_warning or false);
 	end
 
-	if (r) then
+	if (context) then
 		context:UpdateQuotaValues();
 	end
 end
