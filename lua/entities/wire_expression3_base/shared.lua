@@ -439,7 +439,7 @@ function ENT:UpdateQuotaValues()
 
 	if (SERVER) then
 		self:SetServerAverageCPU((context and context.cpu_average or 0) * 1000);
-		self:SetServerTotalCPU(contextr and context.cpu_total or 0) * 1000);
+		self:SetServerTotalCPU(context and context.cpu_total or 0) * 1000);
 		self:SetServerWarning(context and context.cpu_warning or false);
 	end
 
