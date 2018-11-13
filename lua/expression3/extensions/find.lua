@@ -37,84 +37,188 @@ hook.Call("Expression3.Extension.EntityBlackList", EXPR_LIB.EntityBL);
 
 ]]
 
-
-local function filter(a, ff)
-
-	local r = {};
-
-	for i = 1, #ff do
-
-		local e = ff[i];
-
-		if a.wl and not a.wl[e] then continue; end
-
-		if a.bl and a.bl[e] then continue; end;
-
-		if IsValid(e) then
-
-			local c = e:GetClass();
-
-			if EXPR_LIB.EntityBL[c] then continue; end
-
-			if a.ec and a.ec[c] then continue; end
-
-			if a.ic and not a.ic[c] then continue; end
-
-			local m = e:GetModel();
-
-			if a.em and a.em[m] then continue; end
-
-			if a.im and not a.im[m] then continue; end
-
-			if a.ep or a.ip then
-
-				local o = e:getOWner();
-
-				if IsValid(o) then
-
-					if a.ep and a.ep[o] then continue; end
-
-					if a.ip and not a.ip[o] then continue; end
-
-				end
-
-			end
-		end
-
-		r[#r + 1] = e;
-
-	end
-
-	a.a = r;
-
-end
-
---[[
-	Extention and class.
-]]
-
 local extension = EXPR_LIB.RegisterExtension("find");
 
 extension:RegisterLibrary("entlib");
 
-extension:RegisterClass("ed", "find", istable, function(v) return v ~= nil; end);
+extension:RegisterClass("ed", "search", istable, notnil);
+
+--[[
+
+]]
+
+function extension.findByClass(...)
+	local FindByClass
+end
+
+--return {tbl = t, children = {}, parents = {}, size = #t};
+
+local function findByClass( ... )
+	local r = {};
+	local a = ents.FindByClass( ... );
+	
+	for _, v in pairs( a ) do
+		if IsValid(v) and not EXPR_LIB.EntityBL[ v:GetClass() ] then
+			r[#r + 1] = v;
+		end
+	end
+
+	return r;
+end
+
+local function findByClass( ... )
+	local r = {};
+	local a = ents.FindByClassAndParent( ... );
+	
+	for _, v in pairs( a ) do
+		if IsValid(v) and not EXPR_LIB.EntityBL[ v:GetClass() ] then
+			r[#r + 1] = v;
+		end
+	end
+
+	return r;
+end
+
+local function findByModel( ... )
+	local r = {};
+	local a = ents.FindByModel( ... );
+	
+	for _, v in pairs( a ) do
+		if IsValid(v) and not EXPR_LIB.EntityBL[ v:GetClass() ] then
+			r[#r + 1] = v;
+		end
+	end
+
+	return r;
+end
+
+local function findInBox( ... )
+	local r = {};
+	local a = ents.FindInBox( ... );
+	
+	for _, v in pairs( a ) do
+		if IsValid(v) and not EXPR_LIB.EntityBL[ v:GetClass() ] then
+			r[#r + 1] = v;
+		end
+	end
+
+	return r;
+end
+
+local function findInCone( ... )
+	local r = {};
+	local a = ents.FindInCone( ... );
+	
+	for _, v in pairs( a ) do
+		if IsValid(v) and not EXPR_LIB.EntityBL[ v:GetClass() ] then
+			r[#r + 1] = v;
+		end
+	end
+
+	return r;
+end
+
+local function finInPVS( ... )
+	local r = {};
+	local a = ents.FindInPVS( ... );
+	
+	for _, v in pairs( a ) do
+		if IsValid(v) and not EXPR_LIB.EntityBL[ v:GetClass() ] then
+			r[#r + 1] = v;
+		end
+	end
+
+	return r;
+end
+
+local function finInPVS( ... )
+	local r = {};
+	local a = ents.FindInPVS( ... );
+	
+	for _, v in pairs( a ) do
+		if IsValid(v) and not EXPR_LIB.EntityBL[ v:GetClass() ] then
+			r[#r + 1] = v;
+		end
+	end
+
+	return r;
+end
+
+local function findInSphere( ... )
+	local r = {};
+	local a = ents.FindInSphere( ... );
+	
+	for _, v in pairs( a ) do
+		if IsValid(v) and not EXPR_LIB.EntityBL[ v:GetClass() ] then
+			r[#r + 1] = v;
+		end
+	end
+
+	return r;
+end
+
+--[[
+	Base search functions.
+]]
 
 extension:SetSharedState();
 
-extension:RegisterConstructor("ed", "", function() return {a = {}}; end, true);
+extension:RegisterFunction( "entlib", "findByClass", "s", "ed", 1, function( ... )
+	local t = extension.findByClass( ... );
+	return { a = t }; -- return {tbl = t, children = {}, parents = {}, size = #t};
+end);
+
+extension:RegisterFunction( "entlib", "findByClass", "s,e", "ed", 1, function( ... )
+	local t = extension.findByClass( ... );
+	return { a = t }; -- return {tbl = t, children = {}, parents = {}, size = #t};
+end);
+
+extension:RegisterFunction( "entlib", "findByModel", "s", "ed", 1, function( ... )
+	local t = extension.findByModel( ... );
+	return {a = t }; -- return {tbl = t, children = {}, parents = {}, size = #t};
+end);
+
+extension:RegisterFunction( "entlib", "findInBox", "v,v", "ed", 1, function( ... )
+	local t = extension.findInBox( ... );
+	return { a = t }; -- return {tbl = t, children = {}, parents = {}, size = #t};
+end);
+
+extension:RegisterFunction( "entlib", "findInCone", "v,v,n,a", "ed", 1, function( ... )
+	local t = extension.findInCone( ... );
+	return { a = t }; -- return {tbl = t, children = {}, parents = {}, size = #t};
+end);
+
+extension:RegisterFunction( "entlib", "finInPVS", "v", "ed", 1, function( ... )
+	local t = extension.finInPVS( ... );
+	return { a = t }; -- return {tbl = t, children = {}, parents = {}, size = #t};
+end);
+
+extension:RegisterFunction( "entlib", "finInPVS", "e", "ed", 1, function( ... )
+	local t = extension.finInPVS( ... );
+	return { a = t }; -- return {tbl = t, children = {}, parents = {}, size = #t};
+end);
+
+extension:RegisterFunction( "entlib", "findInSphere", "v,n", "ed", 1, function( ... )
+	local t = extension.findInSphere( ... );
+	return { a = t }; -- return {tbl = t, children = {}, parents = {}, size = #t};
+end);
+
+--[[
+	Black List / White List
+]]
 
 extension:RegisterMethod("ed", "clearWhiteList", "", "", 0, function(a)
-
+	
 	a.bl = nil;
-
+	
 	a.wl = nil;
 
 end, true);
 
 extension:RegisterMethod("ed", "removeFromWhiteList", "e", "", 0, function(a, e)
-
+	
 	a.bl = nil;
-
+	
 	a.wl = a.wl or { };
 
 	a.wl[e] = nil;
@@ -122,9 +226,9 @@ extension:RegisterMethod("ed", "removeFromWhiteList", "e", "", 0, function(a, e)
 end, true);
 
 extension:RegisterMethod("ed", "addWhiteList", "e", "", 0, function(a, e)
-
+	
 	a.bl = nil;
-
+	
 	a.wl = a.wl or { };
 
 	a.wl[e] = true;
@@ -132,9 +236,9 @@ extension:RegisterMethod("ed", "addWhiteList", "e", "", 0, function(a, e)
 end, true);
 
 extension:RegisterMethod("ed", "addWhiteList", "t", "", 0, function(a, f)
-
+	
 	a.bl = nil;
-
+	
 	a.wl = a.wl or { };
 
 	for i = 1, #f.tbl do
@@ -148,17 +252,17 @@ extension:RegisterMethod("ed", "addWhiteList", "t", "", 0, function(a, f)
 end, true);
 
 extension:RegisterMethod("ed", "clearBlackList", "", "", 0, function(a)
-
+	
 	a.wl = nil;
-
+	
 	a.bl = nil;
 
 end, true);
 
 extension:RegisterMethod("ed", "removeFromBlackList", "e", "", 0, function(a, e)
-
+	
 	a.wl = nil;
-
+	
 	a.bl = a.bl or { };
 
 	a.bl[e] = nil;
@@ -166,9 +270,9 @@ extension:RegisterMethod("ed", "removeFromBlackList", "e", "", 0, function(a, e)
 end, true);
 
 extension:RegisterMethod("ed", "addBlackList", "e", "", 0, function(a, e)
-
+	
 	a.wl = nil;
-
+	
 	a.bl = a.bl or { };
 
 	a.bl[e] = true;
@@ -176,9 +280,9 @@ extension:RegisterMethod("ed", "addBlackList", "e", "", 0, function(a, e)
 end, true);
 
 extension:RegisterMethod("ed", "addBlackList", "t", "", 0, function(a, f)
-
+	
 	a.wl = nil;
-
+	
 	a.bl = a.bl or { };
 
 	for i = 1, #f.tbl do
@@ -215,7 +319,7 @@ extension:RegisterMethod("ed", "includeClass", "s", "", 0, function(a, c)
 
 end, true);
 
-extension:RegisterMethod("ed", "clearClassFilters", "", "", 0, function(a)
+extension:RegisterMethod("ed", "clearClassFilters", function(a)
 	a.ec = nil;
 	a.ic = nil;
 end, true);
@@ -240,7 +344,7 @@ extension:RegisterMethod("ed", "includeModel", "s", "", 0, function(a, m)
 
 end, true);
 
-extension:RegisterMethod("ed", "clearModelFilters", "", "", 0, function(a)
+extension:RegisterMethod("ed", "clearModelFilters", function(a)
 	a.em = nil;
 	a.im = nil;
 end, true);
@@ -252,7 +356,7 @@ end, true);
 extension:RegisterMethod("ed", "excludePlayerPpops", "p", "", 0, function(a, p)
 
 	a.ip = nil;
-
+	
 	a.ep = a.ep or { };
 
 	a.ep[p] = true;
@@ -262,14 +366,14 @@ end, true);
 extension:RegisterMethod("ed", "includePlayerPpops", "p", "", 0, function(a, p)
 
 	a.ep = nil;
-
+	
 	a.ip = a.ip or { };
 
 	a.ip[p] = true;
 
 end, true);
 
-extension:RegisterMethod("ed", "clearPlayerFilters", "", "", 0, function(a)
+extension:RegisterMethod("ed", "clearPlayerFilters", function(a)
 	a.ep = nil;
 	a.ip = nil;
 end, true);
@@ -281,7 +385,7 @@ end, true);
 extension:RegisterMethod("ed", "clearFilters", "", "", 0, function(a)
 	a.wl = nil;
 	a.bl = nil;
-
+	
 	a.ec = nil;
 	a.ic = nil;
 
@@ -295,7 +399,7 @@ end, false);
 extension:RegisterMethod("ed", "copyFilters", "ed", "", 0, function(a, b)
 	b.wl = table.Copy(a.wl);
 	b.bl = table.Copy(a.bl);
-
+	
 	b.ec = table.Copy(a.ec);
 	b.ic = table.Copy(a.ic);
 
@@ -306,12 +410,62 @@ extension:RegisterMethod("ed", "copyFilters", "ed", "", 0, function(a, b)
 	b.ip = table.Copy(a.ip);
 end, false);
 
+extension:RegisterMethod("ed", "applyFilters", "", "", 0, function(a)
+
+	local r = {};
+
+	for i = 1, #a.a do
+
+		local e = a.a[i];
+
+		if a.wl and not a.wl[e] then continue; end
+
+		if a.bl and a.bl[e] then continue; end;
+
+		if IsValid(e) then
+
+			local c = e:GetClass();
+
+			if a.ec and a.ec[c] then continue; end
+
+			if a.ic and not a.ic[c] then continue; end
+
+			local m = e:GetModel();
+
+			if a.em and a.em[m] then continue; end
+
+			if a.im and not a.im[m] then continue; end
+
+			if a.ep or a.ip then 
+
+				local o = e:getOWner();
+
+				if IsValid(o) then
+
+					if a.ep and a.ep[o] then continue; end
+
+					if a.ip and not a.ip[o] then continue; end
+
+				end
+
+			end
+		end
+
+		r[#r + 1] = e;
+
+	end
+
+	a.a = r;
+
+end, true);
+
+
 --[[
 	Advanced find functions.
 ]]
 
 extension:RegisterMethod("ed", "sortByDistance", "v", "", 0, function(a, v)
-
+	
 	local d = { };
 
 	table.sort(a.a, function(a, b)
@@ -436,7 +590,7 @@ extension:RegisterMethod("ed", "clipFromRegion", "v,v", "", 0, function(a, o, p)
 		local e = a.a[i];
 
 		if IsValid(e) then
-
+			
 			if d <= p:Dot(e:GetPos()) then continue; end
 
 			t[#t + 1] = e;
@@ -448,44 +602,6 @@ extension:RegisterMethod("ed", "clipFromRegion", "v,v", "", 0, function(a, o, p)
 
 end, true);
 
---[[
-	Search functions.
-]]
-
-extension:RegisterMethod("ed", "findByClass", "s", "n", 1, function(a, c)
-	filter(a, ents.FindByClass(c));
-	return #a.a;
-end, true);
-
-extension:RegisterMethod("ed", "findByModel", "s", "n", 1, function(a, m)
-	filter(a, ents.FindByModel(m));
-	return #a.a;
-end, true);
-
-extension:RegisterMethod("ed", "findInBox", "v,v", "n", 1, function(a, mn, mx)
-	filter(a, ents.FindByModel(mn, mx));
-	return #a.a;
-end, true);
-
-extension:RegisterMethod("ed", "findInCone", "v,v,n,a", "n", 1, function(a, v1, v2, n, g)
-	filter(a, ents.FindInCone(v1, v2, n, g));
-	return #a.a;
-end, true);
-
-extension:RegisterMethod("ed", "finInPVS", "v", "n", 1, function(a, v)
-	filter(a, ents.FindInPVS(v));
-	return #a.a;
-end, true);
-
-extension:RegisterMethod("ed", "finInPVS", "e", "n", 1, function(a, e)
-	filter(a, ents.FindInPVS(e));
-	return #a.a;
-end, true);
-
-extension:RegisterMethod("ed", "findInSphere", "v,n", "n", 1, function(a, v, n)
-	filter(a, ents.FindInSphere(v, n));
-	return #a.a;
-end, true);
 
 --[[
 	Results
@@ -514,3 +630,4 @@ end, true);
 ]]
 
 extension:EnableExtension()
+

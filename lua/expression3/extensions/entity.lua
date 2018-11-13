@@ -12,8 +12,7 @@
 
 local extension = EXPR_LIB.RegisterExtension("entity")
 
-extension:SetSharedState()
-
+extension:RegisterLibrary("entlib")
 extension:RegisterLibrary("prop")
 
 --[[
@@ -139,7 +138,6 @@ extension:RegisterMethod("e", "setAng", "a", "", 0, function(context,e,v)
 		e:SetAngles(v)
 	end
 end, false)
-
 extension:SetSharedState()
 
 --[[

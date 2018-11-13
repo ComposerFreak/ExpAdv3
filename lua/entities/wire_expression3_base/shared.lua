@@ -567,7 +567,7 @@ end
 
 function ENT:NetChatMessage(target, values)
 
-	if SERVER and self.context then
+	if SERVER then
 		return self.context:HasPerm(target, "SendToChat");
 	end
 
@@ -577,7 +577,7 @@ end
 
 function ENT:NetGolemMessage(target, values)
 
-	if SERVER and self.context then
+	if SERVER then
 		return self.context:HasPerm(target, "SendToGolem");
 	end
 

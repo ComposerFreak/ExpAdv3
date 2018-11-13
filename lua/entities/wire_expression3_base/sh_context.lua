@@ -98,12 +98,10 @@ function CONTEXT.New()
 
 	tbl.perms = {};
 
-	tbl.net_total = 0;
 	tbl.cpu_total = 0;
 	tbl.cpu_average = 0;
 	tbl.cpu_samples = {};
 	tbl.cpu_warning = false;
-	
 	return setmetatable(tbl, CONTEXT);
 end
 

@@ -505,7 +505,6 @@ hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", functi
 	local extensions = file.Find( path .. "*.lua", "LUA" );
 
 	for i, filename in pairs( extensions ) do
-		print("Loading E3 ext: " .. filename);
 		include( path .. filename );
 	end
 end);
