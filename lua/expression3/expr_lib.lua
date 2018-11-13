@@ -16,7 +16,8 @@
 
 	::HOOKS::
 		Expression3.RegisterExtension					-> Called when extensions should be registered.
-		Expression3.LoadClasses							-> Classes must be registered inside this hook.
+		Expression3.LoadClasses							-> None extended classes must be registered inside this hook.
+		Expression3.LoadExtendedClasses		-> Extended classes must be registered inside this hook.
 		Expression3.LoadConstructors					-> Constructors must be registered inside this hook.
 		Expression3.LoadMethods							-> Methods must be registered inside this hook.
 		Expression3.LoadMethods							-> Methods must be registered inside this hook.
@@ -296,6 +297,7 @@ end
 
 ]]
 function EXPR_LIB.RegisterClass(id, name, isType, isValid)
+
 	if (not loadClasses) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register class %s outside of Hook::Expression3.LoadClasses }}", name);
 	end
@@ -340,6 +342,7 @@ function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 end
 
 function EXPR_LIB.RegisterExtendedClass(id, name, base, isType, isValid)
+
 	if (not loadClasses) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register class %s outside of Hook::Expression3.LoadClasses", name);
 	end
@@ -347,7 +350,7 @@ function EXPR_LIB.RegisterExtendedClass(id, name, base, isType, isValid)
 	local cls = EXPR_LIB.GetClass(base);
 
 	if (not cls) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register extended class %s for none existing class", class, base);
+		EXPR_LIB.ThrowInternal(0, "Attempt to register extended class %s from none existing class %s", class, base);
 	end
 
 	local class = EXPR_LIB.RegisterClass(id, name, isType, isValid);
@@ -662,6 +665,10 @@ function EXPR_LIB.GetAllClasses()
 end
 
 function EXPR_LIB.GetClass(class)
+	if not isstring(class) then
+		EXPR_LIB.ThrowInternal(0, "EXPR_LIB.GetClass(s) was given %s.", type(class));
+	end
+
 	if (not class or class == "") then
 		class = "void";
 	end
@@ -836,6 +843,7 @@ function Extension.CheckRegistration(this, _function, ...)
 	local state, err = pcall(_function, ...);
 
 	if (not state) then
+		print("->", ...)
 		EXPR_LIB.ThrowInternal(0, "%s in component %s", err, this.name);
 	end
 
@@ -860,14 +868,23 @@ function Extension.EnableExtension(this)
 
 	hook.Add("Expression3.LoadClasses", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.classes) do
-			STATE = v[5];
-			PRICE = v[6];
-
 			if (not v[0]) then
+				STATE = v[5];
+				PRICE = v[6];
+
 				local op = this:CheckRegistration(EXPR_LIB.RegisterClass, v[1], v[2], v[3], v[4]);
 				op.extension = this.name;
 				classes[op.id] = op;
-			else
+			end
+		end
+	end);
+
+	hook.Add("Expression3.LoadExtendedClasses", "Expression3.Extension." .. this.name, function()
+		for _, v in pairs(this.classes) do
+			if (v[0]) then
+				STATE = v[5];
+				PRICE = v[6];
+
 				local op = this:CheckRegistration(EXPR_LIB.RegisterExtendedClass, v[1], v[2], v[0], v[3], v[4]);
 				op.extension = this.name;
 				classes[op.id] = op;
@@ -1063,6 +1080,7 @@ function EXPR_LIB.Initialize()
 	classIDs = {};
 	loadClasses = true;
 	hook.Run("Expression3.LoadClasses");
+	hook.Run("Expression3.LoadExtendedClasses");
 
 	loadClasses = false;
 	EXPR_CLASSES = classes;
