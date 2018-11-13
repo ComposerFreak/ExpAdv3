@@ -85,6 +85,7 @@ if (SERVER) then
 	AddCSLuaFile("expression3/wiki_inc.lua");
 	AddCSLuaFile("expression3/wiki/html_compiler.lua");
 	AddCSLuaFile("expression3/wiki/inits/autogen.lua");
+	AddCSLuaFile("expression3/expression3/wiki_inc.lua");
 
 	include("expression3/expr_lib.lua");
 
