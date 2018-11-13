@@ -218,7 +218,8 @@ extension:RegisterMethod("e", "getColor", "", "c", 1, function(e)
 	return Color(0, 0, 0);
 end, true)
 
-extension:SetServerState()
+extension:SetServerState();
+
 extension:RegisterMethod("e", "setColor", "c", "", 0, function(context,e,v)
 	if context:CanUseEntity(e) then
 		e:SetColor(v);
@@ -334,13 +335,13 @@ extension:RegisterMethod("e", "eyeAngles", "", "a", 1, "EyeAngles");
 
 extension:SetServerState()
 extension:RegisterFunction("prop", "spawn", "s", "e", 1, create, false);
-extension:RegisterFunction("prop", "spawn", "s,b", "e", 1, function(ctx, s, b) create(ctx, s, nil, nil, b) end, false);
+extension:RegisterFunction("prop", "spawn", "s,b", "e", 1, function(ctx, s, b) create(ctx, s, nil, nil, b); end, false);
 extension:RegisterFunction("prop", "spawn", "s,v", "e", 1, create, false);
-extension:RegisterFunction("prop", "spawn", "s,v,b", "e", 1, function(ctx, s, v, b) create(ctx, s, v, nil, b) end, false);
+extension:RegisterFunction("prop", "spawn", "s,v,b", "e", 1, function(ctx, s, v, b) create(ctx, s, v, nil, b); end, false);
 extension:RegisterFunction("prop", "spawn", "s,v,a", "e", 1, create, false);
 extension:RegisterFunction("prop", "spawn", "s,v,a,b", "e", 1, create, false);
 
-extension:RegisterFunction("prop", "canSpawn", "", "b", 1, function(ctx) return RateCounter[ctx.player] < rate end, false);
+extension:RegisterFunction("prop", "canSpawn", "", "b", 1, function(ctx) return RateCounter[ctx.player] < rate; end, false);
 
 extension:SetSharedState();
 
