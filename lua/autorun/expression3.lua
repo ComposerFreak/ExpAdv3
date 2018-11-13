@@ -20,6 +20,7 @@ for _, addon in pairs( addons ) do
 end
 
 print("E3 Root directory:", EXPR_ROOT);
+
 if (SERVER) then
 	AddCSLuaFile();
 
@@ -48,6 +49,7 @@ if (SERVER) then
 	AddCSLuaFile("expression3/extensions/e2table.lua");
 	AddCSLuaFile("expression3/extensions/wirelink.lua");
 	AddCSLuaFile("expression3/extensions/sound.lua");
+	AddCSLuaFile("expression3/extensions/find.lua");
 
 	AddCSLuaFile("expression3/editor.lua");
 	AddCSLuaFile( "expression3/editor.lua");
