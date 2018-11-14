@@ -473,6 +473,7 @@ if SERVER then
 end
 
 function ENT:SendNetMessage(name, target, ...)
+	--print("SendNetMessage", name, target, ...)
 	net.Start("Expression3.EntMessage");
 
 	net.WriteEntity(self);
@@ -569,9 +570,11 @@ function ENT:NetChatMessage(target, values)
 
 	if SERVER and self.context then
 		return self.context:HasPerm(target, "SendToChat");
+	elseif CLIENT then
+		chat.AddText( unpack(values) );
+	else
+		return true;
 	end
-
-	chat.AddText( unpack(values) );
 end
 
 
@@ -579,9 +582,11 @@ function ENT:NetGolemMessage(target, values)
 
 	if SERVER and self.context then
 		return self.context:HasPerm(target, "SendToGolem");
+	elseif CLIENT then
+		Golem.Print( unpack(values) );
+	else
+		return true;
 	end
-
-	Golem.Print( unpack(values) );
 end
 
 --[[
