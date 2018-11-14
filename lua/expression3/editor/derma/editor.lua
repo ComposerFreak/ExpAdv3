@@ -74,6 +74,7 @@ function PANEL:Init( )
 
 	self.Insert = false
 	self.bEditable = true
+	self.bUTF8 = false 
 
 	self.pTextEntry = self:Add( "TextEntry" )
 	self.pTextEntry:SetMultiline( true )
@@ -271,7 +272,7 @@ function PANEL:_OnKeyCodeTyped( code )
 
 					if self.Caret.x < 1 then self.Caret.x = 1 end
 
-					local length = #self.tRows[self.Caret.x]
+					local length = utf8.len( self.tRows[self.Caret.x] )
 					if self.Caret.y > length + 1 then
 						self.Caret.y = length + 1
 					end
@@ -288,12 +289,12 @@ function PANEL:_OnKeyCodeTyped( code )
 					self.Caret.x = self.Caret.x + 1
 
 					if istable( self.tRows[self.Caret.x] ) and self.tRows[self.Caret.x].Primary ~= self.Caret.x then
-						self.Caret.x = #self.tRows[self.Caret.x] + self.tRows[self.Caret.x].Primary
+						self.Caret.x = utf8.len( self.tRows[self.Caret.x] ) + self.tRows[self.Caret.x].Primary
 					end
 
 					if self.Caret.x > #self.tRows then self.Caret.x = #self.tRows end
 
-					local length = #self.tRows[self.Caret.x]
+					local length = utf8.len( self.tRows[self.Caret.x] )
 					if self.Caret.y > length + 1 then
 						self.Caret.y = length + 1
 					end
@@ -318,7 +319,7 @@ function PANEL:_OnKeyCodeTyped( code )
 				end
 			elseif code == KEY_PAGEUP then
 				self.Caret.x = math_max( self.Caret.x - math_ceil( self.Size.x / 2 ), 1 )
-				self.Caret.y = math_min( self.Caret.y, #self.tRows[self.Caret.x] + 1 )
+				self.Caret.y = math_min( self.Caret.y, utf8.len( self.tRows[self.Caret.x] ) + 1 )
 
 				self.Scroll.x = math_max( self.Scroll.x - math_ceil( self.Size.x / 2 ), 1 )
 
@@ -329,7 +330,7 @@ function PANEL:_OnKeyCodeTyped( code )
 				end
 			elseif code == KEY_PAGEDOWN then
 				self.Caret.x = math_min( self.Caret.x + math_ceil( self.Size.x / 2 ), #self.tRows )
-				self.Caret.y = self.Caret.x == #self.tRows and 1 or math_min( self.Caret.y, #self.tRows[self.Caret.x] + 1 )
+				self.Caret.y = self.Caret.x == #self.tRows and 1 or math_min( self.Caret.y, utf8.len( self.tRows[self.Caret.x] ) + 1 )
 
 				self.Scroll.x = self.Scroll.x + math_ceil( self.Size.x / 2 )
 
@@ -349,7 +350,7 @@ function PANEL:_OnKeyCodeTyped( code )
 					self.Start = self.Caret:Clone( )
 				end
 			elseif code == KEY_END then
-				self.Caret.y = #self.tRows[self.Caret.x] + 1
+				self.Caret.y = utf8.len( self.tRows[self.Caret.x] ) + 1
 
 				self:ScrollCaret( )
 
@@ -502,7 +503,7 @@ function PANEL:_OnKeyCodeTyped( code )
 			else -- If you don't
 				-- Select the current line
 				self.Start = Vector2( self.Start.x, 1 )
-				self.Caret = Vector2( self.Start.x, #self.tRows[self.Start.x] + 1 )
+				self.Caret = Vector2( self.Start.x, utf8.len( self.tRows[self.Start.x] ) + 1 )
 				-- Get the text
 				local str = self:GetSelection( )
 				-- Repeat it
@@ -556,7 +557,7 @@ function PANEL:_OnKeyCodeTyped( code )
 
 				if self.Caret.x < 1 then self.Caret.x = 1 end
 
-				local length = #self.tRows[self.Caret.x]
+				local length = utf8.len( self.tRows[self.Caret.x] )
 				if self.Caret.y > length + 1 then
 					self.Caret.y = length + 1
 				end
@@ -573,12 +574,12 @@ function PANEL:_OnKeyCodeTyped( code )
 				self.Caret.x = self.Caret.x + 1
 
 				if istable( self.tRows[self.Caret.x] ) and self.tRows[self.Caret.x].Primary ~= self.Caret.x then
-					self.Caret.x = #self.tRows[self.Caret.x] + self.tRows[self.Caret.x].Primary
+					self.Caret.x = utf8.len( self.tRows[self.Caret.x] ) + self.tRows[self.Caret.x].Primary
 				end
 
 				if self.Caret.x > #self.tRows then self.Caret.x = #self.tRows end
 
-				local length = #self.tRows[self.Caret.x]
+				local length = utf8.len( self.tRows[self.Caret.x] )
 				if self.Caret.y > length + 1 then
 					self.Caret.y = length + 1
 				end
@@ -633,7 +634,7 @@ function PANEL:_OnKeyCodeTyped( code )
 			end
 		elseif code == KEY_PAGEUP then
 			self.Caret.x = math_max( self.Caret.x - math_ceil( self.Size.x / 2 ), 1 )
-			self.Caret.y = math_min( self.Caret.y, #self.tRows[self.Caret.x] + 1 )
+			self.Caret.y = math_min( self.Caret.y, utf8.len( self.tRows[self.Caret.x] ) + 1 )
 
 			self.Scroll.x = math_max( self.Scroll.x - math_ceil( self.Size.x / 2 ), 1 )
 
@@ -644,7 +645,7 @@ function PANEL:_OnKeyCodeTyped( code )
 			end
 		elseif code == KEY_PAGEDOWN then
 			self.Caret.x = math_min( self.Caret.x + math_ceil( self.Size.x / 2 ), #self.tRows )
-			self.Caret.y = self.Caret.x == #self.tRows and 1 or math_min( self.Caret.y, #self.tRows[self.Caret.x] + 1 )
+			self.Caret.y = self.Caret.x == #self.tRows and 1 or math_min( self.Caret.y, utf8.len( self.tRows[self.Caret.x] ) + 1 )
 
 			self.Scroll.x = self.Scroll.x + math_ceil( self.Size.x / 2 )
 
@@ -664,7 +665,7 @@ function PANEL:_OnKeyCodeTyped( code )
 				self.Start = self.Caret:Clone( )
 			end
 		elseif code == KEY_END then
-			self.Caret.y = #self.tRows[self.Caret.x] + 1
+			self.Caret.y = utf8.len( self.tRows[self.Caret.x] ) + 1
 
 			self:ScrollCaret( )
 
@@ -691,10 +692,10 @@ function PANEL:_OnKeyCodeTyped( code )
 					local Caret = self.Caret:Clone( )
 
 					self.Start:Set( self.Start.x, 1 )
-					self.Caret:Set( Caret.x, #self.tRows[Caret.x] + 1 )
+					self.Caret:Set( Caret.x, utf8.len( self.tRows[Caret.x] ) + 1 )
 
 					local text = string_match( self.tRows[Caret.x], "^ ? ? ? ?(.*)$" )
-					local oldLength = #self.tRows[Caret.x]
+					local oldLength = utf8.len( self.tRows[Caret.x] )
 
 					self:SetSelection( text )
 
@@ -710,7 +711,7 @@ function PANEL:_OnKeyCodeTyped( code )
 					local Caret = self.Caret:Clone( )
 
 					self.Start:Set( self.Start.x, 1 )
-					self.Caret:Set( Caret.x, #self.tRows[Caret.x] + 1 )
+					self.Caret:Set( Caret.x, utf8.len( self.tRows[Caret.x] ) + 1 )
 
 					self:Indent( )
 
@@ -816,7 +817,7 @@ function PANEL:OnMousePressed( code )
 
 				self.Start = Vector2( cursor.x, 1 )
 				local s = self:ExpandAll( )
-				self.Caret = Vector2( cursor.x, #self.tRows[cursor.x]+1 )
+				self.Caret = Vector2( cursor.x, utf8.len( self.tRows[cursor.x]) + 1 )
 				self:FoldAll( s )
 			else
 				self.temp = true
@@ -949,7 +950,7 @@ function PANEL:CursorToCaret( )
 	char = char + self.Scroll.y
 
 	if line > #self.tRows then line = #self.tRows end
-	local length = #( istable( self.tRows[line] ) and self.tRows[line][1] or self.tRows[line] )
+	local length = utf8.len( istable( self.tRows[line] ) and self.tRows[line][1] or self.tRows[line] )
 	if char > length + 1 then char = length + 1 end
 
 	return Vector2( line, char )
@@ -982,7 +983,7 @@ function PANEL:MovePosition( caret, offset )
 					break
 				else
 					if istable( self.tRows[caret.x + 1] ) then
-						caret.x = caret.x + #self.tRows[caret.x + 1]
+						caret.x = caret.x + utf8.len( self.tRows[caret.x + 1] )
 					else
 						caret.x = caret.x + 1
 					end
@@ -996,7 +997,7 @@ function PANEL:MovePosition( caret, offset )
 
 		if istable( self.tRows[caret.x] ) and self.tRows[caret.x].Primary ~= caret.x then
 			caret.x = self.tRows[caret.x].Primary
-			caret.y = #self.tRows[caret.x][1] + 1
+			caret.y = utf8.len( self.tRows[caret.x][1] ) + 1
 		else
 			while true do
 				if offset < caret.y then
@@ -1007,15 +1008,15 @@ function PANEL:MovePosition( caret, offset )
 					break
 				else
 					if istable( self.tRows[caret.x - 1] ) then
-						caret.x = caret.x - #self.tRows[caret.x - 1]
+						caret.x = caret.x - utf8.len( self.tRows[caret.x - 1] )
 					else
 						caret.x = caret.x - 1
 					end
 					offset = offset - caret.y
 					if istable( self.tRows[caret.x] ) then
-						caret.y = #self.tRows[caret.x][1] + 1 - offset
+						caret.y = utf8.len( self.tRows[caret.x][1] ) + 1 - offset
 					else
-						caret.y = #self.tRows[caret.x] + 1 - offset
+						caret.y = utf8.len( self.tRows[caret.x] ) + 1 - offset
 					end
 				end
 			end
@@ -1027,27 +1028,28 @@ end
 
 function PANEL:ScrollCaret( )
 	local Offset = self:GetFoldingOffset( self.Caret.x )
-
+	self.Caret.y = self.Caret.y - self:GetUTF8Offset( self.Caret.x, self.Caret.y )
+	
 	if self.Caret.x - self.Scroll.x < 1 then
 		self.Scroll.x = self.Caret.x - 1 - Offset
 		if self.Scroll.x < 1 then self.Scroll.x = 1 end
 	end
-
+	
 	if self.Caret.x - self.Scroll.x > self.Size.x - 1 then
 		self.Scroll.x = self.Caret.x - self.Size.x + 1 - Offset
 		if self.Scroll.x < 1 then self.Scroll.x = 1 end
 	end
-
+	
 	if self.Caret.y - self.Scroll.y < 4 then
 		self.Scroll.y = self.Caret.y - 4
 		if self.Scroll.y < 1 then self.Scroll.y = 1 end
 	end
-
+	
 	if self.Caret.y - 1 - self.Scroll.y > self.Size.y - 4 then
 		self.Scroll.y = self.Caret.y - 1 - self.Size.y + 4
 		if self.Scroll.y < 1 then self.Scroll.y = 1 end
 	end
-
+	
 	self.pScrollBar:SetScroll( self.Scroll.x - 1 )
 	self.pHScrollBar:SetScroll( self.Scroll.y - 1 )
 end
@@ -1081,26 +1083,11 @@ local function MakeSel( start, stop )
 end
 
 function PANEL:MakeSelection( selection )
-
-	local start, stop = MakeSel( selection[1], selection[2] )
-
-	-- Should i do this?
-	/*
-	if istable( self.tRows[start.x] ) then
-		start = Vector2( self.tRows[start.x].Primary, #self.tRows[self.tRows[start.x].Primary][1] )
-	end
-
-	if istable( self.tRows[stop.x] ) then
-		local x = self.tRows[start.x].Primary
-		stop = Vector2( self.tRows[x][#self.tRows[x]], 1 )
-	end
-	*/
-
-	return start, stop
+	return MakeSel( selection[1], selection[2] ) 
 end
 
-function PANEL:SelectAll( )
-	self.Caret = Vector2( #self.tRows, istable( self.tRows[#self.tRows] ) and #self.tRows[self.tRows[#self.tRows].Primary][1] or #self.tRows[#self.tRows] + 1 )
+function PANEL:SelectAll( ) --utf8.len
+	self.Caret = Vector2( #self.tRows, istable( self.tRows[#self.tRows] ) and utf8.len( self.tRows[self.tRows[#self.tRows].Primary][1] ) or utf8.len( self.tRows[#self.tRows] ) + 1 )
 	self.Start = Vector2( 1, 1 )
 	-- self:ScrollCaret( )
 end
@@ -1109,23 +1096,26 @@ function PANEL:GetArea( selection )
 	local start, stop = self:MakeSelection( selection )
 	local text = ""
 	local LinesToFold = self:ExpandAll( )
-
+	local nStartOffset = self:GetUTF8Offset( start.x, start.y )
+	local nEndOffset = self:GetUTF8Offset( stop.x, stop.y )
+	
+	
 	if start.x == stop.x then
 		if self.Insert and start.y == stop.y then
 			selection[2].y = selection[2].y + 1
 
-			text = string_sub( self.tRows[start.x], start.y, start.y )
+			text = string_sub( self.tRows[start.x], start.y + nStartOffset, start.y + nEndOffset )
 		else
-			text = string_sub( self.tRows[start.x], start.y, stop.y - 1 )
+			text = string_sub( self.tRows[start.x], start.y + nStartOffset, stop.y - 1 + nEndOffset )
 		end
 	else
-		text = string_sub( self.tRows[start.x], start.y )
+		text = string_sub( self.tRows[start.x], start.y + nStartOffset )
 
 		for i = start.x + 1, stop.x - 1 do
 			text = text .. "\n" .. self.tRows[i]
 		end
 
-		text =  text .. "\n" .. string_sub( self.tRows[stop.x], 1, stop.y - 1 )
+		text =  text .. "\n" .. string_sub( self.tRows[stop.x], 1, stop.y - 1 + nEndOffset )
 	end
 
 	self:FoldAll( LinesToFold )
@@ -1147,7 +1137,7 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 
 	if start != stop then
 		// Merge first and last line
-		self.tRows[start.x] = string_sub( self.tRows[start.x], 1, start.y - 1 ) .. string_sub( self.tRows[stop.x], stop.y )
+		self.tRows[start.x] = string_sub( self.tRows[start.x], 1, start.y - 1 + self:GetUTF8Offset( start.x, start.y ) ) .. string_sub( self.tRows[stop.x], stop.y + self:GetUTF8Offset( stop.x, stop.y ) )
 
 		// Remove deleted lines
 		for i = start.x + 1, stop.x do
@@ -1186,8 +1176,8 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 	// insert text
 	local rows = string_Explode( "\n", text )
 
-	local remainder = string_sub( self.tRows[start.x], start.y )
-	self.tRows[start.x] = string_sub( self.tRows[start.x], 1, start.y - 1 ) .. rows[1]
+	local remainder = string_sub( self.tRows[start.x], start.y + self:GetUTF8Offset( stop.x, stop.y ) )
+	self.tRows[start.x] = string_sub( self.tRows[start.x], 1, start.y - 1 + self:GetUTF8Offset( stop.x, stop.y ) ) .. rows[1]
 
 	for i = 2, #rows do
 		table_insert( self.tRows, start.x + i - 1, rows[i] )
@@ -1195,7 +1185,7 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 	end
 	self.tFoldData = { }
 
-	local stop = Vector2( start.x + #rows - 1, #self.tRows[start.x + #rows - 1] + 1 )
+	local stop = Vector2( start.x + #rows - 1, utf8.len(self.tRows[start.x + #rows - 1]) + 1 )
 
 	self.tRows[stop.x] = self.tRows[stop.x] .. remainder
 
@@ -1234,7 +1224,7 @@ function PANEL:Indent( Shift )
 	local oldSelection = { self:MakeSelection( self:Selection( ) ) }
 	local Scroll = self.Scroll:Clone( )
 	local Start, End = oldSelection[1]:Clone( ), oldSelection[2]:Clone( )
-	local slen, elen = #self.tRows[Start.x], #self.tRows[End.x]
+	local slen, elen = utf8.len( self.tRows[Start.x] ), utf8.len( self.tRows[End.x] )
 
 	Start.y = 1
 	if End.y ~= 1 then
@@ -1256,8 +1246,8 @@ function PANEL:Indent( Shift )
 		self:SetSelection( "    " .. string_gsub( self:GetSelection( ), "\n", "\n    " ) )
 	end
 
-	self.Start = oldSelection[1]:Clone( ):Add( 0, #self.tRows[oldSelection[1].x] - slen )
-	self.Caret = oldSelection[2]:Clone( ):Add( 0, #self.tRows[oldSelection[2].x] - elen )
+	self.Start = oldSelection[1]:Clone( ):Add( 0, utf8.len( self.tRows[oldSelection[1].x] ) - slen )
+	self.Caret = oldSelection[2]:Clone( ):Add( 0, utf8.len( self.tRows[oldSelection[2].x] ) - elen )
 
 	self.Scroll = Scroll:Clone( )
 
@@ -1295,7 +1285,7 @@ function PANEL:wordLeft( caret, bNoMove )
 	local row = self.tRows[caret.x]
 	if caret.y == 1 then
 		if caret.x == 1 then return caret end
-		return Vector2( caret.x-1, #self.tRows[caret.x-1] )
+		return Vector2( caret.x-1, utf8.len( self.tRows[caret.x-1] ) )
 	end
 	local pos = string_match( string_sub( row, 1, caret.y - 2 ), ".+()%f[%p ]" )
 	if pos then pos = pos + 1 end
@@ -1360,8 +1350,8 @@ function PANEL:GetFoldingOffset( nLine )
 
 	while pos < nLine and infloop < 10000 do
 		if istable( self.tRows[pos] ) then
-			offset = offset + #self.tRows[pos] - 1
-			pos = pos + #self.tRows[pos]
+			offset = offset + utf8.len( self.tRows[pos] ) - 1
+			pos = pos + utf8.len( self.tRows[pos] )
 		elseif self.tFoldData[pos] and self.tFoldData[pos][2] then
 			local level = self.tFoldData[pos+1][1]
 			pos = pos + 1
@@ -1380,6 +1370,26 @@ function PANEL:GetFoldingOffset( nLine )
 
 	return offset
 end
+
+function PANEL:GetUTF8Offset( nLine, nChar )
+	if not self.bUTF8 then return 0 end 
+	local offset = 0 
+	local pos = 1
+	local infloop = 0
+	local fold = self:ExpandAll( )
+	local line = self.tRows[nLine]
+	self:FoldAll( fold )
+	
+	while pos < nChar and infloop < 10000 do 
+		if utf8.offset( line, 0, pos ) ~= pos then
+			offset = offset + 1
+		end
+		pos = pos + 1
+		infloop = infloop + 1
+	end 
+	
+	return offset
+end 
 
 function PANEL:ExpandAll( tOld )
 	if not self.bCodeFolding then return end
@@ -1506,6 +1516,11 @@ end
 
 function PANEL:SetParamMatching( bActive )
 	self.bParamMatching = bActive
+end
+
+function PANEL:SetUTF8( bActive )
+	self.pTextEntry:SetAllowNonAsciiCharacters( bActive )
+	self.bUTF8 = bActive 
 end
 
 /*---------------------------------------------------------------------------
@@ -1645,14 +1660,14 @@ function PANEL:DrawText( w, h )
 
 		if istable( self.tRows[line] ) then
 			if self.tRows[line].Primary ~= line then
-				line = line + #self.tRows[line] - (line - self.tRows[line].Primary) - 1
+				line = line + utf8.len( self.tRows[line] ) - (line - self.tRows[line].Primary) - 1
 				continue
 			end
 			local Data = self.tRows[line]
 			self.tRows[line] = Data[1]
 			self:DrawRow( line, painted, true )
 			self.tRows[line] = Data
-			line = line + #self.tRows[line] - 1
+			line = line + utf8.len( self.tRows[line] ) - 1
 		else
 			self:DrawRow( line, painted )
 		end
@@ -1716,6 +1731,25 @@ local function MakeFoldButton( self )
 
 	return btn
 end
+
+local function DrawText( sText, sFont, x, y, col, self ) 
+	if utf8.len( sText ) ~= 0 then 
+		surface_SetFont( sFont )
+		surface_SetTextColor( col )
+		
+		if utf8.len( sText ) ~= string_len( sText ) then 
+			local n = 0
+			for position, code in utf8.codes( sText ) do 
+				surface_SetTextPos( x + self.FontWidth * n , y )
+				surface_DrawText( utf8.char( code ) )
+				n = n + 1
+			end 
+		else
+			surface_SetTextPos( x, y )
+			surface_DrawText( sText ) 
+		end 
+	end 
+end 
 
 function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 	if Row > #self.tRows then return end
@@ -1783,12 +1817,14 @@ function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 			end
 		end
 
-		local len = #cell[1]
+		local len = utf8.len(cell[1])
 		if offset < 0 then
 			if len > -offset then
 				line = cell[1]:sub( 1 - offset )
-				offset = #line
-				draw_SimpleText( line, self.Font, self.LinePadding, ( LinePos ) * self.FontHeight, cell[2] )
+				-- offset = #line
+				-- draw_SimpleText( line, self.Font, self.LinePadding, ( LinePos ) * self.FontHeight, cell[2] )
+				offset = utf8.len(line)
+				DrawText( line, self.Font, self.LinePadding, ( LinePos ) * self.FontHeight, cell[2], self )
 			else
 				offset = offset + len
 			end
@@ -1829,7 +1865,7 @@ function PANEL:PaintSelection( selection, color, outline )
 	for Row = line, endline do
 		if Row > #self.tRows then break end
 		if istable( self.tRows[Row] ) and self.tRows[Row].Primary ~= Row then continue end
-		local length = istable( self.tRows[Row] ) and #self.tRows[Row][1] or #self.tRows[Row]
+		local length = utf8.len( istable( self.tRows[Row] ) and self.tRows[Row][1] or self.tRows[Row] )
 		length = length - self.Scroll.y + 1
 		LinePos = LinePos + 1
 
@@ -1923,7 +1959,7 @@ end
 function PANEL:PaintStatus( )
 	surface_SetFont( "Trebuchet18" )
 
-	local Line = "Length: " .. #self:GetCode( ) .. " Lines: " .. #self.tRows .. " Row: " .. self.Caret.x .. " Col: " .. self.Caret.y
+	local Line = "Length: " .. utf8.len( self:GetCode( ) ) .. " Lines: " .. #self.tRows .. " Row: " .. self.Caret.x .. " Col: " .. self.Caret.y
 
 	if self:HasSelection( ) then
 		Line = Line .. " Sel: " .. #self:GetSelection( )
@@ -2000,7 +2036,7 @@ function PANEL:CalculateScroll( )
 	self.pScrollBar:SetUp( self.Size.x, #self.tRows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ) - self:GetFoldingOffset( #self.tRows ) )
 	local LongestRow = 0
 	for i = 1, #self.tRows do
-		LongestRow = math.max( LongestRow, #self.tRows[i] )
+		LongestRow = math.max( LongestRow, utf8.len( self.tRows[i] ) )
 	end
 	self.LongestRow = LongestRow
 	self.pHScrollBar:SetUp( self.Size.y, LongestRow )

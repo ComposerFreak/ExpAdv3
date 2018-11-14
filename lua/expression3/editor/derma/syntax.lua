@@ -36,7 +36,7 @@ function Syntax:SetColor( sName, sColor, cColor )
 end 
 
 function Syntax:Add( sName, tData )
-	if tLangList[sName] then return ErrorNoHalt( string.format( "Syntax %q already created.", sName ) ) end 
+	if tLangList[sName] then return MsgC( Color( 255, 0, 0 ), string.format( "Syntax %q already created.", sName ) ) end 
 	tLangList[sName] = tData 
 	print( "Adding syntax:", sName )
 end

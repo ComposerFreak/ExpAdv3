@@ -96,8 +96,8 @@ local CreatedFonts = { }
 local function CreateFont( sFont, nSize ) 
 	local sFontID = "golem_" .. string.Replace( string.lower( sFont ), " ", "_" ) .. "_" .. nSize
 	if not CreatedFonts[sFontID] then 
-		surface.CreateFont( sFontID, { font = sFont, size = nSize, weight = 400 } )
-		surface.CreateFont( sFontID .. "_bold", { font = sFont, size = nSize, weight = 800, antialias = false } )
+		surface.CreateFont( sFontID, { font = sFont, size = nSize, weight = 400, extended = true } )
+		surface.CreateFont( sFontID .. "_bold", { font = sFont, size = nSize, weight = 800, antialias = false, extended = true } )
 		CreatedFonts[sFontID] = true 
 	end 
 	
