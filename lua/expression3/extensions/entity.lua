@@ -31,6 +31,20 @@ extension:RegisterWiredInport("e", "ENTITY");
 extension:RegisterWiredOutport("e", "ENTITY");
 
 --[[
+	Player Class
+]]
+
+local function isPlayer(p)
+	return p:IsPlayer()
+end
+
+extension:RegisterExtendedClass("p", {"player"}, "e", isPlayer, IsValid);
+
+extension:RegisterWiredInport("p", "ENTITY");
+
+extension:RegisterWiredOutport("p", "ENTITY");
+
+--[[
 	Bone Class
 ]]
 
@@ -55,17 +69,23 @@ extension:RegisterOperator("neq", "e,p", "b", 1);
 extension:RegisterOperator("eq", "ph,ph", "b", 1);
 extension:RegisterOperator("neq", "ph,ph", "b", 1);
 
+extension:RegisterOperator("eq", "p,p", "b", 1);
+extension:RegisterOperator("neq", "p,p", "b", 1);
 
 --[[
 	Casting operators.
 ]]
 
-extension:RegisterCastingOperator("e", "p", function(ctx, obj)
-	if (not IsValid(obj) and obj:IsPlayer()) then
-		return obj;
+extension:RegisterCastingOperator("e", "p", function(context, e)
+	if (IsValid(e) and e:IsPlayer()) then
+		return e;
 	end
 
-	ctx:Throw("Attempted to cast none player entity to player.");
+	context:Throw("Attempted to cast none player entity to player.");
+end, false);
+
+extension:RegisterCastingOperator("p", "e", function(ctx, p)
+	return p
 end, false);
 
 --[[
@@ -448,11 +468,16 @@ extension:RegisterMethod("e", "isRagdoll", "", "b", 1, "IsRagdoll");
 
 
 --[[
-	Health
+	Health and Armor
 ]]
 
 extension:RegisterMethod("e", "health", "", "n", 1, "Health");
+
 extension:RegisterMethod("e", "maxHealth", "", "n", 1, "GetMaxHealth");
+
+extension:RegisterMethod("e", "armor", "", "n", 1, "Armor");
+
+extension:RegisterMethod("e", "maxArmor", "", "n", 1, "MaxArmor");
 
 --[[
 	Ownership
