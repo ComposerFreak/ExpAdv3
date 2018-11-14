@@ -4,7 +4,7 @@
 
 if SERVER then
 	AddCSLuaFile()
-	
+
 	AddCSLuaFile("wiki/html_compiler.lua")
 	AddCSLuaFile("wiki/inits/autogen.lua")
 	AddCSLuaFile("wiki/inits/examples.lua")
@@ -12,29 +12,29 @@ else
 	include("wiki/html_compiler.lua")
 	include("wiki/inits/autogen.lua")
 	include("wiki/inits/examples.lua")
-	
+
 	hook.Add("Expression3.AddGolemTabTypes", "Expression3.AddGolemTabTypes.wiki", function(self)
 		self:AddCustomTab(true, "html", function(self, html, name, w, h)
 			local HTML = vgui.Create("GOLEM_DHTML")
 			HTML:Setup(html, ScrW(), ScrH())
-			
+
 			local Sheet = self.pnlTabHolder:AddSheet(name or "E3 Wiki", HTML, "fugue/question.png", function(pnl) self:CloseTab(pnl:GetParent(), true) end)
 			self.pnlTabHolder:SetActiveTab(Sheet.Tab)
 			Sheet.Panel:RequestFocus()
-			
+
 			Sheet.Tab.DoRightClick = function(pnl)
 				local Menu = DermaMenu()
-				
+
 				Menu:AddOption("Close", function() self:CloseTab(pnl, false) end)
 				Menu:AddOption("Close others", function() self:CloseAllBut(pnl) end)
 				Menu:AddOption("Close all tabs", function() self:CloseAll()  end)
-				
+
 				Menu:Open()
 			end
-			
-			return Sheet 
+
+			return Sheet
 		end, function(self)
-			
+
 		end)
 	end)
 end
