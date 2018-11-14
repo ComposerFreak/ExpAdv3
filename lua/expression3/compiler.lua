@@ -315,8 +315,6 @@ function COMPILER.SetVariable(this, name, class, scope, prefix, global)
 		scope = this.__scopeID;
 	end
 
-	if not prefix then debug.Trace(); end
-
 	local var = {};
 	var.name = name;
 	var.class = class;
@@ -706,7 +704,6 @@ function COMPILER.Compile_IF(this, inst, token, data)
 	local eif = data.eif;
 
 	if (eif and #eif > 0) then
-
 		for i = 1, #eif do
 			local stmt = eif[i];
 			this:Compile(stmt);
