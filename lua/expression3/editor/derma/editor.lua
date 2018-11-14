@@ -966,14 +966,53 @@ function PANEL:MovePosition( caret, offset )
 	local caret = caret:Clone( )
 
 	if offset > 0 then
-		if istable( self.tRows[caret.x] ) and self.tRows[caret.x].Primary ~= caret.x then
+		while true do 
+			local tRow = self.tRows[caret.x]
+			if istable( tRow ) then 
+				if tRow.Primary ~= caret.x then 
+					caret.x = tRow.Primary + #tRow 
+					caret.y = 1
+					break
+				end 
+				
+				local remainder = utf8.len(tRow[1]) - caret.y 
+				
+				if offset > remainder then 
+					caret.x = tRow.Primary
+					caret.y = 1
+					offset = offset - remainder
+				else
+					caret.y = caret.y + offset
+					break
+				end 
+			else 
+				local remainder = utf8.len(tRow) - caret.y 
+				
+				if caret.x == #self.tRows and offset > remainder then 
+					caret.y = utf8.len(tRow)
+					break 
+				elseif offset > remainder then 
+					caret.x = caret.x + 1
+					caret.y = 1
+					offset = offset - remainder 
+				else 
+					caret.y = caret.y + offset 
+					print(("#"):rep(60))
+					print( offset, remainder, utf8.len(tRow), caret.y, self:GetUTF8Offset(caret.x,caret.y), self:GetUTF8Offset(caret.x,caret.y+offset) )
+					caret.y = caret.y + self:GetUTF8Offset(caret.x,caret.y)
+					print( offset, remainder, utf8.len(tRow), caret.y, self:GetUTF8Offset(caret.x,caret.y), self:GetUTF8Offset(caret.x,caret.y+offset) )
+					break 
+				end 	
+			end 
+		end 
+		/*if istable( self.tRows[caret.x] ) and self.tRows[caret.x].Primary ~= caret.x then
 			while istable( self.tRows[caret.x] ) do
 				caret.x = caret.x + 1
 			end
 			caret.y = 1
-		else
+		else 
 			while true do
-				local length = #( istable( self.tRows[caret.x] ) and self.tRows[caret.x][1] or self.tRows[caret.x] ) - caret.y + 2
+				local length = utf8.len( istable( self.tRows[caret.x] ) and self.tRows[caret.x][1] or self.tRows[caret.x] ) - caret.y + 2
 
 				if offset < length then
 					caret.y = caret.y + offset
@@ -991,7 +1030,7 @@ function PANEL:MovePosition( caret, offset )
 					caret.y = 1 + offset
 				end
 			end
-		end
+		end*/
 	elseif offset < 0 then
 		offset = -offset
 
@@ -1818,6 +1857,10 @@ function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 		end
 
 		local len = utf8.len(cell[1])
+		if isbool(len) then 
+			print( string.format("invalid utf8 data line %d", Row ) )
+			break
+		end 
 		if offset < 0 then
 			if len > -offset then
 				line = cell[1]:sub( 1 - offset )

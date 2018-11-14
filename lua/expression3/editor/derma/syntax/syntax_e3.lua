@@ -231,6 +231,7 @@ function Syntax:FindMatchingParam( nRow, nChar )
 		while line <= #self.dEditor.tRows do 
 			local Line = self.dEditor.tRows[line]
 			while pos < utf8.len(Line) do 
+			-- while pos < #Line do 
 				pos = pos + 1
 				local offset = utf8.offset( Line, 0, pos )
 				if offset ~= pos then -- Ignore utf8 chars
@@ -422,13 +423,12 @@ function Syntax:NextCharacter( )
 	self.sBuffer = self.sBuffer .. self.sChar
 	self.nPosition = self.nPosition + 1
 
-	if self.nPosition <= utf8.len( self.sLine ) then
-		-- self.sChar = self.sLine[self.nPosition]
+	if self.nPosition <= #self.sLine then
 		local offset = utf8.offset( self.sLine, self.nPosition - 1 )
+		self.sChar = utf8.char( utf8.codepoint( self.sLine, offset, offset ) )
 		-- debug.Trace( )
 		-- PrintTableGrep{ ["NEXTCHAR"] = { Position = self.nPosition, Line = self.sLine, Char = self.sChar, Token = self.sBuffer } }
 		-- print( "NEXTCHAR", self.nPosition, string.format( "%q", self.sChar ) )
-		self.sChar = utf8.char( utf8.codepoint( self.sLine, offset, offset ) )
 	else
 		self.sChar = nil
 	end
@@ -436,24 +436,25 @@ end
 
 function Syntax:NextPattern( sPattern, bSkip )
 	if not self.sChar then return false end
+	if sPattern[1] ~= "^" then sPattern = "^" .. sPattern end 
 	local startpos, endpos, text = string_find( self.sLine, sPattern, utf8.offset( self.sLine, self.nPosition - 1 )  )
 	
 	if startpos and self.nPosition ~= utf8.offset( self.sLine, self.nPosition - 1 ) then 
-		PrintTableGrep{ 
-			["NEXTPATTERN"] = { 
-				Substr = self.sLine:sub(utf8.offset( self.sLine, self.nPosition-1 )), 
-				SubstrF = text,
-				Pos = self.nPosition, 
-				PosBump = utf8.offset( self.sLine, self.nPosition-1 ),
-				PosEnd = endpos, 
-				PosStart = startpos, 
-				Pattern = sPattern, 
-				Line = self.sLine, 
-				Char = self.sChar, 
-				Token = self.sBuffer,
-				NeedsShift = self.nPosition ~= utf8.offset( self.sLine, self.nPosition - 1 ),
-			} 
-		}
+		-- PrintTableGrep{ 
+		-- 	["NEXTPATTERN"] = { 
+		-- 		Substr = self.sLine:sub(utf8.offset( self.sLine, self.nPosition-1 )), 
+		-- 		SubstrF = text,
+		-- 		Pos = self.nPosition, 
+		-- 		PosBump = utf8.offset( self.sLine, self.nPosition-1 ),
+		-- 		PosEnd = endpos or "notfound", 
+		-- 		PosStart = startpos or "notfound", 
+		-- 		Pattern = sPattern, 
+		-- 		Line = self.sLine, 
+		-- 		Char = self.sChar, 
+		-- 		Token = self.sBuffer,
+		-- 		NeedsShift = self.nPosition ~= utf8.offset( self.sLine, self.nPosition - 1 ),
+		-- 	} 
+		-- }
 	end 
 	
 	-- if startpos ~= self.nPosition then return false end
@@ -461,40 +462,80 @@ function Syntax:NextPattern( sPattern, bSkip )
 	-- print( "NEXTPATTERN", self.nPosition, startpos, endpos, string.format( "%q", sPattern ), string.format( "%q", self.sLine ), string.format( "%q", self.sChar ), string.format( "%q", self.sBuffer ) )
 	-- debug.Trace()
 	
-	
-	if not startpos then return false end 
-	if endpos >= startpos then 
-		-- endpos = endpos >= startpos and endpos or startpos 
-		local offset_start = (utf8.offset( self.sLine, startpos ) or 0)-1
-		local offset_end = (utf8.offset( self.sLine, endpos ) or 0)-1
-		text = utf8.char( utf8.codepoint( self.sLine, offset_start, offset_end ) )
-		print( offset_start, offset_end, string.format( "%q", text ) )
-	else 
-		text = ""
+	if self.sLine[self.nPosition] == ";" then 
+		-- print( "ASDA")
 	end 
 	
+	if not startpos then return false end 
 	
-	if startpos ~= self.nPosition then return false end 
-	text = text or string_sub( self.sLine, startpos, endpos ) 
+	-- endpos = endpos >= startpos and endpos or startpos 
+	local offset_start = utf8.offset( self.sLine, 0, startpos )
+	local offset_end = utf8.offset( self.sLine, 0, endpos )
+	-- print( offset_start, offset_end )
+	text = utf8.char( utf8.codepoint( self.sLine, offset_start, offset_end ) )
+	print( offset_start, offset_end, string.format( "%q", text ) )
+	
+	
+	-- if startpos > utf8.offset( self.sLine, self.nPosition - 1 ) then 
+	-- 	print( startpos, endpos, self.nPosition, utf8.offset( self.sLine, self.nPosition - 1 ) )
+		
+	-- 	PrintTableGrep{ 
+	-- 		["NEXTPATTERN"] = { 
+	-- 			Substr = self.sLine:sub(utf8.offset( self.sLine, self.nPosition-1 )), 
+	-- 			SubstrF = text,
+	-- 			Pos = self.nPosition, 
+	-- 			PosBump = utf8.offset( self.sLine, self.nPosition-1 ),
+	-- 			PosEnd = endpos or "notfound", 
+	-- 			PosStart = startpos or "notfound", 
+	-- 			Pattern = sPattern, 
+	-- 			Line = self.sLine, 
+	-- 			Char = self.sChar, 
+	-- 			Token = self.sBuffer,
+	-- 			NeedsShift = self.nPosition ~= utf8.offset( self.sLine, self.nPosition - 1 ),
+	-- 		} 
+	-- 	}
+	-- 	return false 
+	-- end 
 	
 	if not bSkip then 
 		self.sBuffer = self.sBuffer .. text
 	end 
 	
 	self.nPosition = endpos + 1
-	if self.nPosition <= #self.sLine then
-		self.sChar = self.sLine[self.nPosition]
+	-- if self.nPosition <= #self.sLine then
+	-- 	self.sChar = self.sLine[self.nPosition]
 	
-	/*self.nPosition = self.nPosition + utf8.len( text )
+	-- self.nPosition = self.nPosition + utf8.len( text )
 	-- self.nPosition = self.nPosition + #text
-	if self.nPosition < utf8.len( self.sLine ) then
+	-- if self.nPosition <= utf8.len( self.sLine ) then
+	if self.nPosition <= #self.sLine then
 		-- PrintTableGrep{ self.nPosition, utf8.len( self.sLine ), self.sLine }
 		-- print( utf8.codepoint( self.sLine, self.nPosition, self.nPosition ) )
 		local offset = utf8.offset( self.sLine, self.nPosition - 1 )
-		self.sChar = utf8.char( utf8.codepoint( self.sLine, offset, offset ) )*/
+		self.sChar = utf8.char( utf8.codepoint( self.sLine, offset, offset ) )
 	else
 		self.sChar = nil
 	end
+	
+	if self.nPosition >= utf8.len( self.sLine ) then 
+		PrintTableGrep{ 
+			["NEXTPATTERN"] = { 
+				Substr = self.sLine:sub(utf8.offset( self.sLine, 0, self.nPosition-1 )), 
+				SubstrF = text,
+				Pos = self.nPosition, 
+				-- PosBump = utf8.offset( self.sLine, self.nPosition-1 ),
+				PosEnd = endpos or "notfound", 
+				PosStart = startpos or "notfound", 
+				Pattern = sPattern, 
+				Line = self.sLine, 
+				Char = self.sChar or "nil", 
+				Token = self.sBuffer,
+				-- NeedsShift = self.nPosition ~= utf8.offset( self.sLine, self.nPosition - 1 ),
+				Length = #self.sLine,
+				LengthUTF8 = utf8.len( self.sLine ),
+			} 
+		}
+	end 
 	
 	return bSkip and text or true 
 end
@@ -516,6 +557,9 @@ function Syntax:AddToken( sTokenName, sBuffer )
 	
 	-- debug.Trace( )
 	-- print( "ADDTOKEN", sTokenName, string.format( "%q", sBuffer ) )
+	-- if isbool(utf8.len(sBuffer)) then 
+	-- 	debug.Trace()
+	-- end 
 end
 
 function Syntax:SkipSpaces( )
