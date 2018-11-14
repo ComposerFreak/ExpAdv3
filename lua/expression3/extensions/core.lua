@@ -421,14 +421,14 @@ end);
 
 ext_core:RegisterFunction("event", "call", "e,s,...", "b", 1, function(context, entity, event, ...)
 	if (not IsValid(entity) or not entity.Expression3) then return end
-	if not hook.Run( "CanTool", context.player, entity, "wire_expression3") then return end
+	if not context:CanUseEntity(entity) then return end
 	local status = entity:CallEvent("", 0, event, ...);
 	return status;
 end);
 
 ext_core:RegisterFunction("event", "call", "cls,n,e,s,...", "", 0, function(context, class, count, entity, event, ...)
 	if (not IsValid(entity) or not entity.Expression3) then return end
-	if not hook.Run( "CanTool", context.player, entity, "wire_expression3") then return end
+	if not context:CanUseEntity(entity) then return end
 	local status, results = entity:CallEvent(class, count, event, ...);
 	return resultsToTable(status, class, results);
 end);

@@ -821,15 +821,17 @@ function PARSER.Statment_2(this)
 
 		local block = this:Block_1(false, "then");
 
-		local eif;
-		local nif = this:Statment_3();
+		local eif = { this:Statment_3() };
 
-		if (nif) then
-			eif = { nif };
+		if (#eif > 0) then
+			while true do
+				local stmt = this:Statment_3();
 
-			while nif do
-				nif = this:Statment_3();
-				eif[#eif + 1] = nif;
+				if not stmt then
+					break;
+				end
+
+				eif[#eif + 1] = stmt;
 			end
 		end
 
