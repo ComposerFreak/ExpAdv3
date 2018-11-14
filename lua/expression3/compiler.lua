@@ -533,7 +533,7 @@ function COMPILER.writeArgsToBuffer(this, inst, vargs, ...)
 			end
 
 			this:addInstructionToBuffer(inst, arg);
-			
+
 			if (vr) then
 				this:writeToBuffer(inst, "}");
 			end
@@ -622,7 +622,7 @@ end
 
 function COMPILER.Compile_SEQ(this, inst, token, data)
 	local stmts = data.stmts;
-	
+
 	if stmts then
 		local price = 0;
 
@@ -777,9 +777,9 @@ function COMPILER.Compile_SERVER(this, inst, token, data)
 	end
 
 	this:PushScope();
-	
+
 	this:SetOption("state", EXPR_SERVER);
-	
+
 	this:Compile(data.block);
 
 	this:addInstructionToBuffer(inst, data.block);
@@ -799,9 +799,9 @@ function COMPILER.Compile_CLIENT(this, inst, token, data)
 	end
 
 	this:PushScope();
-	
+
 	this:SetOption("state", EXPR_CLIENT);
-	
+
 	this:Compile(data.block);
 
 	this:addInstructionToBuffer(inst, data.block);
@@ -854,7 +854,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 			info.global = true;
 			info.prefix = "GLOBAL";
 		end
-		
+
 		this:writeToBuffer(inst, "GLOBAL.");
 		this:writeToBuffer(inst, var);
 
@@ -1112,7 +1112,7 @@ function COMPILER.Compile_AADD(this, inst, token, data)
 			this:writeToBuffer(inst, "%s = ", var);
 
 			this:writeOperationCall(inst, op, "var", expr);
-			
+
 			this:writeToBuffer(inst, ";\n");
 		end
 
@@ -1166,7 +1166,7 @@ function COMPILER.Compile_ASUB(this, inst, token, data)
 			this:writeToBuffer(inst, "%s = ", var);
 
 			this:writeOperationCall(inst, op, "var", expr);
-			
+
 			this:writeToBuffer(inst, ";\n");
 		end
 
@@ -1222,7 +1222,7 @@ function COMPILER.Compile_ADIV(this, inst, token, data)
 			this:writeToBuffer(inst, "%s = ", var);
 
 			this:writeOperationCall(inst, op, "var", expr);
-			
+
 			this:writeToBuffer(inst, ";\n");
 		end
 
@@ -1276,7 +1276,7 @@ function COMPILER.Compile_AMUL(this, inst, token, data)
 			this:writeToBuffer(inst, "%s = ", var);
 
 			this:writeOperationCall(inst, op, "var", expr);
-			
+
 			this:writeToBuffer(inst, ";\n");
 		end
 
@@ -1297,7 +1297,7 @@ function COMPILER.Compile_GROUP(this, inst, token, data)
 
 	local r, c, p = this:Compile(data.expr);
 
-	this.addInstructionToBuffer(inst, data.expr);
+	this:addInstructionToBuffer(inst, data.expr);
 
 	this:writeToBuffer(inst, ")");
 
@@ -1558,7 +1558,7 @@ function COMPILER.Compile_EQ_MUL(this, inst, token, data)
 		else
 			this:writeOperationCall(inst, op, "eq_val", expr2);
 		end
-		
+
 		price = price + p2 + op.price;
 
 		this:CheckState(op.state, token, "Comparison operator (==) '%s == %s'", name(r1), name(r2));
@@ -1623,7 +1623,7 @@ function COMPILER.Compile_NEQ_MUL(this, inst, token, data)
 
 		local expr2 = data.expressions[i];
 		local r2, c2, p2 = this:Compile(expr2);
-		
+
 		local op = this:GetOperator("neq", r1, r2);
 
 		if (not op) then
@@ -2369,7 +2369,7 @@ function COMPILER.Compile_VAR(this, inst, token, data)
 	end
 
 	local c, s, var = this:GetVariable(data.variable)
-	
+
 	if (var and var.prefix) then
 		local prefix = var.atribute and ("this." .. var.prefix) or var.prefix;
 		this:writeToBuffer(inst, "%s.%s", prefix, data.variable);
@@ -2622,7 +2622,7 @@ function COMPILER.Compile_METH(this, inst, token, data)
 		end
 	end
 
-	if (not op) then 
+	if (not op) then
 		this:Throw(token, "No such method %s.%s(%s).", name(mClass), method, names(ids));
 	end
 
@@ -3284,7 +3284,7 @@ function COMPILER.Compile_FOR(this, inst, token, data)
 	local _end = expressions[2];
 	local tEnd, cEnd, p2 = this:Compile(_end);
 	this:addInstructionToBuffer(inst, _end);
-	
+
 	local price = p1 + p2;
 	local step = expressions[3];
 
@@ -3350,7 +3350,7 @@ function COMPILER.Compile_EACH(this, inst, token, data)
 		this:Throw(token, "%s can not be used inside a foreach loop", name(r));
 	end
 
-	this:PushScope(); 
+	this:PushScope();
 	this:SetOption("loop", true);
 
 	this:writeToBuffer(inst, "for _kt, _kv, _vt, _vv in ");
@@ -3398,7 +3398,7 @@ end
 
 function COMPILER.Compile_TRY(this, inst, token, data)
 	this:writeToBuffer(inst, "\nlocal ok, %s = pcall(function()\n", data.var.data);
-	
+
 	this:PushScope();
 		this:SetOption("canReturn", false);
 		this:SetOption("loop", false);
@@ -3476,7 +3476,7 @@ end
 
 local function Inclucde_ROOT(this, inst, token, data)
 	this:writeToBuffer(inst, "\ndo --START INCLUDE\n")
-	
+
 	local price = 0;
 
 	local stmts = data.stmts;
@@ -3791,16 +3791,16 @@ function COMPILER.Compile_DEF_FEILD(this, inst, token, data)
 			this.__defined[var] = true;
 
 			local arg = result[2];
-			
+
 			this:AssToClass(arg.token, true, var, result[1]);
-			
+
 			this:writeToBuffer(inst, " = ");
 
 			this:addInstructionToBuffer(inst, arg);
 
 			this:writeToBuffer(inst, ";\n");
 		end
-	end 
+	end
 
 	this.__defined = {};
 
@@ -3840,7 +3840,7 @@ function COMPILER.Compile_SET_FEILD(this, inst, token, data)
 	elseif (info.feild) then
 		this:writeToBuffer(inst, ".%s = ", info.feild);
 	end
-	
+
 	this:addInstructionToBuffer(inst, expressions[2]);
 
 	this:writeToBuffer(inst, ";\n");
@@ -3862,10 +3862,10 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, data)
 	local signature = string_format("constructor(%s)", data.signature);
 
 	this:writeToBuffer(inst, "\n%s[%q] = function(", userclass.name, signature);
-	
+
 	local args = data.args;
 	local tArgs = #args;
-	
+
 	for i = 1, tArgs do
 		local arg = args[i];
 		this:writeToBuffer(inst, arg[2]);

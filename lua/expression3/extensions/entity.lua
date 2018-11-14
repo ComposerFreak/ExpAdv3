@@ -36,7 +36,7 @@ extension:RegisterWiredOutport("e", "ENTITY");
 
 extension:RegisterClass("ph", {"bone", "physics"}, IsValid, IsValid);
 
-extension:RegisterMethod("e", "physics", "", "ph", 1, "GetPhysicsObject";
+extension:RegisterMethod("e", "physics", "", "ph", 1, "GetPhysicsObject");
 
 extension:RegisterMethod("e", "getBoneCount", "", "n", 1, "GetPhysicsObjectCount");
 
@@ -136,7 +136,7 @@ extension:RegisterMethod("e", "right", "", "v", 1, "GetRight");
 
 extension:RegisterMethod( "ph", "forward", "", "v", 1, function(e)
 	if IsValid(e) then
-		return e:LocalToWorld( Vector(1,0,0) ) - e:GetPos( ));
+		return e:LocalToWorld( Vector(1,0,0) ) - e:GetPos( );
 	end
 
 	return Vector(0, 0, 0);
@@ -144,7 +144,7 @@ end, true );
 
 extension:RegisterMethod( "ph", "right", "", "v", 1, function(e)
 	if IsValid(e) then
-		return e:LocalToWorld( Vector(0,-1,0) ) - e:GetPos( ));
+		return e:LocalToWorld( Vector(0,-1,0) ) - e:GetPos( );
 	end
 
 	return Vector(0, 0, 0);
@@ -152,7 +152,7 @@ end, true );
 
 extension:RegisterMethod( "ph", "up", "", "v", 1, function(e)
 	if IsValid(e) then
-		return e:LocalToWorld( Vector(0,0,1) ) - e:GetPos( ));
+		return e:LocalToWorld( Vector(0,0,1) ) - e:GetPos( );
 	end
 
 	return Vector(0, 0, 0);
@@ -305,7 +305,7 @@ extension:SetServerState();
 
 extension:RegisterMethod("e", "setMaterial", "s", "", 0, function(context, e, s)
 	if context:CanUseEntity(e) then
-		e:SetMaterials);
+		e:SetMaterial(s);
 	end
 end, false);
 
@@ -388,7 +388,7 @@ extension:RegisterMethod("e", "getMass", "", "n", 1, function(e)
 	if IsValid(ph) then
 		return ph:GetMass();
 	end
-	
+
 	return -1;
 end, true);
 
@@ -398,7 +398,7 @@ extension:RegisterMethod("e", "getMassCenter", "", "v", 1, function(e)
 	if IsValid(ph) then
 		return ph:GetMassCenter();
 	end
-	
+
 	return Vector(0, 0, 0);
 end, true);
 
@@ -406,7 +406,7 @@ extension:RegisterMethod("ph", "getMass", "", "n", 1, function(ph)
 	if IsValid(ph) then
 		return ph:GetMass();
 	end
-	
+
 	return -1;
 end, true);
 
@@ -414,7 +414,7 @@ extension:RegisterMethod("ph", "getMassCenter", "", "v", 1, function(ph)
 	if IsValid(ph) then
 		return ph:GetMassCenter();
 	end
-	
+
 	return Vector(0, 0, 0);
 end, true);
 
@@ -547,7 +547,7 @@ extension:RegisterMethod( "e", "attachmentPos", "n", "v", 1, function(e, n)
 	if IsValid(e) then
 		local attachment = e:GetAttachment(n);
 
-		if attachment then 
+		if attachment then
 			return attachment.Pos;
 		end
 	end
@@ -559,7 +559,7 @@ extension:RegisterMethod( "e", "attachmentAng", "n", "a", 1, function(e, n)
 	if IsValid(e) then
 		local attachment = e:GetAttachment(n);
 
-		if attachment then 
+		if attachment then
 			return attachment.Ang;
 		end
 	end
@@ -578,7 +578,7 @@ extension:RegisterMethod( "e", "attachments", "", "t", 1, function(e)
 		end
 	end
 
-	return {tbl = t, children = {}, parents = {}, size = #t};;
+	return {tbl = t, children = {}, parents = {}, size = #t};
 end, true);
 
 --[[
@@ -728,7 +728,7 @@ if SERVER then
 	end
 
 end
-	
+
 extension:SetServerState();
 
 if propcore:GetBool() then
@@ -736,7 +736,7 @@ if propcore:GetBool() then
 	--[[
 		Spawn Functions
 	]]
-	
+
 	extension:RegisterLibrary("prop");
 
 	extension:RegisterFunction("prop", "spawn", "s", "e", 1, spawnProp, false);
@@ -765,7 +765,7 @@ if propcore:GetBool() then
 	--[[
 		Manipulation
 	]]
-	
+
 	extension:RegisterMethod("e", "remove", "", "", 0, function(context, e)
 		if context:CanUseEntity(e) then
 			e:Remove();
