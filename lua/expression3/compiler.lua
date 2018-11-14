@@ -404,12 +404,12 @@ end
 --[[
 ]]
 
-function COMPILER.GetOperator(this, operation, fst, ...)
+function COMPILER.GetOperator(this, operation, fst, snd, ...)
 	if (not fst) then
 		return EXPR_OPERATORS[operation .. "()"];
 	end
 
-	local signature = string_format("%s(%s)", operation, table_concat({fst, ...},","));
+	local signature = string_format("%s(%s)", operation, table_concat({fst, snd, ...},","));
 
 	local Op = EXPR_OPERATORS[signature];
 
@@ -417,7 +417,34 @@ function COMPILER.GetOperator(this, operation, fst, ...)
 		return Op;
 	end
 
-	-- TODO: Inheritance.
+	-- First peram base class.
+
+	if (fst) then
+		local cls = E3Class(fst);
+
+		if (cls and cls.base) then
+			local Op = this:GetOperator(operation, cls.base, snd, ...);
+
+			if (Op) then
+				return Op;
+			end
+		end
+	end
+
+	-- Second peram base class.
+
+	if (snd) then
+		local cls = E3Class(snd);
+
+		if (cls and cls.base) then
+			local Op = this:GetOperator(operation, fst, cls.base, ...);
+
+			if (Op) then
+				return Op;
+			end
+		end
+	end
+
 end
 
 --[[
