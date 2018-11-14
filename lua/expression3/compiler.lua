@@ -856,7 +856,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 		prive = price + p;
 
 		if (not data.variables[i]) then
-			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
+			this:Throw(arg.token, "Invalid assignment, value #%i is not being assigned to a variable.", i);
 		elseif (i < tArgs) then
 			results[#results + 1] = {r, arg, true};
 		else
@@ -872,7 +872,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 		local var = token.data;
 
 		if (not result) then
-			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
+			this:Throw(token, "Invalid assignment, variable %s is not initalized.", var);
 		end
 
 		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0);
@@ -937,7 +937,7 @@ function COMPILER.Compile_LOCAL(this, inst, token, data)
 		price = price + p;
 
 		if (not data.variables[i]) then
-			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
+			this:Throw(arg.token, "Invalid assignment, value #%i is not being assigned to a variable.", i);
 		elseif (i < tArgs) then
 			results[#results + 1] = {r, arg, true};
 		else
@@ -953,7 +953,7 @@ function COMPILER.Compile_LOCAL(this, inst, token, data)
 		local var = token.data;
 
 		if (not result) then
-			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
+			this:Throw(token, "Invalid assignment,  variable %s is not initalized.", var);
 		end
 
 		local class, scope, info = this:AssignVariable(token, true, var, data.class);
@@ -1034,7 +1034,7 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 		local arg = args[i];
 
 		if not var then
-			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
+			this:Throw(arg.token, "Invalid assignment, value #%i is not being assigned to a variable.", i);
 		end
 
 		local r, c, p = this:Compile(arg);
@@ -1053,7 +1053,7 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 				local arg = args[i];
 
 				if not arg then
-					this:Throw(var, "Unable to assign variable %s, no matching value.", var.data);
+					this:Throw(var, "Invalid assignment,  variable %s is not initalized.", var.data);
 				end
 
 				local class, scope, info = this:AssignVariable(var, false, var.data, r);
@@ -3809,7 +3809,7 @@ function COMPILER.Compile_DEF_FEILD(this, inst, token, data)
 		local class, scope, info = this:AssToClass(token, true, var, data.class);
 
 		if (not result) then
-			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
+			this:Throw(token, "Variable %s is not initalized.", var);
 		else
 			if (info) then
 				this:writeToBuffer(inst,string_format("\n%s.vars.%s", userclass.name, var));
