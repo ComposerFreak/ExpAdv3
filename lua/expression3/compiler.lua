@@ -310,15 +310,19 @@ function COMPILER.GetOption(this, option, nonDeep)
 	end
 end
 
-function COMPILER.SetVariable(this, name, class, scope)
+function COMPILER.SetVariable(this, name, class, scope, prefix, global)
 	if (not scope) then
 		scope = this.__scopeID;
 	end
+
+	if not prefix then debug.Trace(); end
 
 	local var = {};
 	var.name = name;
 	var.class = class;
 	var.scope = scope;
+	var.prefix = prefix;
+	var.global = global;
 
 	if not name then debug.Trace(); end
 
@@ -366,7 +370,7 @@ local bannedVars = {
 	["pairs"] = true,
 };
 
-function COMPILER.AssignVariable(this, token, declaired, varName, class, scope)
+function COMPILER.AssignVariable(this, token, declaired, varName, class, scope, prefix, global)
 	if (not isstring(varName)) or varName == "" then
 		--print("VARNAME is " .. varName);
 		debug.Trace();
@@ -388,7 +392,7 @@ function COMPILER.AssignVariable(this, token, declaired, varName, class, scope)
 		elseif (c and class ~= "") then
 			this:Throw(token, "Unable to Initialize variable %s, %s expected got %s.", varName, name(c), name(class));
 		else
-			return this:SetVariable(varName, class, scope);
+			return this:SetVariable(varName, class, scope, prefix, global);
 		end
 	else
 		if (not c) then
@@ -875,12 +879,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 			this:Throw(token, "Invalid assignment, variable %s is not initalized.", var);
 		end
 
-		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0);
-
-		if (info) then
-			info.global = true;
-			info.prefix = "GLOBAL";
-		end
+		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0, "GLOBAL", true);
 
 		this:writeToBuffer(inst, "GLOBAL.");
 		this:writeToBuffer(inst, var);
@@ -891,7 +890,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 
 		this.__defined[var] = true;
 
-		if (result[1] ~= inst.class) then
+		if (result[1] ~= data.class) then
 			local casted = false;
 			local arg = result[2];
 
@@ -900,7 +899,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 			end
 
 			if (not casted) then
-				this:AssignVariable(arg.token, true, var, result[1], 0);
+				this:AssignVariable(arg.token, true, var, result[1], 0, "GLOBAL", true);
 			end
 		end
 	end
@@ -1009,14 +1008,17 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 		local var = vars[i].data;
 		local class, scope, info = this:GetVariable(var);
 
-		if (info and info.prefix) then
-			if (info.atribute) then
-				var = "this." .. info.prefix .. "." .. var;
-			else
-				var = info.prefix .. "." .. var;
+		if info then
+				if (info.atribute) then
+				this:writeToBuffer(inst, "this.");
 			end
-		end
 
+			if (info.prefix) then
+				this:writeToBuffer(inst, info.prefix);
+				this:writeToBuffer(inst, ".");
+			end
+
+		end
 		this:writeToBuffer(inst, var);
 
 		if i < tVars then
@@ -2395,14 +2397,20 @@ function COMPILER.Compile_VAR(this, inst, token, data)
 		this:Throw(token, "Variable %s is defined here and can not be used as part of an expression.", data.variable);
 	end
 
-	local c, s, var = this:GetVariable(data.variable)
+	local c, s, var = this:GetVariable(data.variable);
 
-	if (var and var.prefix) then
-		local prefix = var.atribute and ("this." .. var.prefix) or var.prefix;
-		this:writeToBuffer(inst, "%s.%s", prefix, data.variable);
-	else
-		this:writeToBuffer(inst, data.variable);
+	if (var) then
+		if (var.atribute) then
+			this:writeToBuffer(inst, "this.");
+		end
+
+		if (var.prefix) then
+			this:writeToBuffer(inst, var.prefix);
+			this:writeToBuffer(inst, ".");
+		end
 	end
+
+	this:writeToBuffer(inst, data.variable);
 
 	if (not c) then
 		this:Throw(token, "Variable %s does not exist.", data.variable);
@@ -3465,11 +3473,7 @@ function COMPILER.Compile_INPORT(this, inst, token, data)
 			this:Throw(token, "Invalid name for wired input %s, name must be cammel cased");
 		end
 
-		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0);
-
-		if (info) then
-			info.prefix = "INPUT";
-		end
+		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0, "INPUT");
 
 		this.__directives.inport[var] = {class = data.class, wire = data.wire_type, func = data.wire_func};
 	end
@@ -3487,11 +3491,7 @@ function COMPILER.Compile_OUTPORT(this, inst, token, data)
 			this:Throw(token, "Invalid name for wired output %s, name must be cammel cased");
 		end
 
-		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0);
-
-		if (info) then
-			info.prefix = "OUTPUT";
-		end
+		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0, "OUTPUT");
 
 		this.__directives.outport[var] = {class = data.class, wire = data.wire_type, func = data.wire_func, func_in = data.wire_func2};
 	end
