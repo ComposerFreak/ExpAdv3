@@ -997,10 +997,10 @@ function PANEL:MovePosition( caret, offset )
 					offset = offset - remainder 
 				else 
 					caret.y = caret.y + offset 
-					print(("#"):rep(60))
-					print( offset, remainder, utf8.len(tRow), caret.y, self:GetUTF8Offset(caret.x,caret.y), self:GetUTF8Offset(caret.x,caret.y+offset) )
-					caret.y = caret.y + self:GetUTF8Offset(caret.x,caret.y)
-					print( offset, remainder, utf8.len(tRow), caret.y, self:GetUTF8Offset(caret.x,caret.y), self:GetUTF8Offset(caret.x,caret.y+offset) )
+					-- print(("#"):rep(60))
+					-- print( offset, remainder, utf8.len(tRow), caret.y, self:GetUTF8Offset(caret.x,caret.y), self:GetUTF8Offset(caret.x,caret.y+offset) )
+					-- caret.y = caret.y + self:GetUTF8Offset(caret.x,caret.y)
+					-- print( offset, remainder, utf8.len(tRow), caret.y, self:GetUTF8Offset(caret.x,caret.y), self:GetUTF8Offset(caret.x,caret.y+offset) )
 					break 
 				end 	
 			end 
@@ -1142,24 +1142,24 @@ function PANEL:GetArea( selection )
 	if start.x == stop.x then
 		if self.Insert and start.y == stop.y then
 			selection[2].y = selection[2].y + 1
-
+			
 			text = string_sub( self.tRows[start.x], start.y + nStartOffset, start.y + nEndOffset )
 		else
 			text = string_sub( self.tRows[start.x], start.y + nStartOffset, stop.y - 1 + nEndOffset )
 		end
 	else
 		text = string_sub( self.tRows[start.x], start.y + nStartOffset )
-
+		
 		for i = start.x + 1, stop.x - 1 do
 			text = text .. "\n" .. self.tRows[i]
 		end
-
+		
 		text =  text .. "\n" .. string_sub( self.tRows[stop.x], 1, stop.y - 1 + nEndOffset )
 	end
-
+	
 	self:FoldAll( LinesToFold )
-
-	return text
+	
+	return utf8.force( text )
 end
 
 function PANEL:SetArea( selection, text, isundo, isredo, before, after )
@@ -1986,7 +1986,7 @@ function PANEL:PaintCursor( Caret )
 			surface_SetDrawColor( 240, 240, 240, 255 )
 			local Offset = Caret.x - self.Scroll.x
 			local Insert = Caret.Insert or self.Insert
-			Offset = Offset - self:GetFoldingOffset( Caret.x )
+			Offset = Offset - self:GetFoldingOffset( Caret.x ) 
 
 			if istable( self.tRows[Caret.x] ) and self.tRows[Caret.x].Primary ~= Caret.x then return end
 
@@ -2005,7 +2005,8 @@ function PANEL:PaintStatus( )
 	local Line = "Length: " .. utf8.len( self:GetCode( ) ) .. " Lines: " .. #self.tRows .. " Row: " .. self.Caret.x .. " Col: " .. self.Caret.y
 
 	if self:HasSelection( ) then
-		Line = Line .. " Sel: " .. #self:GetSelection( )
+		-- Line = Line .. " Sel: " .. utf8.len( self:GetSelection( ) )
+		Line = Line .. "Sel: " .. (isbool(utf8.len( self:GetSelection( ) )) and -1 or utf8.len( self:GetSelection( ) ))
 	end
 
 	local Width, Height = surface_GetTextSize( Line )

@@ -422,6 +422,8 @@ function Syntax:NextCharacter( )
 
 	self.sBuffer = self.sBuffer .. self.sChar
 	self.nPosition = self.nPosition + 1
+	-- print( utf8.offset( self.sLine, self.nPosition ), self.nPosition )
+	-- self.nPosition = utf8.offset( self.sLine, self.nPosition ) or self.nPosition + 1
 
 	if self.nPosition <= #self.sLine then
 		local offset = utf8.offset( self.sLine, self.nPosition - 1 )
@@ -430,6 +432,7 @@ function Syntax:NextCharacter( )
 		-- PrintTableGrep{ ["NEXTCHAR"] = { Position = self.nPosition, Line = self.sLine, Char = self.sChar, Token = self.sBuffer } }
 		-- print( "NEXTCHAR", self.nPosition, string.format( "%q", self.sChar ) )
 	else
+		-- print( "NEXTCHAR", self.nPosition, utf8.offset( self.sLine, self.nPosition - 1 ) )
 		self.sChar = nil
 	end
 end
@@ -463,8 +466,10 @@ function Syntax:NextPattern( sPattern, bSkip )
 	-- debug.Trace()
 	
 	if self.sLine[self.nPosition] == ";" then 
-		-- print( "ASDA")
+		-- print( sPattern, startpos, endpos, text )
 	end 
+	
+	-- print( "NEEDSSHIFT", self.nPosition ~= utf8.offset( self.sLine, self.nPosition - 1 ) )
 	
 	if not startpos then return false end 
 	
@@ -473,7 +478,7 @@ function Syntax:NextPattern( sPattern, bSkip )
 	local offset_end = utf8.offset( self.sLine, 0, endpos )
 	-- print( offset_start, offset_end )
 	text = utf8.char( utf8.codepoint( self.sLine, offset_start, offset_end ) )
-	print( offset_start, offset_end, string.format( "%q", text ) )
+	-- print( offset_start, offset_end, string.format( "%q", text ) )
 	
 	
 	-- if startpos > utf8.offset( self.sLine, self.nPosition - 1 ) then 
@@ -501,7 +506,8 @@ function Syntax:NextPattern( sPattern, bSkip )
 		self.sBuffer = self.sBuffer .. text
 	end 
 	
-	self.nPosition = endpos + 1
+	-- self.nPosition = endpos + 1
+	self.nPosition = self.nPosition + utf8.len(text)
 	-- if self.nPosition <= #self.sLine then
 	-- 	self.sChar = self.sLine[self.nPosition]
 	
@@ -517,13 +523,13 @@ function Syntax:NextPattern( sPattern, bSkip )
 		self.sChar = nil
 	end
 	
-	if self.nPosition >= utf8.len( self.sLine ) then 
+	if self.nPosition >= utf8.len( self.sLine ) and false then 
 		PrintTableGrep{ 
 			["NEXTPATTERN"] = { 
 				Substr = self.sLine:sub(utf8.offset( self.sLine, 0, self.nPosition-1 )), 
 				SubstrF = text,
 				Pos = self.nPosition, 
-				-- PosBump = utf8.offset( self.sLine, self.nPosition-1 ),
+				PosBump = utf8.offset( self.sLine, self.nPosition-1 ),
 				PosEnd = endpos or "notfound", 
 				PosStart = startpos or "notfound", 
 				Pattern = sPattern, 
@@ -1026,15 +1032,6 @@ function Syntax:Parse( )
 		end 
 	end
 end
-
-
-
-
-
-
-
-
-
 
 function Syntax:GetSyntax( nRow )
 	if not self.tOutput then self:Parse() end 

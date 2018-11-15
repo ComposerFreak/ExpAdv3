@@ -34,14 +34,14 @@ function Syntax:FindValidLines( tLines )
 	local MultilineComment
 	local ValidLines = { }
 	local Row, Char = 1, 0
-
+	
 	while Row <= #tRows do
 		local Line = tRows[Row]
 		while Char < #Line do
 			Char = Char + 1
 			local Text = Line[Char]
 			local sType = type( MultilineComment )
-
+			
 			if sType == "number" then -- End comment or string (]])
 				if string_match( string_sub( Line, 1, Char ), "%]" .. string_rep( "=", MultilineComment ) .. "%]$" ) then
 					ValidLines[#ValidLines][2] = { Row, Char }
@@ -79,21 +79,21 @@ function Syntax:FindValidLines( tLines )
 				end
 			end
 		end
-
+		
 		Char = 0
 		Row = Row + 1
 	end
-
+	
 	self.dEditor:FoldAll( LinesToFold )
-
+	
 	return function( nLine, nStart )
 		for i = 1, #ValidLines do
 			local tStart, tEnd = ValidLines[i][1], ValidLines[i][2]
-
+			
 			if tStart[1] < nLine and tEnd[1] > nLine then
 				return false
 			end
-
+			
 			if tStart[1] == tEnd[1] then
 				if tStart[1] == nLine then
 			 		if tStart[2] <= nStart and tEnd[2] >= nStart then
@@ -112,7 +112,7 @@ function Syntax:FindValidLines( tLines )
 			 	end
 			end
 		end
-
+		
 		return true
 	end, ValidLines
 end
@@ -122,12 +122,12 @@ function Syntax:MakeFoldData( nExit )
 	local LinesToFold = self.dEditor:ExpandAll( )
 	local ValidLines = self:FindValidLines( )
 	local nLevel = 0
-
+	
 	for nLine = 1, #self.dEditor.tRows do
 		if nLine == nExit then break end
 		local text = self.dEditor.tRows[nLine]
 		self.dEditor.tFoldData[nLine] = self.dEditor.tFoldData[nLine] or { nLevel, false, false }
-
+		
 		local nElse, nBracket = 0, 0
 		string.gsub( text, "()([a-z{}]+)", function( nStart, sType )
 			if not ValidLines( nLine, nStart ) then return end
@@ -162,23 +162,22 @@ function Syntax:MakeFoldData( nExit )
 				end
 			end
 		end )
-
-
+		
 		if (nBracket > 0 or nElse > 0) and self.dEditor.tFoldData[nLine][1] == nLevel then
 			self.dEditor.tFoldData[nLine][3] = true
 		else
 			self.dEditor.tFoldData[nLine][3] = false
 		end
-
+		
 		nLevel = nLevel < 0 and 0 or nLevel
-
+		
 		if self.dEditor.tFoldData[nLine][1] >= nLevel then
 			self.dEditor.tFoldData[nLine][1] = nLevel
 		end
 	end
-
+	
 	self.dEditor.tFoldData[#self.dEditor.tRows+1] = { 0, false, false }
-
+	
 	self.dEditor:FoldAll( LinesToFold )
 end
 
@@ -186,7 +185,7 @@ local ParamPairs = {
 	["{"] = { "{", "}", true },
 	["["] = { "[", "]", true },
 	["("] = { "(", ")", true },
-
+	
 	["}"] = { "}", "{", false },
 	["]"] = { "]", "[", false },
 	[")"] = { ")", "(", false },
@@ -196,42 +195,42 @@ function Syntax:FindMatchingParam( nRow, nChar )
 	if not self.dEditor.tRows[nRow] then return false end
 	local LinesToFold = self.dEditor:ExpandAll( )
 	local Param, EnterParam, ExitParam = ParamPairs[self.dEditor.tRows[nRow][nChar]]
-
+	
 	if ParamPairs[self.dEditor.tRows[nRow][nChar-1]] and not ParamPairs[self.dEditor.tRows[nRow][nChar-1]][3] then
 		nChar = nChar - 1
 		Param = ParamPairs[self.dEditor.tRows[nRow][nChar]]
 	end
-
+	
 	if not Param then
 		nChar = nChar - 1
 		Param = ParamPairs[self.dEditor.tRows[nRow][nChar]]
 	end
-
+	
 	if not Param then
 		self.dEditor:FoldAll( LinesToFold )
 		return false
 	end
-
+	
 	EnterParam = Param[1]
 	ExitParam = Param[2]
-
+	
 	local line, pos, level = nRow, nChar, 0
 	local ValidLines = self:FindValidLines( )
-
+	
 	if not ValidLines( line, pos ) then
 		self.dEditor:FoldAll( LinesToFold )
 		return false
 	end
-
+	
 	if Param[3] then -- Look forward
 		while line <= #self.dEditor.tRows do
 			local Line = self.dEditor.tRows[line]
 			while pos < #Line do
 				pos = pos + 1
 				local Text = Line[pos]
-
+				
 				if not ValidLines( line, pos ) then continue end
-
+				
 				if Text == EnterParam then
 					level = level + 1
 				elseif Text == ExitParam then
@@ -251,11 +250,11 @@ function Syntax:FindMatchingParam( nRow, nChar )
 			local Line = self.dEditor.tRows[line]
 			while pos > 0 do
 				pos = pos - 1
-
+				
 				local Text = Line[pos]
-
+				
 				if not ValidLines( line, pos ) then continue end
-
+				
 				if Text == EnterParam then
 					level = level + 1
 				elseif Text == ExitParam then
@@ -271,9 +270,9 @@ function Syntax:FindMatchingParam( nRow, nChar )
 			pos = #(self.dEditor.tRows[line] or "") + 1
 		end
 	end
-
+	
 	self.dEditor:FoldAll( LinesToFold )
-
+	
 	return false
 end
 
@@ -284,7 +283,7 @@ function Syntax:Format( Code )
 	local indent = 0
 	local line = 1
 	local newline = false
-
+	
 	local i = 0
 	local outline = 1
 	while i < #lines do
@@ -296,7 +295,7 @@ function Syntax:Format( Code )
 		local bNoTabs = false
 		local predent = indent
 		local line = lines[i]
-
+		
 		for n = 1, #Lookup do
 			local tStart, tEnd = Lookup[n][1], Lookup[n][2]
 			if i > tStart[1] and i < tEnd[1] then
@@ -307,9 +306,9 @@ function Syntax:Format( Code )
 				bNoTabs = true
 			end
 		end
-
+		
 		if #line > 0 and line[#line] ~= " " then line = line .. " " end
-
+		
 		if exit then
 			newcode[outline] = lines[i]
 			outline = outline + 1
@@ -356,18 +355,18 @@ function Syntax:Format( Code )
 						--print( i, char, line )
 					end
 				end
-
+				
 				if newline and (predent > indent or nElse > 0) then
 					outline = outline - 1
 				end
-
+				
 				newcode[outline] = string_rep( "\t", bNoTabs and 0 or math.min( predent, indent ) ) .. string.match( line, "^[\t ]*(.*)$" )
 				outline = outline + 1
 				newline = false
 			end
 		end
 	end
-
+	
 	return table.concat( newcode, "\n" )
 end
 
@@ -460,44 +459,42 @@ for i, v in ipairs( operators ) do
 	operators[i] = string_gsub( v, "[%-%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1" )
 end
 
--- PrintTableGrep(operators)
-
 /*---------------------------------------------------------------------------
 Syntaxer
 ---------------------------------------------------------------------------*/
 function Syntax:NextCharacter( )
 	if not self.sChar then return end
-
+	
 	self.sTokenData = self.sTokenData .. self.sChar
 	self.nPosition = self.nPosition + 1
-
+	
 	if self.nPosition <= #self.sLine then
 		self.sChar = self.sLine[self.nPosition]
 	else
 		self.sChar = nil
 	end
-
+	
 	return self.sChar ~= nil
 end
 
 function Syntax:NextPattern( sPattern, bSkip )
 	if not self.sChar then return false end
 	local startpos, endpos, text = string_find( self.sLine, sPattern, self.nPosition  )
-
+	
 	if startpos ~= self.nPosition then return false end
 	text = text or string_sub( self.sLine, startpos, endpos )
-
+	
 	if not bSkip then
 		self.sTokenData = self.sTokenData .. text
 	end
-
+	
 	self.nPosition = endpos + 1
 	if self.nPosition <= #self.sLine then
 		self.sChar = self.sLine[self.nPosition]
 	else
 		self.sChar = nil
 	end
-
+	
 	return bSkip and text or true
 end
 
@@ -508,7 +505,7 @@ function Syntax:AddToken( sTokenName, sTokenData )
 		self.sTokenData = ""
 	end
 	if not sTokenData or sTokenData == "" then return end
-
+	
 	if self.tLastColor and color == self.tLastColor[2] then
 		self.tLastColor[1] = self.tLastColor[1] .. sTokenData
 	else
@@ -521,7 +518,7 @@ function Syntax:SkipSpaces( )
 	if self.sTokenData and self.sTokenData ~= "" then
 		print( string.format( "Unflushed %q on line %d char %d", self.sTokenData, self.nRow, self.nPosition ) )
 	end
-
+	
 	while self.sChar and self.sChar == " " do
 		self:NextCharacter( )
 	end
@@ -534,11 +531,11 @@ function Syntax:ResetTokenizer( )
 	self.sTokenData = ""
 	self.bBlockComment = nil
 	self.bMultilineString = nil
-
+	
 	local tmp = self.dEditor:ExpandAll( )
 	self.tRows = table.Copy( self.Editor.tRows )
 	self.dEditor:FoldAll( tmp )
-
+	
 	self:Parse( )
 end
 
@@ -554,29 +551,29 @@ end
 function Syntax:Parse( )
 	self.bBlockComment = nil
 	self.bMultilineString = nil
-
+	
 	self.tOutput = { }
 	self.tLastColor = nil
-
+	
 	self.nLoops = 0
 	self.nExpire = SysTime( ) + 0.1
-
+	
 	local tmp = self.dEditor:ExpandAll( )
 	self.tRows = table.Copy( self.dEditor.tRows )
 	self.dEditor:FoldAll( tmp )
-
+	
 	for i = 1, #self.tRows do
 		self.sLine = self.tRows[i]
 		self.nRow = i
 		self.tLastColor = nil
 		self.tOutput[i] = { }
-
+		
 		self.nPosition = 0
 		self.sChar = ""
 		self.sTokenData = ""
-
+		
 		-- self:NextCharacter( )
-
+		
 		if self.bBlockComment then
 			local sType = type( self.bBlockComment )
 			if sType == "number" then -- End comment (]])
@@ -585,7 +582,7 @@ function Syntax:Parse( )
 				else
 					self:NextPattern( ".*" )
 				end
-
+				
 				self:NextPattern( "comment" )
 			elseif sType == "boolean" and bBlockComment then -- End comment (*/)
 				if self:NextPattern( ".-%*/" ) then
@@ -593,7 +590,7 @@ function Syntax:Parse( )
 				else
 					self:NextPattern( ".*" )
 				end
-
+				
 				self:NextPattern( "comment" )
 			end
 		elseif self.bMultilineString then
@@ -604,7 +601,7 @@ function Syntax:Parse( )
 				else
 					self:NextPattern( ".*" )
 				end
-
+				
 				self:NextPattern( "string" )
 			elseif sType == "string" then -- End string ("')
 				while self.sChar do
@@ -616,20 +613,20 @@ function Syntax:Parse( )
 					if self.sChar == "\\" then self:NextCharacter( ) end
 					self:NextCharacter( )
 				end
-
+				
 				self:AddToken( "string" )
 			end
 		end
-
+		
 		-- while self.sChar and self:InfProtect( ) do
 		while self.sChar and self:InfProtect( ) do
 			self:SkipSpaces( )
-
+			
 			-- self:NextCharacter( )
-
+			
 			-- local spaces = self:NextPattern( " *", true )
 			-- if spaces and spaces ~= "" then self:AddToken( "operator", spaces ) end
-
+			
 			if self:NextPattern( "^[a-zA-Z_][_A-Za-z0-9]*" ) then
 				if keywords[self.sTokenData] then
 					self:AddToken( "keyword" )
@@ -647,42 +644,42 @@ function Syntax:Parse( )
 				self:AddToken( "number" )
 			elseif self:NextPattern( "^%-%-%[=*%[" ) then -- Multi line comment type --[[ ]]
 				self.bBlockComment = #string_match( self.sTokenData, "=" )
-
+				
 				if self:NextPattern( ".-%]" .. string_rep( "=", self.bBlockComment ) .. "%]$" ) then
 					self.bBlockComment = nil
 				else
 					self:NextPattern( ".*" )
 				end
-
+				
 				self:AddToken( "comment" )
 			elseif self:NextPattern( "^%-%-" ) then -- Single line comment type --
 				self:NextPattern( ".*" )
 				self:AddToken( "comment" )
 			elseif self:NextPattern( "^%[=*%[" ) then -- Multi line string
 				self.bMultilineString = #string_match( self.sTokenData, "=" )
-
+				
 				if self:NextPattern( ".-%]" .. string_rep( "=", self.bMultilineString ) .. "%]$" ) then
 					self.bMultilineString = nil
 				else
 					self:NextPattern( ".*" )
 				end
-
+				
 				self:AddToken( "string" )
 			elseif self.sChar == '"' or self.sChar == "'" then -- Single line string
 				local sType = self.sChar
 				self:NextCharacter( )
-
+				
 				while self.sChar do
 					if self.sChar == sType then break end
 					if self.sChar == "\\" then self:NextCharacter( ) end
 					self:NextCharacter( )
 				end
-
+				
 				self:NextCharacter( )
 				self:AddToken( "string" )
 			elseif self.sChar == "/" then
 				self:NextCharacter( )
-
+				
 				if self.sChar == "*" then -- Multi line comment type /*
 					self.bBlockComment = true
 					while self.sChar do
@@ -695,7 +692,7 @@ function Syntax:Parse( )
 								break
 							end
 						end
-
+						
 						self:NextCharacter( )
 					end
 					self:AddToken( "comment" )
@@ -717,13 +714,11 @@ function Syntax:Parse( )
 				if exit then continue end
 				self:NextCharacter()
 			end
-
+			
 			self:AddToken( "white" )
 			-- self:NextCharacter( )
 		end
 	end
-
-	-- PrintTableGrep( self.tOutput )
 end
 
 function Syntax:GetSyntax( nRow )
