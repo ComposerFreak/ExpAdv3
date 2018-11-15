@@ -24,10 +24,14 @@ ENT.Contact         = "";
 
 ENT.Expression3 	= true;
 
+local function name(id)
+	local obj = E3Class(id);
+	return obj and obj.name or id;
+end
+
 --[[
 	Validate / Set Code
 ]]
-
 
 function ENT:SetCode(script, files, run)
 	self:ShutDown();
@@ -355,27 +359,51 @@ function ENT:HandelThrown(thrown, stackTrace)
 end
 
 --[[
+	Invoke: postfix your result type with * if you do not need a result, or the result type is irrelivant.
 ]]
 
 function ENT:Invoke(where, result, count, udf, ...)
 	if (self:IsRunning()) then
+
+		local optional = string.sub(result, -1) == "*";
+
+		if (optional) then
+			result = string.sub(result, 1, -2);
+		end
 
 		if (udf and udf.op) then
 
 			local r = udf.result;
 			local c = udf.count;
 
-			if (r == nil or c == -1) then
-				r, c = "", 0
+			if (r == nil or r == "" or c == -1) then
+				r, c = "_nil", 0;
 			end
 
-			if (result == nil or count == -1) then
-				result, count = "", 0
+			if (r ~= "_nil" and optional) then
+				optional = false;
 			end
 
-			if (result ~= r or count ~= c) then
-				if (func.scr) then context = func.scr end
-				context:Throw("Invoked function with incorrect return type %q:%i expected, got %q:%i (%s).", name(result), count, name(r), c, where);
+			if (result == nil or result == "" or count == -1) then
+				result, count = "_nil", 0;
+			end
+
+			if ( (result ~= r or count ~= c) and not optional ) then
+				local context = self.context;
+
+				if (udf.scr) then
+					context = udf.scr;
+				end
+
+				local msg = string.format("Invoked function with incorrect return type %q:%i expected, got %q:%i (%s).", name(result), count, name(r), c, where);
+
+				if context then
+					context:Throw(msg);
+				else
+					self:HandelThrown(msg);
+					return false, msg;
+				end
+
 			end
 
 			self.context:PreExecute();
@@ -404,7 +432,7 @@ function ENT:CallEvent(result, count, event, ...)
 		if (events) then
 			for id, udf in pairs(events) do
 				local where = string.format("Event.%s.%s", event, id);
-				local status, results = self:Invoke(where, result, count, udf, ...)
+				local status, results = self:Invoke(where, result .. "*", count, udf, ...);
 
 				if (not status) then
 					return false;
@@ -473,6 +501,7 @@ if SERVER then
 end
 
 function ENT:SendNetMessage(name, target, ...)
+	--print("SendNetMessage", name, target, ...)
 	net.Start("Expression3.EntMessage");
 
 	net.WriteEntity(self);
@@ -569,9 +598,11 @@ function ENT:NetChatMessage(target, values)
 
 	if SERVER and self.context then
 		return self.context:HasPerm(target, "SendToChat");
+	elseif CLIENT then
+		chat.AddText( unpack(values) );
+	else
+		return true;
 	end
-
-	chat.AddText( unpack(values) );
 end
 
 
@@ -579,9 +610,11 @@ function ENT:NetGolemMessage(target, values)
 
 	if SERVER and self.context then
 		return self.context:HasPerm(target, "SendToGolem");
+	elseif CLIENT then
+		Golem.Print( unpack(values) );
+	else
+		return true;
 	end
-
-	Golem.Print( unpack(values) );
 end
 
 --[[

@@ -933,7 +933,7 @@ function Syntax:Parse( )
 						if self:NextPattern( "^[a-z][a-zA-Z0-9]*" ) then 
 							local s = self.sBuffer 
 							
-							if self.tMethods[self.tVariables[word][2]][s] then 
+							if self.tMethods[self.tVariables[word][2]] and self.tMethods[self.tVariables[word][2]][s] then 
 								self:AddToken( "function" ) 
 							end 
 						end 

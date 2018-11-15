@@ -310,7 +310,7 @@ function COMPILER.GetOption(this, option, nonDeep)
 	end
 end
 
-function COMPILER.SetVariable(this, name, class, scope)
+function COMPILER.SetVariable(this, name, class, scope, prefix, global)
 	if (not scope) then
 		scope = this.__scopeID;
 	end
@@ -319,6 +319,8 @@ function COMPILER.SetVariable(this, name, class, scope)
 	var.name = name;
 	var.class = class;
 	var.scope = scope;
+	var.prefix = prefix;
+	var.global = global;
 
 	if not name then debug.Trace(); end
 
@@ -366,7 +368,7 @@ local bannedVars = {
 	["pairs"] = true,
 };
 
-function COMPILER.AssignVariable(this, token, declaired, varName, class, scope)
+function COMPILER.AssignVariable(this, token, declaired, varName, class, scope, prefix, global)
 	if (not isstring(varName)) or varName == "" then
 		--print("VARNAME is " .. varName);
 		debug.Trace();
@@ -388,7 +390,7 @@ function COMPILER.AssignVariable(this, token, declaired, varName, class, scope)
 		elseif (c and class ~= "") then
 			this:Throw(token, "Unable to Initialize variable %s, %s expected got %s.", varName, name(c), name(class));
 		else
-			return this:SetVariable(varName, class, scope);
+			return this:SetVariable(varName, class, scope, prefix, global);
 		end
 	else
 		if (not c) then
@@ -404,12 +406,12 @@ end
 --[[
 ]]
 
-function COMPILER.GetOperator(this, operation, fst, ...)
+function COMPILER.GetOperator(this, operation, fst, snd, ...)
 	if (not fst) then
 		return EXPR_OPERATORS[operation .. "()"];
 	end
 
-	local signature = string_format("%s(%s)", operation, table_concat({fst, ...},","));
+	local signature = string_format("%s(%s)", operation, table_concat({fst, snd, ...},","));
 
 	local Op = EXPR_OPERATORS[signature];
 
@@ -417,7 +419,34 @@ function COMPILER.GetOperator(this, operation, fst, ...)
 		return Op;
 	end
 
-	-- TODO: Inheritance.
+	-- First peram base class.
+
+	if (fst) then
+		local cls = E3Class(fst);
+
+		if (cls and cls.base) then
+			local Op = this:GetOperator(operation, cls.base, snd, ...);
+
+			if (Op) then
+				return Op;
+			end
+		end
+	end
+
+	-- Second peram base class.
+
+	if (snd) then
+		local cls = E3Class(snd);
+
+		if (cls and cls.base) then
+			local Op = this:GetOperator(operation, fst, cls.base, ...);
+
+			if (Op) then
+				return Op;
+			end
+		end
+	end
+
 end
 
 --[[
@@ -533,7 +562,7 @@ function COMPILER.writeArgsToBuffer(this, inst, vargs, ...)
 			end
 
 			this:addInstructionToBuffer(inst, arg);
-			
+
 			if (vr) then
 				this:writeToBuffer(inst, "}");
 			end
@@ -622,7 +651,7 @@ end
 
 function COMPILER.Compile_SEQ(this, inst, token, data)
 	local stmts = data.stmts;
-	
+
 	if stmts then
 		local price = 0;
 
@@ -675,7 +704,6 @@ function COMPILER.Compile_IF(this, inst, token, data)
 	local eif = data.eif;
 
 	if (eif and #eif > 0) then
-
 		for i = 1, #eif do
 			local stmt = eif[i];
 			this:Compile(stmt);
@@ -777,9 +805,9 @@ function COMPILER.Compile_SERVER(this, inst, token, data)
 	end
 
 	this:PushScope();
-	
+
 	this:SetOption("state", EXPR_SERVER);
-	
+
 	this:Compile(data.block);
 
 	this:addInstructionToBuffer(inst, data.block);
@@ -799,9 +827,9 @@ function COMPILER.Compile_CLIENT(this, inst, token, data)
 	end
 
 	this:PushScope();
-	
+
 	this:SetOption("state", EXPR_CLIENT);
-	
+
 	this:Compile(data.block);
 
 	this:addInstructionToBuffer(inst, data.block);
@@ -829,7 +857,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 		prive = price + p;
 
 		if (not data.variables[i]) then
-			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
+			this:Throw(arg.token, "Invalid assignment, value #%i is not being assigned to a variable.", i);
 		elseif (i < tArgs) then
 			results[#results + 1] = {r, arg, true};
 		else
@@ -845,16 +873,11 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 		local var = token.data;
 
 		if (not result) then
-			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
+			this:Throw(token, "Invalid assignment, variable %s is not initalized.", var);
 		end
 
-		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0);
+		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0, "GLOBAL", true);
 
-		if (info) then
-			info.global = true;
-			info.prefix = "GLOBAL";
-		end
-		
 		this:writeToBuffer(inst, "GLOBAL.");
 		this:writeToBuffer(inst, var);
 
@@ -864,7 +887,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 
 		this.__defined[var] = true;
 
-		if (result[1] ~= inst.class) then
+		if (result[1] ~= data.class) then
 			local casted = false;
 			local arg = result[2];
 
@@ -873,7 +896,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 			end
 
 			if (not casted) then
-				this:AssignVariable(arg.token, true, var, result[1], 0);
+				this:AssignVariable(arg.token, true, var, result[1], 0, "GLOBAL", true);
 			end
 		end
 	end
@@ -910,7 +933,7 @@ function COMPILER.Compile_LOCAL(this, inst, token, data)
 		price = price + p;
 
 		if (not data.variables[i]) then
-			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
+			this:Throw(arg.token, "Invalid assignment, value #%i is not being assigned to a variable.", i);
 		elseif (i < tArgs) then
 			results[#results + 1] = {r, arg, true};
 		else
@@ -926,7 +949,7 @@ function COMPILER.Compile_LOCAL(this, inst, token, data)
 		local var = token.data;
 
 		if (not result) then
-			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
+			this:Throw(token, "Invalid assignment,  variable %s is not initalized.", var);
 		end
 
 		local class, scope, info = this:AssignVariable(token, true, var, data.class);
@@ -982,14 +1005,17 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 		local var = vars[i].data;
 		local class, scope, info = this:GetVariable(var);
 
-		if (info and info.prefix) then
-			if (info.atribute) then
-				var = "this." .. info.prefix .. "." .. var;
-			else
-				var = info.prefix .. "." .. var;
+		if info then
+				if (info.atribute) then
+				this:writeToBuffer(inst, "this.");
 			end
-		end
 
+			if (info.prefix) then
+				this:writeToBuffer(inst, info.prefix);
+				this:writeToBuffer(inst, ".");
+			end
+
+		end
 		this:writeToBuffer(inst, var);
 
 		if i < tVars then
@@ -1007,7 +1033,7 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 		local arg = args[i];
 
 		if not var then
-			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
+			this:Throw(arg.token, "Invalid assignment, value #%i is not being assigned to a variable.", i);
 		end
 
 		local r, c, p = this:Compile(arg);
@@ -1026,7 +1052,7 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 				local arg = args[i];
 
 				if not arg then
-					this:Throw(var, "Unable to assign variable %s, no matching value.", var.data);
+					this:Throw(var, "Invalid assignment,  variable %s is not initalized.", var.data);
 				end
 
 				local class, scope, info = this:AssignVariable(var, false, var.data, r);
@@ -1112,7 +1138,7 @@ function COMPILER.Compile_AADD(this, inst, token, data)
 			this:writeToBuffer(inst, "%s = ", var);
 
 			this:writeOperationCall(inst, op, "var", expr);
-			
+
 			this:writeToBuffer(inst, ";\n");
 		end
 
@@ -1166,7 +1192,7 @@ function COMPILER.Compile_ASUB(this, inst, token, data)
 			this:writeToBuffer(inst, "%s = ", var);
 
 			this:writeOperationCall(inst, op, "var", expr);
-			
+
 			this:writeToBuffer(inst, ";\n");
 		end
 
@@ -1222,7 +1248,7 @@ function COMPILER.Compile_ADIV(this, inst, token, data)
 			this:writeToBuffer(inst, "%s = ", var);
 
 			this:writeOperationCall(inst, op, "var", expr);
-			
+
 			this:writeToBuffer(inst, ";\n");
 		end
 
@@ -1276,7 +1302,7 @@ function COMPILER.Compile_AMUL(this, inst, token, data)
 			this:writeToBuffer(inst, "%s = ", var);
 
 			this:writeOperationCall(inst, op, "var", expr);
-			
+
 			this:writeToBuffer(inst, ";\n");
 		end
 
@@ -1297,7 +1323,7 @@ function COMPILER.Compile_GROUP(this, inst, token, data)
 
 	local r, c, p = this:Compile(data.expr);
 
-	this.addInstructionToBuffer(inst, data.expr);
+	this:addInstructionToBuffer(inst, data.expr);
 
 	this:writeToBuffer(inst, ")");
 
@@ -1558,7 +1584,7 @@ function COMPILER.Compile_EQ_MUL(this, inst, token, data)
 		else
 			this:writeOperationCall(inst, op, "eq_val", expr2);
 		end
-		
+
 		price = price + p2 + op.price;
 
 		this:CheckState(op.state, token, "Comparison operator (==) '%s == %s'", name(r1), name(r2));
@@ -1623,7 +1649,7 @@ function COMPILER.Compile_NEQ_MUL(this, inst, token, data)
 
 		local expr2 = data.expressions[i];
 		local r2, c2, p2 = this:Compile(expr2);
-		
+
 		local op = this:GetOperator("neq", r1, r2);
 
 		if (not op) then
@@ -2368,14 +2394,20 @@ function COMPILER.Compile_VAR(this, inst, token, data)
 		this:Throw(token, "Variable %s is defined here and can not be used as part of an expression.", data.variable);
 	end
 
-	local c, s, var = this:GetVariable(data.variable)
-	
-	if (var and var.prefix) then
-		local prefix = var.atribute and ("this." .. var.prefix) or var.prefix;
-		this:writeToBuffer(inst, "%s.%s", prefix, data.variable);
-	else
-		this:writeToBuffer(inst, data.variable);
+	local c, s, var = this:GetVariable(data.variable);
+
+	if (var) then
+		if (var.atribute) then
+			this:writeToBuffer(inst, "this.");
+		end
+
+		if (var.prefix) then
+			this:writeToBuffer(inst, var.prefix);
+			this:writeToBuffer(inst, ".");
+		end
 	end
+
+	this:writeToBuffer(inst, data.variable);
 
 	if (not c) then
 		this:Throw(token, "Variable %s does not exist.", data.variable);
@@ -2622,7 +2654,7 @@ function COMPILER.Compile_METH(this, inst, token, data)
 		end
 	end
 
-	if (not op) then 
+	if (not op) then
 		this:Throw(token, "No such method %s.%s(%s).", name(mClass), method, names(ids));
 	end
 
@@ -3284,7 +3316,7 @@ function COMPILER.Compile_FOR(this, inst, token, data)
 	local _end = expressions[2];
 	local tEnd, cEnd, p2 = this:Compile(_end);
 	this:addInstructionToBuffer(inst, _end);
-	
+
 	local price = p1 + p2;
 	local step = expressions[3];
 
@@ -3350,7 +3382,7 @@ function COMPILER.Compile_EACH(this, inst, token, data)
 		this:Throw(token, "%s can not be used inside a foreach loop", name(r));
 	end
 
-	this:PushScope(); 
+	this:PushScope();
 	this:SetOption("loop", true);
 
 	this:writeToBuffer(inst, "for _kt, _kv, _vt, _vv in ");
@@ -3398,7 +3430,7 @@ end
 
 function COMPILER.Compile_TRY(this, inst, token, data)
 	this:writeToBuffer(inst, "\nlocal ok, %s = pcall(function()\n", data.var.data);
-	
+
 	this:PushScope();
 		this:SetOption("canReturn", false);
 		this:SetOption("loop", false);
@@ -3438,11 +3470,7 @@ function COMPILER.Compile_INPORT(this, inst, token, data)
 			this:Throw(token, "Invalid name for wired input %s, name must be cammel cased");
 		end
 
-		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0);
-
-		if (info) then
-			info.prefix = "INPUT";
-		end
+		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0, "INPUT");
 
 		this.__directives.inport[var] = {class = data.class, wire = data.wire_type, func = data.wire_func};
 	end
@@ -3460,11 +3488,7 @@ function COMPILER.Compile_OUTPORT(this, inst, token, data)
 			this:Throw(token, "Invalid name for wired output %s, name must be cammel cased");
 		end
 
-		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0);
-
-		if (info) then
-			info.prefix = "OUTPUT";
-		end
+		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0, "OUTPUT");
 
 		this.__directives.outport[var] = {class = data.class, wire = data.wire_type, func = data.wire_func, func_in = data.wire_func2};
 	end
@@ -3476,7 +3500,7 @@ end
 
 local function Inclucde_ROOT(this, inst, token, data)
 	this:writeToBuffer(inst, "\ndo --START INCLUDE\n")
-	
+
 	local price = 0;
 
 	local stmts = data.stmts;
@@ -3782,7 +3806,7 @@ function COMPILER.Compile_DEF_FEILD(this, inst, token, data)
 		local class, scope, info = this:AssToClass(token, true, var, data.class);
 
 		if (not result) then
-			this:Throw(token, "Unable to assign variable %s, no matching value.", var);
+			this:Throw(token, "Variable %s is not initalized.", var);
 		else
 			if (info) then
 				this:writeToBuffer(inst,string_format("\n%s.vars.%s", userclass.name, var));
@@ -3791,16 +3815,16 @@ function COMPILER.Compile_DEF_FEILD(this, inst, token, data)
 			this.__defined[var] = true;
 
 			local arg = result[2];
-			
+
 			this:AssToClass(arg.token, true, var, result[1]);
-			
+
 			this:writeToBuffer(inst, " = ");
 
 			this:addInstructionToBuffer(inst, arg);
 
 			this:writeToBuffer(inst, ";\n");
 		end
-	end 
+	end
 
 	this.__defined = {};
 
@@ -3840,7 +3864,7 @@ function COMPILER.Compile_SET_FEILD(this, inst, token, data)
 	elseif (info.feild) then
 		this:writeToBuffer(inst, ".%s = ", info.feild);
 	end
-	
+
 	this:addInstructionToBuffer(inst, expressions[2]);
 
 	this:writeToBuffer(inst, ";\n");
@@ -3862,10 +3886,10 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, data)
 	local signature = string_format("constructor(%s)", data.signature);
 
 	this:writeToBuffer(inst, "\n%s[%q] = function(", userclass.name, signature);
-	
+
 	local args = data.args;
 	local tArgs = #args;
-	
+
 	for i = 1, tArgs do
 		local arg = args[i];
 		this:writeToBuffer(inst, arg[2]);

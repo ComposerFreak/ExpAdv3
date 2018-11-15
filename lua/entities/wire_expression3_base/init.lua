@@ -161,7 +161,7 @@ function ENT:BuildWiredPorts(sort_in, sort_out)
 	self.Inputs = WireLib.AdjustSpecialInputs(self, names_in, types_in);
 
 	for name, wireport in pairs(self.Inputs) do
-		self:TriggerInput(name, wireport.Value);
+		self:TriggerInput(name, wireport.Value, true);
 	end
 
 	------------------------------------------------------------------------------

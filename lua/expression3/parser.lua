@@ -639,7 +639,7 @@ function PARSER.Directive_INPUT(this, token, directive)
 
 	local class_obj = EXPR_LIB.GetClass(port_type);
 
-	if (not class_obj.wire_in_class) then
+if (not class_obj.wire_in_class) then
 		this:Throw(token, "Invalid wire port, class %s can not be used for wired input.", class_obj.name);
 	end
 
@@ -655,7 +655,7 @@ function PARSER.Directive_INPUT(this, token, directive)
 		variables[#variables + 1] = this.__token;
 	end
 
-	return this:EndInstruction(inst, {class = class_obj.id, variables = variables; wire_type = wire_in_class; wire_func = wire_in_func});
+	return this:EndInstruction(inst, {class = class_obj.id, variables = variables, wire_type = class_obj.wire_in_class, wire_func = class_obj.wire_in_func});
 end
 
 function PARSER.Directive_OUTPUT(this, token, directive)
@@ -683,7 +683,7 @@ function PARSER.Directive_OUTPUT(this, token, directive)
 		variables[#variables + 1] = this.__token;
 	end
 
-	return this:EndInstruction(inst, {class = class_obj.id, variables = variables; wire_type = class_obj.wire_out_class; wire_func = class_obj.wire_out_func; wire_func2 = class_obj.wire_in_func});
+	return this:EndInstruction(inst, {class = class_obj.id, variables = variables, wire_type = class_obj.wire_out_class, wire_func = class_obj.wire_out_func, wire_func2 = class_obj.wire_out_func});
 end
 
 --[[
@@ -821,15 +821,17 @@ function PARSER.Statment_2(this)
 
 		local block = this:Block_1(false, "then");
 
-		local eif;
-		local nif = this:Statment_3();
+		local eif = { this:Statment_3() };
 
-		if (nif) then
-			eif = { nif };
+		if (#eif > 0) then
+			while true do
+				local stmt = this:Statment_3();
 
-			while nif do
-				nif = this:Statment_3();
-				eif[#eif + 1] = nif;
+				if not stmt then
+					break;
+				end
+
+				eif[#eif + 1] = stmt;
 			end
 		end
 
@@ -918,11 +920,11 @@ function PARSER.Statment_5(this)
 		this:Require("lpa", "Left parenthesis (() ) expected to close cloop defintion.");
 
 		this:Require("typ", "Class expected after lpa, for foreach loop")
-		
+
 		local a = this.__token.data
 
 		this:Require("var", "Variable expected after class, for foreach loop")
-		
+
 		local b = this.__token.data
 
 		local kType, kValue;
@@ -988,7 +990,7 @@ function PARSER.Statment_7(this)
 
 		this:Require("var", "Variable('s) expected after class for global variable.");
 		variables[1] = this.__token;
-		
+
 		while (this:Accept("com")) do
 			this:Require("var", "Variable expected after comma (,).");
 			variables[#variables + 1] = this.__token;
@@ -1023,7 +1025,7 @@ function PARSER.Statment_7(this)
 		local variables = {};
 
 		variables[1] = this:Require("var", "Variable('s) expected after class for variable.");
-		
+
 		while (this:Accept("com")) do
 			variables[#variables + 1] = this:Require("var", "Variable expected after comma (,).");
 		end
@@ -1365,7 +1367,7 @@ function PARSER.Expression_7(this)
 
 	while this:CheckToken("eq", "neq") do
 		if (this:Accept("eq")) then
-			
+
 			if (this:Accept("lsb")) then
 				local inst = this:StartInstruction("eq_mul", expr.token);
 
@@ -1392,7 +1394,7 @@ function PARSER.Expression_7(this)
 				expr = this:EndInstruction(inst, {expr = expr; expr2 = expr2});
 			end
 		elseif (this:Accept("neq")) then
-			
+
 			if (this:Accept("lsb")) then
 				local inst = this:StartInstruction("neq_mul", expr.token);
 
@@ -1703,11 +1705,11 @@ end
 function PARSER.Expression_24(this)
 	if (this:Accept("lpa")) then
 		local inst = this:StartInstruction("group", this.__token);
-		
+
 		local expr = this:Expression_1();
 
 		this:Require("rpa", "Right parenthesis ( )) missing, to close grouped equation.");
-		
+
 		return this:EndInstruction(inst, {expr = expr});
 	end
 
@@ -1793,7 +1795,7 @@ function PARSER.Expression_27(this)
 		end
 
 		this:Require("rpa", "Right parenthesis ( )) expected to close constructor parameters.");
-		
+
 		return this:EndInstruction(inst, {class = class.data; expressions = expressions});
 	end
 
@@ -2058,7 +2060,7 @@ function PARSER.ClassStatment_0(this)
 		local inst = this:StartInstruction("class", this.__token);
 
 		this:Require("var", "Class name expected after class");
-		
+
 		local extends, implements;
 		local classname = this.__token.data;
 
@@ -2072,32 +2074,32 @@ function PARSER.ClassStatment_0(this)
 
 		if (this:Accept("imp")) then
 			this:Require("typ", "Class name expected after implements");
-			
+
 			implements = {this.__token};
 
 			while(this:Accept("com")) do
 				this:Require("typ", "Class name expected after implements");
-				
+
 				implements[#implements + 1] = this.__token;
 			end
 		end
 
 		this:Require("lcb", "Left curly bracket ({) expected, to open class");
-		
+
 		local stmts = {};
 
 		if (not this:CheckToken("rcb")) then
 			this:PushScope()
 
 			this:SetOption("curclass", classname);
-			
+
 			stmts = this:Statements(true, this.ClassStatment_1);
 
 			this:PopScope()
 		end
 
 		this:Require("rcb", "Right curly bracket (}) missing, to close class");
-		
+
 		return this:EndInstruction(inst, {block = stmts; extends = extends; implements = implements; classname = classname});
 	end
 
@@ -2166,11 +2168,11 @@ end
 function PARSER.ClassStatment_3(this)
 	if (this:Accept("meth")) then
 		local inst = this:StartInstruction("def_method", this.__token);
-		
+
 		local typ = this:Require("typ", "Return type expected for method, after method.");
-		
+
 		local var = this:Require("var", "Name expected for method, after %s", name(typ.data));
-		
+
 		local params, signature = this:InputParameters(inst);
 
 		local block = this:Block_1(true, " ");
@@ -2206,13 +2208,13 @@ end
 function PARSER.InterfaceStatment_0(this)
 	if (this:Accept("itf")) then
 		local inst = this:StartInstruction("interface", this.__token);
-		
+
 		local interface = this:Require("var", "Interface name expected after class");
-		
+
 		this:SetUserObject(interface.data);
 
 		this:Require("lcb", "Left curly bracket ({) expected, to open interface");
-		
+
 		local stmts = {};
 
 		if (not this:CheckToken("rcb")) then
@@ -2225,7 +2227,7 @@ function PARSER.InterfaceStatment_0(this)
 		end
 
 		this:Require("rcb", "Right curly bracket (}) missing, to close interface");
-		
+
 		return this:EndInstruction(inst, {interface = interface.data; stmts = stmts});
 	end
 
@@ -2238,20 +2240,20 @@ end
 function PARSER.InterfaceStatment_1(this)
 	if (this:Accept("meth")) then
 		local inst = this:StartInstruction("interface_method", this.__token);
-		
+
 		local result = this:Require("typ", "Return type expected for method, after method.");
 
 		local name = this:Require("var", "Name expected for method, after %s", name(result.data));
 
 		this:Require("lpa", "Left parenthesis ( () expected to close method parameters.");
-		
+
 		local params = {};
 
 		if (not this:CheckToken("rpa")) then
 
 			while (true) do
 				this:Require("typ", "Parameter type expected for parameter.");
-				
+
 				params[#params + 1] = this.__token.data;
 
 				if (not this:Accept("com")) then
