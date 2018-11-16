@@ -88,6 +88,29 @@ if (SERVER) then
 	AddCSLuaFile("expression3/wiki/inits/autogen.lua");
 	AddCSLuaFile("expression3/wiki/inits/examples.lua");
 
+	resource.AddFile("models/lemongate/gibsmodel_chipmesh001.mdl");
+	resource.AddFile("models/lemongate/gibsmodel_fanmesh001.mdl");
+	resource.AddFile("models/lemongate/lemongate.mdl");
+	resource.AddFile("models/mandrac/wire/e3.mdl");
+	resource.AddFile("models/nezzkryptic/e3_chip.mdl");
+	resource.AddFile("models/shadowscion/lemongate/gate.mdl");
+	resource.AddFile("models/tanknut/cylinder.mdl");
+
+
+	local _, folders = file.Find( string.format("%s\\materials\\*", EXPR_ROOT) , "GAME");
+	for _, folder in pairs( folders ) do
+		--print( "E3 - scanning materials: " .. folder );
+
+		local images = file.Find( string.format("%s\\materials\\%s\\*.png", EXPR_ROOT, folder), "GAME");
+		for _, img in pairs( images ) do
+
+			local png = string.format("materials\\%s\\%s", folder, img);
+			--print( "E3 - resource added: " .. png );
+			resource.AddSingleFile(png);
+		end
+	end
+
+
 	include("expression3/expr_lib.lua");
 
 elseif (CLIENT) then
