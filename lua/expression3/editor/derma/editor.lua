@@ -746,9 +746,7 @@ function PANEL:_OnTextChanged( )
 	end
 
 	if text == "" then return end
-	if not ctrlv then
-		if text == "\n" then return end
-	end
+	if not ctrlv and text == "\n" then return end
 
 	local bSelection = self:HasSelection( )
 
@@ -997,40 +995,10 @@ function PANEL:MovePosition( caret, offset )
 					offset = offset - remainder 
 				else 
 					caret.y = caret.y + offset 
-					-- print(("#"):rep(60))
-					-- print( offset, remainder, utf8.len(tRow), caret.y, self:GetUTF8Offset(caret.x,caret.y), self:GetUTF8Offset(caret.x,caret.y+offset) )
-					-- caret.y = caret.y + self:GetUTF8Offset(caret.x,caret.y)
-					-- print( offset, remainder, utf8.len(tRow), caret.y, self:GetUTF8Offset(caret.x,caret.y), self:GetUTF8Offset(caret.x,caret.y+offset) )
 					break 
 				end 	
 			end 
 		end 
-		/*if istable( self.tRows[caret.x] ) and self.tRows[caret.x].Primary ~= caret.x then
-			while istable( self.tRows[caret.x] ) do
-				caret.x = caret.x + 1
-			end
-			caret.y = 1
-		else 
-			while true do
-				local length = utf8.len( istable( self.tRows[caret.x] ) and self.tRows[caret.x][1] or self.tRows[caret.x] ) - caret.y + 2
-
-				if offset < length then
-					caret.y = caret.y + offset
-					break
-				elseif caret.x == #self.tRows then
-					caret.y = caret.y + length - 1
-					break
-				else
-					if istable( self.tRows[caret.x + 1] ) then
-						caret.x = caret.x + utf8.len( self.tRows[caret.x + 1] )
-					else
-						caret.x = caret.x + 1
-					end
-					offset = offset - length
-					caret.y = 1 + offset
-				end
-			end
-		end*/
 	elseif offset < 0 then
 		offset = -offset
 
@@ -1067,7 +1035,6 @@ end
 
 function PANEL:ScrollCaret( )
 	local Offset = self:GetFoldingOffset( self.Caret.x )
-	self.Caret.y = self.Caret.y - self:GetUTF8Offset( self.Caret.x, self.Caret.y )
 	
 	if self.Caret.x - self.Scroll.x < 1 then
 		self.Scroll.x = self.Caret.x - 1 - Offset
@@ -1125,7 +1092,7 @@ function PANEL:MakeSelection( selection )
 	return MakeSel( selection[1], selection[2] ) 
 end
 
-function PANEL:SelectAll( ) --utf8.len
+function PANEL:SelectAll( ) 
 	self.Caret = Vector2( #self.tRows, istable( self.tRows[#self.tRows] ) and utf8.len( self.tRows[self.tRows[#self.tRows].Primary][1] ) or utf8.len( self.tRows[#self.tRows] ) + 1 )
 	self.Start = Vector2( 1, 1 )
 	-- self:ScrollCaret( )
@@ -1138,46 +1105,58 @@ function PANEL:GetArea( selection )
 	local nStartOffset = self:GetUTF8Offset( start.x, start.y )
 	local nEndOffset = self:GetUTF8Offset( stop.x, stop.y )
 	
-	
 	if start.x == stop.x then
+		local sLine = self.tRows[start.x]
+		local nStartPos = utf8.offset( sLine, start.y-1 ) 
+		local nEndPos = utf8.offset( sLine, stop.y-1 ) 
+		
 		if self.Insert and start.y == stop.y then
 			selection[2].y = selection[2].y + 1
-			
-			text = string_sub( self.tRows[start.x], start.y + nStartOffset, start.y + nEndOffset )
-		else
-			text = string_sub( self.tRows[start.x], start.y + nStartOffset, stop.y - 1 + nEndOffset )
 		end
+		
+		if nEndPos then nEndPos = nEndPos - 1 end 
+		
+		text = utf8.char( utf8.codepoint( sLine, nStartPos, nEndPos ) )
 	else
-		text = string_sub( self.tRows[start.x], start.y + nStartOffset )
+		-- text = string_sub( self.tRows[start.x], utf8.offset( self.tRows[start.x], start.y-1 ) )
+		text = utf8.char( utf8.codepoint( self.tRows[start.x], utf8.offset( self.tRows[start.x], start.y - 1 ), -1 ) )
 		
 		for i = start.x + 1, stop.x - 1 do
 			text = text .. "\n" .. self.tRows[i]
 		end
 		
-		text =  text .. "\n" .. string_sub( self.tRows[stop.x], 1, stop.y - 1 + nEndOffset )
+		text = text .. "\n" .. utf8.char( utf8.codepoint( self.tRows[stop.x], 1, utf8.offset( self.tRows[stop.x], stop.y - 2 ) ) )
 	end
 	
 	self:FoldAll( LinesToFold )
 	
-	return utf8.force( text )
+	if isbool(utf8.len(text)) then 
+		local _, pos = utf8.len(text)
+		print( string.format( "Grabbing invalid utf8 data at position %d in string %q\nSelection start: %s\nSelection end:%s", pos, text, tostring(start), tostring(stop) ) )
+		return utf8.force(text)
+	end 
+	
+	return text
 end
 
 function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 	local buffer = self:GetArea( selection )
 	local start, stop = self:MakeSelection( selection )
 	local LinesToFold = { }
-
+	
 	for line = 1, #self.tRows do
 		LinesToFold[line] = istable( self.tRows[line] )
 		if istable( self.tRows[line] ) then
 			self:ExpandLine( line )
 		end
 	end
-
+	
 	if start != stop then
 		// Merge first and last line
-		self.tRows[start.x] = string_sub( self.tRows[start.x], 1, start.y - 1 + self:GetUTF8Offset( start.x, start.y ) ) .. string_sub( self.tRows[stop.x], stop.y + self:GetUTF8Offset( stop.x, stop.y ) )
-
+		local sFirst = utf8.char( utf8.codepoint( self.tRows[start.x], 1, utf8.offset( self.tRows[start.x], start.y - 2 ) ) )
+		local sLast = utf8.char( utf8.codepoint( self.tRows[stop.x], utf8.offset( self.tRows[stop.x], stop.y - 1 ), -1 ) )
+		self.tRows[start.x] = sFirst .. sLast
+		
 		// Remove deleted lines
 		for i = start.x + 1, stop.x do
 			table_remove( self.tRows, start.x + 1 )
@@ -1185,14 +1164,14 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 			table_remove( LinesToFold, start.x + 1 )
 		end
 	end
-
+	
 	if !text or text == "" then
 		self.pScrollBar:SetUp( self.Size.x, #self.tRows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ) )
 		self:CalculateScroll( )
 		self.tSyntax:Parse( )
 		self:TextChanged( selection, text )
 		if self.bCodeFolding then self.tSyntax:MakeFoldData( ) end
-
+		
 		if isredo then
 			self.Undo[#self.Undo + 1] = { { start:Clone( ), start:Clone( ) },
 				buffer, after, before }
@@ -1211,29 +1190,50 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 			return start
 		end
 	end
-
+	
 	// insert text
 	local rows = string_Explode( "\n", text )
-
-	local remainder = string_sub( self.tRows[start.x], start.y + self:GetUTF8Offset( stop.x, stop.y ) )
-	self.tRows[start.x] = string_sub( self.tRows[start.x], 1, start.y - 1 + self:GetUTF8Offset( stop.x, stop.y ) ) .. rows[1]
-
+	
+	local sFirst, sLast = "", ""
+	if start.y > 1 then 
+		sFirst = utf8.char( utf8.codepoint( self.tRows[start.x], 1, utf8.offset( self.tRows[start.x], start.y-2 ) ) )
+	end 
+	if start.y < utf8.len( self.tRows[start.x]) then 
+		sLast = utf8.char( utf8.codepoint( self.tRows[start.x], utf8.offset( self.tRows[start.x], start.y-1 ), -1 ) )
+	end 
+	
+	self.tRows[start.x] = sFirst .. rows[1]
+	
 	for i = 2, #rows do
 		table_insert( self.tRows, start.x + i - 1, rows[i] )
 		table_insert( LinesToFold, start.x + i - 1, false )
 	end
 	self.tFoldData = { }
-
-	local stop = Vector2( start.x + #rows - 1, utf8.len(self.tRows[start.x + #rows - 1]) + 1 )
-
-	self.tRows[stop.x] = self.tRows[stop.x] .. remainder
-
+	
+	stop = Vector2( start.x + #rows - 1, utf8.len(self.tRows[start.x + #rows - 1]) + 1 )
+	
+	self.tRows[stop.x] = self.tRows[stop.x] .. sLast
+	
+	-- local sFirst = utf8.char( utf8.codepoint( self.tRows[start.x], 1, utf8.offset( self.tRows[start.x], start.y-2 ) ) )
+	-- local sLast = utf8.char( utf8.codepoint( self.tRows[start.x], utf8.offset( self.tRows[start.x], start.y ), -1 ) )
+	-- self.tRows[start.x] = sFirst .. rows[1]
+	
+	-- for i = 2, #rows do
+	-- 	table_insert( self.tRows, start.x + i - 1, rows[i] )
+	-- 	table_insert( LinesToFold, start.x + i - 1, false )
+	-- end
+	-- self.tFoldData = { }
+	
+	-- local stop = Vector2( start.x + #rows - 1, utf8.len(self.tRows[start.x + #rows - 1]) + 1 )
+	
+	-- self.tRows[stop.x] = self.tRows[stop.x] .. sLast
+	
 	self.pScrollBar:SetUp( self.Size.x, #self.tRows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ))
 	self:CalculateScroll( )
 	self.tSyntax:Parse( )
 	self:TextChanged( selection, text )
 	if self.bCodeFolding then self.tSyntax:MakeFoldData( ) end
-
+	
 	if isredo then
 		self.Undo[#self.Undo + 1] = { { start:Clone( ), stop:Clone( ) },
 			buffer, after, before }
@@ -1412,6 +1412,7 @@ end
 
 function PANEL:GetUTF8Offset( nLine, nChar )
 	if not self.bUTF8 then return 0 end 
+	if nLine > #self.tRows then return 0 end 
 	local offset = 0 
 	local pos = 1
 	local infloop = 0
@@ -2006,7 +2007,7 @@ function PANEL:PaintStatus( )
 
 	if self:HasSelection( ) then
 		-- Line = Line .. " Sel: " .. utf8.len( self:GetSelection( ) )
-		Line = Line .. "Sel: " .. (isbool(utf8.len( self:GetSelection( ) )) and -1 or utf8.len( self:GetSelection( ) ))
+		Line = Line .. " Sel: " .. (isbool(utf8.len( self:GetSelection( ) )) and -1 or utf8.len( self:GetSelection( ) ))
 	end
 
 	local Width, Height = surface_GetTextSize( Line )
