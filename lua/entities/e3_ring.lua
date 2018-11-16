@@ -48,7 +48,6 @@ if SERVER then
     local ent = ents.Create("e3_ring");
 
     if ent then
-      ent:SetPos(player:GetPos());
       ent:SetParent(player);
       ent:Spawn();
 
@@ -86,8 +85,7 @@ end
 ]]
 
 function ENT:Initialize()
-  self:SetModel("models/tanknut/cylinder.mdl");--"models/props_phx/construct/glass/glass_curve360x1.mdl");
-  --self:SetModelScale( -1 );
+  self:SetModel("models/tanknut/cylinder.mdl");
   self:SetSolid(SOLID_NONE);
   self:SetMoveType(MOVETYPE_NONE);
   self:DrawShadow(false);
@@ -98,7 +96,9 @@ end
 ]]
 
 function ENT:Think()
+  local player = self:GetParent();
   self:SetAngles( Angle(0, RealTime() * -10, 0) );
+  if (IsValid(player)) then self:SetPos(player:GetPos() + Vector(0, 0, 50) ); end
 end
 
 --[[
