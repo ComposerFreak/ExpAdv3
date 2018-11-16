@@ -74,7 +74,7 @@ if CLIENT then
   local data = {
     ["$basetexture"] = "e3_ring_rt",
     ["$translucent"] = 1,
-    ["$basetexturetransform"] = "center .5 .5 scale -1 1 rotate 0 translate 0 0",
+    --["$basetexturetransform"] = "center .5 .5 scale 1 1 rotate 0 translate 0 0",
   };
 
   EXPR_LIB.RING_RT = EXPR_LIB.RING_RT or GetRenderTarget( "e3_ring_rt", 512, 512);
@@ -86,8 +86,8 @@ end
 ]]
 
 function ENT:Initialize()
-  self:SetModel("models/props_phx/construct/glass/glass_curve360x1.mdl");
-  self:SetModelScale( -1 );
+  self:SetModel("models/tanknut/cylinder.mdl");--"models/props_phx/construct/glass/glass_curve360x1.mdl");
+  --self:SetModelScale( -1 );
   self:SetSolid(SOLID_NONE);
   self:SetMoveType(MOVETYPE_NONE);
   self:DrawShadow(false);
@@ -98,7 +98,23 @@ end
 ]]
 
 function ENT:Think()
-  self:SetAngles( Angle(180, RealTime() * -10, 0) );
+  self:SetAngles( Angle(0, RealTime() * -10, 0) );
+end
+
+--[[
+  Developemnt code.
+]]
+
+if (SERVER) then
+  --[[hook.Add("InitPostEntity", "Epression3.RingTest", function()
+    local ent = ents.Create("e3_ring");
+
+    if ent then
+      ent:SetPos( Vector(147, 210, -11942) );
+      ent:Spawn();
+    end
+  end);]]
+
 end
 
 --[[
@@ -107,14 +123,13 @@ end
 
 if CLIENT then
 
-  local CogColor = Color(150, 34, 34, 255);
-	local CogTexture = surface.GetTextureID("expression 2/cog");
+  local borderColor = Color(150, 34, 34, 255);
 
-  local fone = surface.CreateFont( "E3_Ring_Font", {
+  surface.CreateFont( "E3_Ring_Font", {
   	font = "Arial", -- Use the font-name which is shown to you by your operating system Font Viewer, not the file name
   	extended = false,
-  	size = 50,
-  	weight = 500,
+  	size = 30,
+  	weight = 300,
   	blursize = 0,
   	scanlines = 0,
   	antialias = true,
@@ -123,23 +138,56 @@ if CLIENT then
   	strikeout = false,
   	symbol = false,
   	rotary = false,
-  	shadow = true,
-  	additive = false,
+  	shadow = false,
+  	additive = true,
   	outline = false,
   } );
 
-  function ENT:DrawMaterial()
-      surface.SetDrawColor(0, 0, 0, 0);
-      surface.DrawRect(0, 100, 512, 100);
+  surface.CreateFont( "E3_Ring_Font_Smaller", {
+  	font = "Arial", -- Use the font-name which is shown to you by your operating system Font Viewer, not the file name
+  	extended = false,
+  	size = 16,
+  	weight = 300,
+  	blursize = 0,
+  	scanlines = 1,
+  	antialias = true,
+  	underline = false,
+  	italic = false,
+  	strikeout = false,
+  	symbol = false,
+  	rotary = false,
+  	shadow = false,
+  	additive = true,
+  	outline = false,
+  } );
 
-      surface.SetTexture(CogTexture);
-			surface.SetDrawColor(CogColor.r, CogColor.g, CogColor.b, 255);
-			surface.DrawTexturedRectRotated(50, 150, 80, 80, RealTime() * 10);
 
-      draw.DrawText( "Expression Three", "E3_Ring_Font", 290, 130, CogColor, TEXT_ALIGN_CENTER );
+  local y = 256;
+  local h = 50;
+  local b = 5;
+
+  function ENT:GetPlayerName()
+    local ply = self:GetParent();
+
+    if not IsValid(ply) or not ply:IsPlayer() then
+      return "This player";
+    end
+
+    return ply:GetName();
   end
 
-  function ENT:Draw()
+  function ENT:DrawBackGround()
+    surface.SetDrawColor(borderColor.r, borderColor.g, borderColor.b, 150);
+    surface.DrawRect(0, y - ((h * 0.5) + b), 512, b);
+
+    surface.SetDrawColor(100, 0, 0, 100);
+    surface.DrawRect(0, y - (h * 0.5), 512, h);
+
+    surface.SetDrawColor(borderColor.r, borderColor.g, borderColor.b, 150);
+    surface.DrawRect(0, y + ((h * 0.5) - b), 512, b);
+  end
+
+  function ENT:DrawOutsideMaterial()
     local w, h = ScrW(), ScrH();
 
     render.PushRenderTarget(EXPR_LIB.RING_RT);
@@ -147,16 +195,45 @@ if CLIENT then
       render.SetViewPort(0, 0, 512, 512);
         cam.Start2D();
 
-          self:DrawMaterial();
+          self:DrawBackGround();
 
-        cam.End2D()
-      render.SetViewPort(0, 0, w, h);
-    render.SetRenderTarget();
+          draw.DrawText( self:GetPlayerName() .. " is currently edditing", "E3_Ring_Font_Smaller", 256, y - 26, Color(255, 100, 100, 100), TEXT_ALIGN_CENTER );
+          draw.DrawText( "Expression Advanced Three", "E3_Ring_Font", 256, y - 10, borderColor, TEXT_ALIGN_CENTER );
 
-    EXPR_LIB.RING_MAT:SetTexture("$basetexture", EXPR_LIB.RING_RT);
+          cam.End2D()
+        render.SetViewPort(0, 0, w, h);
+      render.SetRenderTarget();
+
+      EXPR_LIB.RING_MAT:SetTexture("$basetexture", EXPR_LIB.RING_RT);
+  end
+
+  function ENT:DrawInsideMaterial()
+    local w, h = ScrW(), ScrH();
+
+    render.PushRenderTarget(EXPR_LIB.RING_RT);
+      render.Clear(0, 0, 0, 0);
+      render.SetViewPort(0, 0, 512, 512);
+        cam.Start2D();
+
+          self:DrawBackGround();
+
+          cam.End2D()
+        render.SetViewPort(0, 0, w, h);
+      render.SetRenderTarget();
+
+      EXPR_LIB.RING_MAT:SetTexture("$basetexture", EXPR_LIB.RING_RT);
+  end
+
+  function ENT:Draw()
 
     render.MaterialOverride(EXPR_LIB.RING_MAT);
 
+    self:DrawInsideMaterial();
+    self:SetModelScale(-1);
+    self:DrawModel();
+
+    self:DrawOutsideMaterial();
+    self:SetModelScale(1);
     self:DrawModel();
 
     render.MaterialOverride();

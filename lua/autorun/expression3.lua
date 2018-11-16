@@ -76,10 +76,10 @@ if (SERVER) then
 	AddCSLuaFile("expression3/editor/derma/console2.lua");
 	AddCSLuaFile("expression3/editor/expr_editor_lib.lua");
 
-	AddCSLuaFile( "expression3/editor/derma/syntax.lua" )
-	AddCSLuaFile( "expression3/editor/derma/syntax/syntax_e3.lua" )
-	AddCSLuaFile( "expression3/editor/derma/syntax/syntax_lua.lua" )
-	AddCSLuaFile( "expression3/editor/derma/syntax/syntax_console.lua" )
+	AddCSLuaFile("expression3/editor/derma/syntax.lua");
+	AddCSLuaFile("expression3/editor/derma/syntax/syntax_e3.lua");
+	AddCSLuaFile("expression3/editor/derma/syntax/syntax_lua.lua");
+	AddCSLuaFile("expression3/editor/derma/syntax/syntax_console.lua");
 
 	AddCSLuaFile("expression3/wiki.lua");
 	AddCSLuaFile("expression3/wiki_inc.lua");
