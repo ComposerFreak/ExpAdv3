@@ -3343,6 +3343,7 @@ function COMPILER.Compile_FOR(this, inst, token, data)
 	this:AssignVariable(token, true, var, class, nil);
 
 	this:Compile(data.block);
+	this:addInstructionToBuffer(inst, data.block);
 
 	this:PopScope();
 
