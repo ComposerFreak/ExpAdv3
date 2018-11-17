@@ -501,7 +501,13 @@ if SERVER then
 end
 
 function ENT:SendNetMessage(name, target, ...)
-	--print("SendNetMessage", name, target, ...)
+
+	if CLIENT then
+		if IsValid(target) and target == LocalPlayer() then
+			self:ReceiveNetMessage(name, target, {...});
+		end
+	end
+
 	net.Start("Expression3.EntMessage");
 
 	net.WriteEntity(self);
