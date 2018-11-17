@@ -103,7 +103,7 @@ function CONTEXT.New()
 	tbl.cpu_average = 0;
 	tbl.cpu_samples = {};
 	tbl.cpu_warning = false;
-	
+
 	return setmetatable(tbl, CONTEXT);
 end
 
@@ -125,6 +125,7 @@ function CONTEXT:SetPerm(player, perm, value)
 end
 
 function CONTEXT:HasPerm(player, perm)
+	if not IsValid(player) then return false; end
 	if (self.player == player) then return true; end
 
 	local id = player:AccountID();

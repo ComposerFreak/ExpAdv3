@@ -892,7 +892,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 			local arg = result[2];
 
 			if (result[3]) then
-				-- TODO: CAST
+				casted = this:CastExpression(this, data.class, data.expressions[i]);
 			end
 
 			if (not casted) then
@@ -967,7 +967,7 @@ function COMPILER.Compile_LOCAL(this, inst, token, data)
 			local arg = result[2];
 
 			if (result[3]) then
-				-- TODO: CAST
+				casted = this:CastExpression(this, data.class, data.expressions[i]);
 			end
 
 			if (not casted) then
@@ -2346,7 +2346,13 @@ function COMPILER.CastExpression(this, type, expr)
 
 	local op = this:CastUserType(type, expr.result);
 
-	if (not op) then
+	if op then
+		local temp = table.Copy(expr);
+
+		expr.buffer = {};
+
+		this:addInstructionToBuffer(expr, temp);
+	else
 		local signature = string_format("(%s)%s", type, expr.result);
 
 		op = EXPR_CAST_OPERATORS[signature];
@@ -2358,14 +2364,14 @@ function COMPILER.CastExpression(this, type, expr)
 		if (not this:CheckState(op.state)) then
 			return false, expr;
 		end
-	end
 
-	if (op.operator) then
-		local temp = table.Copy(expr);
+		if (op.operator) then
+			local temp = table.Copy(expr);
 
-		expr.buffer = {};
+			expr.buffer = {};
 
-		this:addInstructionToBuffer(expr, temp);
+			this:writeOperationCall(expr, op, temp);
+		end
 	end
 
 	expr.result = op.result;
@@ -3339,11 +3345,11 @@ function COMPILER.Compile_FOR(this, inst, token, data)
 	this:writeToBuffer(inst, " do\n");
 
 	this:PushScope();
-	this:SetOption("loop", true);
-	this:AssignVariable(token, true, var, class, nil);
+		this:SetOption("loop", true);
+		this:AssignVariable(token, true, var, class, nil);
 
-	this:Compile(data.block);
-	this:addInstructionToBuffer(inst, data.block);
+		this:Compile(data.block);
+		this:addInstructionToBuffer(inst, data.block);
 
 	this:PopScope();
 
