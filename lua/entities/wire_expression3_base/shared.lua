@@ -602,25 +602,38 @@ end
 
 function ENT:NetChatMessage(target, values)
 
-	if SERVER and self.context then
-		return self.context:HasPerm(target, "SendToChat");
-	elseif CLIENT then
-		chat.AddText( unpack(values) );
-	else
-		return true;
+	local context = self.context;
+
+	if context then
+		if not context:HasPerm(target, "SendToChat") then
+			return false;
+		end
 	end
+
+	if CLIENT then
+		chat.AddText( unpack(values) );
+	end
+
+	return true;
+
 end
 
 
 function ENT:NetGolemMessage(target, values)
 
-	if SERVER and self.context then
-		return self.context:HasPerm(target, "SendToGolem");
-	elseif CLIENT then
-		Golem.Print( unpack(values) );
-	else
-		return true;
+	local context = self.context;
+
+	if context then
+		if not context:HasPerm(target, "SendToGolem") then
+			return false;
+		end
 	end
+
+	if CLIENT then
+		Golem.Print( unpack(values) );
+	end
+
+	return true;
 end
 
 --[[
