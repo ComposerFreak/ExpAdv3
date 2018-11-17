@@ -98,7 +98,7 @@ end
 function ENT:Think()
   local player = self:GetParent();
   self:SetAngles( Angle(0, RealTime() * -10, 0) );
-  if (IsValid(player)) then self:SetPos(player:GetPos() + Vector(0, 0, 50) ); end
+  if (IsValid(player)) then self:SetPos(player:GetPos() + Vector(0, 0, 20) ); end
 end
 
 --[[
