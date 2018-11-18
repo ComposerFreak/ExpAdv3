@@ -1,11 +1,11 @@
 --[[
-	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____   
-	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J  
-	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L 
-	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  ( 
-	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J 
+	   ____      _  _      ___    ___       ____      ___      ___     __     ____      _  _          _        ___     _  _       ____
+	  F ___J    FJ  LJ    F _ ", F _ ",    F ___J    F __".   F __".   FJ    F __ ]    F L L]        /.\      F __".  FJ  L]     F___ J
+	 J |___:    J \/ F   J `-' |J `-'(|   J |___:   J (___|  J (___|  J  L  J |--| L  J   \| L      //_\\    J |--\ LJ |  | L    `-__| L
+	 | _____|   /    \   |  __/F|  _  L   | _____|  J\___ \  J\___ \  |  |  | |  | |  | |\   |     / ___ \   | |  J |J J  F L     |__  (
+	 F L____:  /  /\  \  F |__/ F |_\  L  F L____: .--___) \.--___) \ F  J  F L__J J  F L\\  J    / L___J \  F L__J |J\ \/ /F  .-____] J
 	J________LJ__//\\__LJ__|   J__| \\__LJ________LJ\______JJ\______JJ____LJ\______/FJ__L \\__L  J__L   J__LJ______/F \\__//   J\______/F
-	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F 
+	|________||__/  \__||__L   |__|  J__||________| J______F J______F|____| J______F |__L  J__|  |__L   J__||______F   \__/     J______F
 
 	Based on my EA2 Holograms, They are my EA2 holograms :P
 ]]
@@ -33,7 +33,7 @@ local function NewInfoTable( )
 		SCALEY = 1,
 		SCALEZ = 1,
 		CLIPS = { },
-		BONES = { } 
+		BONES = { }
 	};
 end
 
@@ -62,7 +62,7 @@ local function NewBoneTable( )
 		ANGLEY = 0,
 		ANGLER = 0
 	};
-end 
+end
 
 --[[
 	Hologram Info Linking
@@ -112,9 +112,9 @@ function ENT:Initialize( )
 	LinkHoloInfo( self );
 
 	if CLIENT then return self:ApplyHoloInfo( ) end
-	
+
 	self.PlyID = IsValid( self.player ) and self.player:UniqueID( ) or "";
-	
+
 	self:SetSolid( SOLID_NONE );
 	self:SetMoveType( MOVETYPE_NONE );
 	self:DrawShadow( false );
@@ -157,13 +157,13 @@ if SERVER then
 			self.SYNC_SCALEX = nil
 			net.WriteFloat( self.INFO.SCALEX )
 		end
-		
+
 		net.WriteBit( self.SYNC_SCALEY )
 		if self.SYNC_SCALEY then
 			self.SYNC_SCALEY = nil
 			net.WriteFloat( self.INFO.SCALEY )
 		end
-		
+
 		net.WriteBit( self.SYNC_SCALEZ )
 		if self.SYNC_SCALEZ then
 			self.SYNC_SCALEZ = nil
@@ -172,25 +172,25 @@ if SERVER then
 	end
 
 	function ENT:SyncInfoForced( )
-	
+
 		net.WriteBit( self.INFO.VISIBLE )
 		net.WriteBit( self.INFO.SHADING )
 
 		net.WriteBit( true )
 		net.WriteFloat( self.INFO.SCALEX )
-		
+
 		net.WriteBit( true )
 		net.WriteFloat( self.INFO.SCALEY )
-		
+
 		net.WriteBit( true )
 		net.WriteFloat( self.INFO.SCALEZ )
-		
+
 	end
 
 	ClipQueue = { }
 
 	function ENT:SyncClips( Forced )
-		
+
 		if Forced then return self:SyncClipsForced( ) end
 
 		for ID, _ in pairs( self.SYNC_CLIPS ) do
@@ -252,7 +252,7 @@ if SERVER then
 	end
 
 	function ENT:SyncClipsForced( Forced )
-		
+
 		for ID, Info in pairs( self.CLIPS ) do
 
 			net.WriteUInt( ID, 16 )
@@ -289,7 +289,7 @@ if SERVER then
 	BoneQueue = { }
 
 	function ENT:SyncBones( Forced )
-		
+
 		if Forced then return self:SyncBonesForced( ) end
 
 		for ID, _ in pairs( self.SYNC_BONES ) do
@@ -361,9 +361,9 @@ if SERVER then
 	end
 
 	function ENT:SyncBonesForced( Forced )
-		
+
 		for ID, Info in pairs( self.BONES ) do
-			
+
 			net.WriteBit( Info.JIGGLE )
 
 			net.WriteBit( true )
@@ -400,7 +400,7 @@ if SERVER then
 	end
 
 	function ENT:SyncClient( Force )
-		
+
 		net.WriteUInt( self:EntIndex( ), 16 )
 
 		if self.INFO.FORCEFIRST then
@@ -450,9 +450,9 @@ if SERVER then
 
 		local Block = BlockQueue[ PlyID ]
 		local UnBlock = UnblockQueue[ PlyID ]
-			
+
 		if !Block and !UnBlock then return end
-			
+
 		net.Start( "Expression3.Hologram.Block" )
 
 			if Block then
@@ -507,11 +507,11 @@ if SERVER then
 
 		if NeedsUpdate then
 			net.Start( "Expression3.Hologram" )
-			
+
 			for ID, _ in pairs( RemoveQueue ) do
 				net.WriteUInt( ID, 16 )
 			end
-			
+
 			net.WriteUInt( 0, 16 )
 
 			RemoveQueue = { }
@@ -523,10 +523,10 @@ if SERVER then
 			end
 
 			net.WriteUInt( 0, 16 )
-			
+
 			net.Broadcast( )
 		end
-		
+
 		for _, Player in pairs( player.GetAll( ) ) do
 			SyncBlockedHolograms( Player )
 		end
@@ -540,14 +540,14 @@ elseif CLIENT then -- End of <if SERVER>
 
 		Info.VISIBLE = net.ReadBit( ) == 1
 		Info.SHADING = net.ReadBit( ) == 1
-		
+
 		if net.ReadBit( ) == 1 then Info.SCALEX = net.ReadFloat( ) end
 		if net.ReadBit( ) == 1 then Info.SCALEY = net.ReadFloat( ) end
 		if net.ReadBit( ) == 1 then Info.SCALEZ = net.ReadFloat( ) end
 	end
 
 	local function UpdateClips( Key )
-		
+
 		local Clips = INFOTABLE[ Key ].CLIPS
 
 		local ID = net.ReadUInt( 16 )
@@ -610,12 +610,12 @@ elseif CLIENT then -- End of <if SERVER>
 	net.Receive( "Expression3.Hologram", function( Len )
 
 		local RemoveID = net.ReadUInt( 16 )
-		
+
 		while RemoveID ~= 0 do
 			INFOTABLE[ RemoveID ] = nil
 			RemoveID = net.ReadUInt( 16 )
 		end
-		
+
 		local Key = net.ReadUInt( 16 )
 
 		while Key ~= 0 do
@@ -623,7 +623,7 @@ elseif CLIENT then -- End of <if SERVER>
 			local Info = INFOTABLE[ Key ] or NewInfoTable( )
 			INFOTABLE[ Key ] = Info
 
-			if net.ReadBit( ) == 1 then 
+			if net.ReadBit( ) == 1 then
 				Info.PlyID = net.ReadString( )
 			end
 
@@ -642,7 +642,7 @@ elseif CLIENT then -- End of <if SERVER>
 
 	net.Receive( "Expression3.Hologram.Block", function( Len )
 		local BlockID = net.ReadUInt( 16 )
-		
+
 		while BlockID ~= 0 do
 			local Info = INFOTABLE[ BlockID ]
 			if Info then Info.BLOCKED = true end
@@ -651,7 +651,7 @@ elseif CLIENT then -- End of <if SERVER>
 		end
 
 		local UnblockID = net.ReadUInt( 16 )
-		
+
 		while UnblockID ~= 0 do
 			local Info = INFOTABLE[ UnblockID ]
 			if Info then Info.BLOCKED = false end
@@ -685,7 +685,7 @@ if SERVER then
 	-- Scale:
 
 	function ENT:SetScale( Scale )
-		local ScaleLimit = Component:ReadSetting( "size", 50 )
+		local ScaleLimit = 50;
 
 		local X = math.Clamp( Scale.x, -ScaleLimit, ScaleLimit )
 		local Y = math.Clamp( Scale.y, -ScaleLimit, ScaleLimit )
@@ -730,7 +730,7 @@ if SERVER then
 	end
 
 	-- Clipping:
-	
+
 	function ENT:PushClip( ID, Origin, Normal, Global )
 		self:SetClipOrigin( ID, Origin )
 		self:SetClipNormal( ID, Normal )
@@ -738,20 +738,20 @@ if SERVER then
 	end
 
 	function ENT:SetClipEnabled( ID, bEnable )
-		if ID < 1 or ID > Component:ReadSetting( "clips", 5 ) then return end
-		
+		if ID < 1 or ID > 5 then return end
+
 		self.CLIPS[ ID ] = self.CLIPS[ ID ] or NewClippingTable( )
 
 		self.CLIPS[ ID ].ENABLED = bEnable
 
 		self.SYNC_CLIPS[ ID ] = true
-		
+
 		ClipQueue[ self ] = true
 	end
 
 	function ENT:SetClipOrigin( ID, Vector )
-		if ID < 1 or ID > Component:ReadSetting( "clips", 5 ) then return end
-		
+		if ID < 1 or ID > 5 then return end
+
 		self.CLIPS[ ID ] = self.CLIPS[ ID ] or NewClippingTable( )
 
 		local Clip = self.CLIPS[ ID ]
@@ -784,15 +784,15 @@ if SERVER then
 		self.SYNC_CLIPS[ ID ] = self.CLIPS[ ID ].Global ~= Bool
 
 		self.CLIPS[ ID ].Global = Bool
-		
+
 		if self.SYNC_CLIPS[ ID ] == true then
 			ClipQueue[ self ] = true
 		end
 	end
 
 	function ENT:SetClipNormal( ID, Vector )
-		if ID < 1 or ID > Component:ReadSetting( "clips", 5 ) then return end
-		
+		if ID < 1 or ID > 5 then return end
+
 		self.CLIPS[ ID ] = self.CLIPS[ ID ] or NewClippingTable( )
 
 		local Clip = self.CLIPS[ ID ]
@@ -830,7 +830,7 @@ if SERVER then
 	end
 
 	-- Bones:
-	
+
 	function ENT:SetBoneJiggle( ID, bJiggle )
 		if ID < 1 or ID > self:GetBoneCount( ) then return end
 
@@ -850,7 +850,7 @@ if SERVER then
 
 	function ENT:SetBonePos( ID, Vector )
 		if ID < 1 or ID > self:GetBoneCount( ) then return end
-		
+
 		self:ManipulateBonePosition( ID - 1, Vector )
 
 		self.BONES[ ID ] = self.BONES[ ID ] or NewBoneTable( )
@@ -878,13 +878,13 @@ if SERVER then
 
 	function ENT:GetBonePos( ID )
 		if ID < 1 or ID > self:GetBoneCount( ) then return Vector( 0, 0, 0 ) end
-		
+
 		return self:GetManipulateBonePosition( ID - 1 )
 	end
 
 	function ENT:SetBoneScale( ID, Vector )
 		if ID < 1 or ID > self:GetBoneCount( ) then return end
-		
+
 		self:ManipulateBoneScale( ID - 1, Vector )
 
 		self.BONES[ ID ] = self.BONES[ ID ] or NewBoneTable( )
@@ -912,7 +912,7 @@ if SERVER then
 
 	function ENT:GetBoneScale( ID )
 		if ID < 1 or ID > self:GetBoneCount( ) then return Vector( 0, 0, 0 ) end
-		
+
 		return self:GetManipulateBoneScale( ID - 1 )
 	end
 
@@ -920,7 +920,7 @@ if SERVER then
 		if ID < 1 or ID > self:GetBoneCount( ) then return end
 
 		self:ManipulateBoneAngles( ID - 1, Angle )
-		
+
 		self.BONES[ ID ] = self.BONES[ ID ] or NewBoneTable( )
 
 		local Clip = self.BONES[ ID ]
@@ -946,7 +946,7 @@ if SERVER then
 
 	function ENT:GetBoneAngle( ID )
 		if ID < 1 or ID > self:GetBoneCount( ) then return Angle( 0, 0, 0 ) end
-		
+
 		return self:GetManipulateBoneAngles( ID - 1 )
 	end
 
@@ -959,7 +959,7 @@ if SERVER then
 	end
 
 	-- Automation for spoofing animations:
-	
+
 	function ENT:MoveTo( Vector, Speed )
 		self.MOVETO = Vector
 		self.MOVEDIR = nil
@@ -997,7 +997,7 @@ if SERVER then
 	end
 
 	function ENT:ScaleTo( Scale, Speed )
-		local ScaleLimit = Component:ReadSetting( "size", 50 )
+		local ScaleLimit = 50;
 		local NewScale = Vector( math.Clamp( Scale.x, -ScaleLimit, ScaleLimit ), math.Clamp( Scale.y, -ScaleLimit, ScaleLimit ), math.Clamp( Scale.z, -ScaleLimit, ScaleLimit ) )
 
 		self.SCALETO = NewScale
@@ -1068,7 +1068,7 @@ if SERVER then
 	end
 
 	-- Block a player from seeing a hologram:
-	
+
 	function ENT:BlockPlayer( Player )
 		local PlyID = Player:UniqueID( )
 
@@ -1085,7 +1085,7 @@ if SERVER then
 		local PlyID = Player:UniqueID( )
 
 		if !self.BLOCKED_IDS[ PlyID ] then return end
-		
+
 		self.BLOCKED_IDS[ PlyID ] = nil
 
 		UnblockQueue[ PlyID ] = UnblockQueue[ PlyID ] or { }
@@ -1114,7 +1114,7 @@ function ENT:Draw( )
 	if !Info or !Info.VISIBLE or Info.BLOCKED then return end
 
 	local PlyID = Info.PlyID
-	
+
 	if BlockedPlayers[PlyID] then return end
 
 	if self:GetColor( ).a ~= 255 then
@@ -1126,36 +1126,36 @@ function ENT:Draw( )
 	local Pushed, State
 
 	if Info.CLIPS then
-		
+
 		Pushed = 0
 		State = render.EnableClipping( true )
 
 		for _, Clip in pairs( Info.CLIPS ) do
-			
+
 			if !Clip.ENABLED then continue end
 
 			local Normal = Vector( Clip.NORMALX, Clip.NORMALY, Clip.NORMALZ )
-			
+
 			local Origin = Vector( Clip.ORIGINX, Clip.ORIGINY, Clip.ORIGINZ )
 
 			if !Clip.Global then
-				Normal = self:LocalToWorld( Normal ) - self:GetPos( ) 
-						
+				Normal = self:LocalToWorld( Normal ) - self:GetPos( )
+
 				Origin = self:LocalToWorld( Origin )
 			end
-					
+
 			render.PushCustomClipPlane( Normal, Normal:Dot( Origin ) )
-					
+
 			Pushed = Pushed + 1
-		
+
 		end
 
 	end
 
 	render.SuppressEngineLighting( !Info.SHADING )
-			
+
 	self:DrawModel( )
-		
+
 	render.SuppressEngineLighting( false )
 
 	if Info.CLIPS then
@@ -1163,23 +1163,23 @@ function ENT:Draw( )
 		for I = 1, Pushed do
 			render.PopCustomClipPlane( )
 		end
-			
+
 		render.EnableClipping( State )
 	end
 
 end
 
 hook.Add("HUDPaint", "Expression3.Hologram", function( )
-	
+
 	for ID, Info in pairs( INFOTABLE ) do
 		local ENT = Entity( ID )
-		
+
 		if IsValid( ENT ) then
 			local PlyID = Info.PlyID
 			local Owner = player.GetByUniqueID( PlyID )
 
 			if LabeledPlayers[PlyID] and !BlockedPlayers[PlyID] then
-				
+
 				local ScreenData = ENT:GetPos( ):ToScreen( )
 
 				if !ScreenData.visible then return end
@@ -1205,7 +1205,7 @@ function ENT:ApplyHoloInfo( )
 	local Scale = Vector( Info.SCALEX, Info.SCALEY, Info.SCALEZ )
 
 	if BoneCount > 1 then
-		
+
 		for I = BoneCount, 0 do
 			local BoneScale = Scale
 
@@ -1217,12 +1217,12 @@ function ENT:ApplyHoloInfo( )
 					BoneScale = Vector( Bone.SCALEY, Bone.SCALEX, Bone.SCALEZ )
 				end
 			end
-		
+
 			self:ManipulateBoneScale( I, BoneScale )
 		end
 
 	elseif self.EnableMatrix then
-		
+
 		local ScaleMatrix = Matrix( )
 
 		ScaleMatrix:Scale( Scale )
@@ -1238,7 +1238,7 @@ function ENT:ApplyHoloInfo( )
 	if self.BONES then
 
 		for I, BoneData in pairs( self.BONES ) do
-				
+
 			self:ManipulateBoneJiggle( I - 1, BoneData.JIGGLE and 1 or 0 )
 
 			self:ManipulateBonePosition( I - 1, Vector( BoneData.POSX, BoneData.POSY, BoneData.POSZ ) )
