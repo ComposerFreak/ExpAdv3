@@ -119,9 +119,7 @@ function TOOL:RightClick( Trace )
 	if (SERVER) then
 		self:GetOwner():SendLua( [[
 		if (Golem) then
-			local editor = Golem.GetInstance();
-			editor:SetVisible(true);
-			editor:MakePopup();
+			Golem.Open();
 		end]]);
 	end
 end

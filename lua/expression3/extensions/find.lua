@@ -503,7 +503,7 @@ extension:RegisterMethod("ed", "toArray", "", "t", 1, function(a)
 	local t = {};
 
 	for k, v in pairs( a.a ) do
-		t[k] = v;
+		t[k] = {"e", v};
 	end
 
 	return {tbl = t, children = {}, parents = {}, size = #t};

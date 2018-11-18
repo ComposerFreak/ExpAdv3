@@ -110,6 +110,8 @@ extension:RegisterMethod("e", "getModel", "", "s", 1, "GetModel");
 
 extension:RegisterMethod("e", "id", "", "n", 1, "EntIndex");
 
+extension:RegisterMethod("e", "parent", "", "e", 1, "GetParent");
+
 --[[
 	Position & Angle
 ]]
@@ -877,7 +879,7 @@ if applyForce:GetBool() then
 			local ph = e:GetPhysicsObject();
 
 			if IsValid(ph) then
-				phys:ApplyForceCenter(v);
+				ph:ApplyForceCenter(v);
 			end
 		end
 	end, false);
@@ -887,7 +889,7 @@ if applyForce:GetBool() then
 			local ph = e:GetPhysicsObject();
 
 			if IsValid(ph) then
-				phys:ApplyForceOffset(v);
+				ph:ApplyForceOffset(v);
 			end
 		end
 	end, false);
@@ -907,7 +909,7 @@ if applyForce:GetBool() then
 			local e = ph:GetEntity();
 
 			if context:CanUseEntity(e) then
-				phys:ApplyForceCenter(v);
+				ph:ApplyForceCenter(v);
 			end
 		end
 	end, false);
@@ -917,7 +919,7 @@ if applyForce:GetBool() then
 			local e = ph:GetEntity();
 
 			if context:CanUseEntity(e) then
-				phys:ApplyForceOffset(v);
+				ph:ApplyForceOffset(v);
 			end
 		end
 	end, false);
