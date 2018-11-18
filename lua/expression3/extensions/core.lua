@@ -182,11 +182,11 @@ function ext_core.PostLoadClasses(this, classes)
 		local id = c.id;
 
 		if (id ~= "_vr" and id ~= "") then
-			ext_core:RegisterCastingOperator(id, "vr", function(ctx, obj)
+			ext_core:RegisterCastingOperator("vr", id, function(ctx, obj)
 				return {id, obj};
 			end);
 
-			ext_core:RegisterCastingOperator("vr", id, function(ctx, vr)
+			ext_core:RegisterCastingOperator(id, "vr", function(ctx, vr)
 				if (not vr or not vr[1] or vr[2] == nil) then
 					ctx:Throw("attempt to cast variant of type nil to " .. c.name);
 				end
