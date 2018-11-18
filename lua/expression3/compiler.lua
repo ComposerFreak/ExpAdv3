@@ -2595,7 +2595,7 @@ local function getMethod(mClass, userclass, method, ...)
 
 	local sig = string_format("%s.%s(%s)", mClass, method, prams);
 
-	local op EXPR_METHODS[sig];
+	local op = EXPR_METHODS[sig];
 
 	if op then return op; end
 
