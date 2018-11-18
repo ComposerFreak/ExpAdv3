@@ -2602,9 +2602,8 @@ local function getMethod(mClass, userclass, method, ...)
 	local class = E3Class(mClass);
 
 	if (class and class.base) then
-			local op = getMethod(class.base, userclass, method, ...)
-			if (op) then return op; end
-		end
+		local op = getMethod(class.base, userclass, method, ...)
+		if (op) then return op; end
 	end
 end
 
