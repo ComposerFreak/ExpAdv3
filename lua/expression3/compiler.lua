@@ -892,7 +892,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 			local arg = result[2];
 
 			if (result[3]) then
-				casted = this:CastExpression(this, data.class, data.expressions[i]);
+				casted = this:CastExpression(data.class, data.expressions[i]);
 			end
 
 			if (not casted) then
@@ -967,7 +967,7 @@ function COMPILER.Compile_LOCAL(this, inst, token, data)
 			local arg = result[2];
 
 			if (result[3]) then
-				casted = this:CastExpression(this, data.class, data.expressions[i]);
+				casted = this:CastExpression(data.class, data.expressions[i]);
 			end
 
 			if (not casted) then
@@ -2392,6 +2392,8 @@ function COMPILER.Compile_CAST(this, inst, token, data)
 		this:Throw(token, "Type of %s can not be cast to type of %s.", name(expr.result), name(data.class))
 	end
 
+	this:addInstructionToBuffer(inst, expr);
+
 	return expr.result, expr.rCount, expr.price;
 end
 
@@ -3177,33 +3179,48 @@ function COMPILER.Compile_GET(this, inst, token, data)
 
 	local op;
 	local keepid = false;
-	local cls = data.class;
+	local class = data.class;
 
-	if (not cls) then
+	local op_result = "";
+	local op_count = 0;
+
+	if (not class) then
 		op = this:GetOperator("get", vType, iType);
 
 		if (not op) then
 			this:Throw(token, "No such get operation %s[%s]", name(vType), name(iType));
 		end
-	else
-		op = this:GetOperator("get", vType, iType, cls.data);
 
-		if (not op) then
+		op_result = op.result;
+		op_count = op.rCount;
+
+	else
+		op = this:GetOperator("get", vType, iType, class);
+
+		if (op) then
+			op_result = op.result;
+			op_count = op.rCount;
+		else
 			keepid = true;
 
 			op = this:GetOperator("get", vType, iType, "_cls");
 
 			if (op) then
-				if (op.result == "") then
-					op.result = cls.data;
-					op.rCount = 1;
+				op_result = op.result;
+				op_count = op.rCount;
+
+				if (op_result == "" or op_result == "_nil") then
+					op_result = cls;
+					op_count = 1;
 				end
 			end
 		end
 
+		print("GET CLASS: ", class, "returns", op_result, op_count);
+
 		if (not op) then
 			if cls then
-				this:Throw(token, "No such get operation %s[%s,%s]", name(vType), name(iType), name(cls.data));
+				this:Throw(token, "No such get operation %s[%s,%s]", name(vType), name(iType), name(class));
 			else
 				this:Throw(token, "No such get operation %s[%s]", name(vType), name(iType));
 			end
@@ -3221,20 +3238,20 @@ function COMPILER.Compile_GET(this, inst, token, data)
 
 		this:writeToBuffer(inst, "]");
 
-		return op.result, op.rCount, (op.price + vPrice + iPrice);
+		return op_result, op_count, (op.price + vPrice + iPrice);
 	end
 
 	if (keepid) then
-		this:writeOperationCall(inst, op, value, index, string_format("%q", cls.data));
+		this:writeOperationCall(inst, op, value, index, string_format("%q", class));
 	else
 		this:writeOperationCall(inst, op, value, index);
 	end
 
-	if (cls) then
-		return cls.data, 1, (op.price + vPrice + iPrice);
+	if (class) then
+		return class, 1, (op.price + vPrice + iPrice);
 	end
 
-	return op.result, op.rCount, (op.price + vPrice + iPrice);
+	return op_result, op_count, (op.price + vPrice + iPrice);
 end
 
 function COMPILER.Compile_SET(this, inst, token, data)

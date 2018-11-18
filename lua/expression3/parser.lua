@@ -1943,6 +1943,7 @@ function PARSER.Expression_Trailing(this, expr)
 				expr = this:EndInstruction(inst, {expr = expr; var = varToken});
 			end
 		elseif (this:Accept("lsb")) then
+			local class;
 			local lsb = this.__token;
 
 			local inst = this:StartInstruction("get", expr.token);
@@ -1956,6 +1957,10 @@ function PARSER.Expression_Trailing(this, expr)
 			if (this:Accept("com")) then
 
 				this:Require("typ", "Class expected for index operator, after coma (,).");
+
+				class = E3Class(this.__token.data);
+
+				if (class) then class = class.id; end
 			end
 
 			this:Require("rsb", "Right square bracket (]) expected to close index operator.");
@@ -1965,7 +1970,7 @@ function PARSER.Expression_Trailing(this, expr)
 				break;
 			end
 
-			expr = this:EndInstruction(inst, {expressions = expressions});
+			expr = this:EndInstruction(inst, {expressions = expressions, class = class});
 		elseif (this:Accept("lpa")) then
 			local inst = this:StartInstruction("call", expr.token);
 
