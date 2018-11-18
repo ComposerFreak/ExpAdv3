@@ -49,18 +49,21 @@ function Syntax:FindValidLines( )
 		local sStringType = false 
 		local Line = self.dEditor.tRows[Row]
 		
-		while Char < #Line do 
+		while Char < utf8.len(Line) do 
 			Char = Char + 1
-			local offset = utf8.offset( Line, 0, Char )
+			/*local offset = utf8.offset( Line, 0, Char )
 			if offset ~= Char then -- Ignore utf8 chars
 				local n = offset 
 				while true do 
+					print( Char, n, offset, Line, #Line )
 					Char = utf8.offset( Line, 0, n )
 					if Char ~= offset then break end 
 					n = n + 1
 				end 
 			end 
-			local Text = Line[Char]
+			local Text = Line[Char]*/
+			local nOffset = utf8.offset( Line, Char )
+			local Text = utf8.char( utf8.codepoint( Line, nOffset, nOffset ) )
 			
 			if bMultilineComment then 
 				if Text == "/" and Line[Char-1] == "*" then 
@@ -88,11 +91,11 @@ function Syntax:FindValidLines( )
 			
 			if Text == "/" then 
 				if Line[Char+1] == "/" then // SingleLine comment
-					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
+					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, utf8.len(Line) + 1 } }
 					break 
 				elseif Line[Char+1] == "*" then // MultiLine Comment
 					bMultilineComment = true 
-					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
+					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, utf8.len(Line) + 1 } }
 					continue 
 				end 
 			end 
@@ -100,7 +103,7 @@ function Syntax:FindValidLines( )
 			if Text == "'" then 
 				if Line[Char-1] ~= "\\" then 
 					bMultilineString = true 
-					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
+					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, utf8.len(Line) + 1 } }
 				end 
 				continue 
 			end 
@@ -108,7 +111,7 @@ function Syntax:FindValidLines( )
 			if Text == '"' then 
 				if Line[Char-1] ~= "\\" then 
 					sStringType = Text 
-					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
+					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, utf8.len(Line) + 1 } }
 				end 
 			end 
 		end 
@@ -576,7 +579,7 @@ function Syntax:SkipSpaces( )
 	while self.sChar and self.sChar == " " do
 		self:NextCharacter( )
 	end 
-	self:AddToken( "notfound" )
+	self:AddToken( "space" )
 end
 
 function Syntax:AddUserFunction( nRow, sName ) 
@@ -945,7 +948,7 @@ function Syntax:Parse( )
 						end 
 					end 
 					
-					self:AddToken( "notfound" )
+					-- self:AddToken( "notfound" )
 					continue 
 				end 
 				
@@ -1014,6 +1017,8 @@ function Syntax:Parse( )
 				else 
 					self:AddToken( "operator" )
 				end
+			-- elseif self:NextPattern( utf8.charpattern ) and #self.sBuffer ~= utf8.len( self.sBuffer ) then 
+			-- 	self:AddToken( "UTF8" ) 
 			else
 				local exit = false
 				for i = 1, #self.tTokens do 
@@ -1028,9 +1033,12 @@ function Syntax:Parse( )
 				self:NextCharacter( )
 			end 
 			
-			self:AddToken( "notfound" ) 
+			-- print(string.format("%q",self.sBuffer))
+			
+			-- self:AddToken( "notfound" ) 
 		end 
 	end
+	-- PrintTableGrep( self.tOutput )
 end
 
 function Syntax:GetSyntax( nRow )

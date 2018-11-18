@@ -389,6 +389,7 @@ function PANEL:_OnKeyCodeTyped( code )
 			end
 		elseif code == KEY_C then
 			if self:HasSelection( ) then
+				-- PrintTableGrep( self:Selection() )
 				local clipboard = self:GetSelection( )
 				clipboard = string_gsub( clipboard, "\n", "\r\n" )
 				SetClipboardText( clipboard )
@@ -610,9 +611,8 @@ function PANEL:_OnKeyCodeTyped( code )
 				self:SetSelection( "" )
 				tFolds = self:ExpandAll( )
 			else
-				-- self:SetCaret( self:SetArea( { self.Caret, self:MovePosition( self.Caret, -1 ) }, "" ) )
 				local buffer = self:GetArea( { self.Caret, Vector2( self.Caret.x, 1 ) } )
-				if self.Caret.y % 4 == 1 and #buffer > 0 and string_rep( " ", #buffer ) == buffer then
+				if self.Caret.y % 4 == 1 and utf8.len(buffer) > 0 and string_rep( " ", utf8.len(buffer) ) == buffer then
 					self:SetCaret( self:SetArea( { self.Caret, self:MovePosition( self.Caret, -4 ) }, "" ) )
 				else
 					self:SetCaret( self:SetArea( { self.Caret, self:MovePosition( self.Caret, -1 ) }, "" ) )
@@ -626,7 +626,7 @@ function PANEL:_OnKeyCodeTyped( code )
 			else
 				-- self:SetCaret( self:SetArea( { self.Caret, self:MovePosition( self.Caret, 1 ) }, "" ) )
 				local buffer = self:GetArea( { Vector2( self.Caret.x, self.Caret.y + 4 ), Vector2( self.Caret.x, 1 ) } )
-				if self.Caret.y % 4 == 1 and string_rep( " ", #( buffer ) ) == buffer and #( self.tRows[self.Caret.x] ) >= self.Caret.y + 4 - 1 then
+				if self.Caret.y % 4 == 1 and string_rep( " ", utf8.len( buffer ) ) == buffer and utf8.len( self.tRows[self.Caret.x] ) >= self.Caret.y + 4 - 1 then
 					self:SetCaret( self:SetArea( { self.Caret, self:MovePosition( self.Caret, 4 ) }, "" ) )
 				else
 					self:SetCaret( self:SetArea( { self.Caret, self:MovePosition( self.Caret, 1 ) }, "" ) )
@@ -733,7 +733,7 @@ function PANEL:_OnTextChanged( )
 	local ctrlv = false
 	local text = self.pTextEntry:GetValue( )
 	self.pTextEntry:SetText( "" )
-
+	
 	if ( input_IsKeyDown( KEY_LCONTROL ) or input_IsKeyDown( KEY_RCONTROL ) ) and not ( input_IsKeyDown( KEY_LALT ) or input_IsKeyDown( KEY_RALT ) ) then
 		-- ctrl+[shift+]key
 		if input_IsKeyDown( KEY_V ) then
@@ -744,10 +744,10 @@ function PANEL:_OnTextChanged( )
 			return
 		end
 	end
-
+	
 	if text == "" then return end
 	if not ctrlv and text == "\n" then return end
-
+	
 	local bSelection = self:HasSelection( )
 
 	if bSelection then
@@ -964,41 +964,32 @@ function PANEL:MovePosition( caret, offset )
 	local caret = caret:Clone( )
 
 	if offset > 0 then
-		while true do 
-			local tRow = self.tRows[caret.x]
-			if istable( tRow ) then 
-				if tRow.Primary ~= caret.x then 
-					caret.x = tRow.Primary + #tRow 
-					caret.y = 1
-					break
-				end 
-				
-				local remainder = utf8.len(tRow[1]) - caret.y 
-				
-				if offset > remainder then 
-					caret.x = tRow.Primary
-					caret.y = 1
-					offset = offset - remainder
-				else
+		if istable( self.tRows[caret.x] ) and self.tRows[caret.x].Primary ~= caret.x then
+			while istable( self.tRows[caret.x] ) do
+				caret.x = caret.x + 1
+			end
+			caret.y = 1
+		else
+			while true do
+				local length = utf8.len( istable( self.tRows[caret.x] ) and self.tRows[caret.x][1] or self.tRows[caret.x] ) - caret.y + 2
+
+				if offset < length then
 					caret.y = caret.y + offset
 					break
-				end 
-			else 
-				local remainder = utf8.len(tRow) - caret.y 
-				
-				if caret.x == #self.tRows and offset > remainder then 
-					caret.y = utf8.len(tRow)
-					break 
-				elseif offset > remainder then 
-					caret.x = caret.x + 1
-					caret.y = 1
-					offset = offset - remainder 
-				else 
-					caret.y = caret.y + offset 
-					break 
-				end 	
-			end 
-		end 
+				elseif caret.x == #self.tRows then
+					caret.y = caret.y + length - 1
+					break
+				else
+					if istable( self.tRows[caret.x + 1] ) then
+						caret.x = caret.x + #self.tRows[caret.x + 1]
+					else
+						caret.x = caret.x + 1
+					end
+					offset = offset - length
+					caret.y = 1 + offset
+				end
+			end
+		end
 	elseif offset < 0 then
 		offset = -offset
 
@@ -1080,16 +1071,13 @@ function PANEL:SetSelection( text )
 	self:SetCaret( self:SetArea( self:Selection( ), text ) )
 end
 
-local function MakeSel( start, stop )
+function PANEL:MakeSelection( selection )
+	local start, stop = selection[1], selection[2]
 	if start.x > stop.x or ( start.x == stop.x and start.y > stop.y ) then
 		return stop, start
 	else
 		return start, stop
 	end
-end
-
-function PANEL:MakeSelection( selection )
-	return MakeSel( selection[1], selection[2] ) 
 end
 
 function PANEL:SelectAll( ) 
@@ -1102,30 +1090,33 @@ function PANEL:GetArea( selection )
 	local start, stop = self:MakeSelection( selection )
 	local text = ""
 	local LinesToFold = self:ExpandAll( )
-	local nStartOffset = self:GetUTF8Offset( start.x, start.y )
-	local nEndOffset = self:GetUTF8Offset( stop.x, stop.y )
 	
 	if start.x == stop.x then
-		local sLine = self.tRows[start.x]
-		local nStartPos = utf8.offset( sLine, start.y-1 ) 
-		local nEndPos = utf8.offset( sLine, stop.y-1 ) 
-		
-		if self.Insert and start.y == stop.y then
-			selection[2].y = selection[2].y + 1
-		end
-		
-		if nEndPos then nEndPos = nEndPos - 1 end 
-		
-		text = utf8.char( utf8.codepoint( sLine, nStartPos, nEndPos ) )
+		if start.y ~= stop.y then 
+			local sLine = self.tRows[start.x]
+			local nStartPos = utf8.offset( sLine, start.y-1 ) 
+			local nEndPos = utf8.offset( sLine, stop.y-1 ) 
+			
+			if self.Insert and start.y == stop.y then
+				selection[2].y = selection[2].y + 1
+			end
+			
+			if nEndPos then nEndPos = nEndPos - 1 end 
+			
+			text = utf8.char( utf8.codepoint( sLine, nStartPos, nEndPos or -1 ) )
+		end 
 	else
-		-- text = string_sub( self.tRows[start.x], utf8.offset( self.tRows[start.x], start.y-1 ) )
-		text = utf8.char( utf8.codepoint( self.tRows[start.x], utf8.offset( self.tRows[start.x], start.y - 1 ), -1 ) )
+		if utf8.len(self.tRows[start.x]) ~= 0 then 
+			text = utf8.char( utf8.codepoint( self.tRows[start.x], utf8.offset( self.tRows[start.x], start.y - 1 ), -1 ) )
+		end 
 		
 		for i = start.x + 1, stop.x - 1 do
 			text = text .. "\n" .. self.tRows[i]
 		end
 		
-		text = text .. "\n" .. utf8.char( utf8.codepoint( self.tRows[stop.x], 1, utf8.offset( self.tRows[stop.x], stop.y - 2 ) ) )
+		if utf8.len(self.tRows[stop.x]) ~= 0 then 
+			text = text .. "\n" .. utf8.char( utf8.codepoint( self.tRows[stop.x], 1, utf8.offset( self.tRows[stop.x], stop.y - 2 ) ) )
+		end 
 	end
 	
 	self:FoldAll( LinesToFold )
@@ -1151,10 +1142,15 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 		end
 	end
 	
-	if start != stop then
+	if start ~= stop then
 		// Merge first and last line
+		-- if start.y 
 		local sFirst = utf8.char( utf8.codepoint( self.tRows[start.x], 1, utf8.offset( self.tRows[start.x], start.y - 2 ) ) )
 		local sLast = utf8.char( utf8.codepoint( self.tRows[stop.x], utf8.offset( self.tRows[stop.x], stop.y - 1 ), -1 ) )
+		
+		if stop.y >= utf8.len( self.tRows[stop.x] ) then sLast = "" end 
+		if start.y <= 1 then sFirst = "" end 
+		
 		self.tRows[start.x] = sFirst .. sLast
 		
 		// Remove deleted lines
@@ -1185,7 +1181,7 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 		else
 			self.Redo = { }
 			self.Undo[#self.Undo + 1] = { { start:Clone( ), start:Clone( ) },
-				buffer, selection[1]:Clone( ), start:Clone( ) }
+				buffer, selection[2]:Clone( ), selection[1]:Clone( ) }
 			for i = #LinesToFold, 1, -1 do if LinesToFold[i] then self:FoldLine( i ) end end
 			return start
 		end
@@ -1214,20 +1210,6 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 	
 	self.tRows[stop.x] = self.tRows[stop.x] .. sLast
 	
-	-- local sFirst = utf8.char( utf8.codepoint( self.tRows[start.x], 1, utf8.offset( self.tRows[start.x], start.y-2 ) ) )
-	-- local sLast = utf8.char( utf8.codepoint( self.tRows[start.x], utf8.offset( self.tRows[start.x], start.y ), -1 ) )
-	-- self.tRows[start.x] = sFirst .. rows[1]
-	
-	-- for i = 2, #rows do
-	-- 	table_insert( self.tRows, start.x + i - 1, rows[i] )
-	-- 	table_insert( LinesToFold, start.x + i - 1, false )
-	-- end
-	-- self.tFoldData = { }
-	
-	-- local stop = Vector2( start.x + #rows - 1, utf8.len(self.tRows[start.x + #rows - 1]) + 1 )
-	
-	-- self.tRows[stop.x] = self.tRows[stop.x] .. sLast
-	
 	self.pScrollBar:SetUp( self.Size.x, #self.tRows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ))
 	self:CalculateScroll( )
 	self.tSyntax:Parse( )
@@ -1247,7 +1229,7 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 	else
 		self.Redo = { }
 		self.Undo[#self.Undo + 1] = { { start:Clone( ), stop:Clone( ) },
-			buffer, selection[1]:Clone( ), stop:Clone( ) }
+			buffer, selection[2]:Clone( ), selection[1]:Clone( ) }
 		for i = #LinesToFold, 1, -1 do if LinesToFold[i] then self:FoldLine( i ) end end
 		return stop
 	end

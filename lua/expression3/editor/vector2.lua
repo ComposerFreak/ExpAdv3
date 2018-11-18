@@ -76,7 +76,7 @@ function meta:__call( x, y ) // var()
 end 
 
 function meta:__tostring( ) 
-	return "Vector2: " .. math.Round(self.x, 10) .. "\t" .. math.Round(self.y, 10) 
+	return "Vector2: " .. math.Round(self.x, 10) .. ":" .. math.Round(self.y, 10) 
 end 
 
 function meta:Dot( other ) 
