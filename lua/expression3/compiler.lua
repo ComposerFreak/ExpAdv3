@@ -2680,7 +2680,7 @@ function COMPILER.Compile_METH(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, ":");
 
-		this:writeToBuffer(inst, method .. "(");
+		this:writeToBuffer(inst, op.operator .. "(");
 
 		this:writeArgsToBuffer(inst, vargs, unpack(expressions));
 
