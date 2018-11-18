@@ -2,13 +2,7 @@
 --==         E3 Wiki         ==--
 --=============================--
 
-if SERVER then
-	AddCSLuaFile()
-
-	AddCSLuaFile("wiki/html_compiler.lua")
-	AddCSLuaFile("wiki/inits/autogen.lua")
-	AddCSLuaFile("wiki/inits/examples.lua")
-else
+if CLIENT then
 	include("wiki/html_compiler.lua")
 	include("wiki/inits/autogen.lua")
 	include("wiki/inits/examples.lua")

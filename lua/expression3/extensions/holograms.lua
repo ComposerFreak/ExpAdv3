@@ -457,19 +457,19 @@ end, false);
 
 ----------------------------------------------------------------------------------------------
 
-extension:RegisterMethod("h", "shading", "", "b", 1, function(ctx, holo, b)
+extension:RegisterMethod("h", "setShading", "b", "", 0, function(ctx, holo, b)
 	if IsValid( holo ) and holo.player == ctx.player then
 		holo:SetShading(b);
 	end
 end, false);
 
-extension:RegisterMethod("h", "shadow", "", "b", 1, function(ctx, holo, b)
+extension:RegisterMethod("h", "setShadow", "b", "", 0, function(ctx, holo, b)
 	if IsValid( holo ) and holo.player == ctx.player then
 		holo:DrawShadow(b);
 	end
 end, false);
 
-extension:RegisterMethod("h", "visible", "", "b", 1, function(ctx, holo, b)
+extension:RegisterMethod("h", "setVisible", "b", "", 0, function(ctx, holo, b)
 	if IsValid( holo ) and holo.player == ctx.player then
 		holo:SetVisible(b);
 	end
