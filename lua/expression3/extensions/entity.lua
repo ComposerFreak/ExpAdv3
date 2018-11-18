@@ -110,6 +110,8 @@ extension:RegisterMethod("e", "getModel", "", "s", 1, "GetModel");
 
 extension:RegisterMethod("e", "id", "", "n", 1, "EntIndex");
 
+extension:RegisterMethod("e", "parent", "", "e", 1, "GetParent");
+
 --[[
 	Position & Angle
 ]]

@@ -2594,7 +2594,18 @@ local function getMethod(mClass, userclass, method, ...)
 	end
 
 	local sig = string_format("%s.%s(%s)", mClass, method, prams);
-	return EXPR_METHODS[sig];
+
+	local op EXPR_METHODS[sig];
+
+	if op then return op; end
+
+	local class = E3Class(mClass);
+
+	if (class and class.base) then
+			local op = getMethod(class.base, userclass, method, ...)
+			if (op) then return op; end
+		end
+	end
 end
 
 function COMPILER.Compile_METH(this, inst, token, data)
