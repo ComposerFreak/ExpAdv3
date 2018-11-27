@@ -53,17 +53,17 @@ local PANEL = { }
 
 function PANEL:Init( )
 	self:SetCursor( "beam" )
-
+	
 	self.tRows = { "" }
 	self.FoldButtons = { }
 	self.tFoldData = { {0, false, false} }
 	self.Undo = { }
 	self.Redo = { }
 	self.Bookmarks = { }
-
+	
 	self.tCursors = { }
 	self.tSelections = { }
-
+	
 	self.Blink = RealTime( )
 	self.BookmarkWidth = 16
 	self.LineNumberWidth = 2
@@ -71,44 +71,44 @@ function PANEL:Init( )
 	self.FontHeight = 0
 	self.FontWidth = 0
 	self.LinePadding = 0
-
+	
 	self.Insert = false
 	self.bEditable = true
 	self.bUTF8 = false 
-
+	
 	self.pTextEntry = self:Add( "TextEntry" )
 	self.pTextEntry:SetMultiline( true )
 	self.pTextEntry:SetSize( 0, 0 )
-
+	
 	self.pTextEntry.m_bDisableTabbing = true // OH GOD YES!!!!! NO MORE HACKS!!!
 	self.pTextEntry.OnTextChanged = function( ) self:_OnTextChanged( ) end
 	self.pTextEntry.OnKeyCodeTyped = function( _, code ) self:_OnKeyCodeTyped( code ) end
-
+	
 	self.Caret = Vector2( 1, 1 )
 	self.Start = Vector2( 1, 1 )
 	self.Scroll = Vector2( 1, 1 )
 	self.Size = Vector2( 1, 1 )
-
+	
 	self.pScrollBar = self:Add( "DVScrollBar" )
 	self.pScrollBar:SetUp( 1, 1 )
-
+	
 	self.pScrollBar.btnUp.DoClick = function ( self ) self:GetParent( ):AddScroll( -4 ) end
 	self.pScrollBar.btnDown.DoClick = function ( self ) self:GetParent( ):AddScroll( 4 ) end
-
+	
 	function self.pScrollBar:AddScroll( dlta )
 		local OldScroll = self:GetScroll( )
 		self:SetScroll( self:GetScroll( ) + dlta)
 		return OldScroll == self:GetScroll( )
 	end
-
+	
 	function self.pScrollBar:OnMouseWheeled( dlta )
 		if not self:IsVisible( ) then return false end
 		return self:AddScroll( dlta * -4 )
 	end
-
+	
 	self.pHScrollBar = self:Add( "GOLEM_HScrollBar")
 	self.pHScrollBar:SetUp( 1, 1 )
-
+	
 	self:SetFont( Golem.Font:GetFont( ) )
 end
 
@@ -171,7 +171,7 @@ function PANEL:Think( )
 
 		if State ~= SpecialKeys[ Enum ] then
 			SpecialKeys[ Enum ] = State
-			if State then self:_OnKeyCodeTyped( Enum ) end
+			if State then self:_OnKeyCodeTyped( Enum, true ) end
 		end
 	end
 
@@ -184,25 +184,26 @@ function PANEL:Think( )
 	self:SetCursor( "beam" )
 end
 
-function PANEL:_OnKeyCodeTyped( code )
+function PANEL:_OnKeyCodeTyped( code, fake )
 	self.Blink = RealTime( )
-
+	
 	local alt = input_IsKeyDown( KEY_LALT ) or input_IsKeyDown( KEY_RALT )
 	if alt then return end
-
+	
 	local shift = input_IsKeyDown( KEY_LSHIFT ) or input_IsKeyDown( KEY_RSHIFT )
 	local control = input_IsKeyDown( KEY_LCONTROL ) or input_IsKeyDown( KEY_RCONTROL )
-
+	
 	-- allow ctrl-ins and shift-del ( shift-ins, like ctrl-v, is handled by vgui )
 	if not shift and control and code == KEY_INSERT then
 		shift, control, code = true, false, KEY_C
 	elseif shift and not control and code == KEY_DELETE then
 		shift, control, code = false, true, KEY_X
 	end
-
+	
 	local tFolds = self:ExpandAll( )
-
-
+	
+	if SpecialKeys[code] and not fake then print( "WORKS" ) end 
+	
 	-- Watered down version for display only
 	if not self.bEditable then
 		if control then
@@ -1842,7 +1843,9 @@ function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 		local len = utf8.len(cell[1])
 		if isbool(len) then 
 			print( string.format("invalid utf8 data line %d", Row ) )
-			break
+			cell[1] = utf8.force(cell[1])
+			len = utf8.len(cell[1])
+			-- break
 		end 
 		if offset < 0 then
 			if len > -offset then
@@ -1891,7 +1894,7 @@ function PANEL:PaintSelection( selection, color, outline )
 	for Row = line, endline do
 		if Row > #self.tRows then break end
 		if istable( self.tRows[Row] ) and self.tRows[Row].Primary ~= Row then continue end
-		local length = utf8.len( istable( self.tRows[Row] ) and self.tRows[Row][1] or self.tRows[Row] )
+		local length = utf8.len( utf8.force(istable( self.tRows[Row] ) and self.tRows[Row][1] or self.tRows[Row] ))
 		length = length - self.Scroll.y + 1
 		LinePos = LinePos + 1
 
@@ -2062,8 +2065,8 @@ PerformLayout
 function PANEL:CalculateScroll( )
 	self.pScrollBar:SetUp( self.Size.x, #self.tRows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ) - self:GetFoldingOffset( #self.tRows ) )
 	local LongestRow = 0
-	for i = 1, #self.tRows do
-		LongestRow = math.max( LongestRow, utf8.len( self.tRows[i] ) )
+	for i = 1, #self.tRows do 
+		LongestRow = math.max( LongestRow, utf8.len( utf8.force(self.tRows[i]) ) )
 	end
 	self.LongestRow = LongestRow
 	self.pHScrollBar:SetUp( self.Size.y, LongestRow )
