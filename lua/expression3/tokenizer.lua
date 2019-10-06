@@ -615,7 +615,7 @@ function TOKENIZER.Loop(this)
 
 	if (this:NextPattern("^[a-zA-Z][a-zA-Z0-9_%.]*")) then
 		for k, v in pairs(EXPR_CLASSES) do
-			if (this.__data == k) then
+			if (this.__data == k && k != "class") then
 				this:CreateToken("typ", "type", v.id, k);
 				return true;
 			end
