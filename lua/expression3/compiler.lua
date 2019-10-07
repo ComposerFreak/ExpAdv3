@@ -3950,6 +3950,19 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, data)
 	return nil, nil, EXPR_LOW;
 end
 
+function COMPILER.Compile_SUPCONST(this, inst, token, data)
+	local class = this:GetOption("userclass");
+	
+	if (not class.extends) then
+		this:Throw(inst, "class %s does not extend a class", class.name)
+	end
+
+	data.class = class.extends.name;
+
+	this:writeToBuffer(inst, "this = ");
+	return COMPILER.Compile_NEW(this, inst, token, data);
+end
+
 function COMPILER.Compile_DEF_METHOD(this, inst, token, data)
 	this:PushScope();
 

@@ -38,7 +38,7 @@
 			Stmt8 ← (type (Var("," Var)* ("=" / "+=" / "-=" / "/=" / "*=")? (Expr1? ("," Expr1)*)))? Stmt9
 			Stmt9 ← ("delegate" "(" (Type ((",")?)*)?) ")" ("{")? "return" Num ("}")?)? Stmt10
 			Stmt10 ← (("return" (Expr1 ((","")?)*)?) / "continue", "break")?
-
+			
 		:::Expressions:::
 			Expr1 ← (Expr1 "?" Expr1 ":" Expr1)? Expr2
 			Expr2 ← (Expr3 "||" Expr3)? Expr3
@@ -567,6 +567,62 @@ function PARSER.Block_1(this, _end, lcb)
 	end
 end
 
+function PARSER.Block_2(this)
+	this:ExcludeWhiteSpace( "Further input required at end of code, incomplete statement" )
+
+	this:Require("lcb", "Left curly bracket ({) missing for constructor");
+
+	local stmts;
+	local seq = this:StartInstruction("seq", this.__token, true);
+
+	if (not this:CheckToken("rcb")) then
+		this:PushScope();
+
+		stmts = this:Statements(true, this.ConstructorStatment);
+
+		this:PopScope();
+	end
+
+	if (not this:Accept("rcb")) then
+		this:Throw(this.__token, "Right curly bracket (}) missing, to close constructor got " .. this.__token.type);
+	end
+
+	return this:EndInstruction(seq, {stmts = stmts});
+end
+
+function PARSER.ConstructorStatment(this, stmtc)
+	
+	if (this:Accept("sup")) then
+		
+		if (stmtc > 0) then
+			this:Throw(this.__token, "Super constructor can not appear here.");
+		end
+
+		local seq = this:StartInstruction("supconst", this.__token, true);
+
+		this:Require("lpa", "Left parenthesis (( ) expected to open super constructor parameters.")
+
+		local expressions = {};
+
+		if (not this:CheckToken("rpa")) then
+			expressions[1] = this:Expression_1();
+
+			while(this:Accept("com")) do
+				this:Exclude("rpa", "Expression or value expected after comma (,).");
+
+				expressions[#expressions + 1] = this:Expression_1();
+			end
+
+		end
+
+		this:Require("rpa", "Right parenthesis ( )) expected to close super constructor parameters.");
+
+		return this:EndInstruction(seq, {expressions = expressions});
+	end
+
+	return this:Statment_0();
+end
+
 --[[
 
 ]]
@@ -697,7 +753,7 @@ function PARSER.Statements(this, block, call)
 
 		while true do
 
-			local stmt = call(this);
+			local stmt = call(this, #stmts);
 
 			stmts[#stmts + 1] = stmt;
 
@@ -2158,11 +2214,12 @@ function PARSER.ClassStatment_2(this)
 	local class = this:GetOption("curclass");
 
 	if (this:AcceptWithData("typ", class)) then
+
 		local inst = this:StartInstruction("constclass", this.__token);
 
 		local args, signature = this:InputParameters(inst);
 
-		local block = this:Block_1(true, " ");
+		local block = this:Block_2(true, " ");
 
 		return this:EndInstruction(inst, {args = args; signature = signature; block = block});
 	end

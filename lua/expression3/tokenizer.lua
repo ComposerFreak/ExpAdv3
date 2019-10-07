@@ -42,6 +42,7 @@ local KEYWORDS = {
 		["method"] = {"meth", "method"},
 		["extends"] = {"ext", "extends"},
 		["instanceof"] = {"iof", "instanceof"},
+		["super"] = {"sup", "super"},
 		["nil"] = {"nil", "nil"},
 	}
 }
