@@ -2551,7 +2551,7 @@ function COMPILER.Compile_NEW(this, inst, token, data)
 	local signature = string_format("%s(%s)", name(data.class), names(ids));
 
 	if (op and userclass) then
-		this:writeToBuffer(inst, "[%q](", op);
+		this:writeToBuffer(inst, "%s[%q](", cls.name, op);
 
 		for k, expr in pairs(data.expressions) do
 			this:addInstructionToBuffer(inst, expr);
@@ -3936,7 +3936,7 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, data)
 	userclass.valid = true;
 	userclass.constructors[signature] = signature;
 
-	this:writeToBuffer(inst, "\nlocal this = setmetatable({vars = setmetatable({}, %s.vars)}, %s)\n", userclass.name, userclass.name);
+	this:writeToBuffer(inst, "\nlocal this = setmetatable({vars = setmetatable({}, %s.vars), hash = %q}, %s)\n", userclass.name, userclass.hash, userclass.name);
 
 	if data.block then
 		this:Compile(data.block);
@@ -3983,10 +3983,11 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, data)
 
 
 	local meth = {};
-	meth.sig = signature;
+	meth.signature = signature;
 	meth.name = data.var.data;
 	meth.result = data.type.data;
 	meth.token = token;
+	meth.price = 0; --TODO Change me to be a actual value!
 	userclass.methods[signature] = meth;
 
 	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
