@@ -4000,7 +4000,7 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, data)
 	meth.name = data.var.data;
 	meth.result = data.type.data;
 	meth.token = token;
-	meth.price = 0; --TODO Change me to be a actual value!
+	meth.price = 0;
 	userclass.methods[signature] = meth;
 
 	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
@@ -4009,7 +4009,10 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, data)
 	this:SetOption("retunClass", meth.result);
 	this:SetOption("retunCount", meth.result ~= "" and -1 or 0);
 
-	this:Compile(data.block);
+	local _, __, blockprice = this:Compile(data.block);
+	
+	meth.price = blockprice;
+
 	this:addInstructionToBuffer(inst, data.block);
 
 	local count = this:GetOption("retunCount");
@@ -4035,7 +4038,7 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, data)
 	return nil, nil, EXPR_LOW;
 end
 
-function COMPILER.Compile_TOSTR(this, inst, token, expressions)
+function COMPILER.Compile_TOSTR(this, inst, token, data)
 	local userclass = this:GetOption("userclass");
 
 	this:PushScope();
@@ -4048,13 +4051,13 @@ function COMPILER.Compile_TOSTR(this, inst, token, expressions)
 	this:SetOption("retunClass", "s");
 	this:SetOption("retunCount", 1);
 
-	this:writeToBuffer(inst, "\n%s.__tostring = function(this)\n");
+	this:writeToBuffer(inst, "\n%s.__tostring = function(this)\n", userclass.name);
 
-	local error = string_format("Attempt to call user method '%s.%s(%s)' using alien class of the same name.", userclass.name, data.__name.data, data.signature);
+	local error = string_format("Attempt to call user operator '%s.tostring()' using alien class of the same name.", userclass.name);
 	this:writeToBuffer(inst, "if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error);
 
 	this:Compile(data.block);
-	this:writeToBuffer(data.block)
+	this:writeToBuffer(inst, data.block)
 	this:PopScope();
 
 	this:writeToBuffer(inst, "\nend\n");

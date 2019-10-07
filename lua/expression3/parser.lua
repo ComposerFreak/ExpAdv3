@@ -2256,9 +2256,9 @@ function PARSER.ClassStatment_4(this)
 			this:Throw(inst.__var, "The tostring operation does not take any parameters.");
 		end
 
-		this:Block_1(true, " ");
+		local block = this:Block_1(true, " ");
 
-		return this:EndInstruction(inst, {params = params; signature = signature});
+		return this:EndInstruction(inst, {params = params; signature = signature, block = block});
 	end
 
 	this:Throw(this.__token, "Right curly bracket (}) expected, to close class.");
