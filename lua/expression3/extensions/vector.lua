@@ -33,28 +33,52 @@ extension:RegisterConstructor("v", "", function() return Vector(0, 0, 0) end, tr
 	Operators
 ]]
 
-extension:RegisterOperator("eq", "v,v", "b", 1, function(a, b)
-	return (a.x == b.x) and (a.y == b.y) and (a.z == b.z);
+extension:RegisterOperator("eq", "v,v", "b", 4, function(a, b)
+	local x = (a.x == b.x);
+	local y = (a.y == b.y);
+	local z = (a.z == b.z);
+
+	return (x and y and z), x, y, z;
 end, true);
 
-extension:RegisterOperator("neq", "v,v", "b", 1, function(a, b)
-	return (a.x ~= b.x) and (a.y ~= b.y) and (a.z ~= b.z);
+extension:RegisterOperator("neq", "v,v", "b", 4, function(a, b)
+	local x = (a.x ~= b.x);
+	local y = (a.y ~= b.y);
+	local z = (a.z ~= b.z);
+
+	return (x and y and z), x, y, z;
 end, true);
 
-extension:RegisterOperator("lth", "v,v", "b", 1, function(a, b)
-	return (a.x < b.x) and (a.y < b.y) and (a.z < b.z);
+extension:RegisterOperator("lth", "v,v", "b", 4, function(a, b)
+	local x = (a.x < b.x);
+	local y = (a.y < b.y);
+	local z = (a.z < b.z);
+
+	return (x and y and z), x, y, z;
 end, true);
 
-extension:RegisterOperator("leg", "v,v", "b", 1, function(a, b)
-	return (a.x <= b.x) and (a.y <= b.y) and (a.z <= b.z);
+extension:RegisterOperator("leg", "v,v", "b", 4, function(a, b)
+	local x = (a.x <= b.x);
+	local y = (a.y <= b.y);
+	local z = (a.z <= b.z);
+
+	return (x and y and z), x, y, z;
 end, true);
 
-extension:RegisterOperator("gth", "v,v", "b", 1, function(a, b)
-	return (a.x > b.x) and (a.y > b.y) and (a.z > b.z);
+extension:RegisterOperator("gth", "v,v", "b", 4, function(a, b)
+	local x = (a.x > b.x);
+	local y = (a.y > b.y);
+	local z = (a.z > b.z);
+
+	return (x and y and z), x, y, z;
 end, true);
 
-extension:RegisterOperator("geq", "v,v", "b", 1, function(a, b)
-	return (a.x >= b.x) and (a.y >= b.y) and (a.z >= b.z);
+extension:RegisterOperator("geq", "v,v", "b", 4, function(a, b)
+	local x = (a.x >= b.x);
+	local y = (a.y >= b.y);
+	local z = (a.z >= b.z);
+
+	return (x and y and z), x, y, z;
 end, true);
 
 --[[

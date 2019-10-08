@@ -770,10 +770,6 @@ function Extension.SetClientState(this)
 	this.state = EXPR_CLIENT;
 end
 
-function Extension.SetClientState(this)
-	this.state = EXPR_CLIENT;
-end
-
 function Extension.RegisterPermission(this, name, image, desc)
 	this.perms[#this.perms+1] = {name, image, desc};
 end
