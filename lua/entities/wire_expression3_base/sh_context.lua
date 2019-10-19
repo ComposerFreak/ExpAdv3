@@ -111,8 +111,9 @@ end
 --[[
 	PERMISSIONS:
 ]]
-
+/*
 function CONTEXT:SetPerm(player, perm, value)
+	if not IsValid(player) then return; end
 	local id = player:AccountID();
 	local perms = self.perms[id];
 
@@ -122,6 +123,22 @@ function CONTEXT:SetPerm(player, perm, value)
 	end
 
 	perms[perm] = value;
+end
+
+function CONTEXT:SetPP(entity, perm, value)
+	local owner;
+
+	if (entity.CPPIGetOwner) then
+		owner = entity:CPPIGetOwner();
+	end
+
+	if (not owner) and (entity.GetPlayer) then
+		owner = entity:GetPlayer();
+	end
+
+	if (not owner) then return false; end
+
+	return self:SetPerm(owner, perm, value);
 end
 
 function CONTEXT:HasPerm(player, perm)
@@ -136,7 +153,7 @@ function CONTEXT:HasPerm(player, perm)
 	return perms[perm] or false;
 end
 
-function CONTEXT:CanUseEntity(entity)
+function CONTEXT:DoPPCheck(entity, perm)
 	local owner;
 
 	if (entity.CPPIGetOwner) then
@@ -149,7 +166,11 @@ function CONTEXT:CanUseEntity(entity)
 
 	if (not owner) then return false; end
 
-	return self:HasPerm(owner, "Prop-Control");
+	return self:HasPerm(owner, perm);
+end
+
+function CONTEXT:CanUseEntity(entity)
+	return self:DoPPCheck(entity, "Prop-Control");
 end
 
 function EXPR_LIB.SetPermissionsForEntity(entity, player, perm, value)
@@ -159,8 +180,27 @@ function EXPR_LIB.SetPermissionsForEntity(entity, player, perm, value)
 		player:SendLua( string.format("EXPR_LIB.SetPermissionsForEntity(Entity(%i), Player(%i), %q, %s)", entity:EntIndex(), player:UserID(), perm, value and "true" or "false" ) );
 	end
 
+	if (CLIENT) then
+		RunConsoleCommand("e3_perm", entity:EntIndex(), perm, value and 1 or 0);
+	end
+
 	entity.context:SetPerm(player, perm, value);
 end
+
+if SERVER then
+	concommand.Add("e3_perm", function(ply, cmd, args, line)
+		if not IsValid(ply) then return; end
+		if #args < 3 then return; end
+
+		local entity = Entity( tonumber(args[1]) );
+		if not IsValid(entity) then return; end
+
+		local perm = args[2];
+		local val = tobool(args[3]);
+
+		EXPR_LIB.SetPermissionsForEntity(entity, ply, perm, val);
+	end);
+end*/
 
 --[[
 	CPU Benchmarking / Quota

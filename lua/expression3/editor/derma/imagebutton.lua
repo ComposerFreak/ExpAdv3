@@ -163,4 +163,4 @@ function PANEL:Paint( w, h )
 	return true 
 end 
 
-vgui.Register( "GOLEM_ImageButton", PANEL, "GOLEM_Button" ) 
+vgui.Register( "GOLEM_ImageButton", PANEL, "GOLEM_Button" )

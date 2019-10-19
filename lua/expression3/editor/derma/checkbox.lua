@@ -15,25 +15,41 @@ local cross = Material("fugue\\cross-button.png");
 
 function CHECK:Init()
 	self.bChecked = false;
-	self:SetTick(tick);
-	self:SetCross(cross);
+	self:SetTick(tick, self:GetColor());
+	self:SetCross(cross, self:GetColor());
 	self:SetMaterial( self.cross );
 end
 
-function CHECK:SetTick(tick)
-	self.tick = tick;
-	if (bChecked) then self:SetMaterial(tick); end
+function CHECK:SetStatic(image)
+	self:SetTick(image, Color(0, 255, 0));
+	self:SetCross(image, Color(255, 0, 0));
 end
 
-function CHECK:SetCross(cross)
-	self.cross = cross;
-	if (not bChecked) then self:SetMaterial(cross); end
+function CHECK:SetTick(tick, col)
+	self.tick = tick or self.tick;
+	self.ctick = col or self.ctick;
+
+	if (self.bChecked) then
+		self:SetMaterial(self.tick);
+		self:SetColor(self.ctick);
+	end
+end
+
+function CHECK:SetCross(cross, col)
+	self.cross = cross or self.cross;
+	self.ccross = col or self.ccross;
+
+	if (not self.bChecked) then
+		self:SetMaterial(self.cross);
+		self:SetColor(self.ccross);
+	end
 end
 
 
 function CHECK:DoClick()
 	self.bChecked = not self.bChecked;
 	self:SetMaterial( self.bChecked and self.tick or self.cross );
+	self:SetColor( self.bChecked and self.ctick or self.ccross );
 	self:ChangedValue(self.bChecked);
 end
 
@@ -44,7 +60,7 @@ end
 function CHECK:SetValue(b, noChanged)
 	self.bChecked = b;
 	self:SetMaterial( self.bChecked and self.tick or self.cross );
-
+	self:SetColor( self.bChecked and self.ctick or self.ccross );
 	if (not noChanged) then
 		self:ChangedValue(self.bChecked);
 	end

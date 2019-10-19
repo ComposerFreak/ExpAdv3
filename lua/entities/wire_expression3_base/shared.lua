@@ -586,8 +586,8 @@ if SERVER then
 	util.AddNetworkString("SendToGolem");
 end
 
-EXPR_LIB.RegisterPermission("SendToChat", "", "This gate is allowed to send messages to your chatbox.")
-EXPR_LIB.RegisterPermission("SendToGolem", "", "This gate is allowed to send messages to your Golem console.")
+EXPR_LIB.RegisterPermission("SendToChat", "fugue/balloon-ellipsis.png", "This gate is allowed to send messages to your chatbox.")
+EXPR_LIB.RegisterPermission("SendToGolem", "fugue/terminal--arrow.png", "This gate is allowed to send messages to your Golem console.")
 
 EXPR_PRINT_GOLEM = 0;
 EXPR_PRINT_CHAT = 1;
@@ -602,10 +602,10 @@ end
 
 function ENT:NetChatMessage(target, values)
 
-	local context = self.context;
+	--local context = self.context;
 
-	if context then
-		if not context:HasPerm(target, "SendToChat") then
+	if self.getPerm then
+		if not self:getPerm(target, "SendToChat") then
 			return false;
 		end
 	end
@@ -621,10 +621,10 @@ end
 
 function ENT:NetGolemMessage(target, values)
 
-	local context = self.context;
+	--local context = self.context;
 
-	if context then
-		if not context:HasPerm(target, "SendToGolem") then
+	if self.getPerm then
+		if not self:getPerm(target, "SendToGolem") then
 			return false;
 		end
 	end

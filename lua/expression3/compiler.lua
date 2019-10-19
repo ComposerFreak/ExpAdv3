@@ -2794,7 +2794,7 @@ function COMPILER.Compile_FUNC(this, inst, token, data)
 		this.__functions[signature] = op.operator;
 	elseif (type(op.operator) == "string") then
 		this:writeToBuffer(inst, op.operator .. "(");
-		this:writeArgsToBuffer(unpack(data.expressions));
+		this:writeArgsToBuffer(inst, false, unpack(data.expressions));
 		this:writeToBuffer(inst, ")");
 		this:Import(op.operator);
 	else
