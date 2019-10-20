@@ -1066,8 +1066,6 @@ end
 function EXPR_LIB.Initialize()
 	--MsgN("Loading Expression 3");
 
-	include("expression3/extensions/core.lua");
-
 	hook.Run("Expression3.RegisterExtensions");
 
 	hook.Run("Expression3.LoadPerms");
@@ -1318,5 +1316,7 @@ end
 	:::Load Expression 3:::
 	'''''''''''''''''''''''
 ]]
+
+include("expression3/core/init.lua");
 
 timer.Simple(5, EXPR_LIB.Initialize);

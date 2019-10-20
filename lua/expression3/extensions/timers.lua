@@ -22,13 +22,14 @@ extension:RegisterFunction("timer", "simple", "n,f,...", "", 0, function(ctx, d,
 	local timers = ctx.data.timers;
 
 	timers[#timers + 1] = {
-		delay = d,
+		delay = d;
 		next = CurTime() + d;
 		paused = false;
 		reps = 1;
 		count = 0;
 		func = f;
 		values = {...};
+		simple = true;
 	};
 
 end, false);
@@ -36,8 +37,8 @@ end, false);
 extension:RegisterFunction("timer", "create", "s,n,n,f,...", "", 0, function(ctx, n, d, r, f, ...)
 	local timers = ctx.data.timers;
 
-	timers[#timers + 1] = {
-		delay = d,
+	timers[n] = {
+		delay = d;
 		next = CurTime() + d;
 		paused = false;
 		reps = r;
@@ -82,25 +83,25 @@ hook.Add( "Think", "Expression3.Timers.Run", function( )
 
 					i = i + 1; -- Limit the amount we do in one think.
 
-					if (i < 50) then
-						if (not timer.paused and now >= timer.next) then
-							timer.next = now + timer.delay;
+					if (i > 500) then break; end
 
-							if (timer.reps > 0) then
-								timer.count = timer.count + 1;
+					if (not timer.paused and now >= timer.next) then
+						timer.next = now + timer.delay;
 
-								if (timer.count >= timer.reps) then
-									timers[k] = nil;
-								end
-							end
+						if (timer.reps > 0) then
+							timer.count = timer.count + 1;
 
-							if (timer.simple) then
+							if (timer.count >= timer.reps) then
 								timers[k] = nil;
 							end
-
-							local where = "timer." .. k;
-							ctx.entity:Invoke(where, "", 0, timer.func, unpack(timer.values));
 						end
+
+						if (timer.simple) then
+							timers[k] = nil;
+						end
+
+						local where = "timer." .. k;
+						ctx.entity:Invoke(where, "", 0, timer.func, unpack(timer.values));
 					end
 				end
 			end

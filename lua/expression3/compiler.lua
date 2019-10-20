@@ -2786,7 +2786,7 @@ function COMPILER.Compile_FUNC(this, inst, token, data)
 		local signature = string_format("%s.%s", data.library.data, op.signature);
 
 		if op.context then
-			this:writeOperationCall2("_FUN", inst, signature, vargs, "CONTEXT", unpack(data.expressions));
+			this:writeOperationCall2("_FUN", inst, signature, vargs + 1, "CONTEXT", unpack(data.expressions));
 		else
 			this:writeOperationCall2("_FUN", inst, signature, vargs, unpack(data.expressions));
 		end

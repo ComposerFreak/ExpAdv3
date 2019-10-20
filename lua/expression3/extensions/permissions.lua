@@ -237,19 +237,27 @@ end
 	local Owner = function(entity)
 		local owner;
 
+		if not IsValid(entity) then
+			return;
+		end
+			
 		if entity.CPPIGetOwner then
 			owner = entity:CPPIGetOwner();
 		end
 
-		if (not owner) and entity.GetPlayer then
+		if not IsValid(owner) and entity.GetPlayer then
 			owner = entity:GetPlayer();
+		end
+
+		if not IsValid(owner) and IsValid(entity.player) then
+			owner = entity.player;
 		end
 
 		return owner;
 	end
 
 	local Set = function(entity, target, perm, value)
-		//print(SERVER, "SET -> ", entity, target, perm, value);
+		--print(SERVER, "SET -> ", entity, target, perm, value);
 
 		if not IsValid(entity) then return false; end
 		if not IsValid(target) then return false; end
@@ -268,7 +276,7 @@ end
 	end
 
 	local Get = function(entity, target, perm)
-		//print(SERVER, "GET -> ", entity, target, perm);
+		--print(SERVER, "GET -> ", entity, target, perm);
 
 		if not IsValid(entity) then return false; end
 		if not IsValid(target) then return false; end
@@ -279,8 +287,6 @@ end
 		local tid = target:UserID();
 		local perms = entity.permissions[tid];
 		if not perms then return false; end
-
-		//print("RESULT -> ", perms[perm] or flase);
 
 		return perms[perm] or flase;
 	end
@@ -359,19 +365,9 @@ if CLIENT then
 		if not IsValid(target) then return; end
 
 		Set(entity, target, perm, value);
-		
-		//print("NET -> ", entity, target, perm, value);
 	end);
 
 end
-
-/****************************************************************************************************************************
-	Create a permissons extention
-****************************************************************************************************************************/
-
-	
-
-
 
 /****************************************************************************************************************************
 	Create a permissons extention
