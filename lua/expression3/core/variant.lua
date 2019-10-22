@@ -12,11 +12,7 @@
 	*****************************************************************************************************************************************************
 ]]--
 	
-	local function notnil(obj)
-		return obj ~= nil and obj ~= _nil
-	end
-
-	local class_object = extension:RegisterClass("vr", {"variant", "object"}, istable, notnil);
+	local class_object = extension:RegisterClass("vr", {"variant", "object"}, istable, EXPR_LIB.NOTNIL);
 
 --[[
 	*****************************************************************************************************************************************************

@@ -24,11 +24,7 @@
 	*****************************************************************************************************************************************************
 ]]--
 
-	local function notnil(obj)
-		return obj ~= nil and obj ~= _nil
-	end
-
-	local class_str = extension:RegisterClass("s", {"string"}, isstring, notnil);
+	local class_str = extension:RegisterClass("s", {"string"}, isstring, EXPR_LIB.NOTNIL);
 	extension:RegisterWiredInport("s", "STRING");
 	extension:RegisterWiredOutport("s", "STRING");
 

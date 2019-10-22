@@ -14,10 +14,6 @@
 	*****************************************************************************************************************************************************
 ]]--
 
-	local function notnil(obj)
-		return obj ~= nil and obj ~= _nil
-	end
-
 	local function pi()
 		return math.pi	
 	end
@@ -44,7 +40,7 @@
 	*****************************************************************************************************************************************************
 ]]--
 
-	local class_num = extension:RegisterClass("n", {"number", "int", "integer", "double", "normal"}, isnumber, notnil);
+	local class_num = extension:RegisterClass("n", {"number", "int", "integer", "double", "normal"}, isnumber, EXPR_LIB.NOTNIL);
 
 	extension:RegisterWiredInport("n", "NORMAL");
 	extension:RegisterWiredOutport("n", "NORMAL");

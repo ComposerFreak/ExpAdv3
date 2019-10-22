@@ -12,11 +12,7 @@
 	*****************************************************************************************************************************************************
 ]]--
 	
-	local function notnil(obj)
-		return obj ~= nil and obj ~= _nil
-	end
-
-	local class_error = extension:RegisterClass("er", {"error"}, istable, notnil);
+	local class_error = extension:RegisterClass("er", {"error"}, istable, EXPR_LIB.NOTNIL);
 
 --[[
 	*****************************************************************************************************************************************************

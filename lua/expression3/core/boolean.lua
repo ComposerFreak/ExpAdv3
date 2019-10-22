@@ -12,11 +12,7 @@
 	*****************************************************************************************************************************************************
 ]]--
 	
-	local function notnil(obj)
-		return obj ~= nil and obj ~= _nil
-	end
-
-	local class_bool = extension:RegisterClass("b", {"boolean", "bool"}, isbool, notnil);
+	local class_bool = extension:RegisterClass("b", {"boolean", "bool"}, isbool, EXPR_LIB.NOTNIL);
 
 	extension:RegisterWiredInport("b", "NORMAL", function(i)
 		return i ~= 0;

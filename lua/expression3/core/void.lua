@@ -23,6 +23,8 @@
 	end
 
 	EXPR_LIB._NIL_ = _nil;
+	EXPR_LIB.ISNIL = isnil;
+	EXPR_LIB.NOTNIL = notnil;
 
 	local class_nil = extension:RegisterClass("nil", {"void"}, isnil, isnil);
 
