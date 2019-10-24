@@ -43,7 +43,7 @@ local KEYWORDS = {
 		["extends"] = {"ext", "extends"},
 		["instanceof"] = {"iof", "instanceof"},
 		["super"] = {"sup", "super"},
-		["nil"] = {"nil", "nil"},
+		["nil"] = {"void", "nil"},
 	}
 }
 

@@ -1940,8 +1940,8 @@ function PARSER.Expression_30(this)
 	elseif this:Accept("typ") then
 		local inst = this:StartInstruction("cls", this.__token);
 		return this:EndInstruction(inst, {value = this.__token.data});
-	elseif this:Accept("nil") then
-		local inst = this:StartInstruction("nil", this.__token);
+	elseif this:Accept("void") then
+		local inst = this:StartInstruction("void", this.__token);
 		return this:EndInstruction(inst, {});
 	end
 end

@@ -2454,8 +2454,8 @@ function COMPILER.Compile_CLS(this, inst, token, data)
 	return "_cls", 1, EXPR_MIN;
 end
 
-function COMPILER.Compile_NIL(this, inst, token)
-	this:writeToBuffer(inst, "NIL");
+function COMPILER.Compile_VOID(this, inst, token)
+	this:writeToBuffer(inst, "void");
 	return "", 1, EXPR_MIN;
 end
 
