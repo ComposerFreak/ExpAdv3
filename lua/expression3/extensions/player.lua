@@ -17,6 +17,55 @@ local extension = EXPR_LIB.RegisterExtension("player")
 extension:SetSharedState();
 
 --[[
+	Player Class
+]]
+
+local function isPlayer(p)
+	return p:IsPlayer()
+end
+
+extension:RegisterExtendedClass("p", {"player"}, "e", isPlayer, IsValid);
+
+extension:RegisterWiredInport("p", "ENTITY");
+
+extension:RegisterWiredOutport("p", "ENTITY");
+
+--[[
+	Operators
+]]
+
+extension:RegisterOperator("eq", "p,p", "b", 1);
+extension:RegisterOperator("neq", "p,p", "b", 1);
+
+extension:RegisterOperator("eq", "e,p", "b", 1);
+extension:RegisterOperator("neq", "e,p", "b", 1);
+
+--[[
+	Casting operators.
+]]
+
+extension:RegisterCastingOperator("e", "p", function(context, e)
+	if (IsValid(e) and e:IsPlayer()) then
+		return e;
+	end
+
+	context:Throw("Attempted to cast none player entity to player.");
+end, false);
+
+
+extension:RegisterCastingOperator("p", "e", function(ctx, p)
+	return p
+end, false);
+
+--[[
+	IsValid
+]]
+
+extension:RegisterMethod("p", "isValid", "", "b", 1, function(e)
+	return IsValid(e);
+end, true);
+
+--[[
 	SteamID
 ]]
 

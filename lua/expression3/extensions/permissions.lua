@@ -307,8 +307,8 @@ end
 		context.permissions = entity.permissions;
 		context.getPerm = function(context, target, perm) return Get(context.entity, target, perm); end;
 		context.setPerm = function(context, target, perm, value) return Set(context.entity, target, perm, value); end;
-		context.getOwner = function(context) return Owner(context.entity); end;
-		context.ppCheck = function(context) return PPCheck(context.entity); end;
+		context.getOwner = function(context, target) return Owner(context.entity, target); end;
+		context.ppCheck = function(context, target, perm) return PPCheck(context.entity, target, perm); end;
 	end);
 
 /****************************************************************************************************************************
@@ -375,8 +375,6 @@ end
 
 local extension = EXPR_LIB.RegisterExtension("permissons");
 
-
-
-
+extension:RegisterPermission("Prop-Control", "fugue/controller-d-pad.png", "This gate is allowed to alter your props.");
 
 extension:EnableExtension();

@@ -111,6 +111,12 @@ end
 --[[
 	PERMISSIONS:
 ]]
+
+function CONTEXT:CanUseEntity(entity)
+	return self:ppCheck(entity, "Prop-Control");
+end
+
+
 /*
 function CONTEXT:SetPerm(player, perm, value)
 	if not IsValid(player) then return; end
@@ -167,10 +173,6 @@ function CONTEXT:DoPPCheck(entity, perm)
 	if (not owner) then return false; end
 
 	return self:HasPerm(owner, perm);
-end
-
-function CONTEXT:CanUseEntity(entity)
-	return self:DoPPCheck(entity, "Prop-Control");
 end
 
 function EXPR_LIB.SetPermissionsForEntity(entity, player, perm, value)
