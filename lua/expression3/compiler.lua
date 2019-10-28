@@ -2712,7 +2712,7 @@ function COMPILER.Compile_FUNC(this, inst, token, data)
 	end
 
 	local op;
-	local vargs;
+	local vargs = 0;
 	local ids = {};
 	local total = #data.expressions;
 
