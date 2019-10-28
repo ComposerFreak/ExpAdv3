@@ -265,6 +265,8 @@ function PARSER.Next(this)
 	this.__token = this.__tokens[this.__pos];
 	this.__next = this.__tokens[this.__pos + 1];
 
+	--print("NEXT ->", this.__pos, this.__total, #this.__tokens)
+
 	if (this.__pos > this.__total) then
 		return false;
 	end
@@ -299,6 +301,7 @@ end
 
 function PARSER.Accept(this, type, ...)
 	if (this:CheckToken(type, ...)) then
+		--print("Accept(" .. type .. ", " .. this.__next.data .. ") -> ", this.cur_instruction and this.cur_instruction.type or "?")
 		this:Next();
 		return true;
 	end
@@ -308,6 +311,7 @@ end
 
 function PARSER.AcceptWithData(this, type, data)
 	if (this:CheckToken(type) and this.__next.data == data) then
+		--print("AcceptWithData(" .. type .. ", " .. data .. ") -> ", this.cur_instruction and this.cur_instruction.type or "?")
 		this:Next();
 		return true;
 	end
@@ -341,12 +345,12 @@ function PARSER.StepBackward(this, steps)
 
 	local pos = this.__pos - (steps + 1);
 
-	if (pos == 0) then
+	--[[if (pos == 0) then
 		this.__pos = 0;
 		this.__token = this.__tokens[0];
 		this.__next = this.__tokens[1];
 		return;
-	end
+	end]]--
 
 	if (pos > this.__total) then
 		pos = this.__total;
@@ -1161,7 +1165,7 @@ function PARSER.Statment_8(this)
 			this:Throw(inst.token, "Variable can not be preceded by whitespace.");
 		end
 	end
-
+	
 	return this:Statment_9();
 end
 
