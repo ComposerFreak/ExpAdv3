@@ -133,12 +133,39 @@ function ENT:GetOverlayData()
 		self:GetPlayerName(),
 		self:GetScriptName() or "generic",
 		"----------------------",
-		"SV average: " .. self:GetServerAverageCPU(),
-		"SV total:" .. self:GetServerTotalCPU(),
-		"SV warning:" .. tostring(self:GetServerWarning()),
-		"----------------------",
-		"CL average: " .. self:GetClientAverageCPU(),
-		"CL total:" .. self:GetClientTotalCPU(),
-		"CL warning:" .. tostring(self:GetClientWarning()),
+		"SEVER: " .. self:GetServerDisplayData(),
+		"CLIENT: " .. self:GetClientDisplayData(),
 	}, "\n")};
+end
+
+local function percent(part, whole)
+	part, whole = part or 0, whole or 0;
+	
+	if part <= 0 or whole <= 0 then return 0; end
+	
+	local p = math.ceil((part / whole) * 100);
+	
+	if p < 0 then p = 0; end
+	
+	return p;
+end
+
+function ENT:GetDisplayLine(average, statistic, warning)
+	if not self.context then return "Offline"; end
+
+	local critical = 2.3646;
+	local hard = self.context:GetHardQuota();
+
+	local softp = percent(statistic, critical);
+	local hardp = percent(average, hard);
+
+	return softp .. "% (" .. hardp .. "%" .. (warning and "!" or "") .. ")";
+end
+
+function ENT:GetClientDisplayData()
+	return self:GetDisplayLine(self:GetClientAverageCPU(), self:GetClientStatisticCPU(), self:GetClientWarning());
+end
+
+function ENT:GetServerDisplayData()
+	return self:GetDisplayLine(self:GetServerAverageCPU(), self:GetServerStatisticCPU(), self:GetServerWarning());
 end

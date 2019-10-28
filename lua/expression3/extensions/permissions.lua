@@ -110,19 +110,11 @@ if CLIENT then
 	    end
 
 	    if (IsValid(self.entity)) then
-	    	local server_status = table.concat({
-	    		"Server: ", self.entity:GetServerAverageCPU(), " / ", self.entity:GetServerTotalCPU(), " (", tostring(self.entity:GetServerWarning()), ")",
-	    	});
-
-	    	local client_status = table.concat({
-	    		"Client: ", self.entity:GetClientAverageCPU(), " / ", self.entity:GetClientTotalCPU(), " (", tostring(self.entity:GetClientWarning()), ")"
-	    	});
-
-	   		draw.DrawText("Name: " .. self.entity:GetScriptName(), "DermaDefault", b, b, Color( 255, 255, 255, 255 ), TEXT_ALIGN_LEFT );
+	    	draw.DrawText("Name: " .. self.entity:GetScriptName(), "DermaDefault", b, b, Color( 255, 255, 255, 255 ), TEXT_ALIGN_LEFT );
 	   		draw.DrawText("Owner: " .. self.entity:GetPlayerName(), "DermaDefault", b, b + 20, Color( 255, 255, 255, 255 ), TEXT_ALIGN_LEFT );
 
-	   		draw.DrawText(server_status, "DermaDefault", b + 400, b, Color( 255, 255, 255, 255 ), TEXT_ALIGN_LEFT );
-	   		draw.DrawText(client_status, "DermaDefault", b + 400, b + 20, Color( 255, 255, 255, 255 ), TEXT_ALIGN_LEFT );
+	   		draw.DrawText("Server: " .. self.entity:GetServerDisplayData(), "DermaDefault", b + 400, b, Color( 255, 255, 255, 255 ), TEXT_ALIGN_LEFT );
+	   		draw.DrawText("Client: " .. self.entity:GetClientDisplayData(), "DermaDefault", b + 400, b + 20, Color( 255, 255, 255, 255 ), TEXT_ALIGN_LEFT );
 	   		//draw.DrawText(tostring(self.entity), "DermaDefault", b + 400, b + 20, Color( 255, 255, 255, 255 ), TEXT_ALIGN_LEFT );
 	   	end
 	end

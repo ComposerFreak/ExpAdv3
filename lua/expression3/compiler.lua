@@ -1401,7 +1401,7 @@ function COMPILER.Compile_OR(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr2);
 
-		this:writeToBuffer(inst, "(");
+		this:writeToBuffer(inst, ")");
 	else
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
@@ -1444,7 +1444,7 @@ function COMPILER.Compile_AND(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr2);
 
-		this:writeToBuffer(inst, "(");
+		this:writeToBuffer(inst, ")");
 	else
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
@@ -1476,7 +1476,7 @@ function COMPILER.Compile_BXOR(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr2);
 
-		this:writeToBuffer(inst, "(");
+		this:writeToBuffer(inst, ")");
 	else
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
@@ -1508,7 +1508,7 @@ function COMPILER.Compile_BOR(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr2);
 
-		this:writeToBuffer(inst, "(");
+		this:writeToBuffer(inst, ")");
 	else
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
@@ -1540,7 +1540,7 @@ function COMPILER.Compile_BAND(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr2);
 
-		this:writeToBuffer(inst, "(");
+		this:writeToBuffer(inst, ")");
 	else
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
@@ -1738,7 +1738,7 @@ function COMPILER.Compile_LTH(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr2);
 
-		this:writeToBuffer(inst, "(");
+		this:writeToBuffer(inst, ")");
 	else
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
@@ -1770,7 +1770,7 @@ function COMPILER.Compile_LEQ(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr2);
 
-		this:writeToBuffer(inst, "(");
+		this:writeToBuffer(inst, ")");
 	else
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
@@ -1802,7 +1802,7 @@ function COMPILER.Compile_GTH(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr2);
 
-		this:writeToBuffer(inst, "(");
+		this:writeToBuffer(inst, ")");
 	else
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
@@ -1834,7 +1834,7 @@ function COMPILER.Compile_GEQ(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr2);
 
-		this:writeToBuffer(inst, "(");
+		this:writeToBuffer(inst, ")");
 	else
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
@@ -1866,7 +1866,7 @@ function COMPILER.Compile_BSHL(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr2);
 
-		this:writeToBuffer(inst, "(");
+		this:writeToBuffer(inst, ")");
 	else
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
@@ -1898,7 +1898,7 @@ function COMPILER.Compile_BSHR(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr2);
 
-		this:writeToBuffer(inst, "(");
+		this:writeToBuffer(inst, ")");
 	else
 		this:writeOperationCall(inst, op, expr1, expr2);
 	end
@@ -2712,7 +2712,7 @@ function COMPILER.Compile_FUNC(this, inst, token, data)
 	end
 
 	local op;
-	local vargs = 0;
+	local vargs;
 	local ids = {};
 	local total = #data.expressions;
 
@@ -2786,7 +2786,8 @@ function COMPILER.Compile_FUNC(this, inst, token, data)
 		local signature = string_format("%s.%s", data.library.data, op.signature);
 
 		if op.context then
-			this:writeOperationCall2("_FUN", inst, signature, vargs + 1, "CONTEXT", unpack(data.expressions));
+			if vargs then vargs = vargs + 1; end
+			this:writeOperationCall2("_FUN", inst, signature, vargs, "CONTEXT", unpack(data.expressions));
 		else
 			this:writeOperationCall2("_FUN", inst, signature, vargs, unpack(data.expressions));
 		end
