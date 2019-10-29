@@ -420,7 +420,7 @@ function ENT:Invoke(where, result, count, udf, ...)
 				self:HandelThrown(results[1]);
 			end
 
-			return staus, results;
+			return status, results;
 		end
 	end
 end
@@ -607,8 +607,6 @@ end
 
 function ENT:NetChatMessage(target, values)
 
-	--local context = self.context;
-
 	if self.getPerm then
 		if not self:getPerm(target, "SendToChat") then
 			return false;
@@ -625,8 +623,6 @@ end
 
 
 function ENT:NetGolemMessage(target, values)
-
-	--local context = self.context;
 
 	if self.getPerm then
 		if not self:getPerm(target, "SendToGolem") then

@@ -113,7 +113,6 @@ function ENT:TriggerInput(name, value, noTrig)
 		if (port and wireport) then
 			if (port.wire == wireport.Type) then
 				local v = port.func and port.func(value) or value;
-
 				if (v ~= self.context.wire_in[name]) then
 					context.wire_in[name] = v;
 					self:CallEvent("", 0, "Trigger", {"s", name}, {port.class, v});
