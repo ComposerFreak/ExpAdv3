@@ -2825,7 +2825,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, data)
 		this:writeToBuffer(inst, var);
 		this:AssignVariable(token, true, var, class);
 
-		if (k > tArgs) then
+		if (k < tArgs) then
 			this:writeToBuffer(inst, ",");
 		end
 	end
