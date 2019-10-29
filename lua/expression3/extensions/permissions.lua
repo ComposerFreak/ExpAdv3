@@ -1,8 +1,8 @@
 
 /****************************************************************************************************************************
-	
+
 ****************************************************************************************************************************/
-if CLIENT then 
+if CLIENT then
 	local b = 5;
 	local cw, ch = 200, 32;
 	local dw, dh = 200, 32;
@@ -34,7 +34,7 @@ if CLIENT then
 			self:ChangedValue(name, value);
 		end;
 
-		control:SetToolTip(name .. "\n" .. desc);
+		control:SetTooltip(name .. "\n" .. desc);
 		control:Dock(RIGHT);
 
 		self.controls[name] = control;
@@ -42,7 +42,7 @@ if CLIENT then
 
 	function PERM_PANEL:Update(entity)
 		self.entity = entity;
-		for perm, control in pairs(self.controls) do			
+		for perm, control in pairs(self.controls) do
 			control:SetValue( entity.context:getPerm(LocalPlayer(), perm), true);
 		end
 	end
@@ -74,7 +74,7 @@ if CLIENT then
 
 	function ICON_PANEL:AddControl(name, image, desc)
 		local control = self:Add("GOLEM_ImageButton");
-		control:SetToolTip(name .. "\n" .. desc);
+		control:SetTooltip(name .. "\n" .. desc);
 		control:SetMaterial(Material(image));
 		control:Dock(RIGHT);
 	end
@@ -84,7 +84,7 @@ if CLIENT then
 /****************************************************************************************************************************
 	We will list all our gates, so we need to create a display for that.
 ****************************************************************************************************************************/
-	
+
 	local GATE_PANEL = {};
 
 	function GATE_PANEL:Init()
@@ -124,7 +124,7 @@ if CLIENT then
 /****************************************************************************************************************************
 	We will need to house all this inside an editor tab, this is that panel.
 ****************************************************************************************************************************/
-		
+
 	local MENU_PANEL = {};
 
 	function MENU_PANEL:Init()
@@ -152,8 +152,12 @@ if CLIENT then
 
 		self:Update();
 		self:SetSize(300, 100);
-		
-		timer.Create("GOLEM_Permissions", 5, 0, function() self:Update(); end);
+
+		timer.Create("GOLEM_Permissions", 5, 0, function()
+			if IsValid(self) then
+				self:Update();
+			end
+		end);
 	end
 
 	function MENU_PANEL:addEntity(entity)
@@ -199,7 +203,7 @@ if CLIENT then
 /****************************************************************************************************************************
 	set every thing up in the editor using the api.
 ****************************************************************************************************************************/
-	hook.Add( "Expression3.AddGolemTabTypes", "PermissionsTab", function(editor) 
+	hook.Add( "Expression3.AddGolemTabTypes", "PermissionsTab", function(editor)
 		editor:AddCustomTab( true, "expression 3", function( self )
 			if self.Permissions then
 				self.pnlSideTabHolder:SetActiveTab( self.Permissions.Tab )
@@ -232,7 +236,7 @@ end
 		if not IsValid(entity) then
 			return;
 		end
-			
+
 		if entity.CPPIGetOwner then
 			owner = entity:CPPIGetOwner();
 		end
@@ -272,7 +276,7 @@ end
 
 		if not IsValid(entity) then return false; end
 		if not IsValid(target) then return false; end
-		
+
 		local owner = Owner(entity);
 		if IsValid(owner) and owner == target then return true; end
 

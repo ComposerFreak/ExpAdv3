@@ -1,6 +1,6 @@
 /*============================================================================================================================================
 	Name: GOLEM_CloseButton
-	Author: Oskar 
+	Author: Oskar
 ============================================================================================================================================*/
 
 local small_cross = Material( "fugue/cross-button.png" )
@@ -16,23 +16,23 @@ end
 function PANEL:DoClick( )
 	local Parent = self:GetParent( )
 	if Parent then
-		if Parent.Close then 
+		if Parent.Close then
 			Parent:Close( )
-		else 
-			Parent:Remove( ) 
-		end 
+		else
+			Parent:Remove( )
+		end
 	end
 end
 
 function PANEL:SetOffset( x, y )
-	self._x = x 
-	self._y = y 
-end 
+	self._x = x
+	self._y = y
+end
 
 function PANEL:Think( )
 	if self:GetParent() then
-		local x = self:GetParent( ):GetWide( ) - self:GetWide( ) + self._x 
-		local y = self._y 
+		local x = self:GetParent( ):GetWide( ) - self:GetWide( ) + self._x
+		local y = self._y
 		self:SetPos( x, y )
 	end
 end

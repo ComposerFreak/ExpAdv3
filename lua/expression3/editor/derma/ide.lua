@@ -737,6 +737,7 @@ function PANEL:SaveTabs( )
 	local strtabs = { }
 	for i = 1, #self.pnlTabHolder.Items do
 		local Tab = self.pnlTabHolder.Items[i].Tab
+		if not IsValid( Tab.Panel ) or not Tab.Panel then continue end
 		if Tab.Panel.Global then continue end
 		if not Tab.__shouldsave then continue end
 		local FilePath = self.pnlTabHolder.Items[i].Tab.FilePath

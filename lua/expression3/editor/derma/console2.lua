@@ -279,7 +279,7 @@ function CONSOLE:WriteValues(where, values)
 	local tValues = #values;
 
 	if (tValues > 1 and isfunction( values[1]) ) then
-		hascb = true;	
+		hascb = true;
 		self:BeginCB(where, values[1] );
 	end
 
@@ -368,20 +368,20 @@ function CONSOLE:Warn(level, ...)
 	local right = {...};
 
 	level = level or 0;
-	
-	if level == 1 then 
+
+	if level == 1 then
 		left[1] = {image = "fugue/question.png", size = 16}
 	elseif level == 2 then
 		left[1] = {image = "fugue/exclamation-circle.png", size = 16}
-	elseif level == 3 then 
+	elseif level == 3 then
 		left[1] = {image = "fugue/exclamation-red.png", size = 16}
 	end
-	
+
 	if level == 3 then
 		self:SetBackGroundColorL(200, 50, 50);
 		self:SetBackGroundColorR(200, 50, 50);
 	end
-	
+
 	left[#left + 1] = Color(255, 255, 255);
 	left[#left + 1] = "Warning";
 

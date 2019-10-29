@@ -64,10 +64,10 @@ surface.CreateFont( "Trebuchet20", {
 	Fonts
 ============================================================================================================================================*/
 /** Windows
-	
+
 	Courier New
 	DejaVu Sans Mono
-	Consolas 
+	Consolas
 	Fixedsys
 	Lucida Console
 */
@@ -79,45 +79,45 @@ surface.CreateFont( "Trebuchet20", {
 local Font = { sFontID = "Trebuchet24" }
 Golem.Font = Font
 
-table.Empty( cvars.GetConVarCallbacks( "golem_font_name", true ) ) 
-table.Empty( cvars.GetConVarCallbacks( "golem_font_size", true ) ) 
+table.Empty( cvars.GetConVarCallbacks( "golem_font_name", true ) )
+table.Empty( cvars.GetConVarCallbacks( "golem_font_size", true ) )
 
-CreateClientConVar( "golem_font_name", "Courier New", true, false ) 
+CreateClientConVar( "golem_font_name", "Courier New", true, false )
 CreateClientConVar( "golem_font_size", 16, true, false )
 
-cvars.AddChangeCallback( "golem_font_name", function( sCVar, sOld, sNew ) Font:SetFont( sNew, GetConVarNumber( "golem_font_size" ), true ) end ) 
-cvars.AddChangeCallback( "golem_font_size", function( sCVar, sOld, sNew ) Font:SetFont( GetConVarString( "golem_font_name" ), sNew, true ) end ) 
+cvars.AddChangeCallback( "golem_font_name", function( sCVar, sOld, sNew ) Font:SetFont( sNew, GetConVarNumber( "golem_font_size" ), true ) end )
+cvars.AddChangeCallback( "golem_font_size", function( sCVar, sOld, sNew ) Font:SetFont( GetConVarString( "golem_font_name" ), sNew, true ) end )
 
 function Font:GetFont( )
 	return self.sFontID
 end
 
-local CreatedFonts = { } 
-local function CreateFont( sFont, nSize ) 
+local CreatedFonts = { }
+local function CreateFont( sFont, nSize )
 	local sFontID = "golem_" .. string.Replace( string.lower( sFont ), " ", "_" ) .. "_" .. nSize
-	if not CreatedFonts[sFontID] then 
+	if not CreatedFonts[sFontID] then
 		surface.CreateFont( sFontID, { font = sFont, size = nSize, weight = 400 } )
 		surface.CreateFont( sFontID .. "_bold", { font = sFont, size = nSize, weight = 800, antialias = false } )
-		CreatedFonts[sFontID] = true 
-	end 
-	
-	return sFontID
-end 
+		CreatedFonts[sFontID] = true
+	end
 
-// Override 
+	return sFontID
+end
+
+// Override
 function Font:OnFontChange( ) end
 
-function Font:SetFont( sFont, nSize, bConVar ) 
-	sFont = sFont or GetConVarString( "golem_font_name" ) 
-	nSize = tonumber(nSize) or GetConVarNumber( "golem_font_size" ) 
-	
-	if not bConVar then 
-		if sFont ~= GetConVarString( "golem_font_name" ) then RunConsoleCommand( "golem_font_name", sFont ) end 
-		if nSize ~= GetConVarNumber( "golem_font_size" ) then RunConsoleCommand( "golem_font_size", nSize ) end 
-	end 
-	
+function Font:SetFont( sFont, nSize, bConVar )
+	sFont = sFont or GetConVarString( "golem_font_name" )
+	nSize = tonumber(nSize) or GetConVarNumber( "golem_font_size" )
+
+	if not bConVar then
+		if sFont ~= GetConVarString( "golem_font_name" ) then RunConsoleCommand( "golem_font_name", sFont ) end
+		if nSize ~= GetConVarNumber( "golem_font_size" ) then RunConsoleCommand( "golem_font_size", nSize ) end
+	end
+
 	self.sFontID = CreateFont( sFont, nSize )
-	
+
 	self:OnFontChange( self.sFontID, sFont, nSize )
 end
 
