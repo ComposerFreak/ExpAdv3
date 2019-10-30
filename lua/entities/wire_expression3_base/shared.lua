@@ -423,6 +423,8 @@ function ENT:Invoke(where, result, count, udf, ...)
 			return status, results;
 		end
 	end
+
+	return false, "Gate is offline";
 end
 
 function ENT:CallEvent(result, count, event, ...)
@@ -554,13 +556,11 @@ function ENT:ReceiveNetMessage(name, target, values)
 end
 
 net.Receive("Expression3.EntMessage", function()
-	local target;
-
 	local entity = net.ReadEntity();
 
 	local name = net.ReadString();
 
-	if SERVER then target = net.ReadEntity(); end
+	local target = SERVER and net.ReadEntity() or LocalPlayer();
 
 	local values = net.ReadTable();
 
@@ -606,7 +606,7 @@ function ENT:SendToOwner( type, ... )
 end
 
 function ENT:NetChatMessage(target, values)
-
+	
 	if self.getPerm then
 		if not self:getPerm(target, "SendToChat") then
 			return false;

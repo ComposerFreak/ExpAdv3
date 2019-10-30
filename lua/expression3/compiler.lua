@@ -2772,8 +2772,33 @@ function COMPILER.Compile_FUNC(this, inst, token, data)
 
 	this:CheckState(op.state, token, "Function %s.%s(%s).", data.library.data, data.name, names(ids, ","));
 
+	local compile = function()
+		if (type(op.operator) == "function") then
+			local signature = string_format("%s.%s", data.library.data, op.signature);
+
+			if op.context then
+				if vargs then vargs = vargs + 1; end
+				this:writeOperationCall2("_FUN", inst, signature, vargs, "CONTEXT", unpack(data.expressions));
+			else
+				this:writeOperationCall2("_FUN", inst, signature, vargs, unpack(data.expressions));
+			end
+
+			this.__functions[signature] = op.operator;
+		elseif (type(op.operator) == "string") then
+			this:writeToBuffer(inst, op.operator .. "(");
+			this:writeArgsToBuffer(inst, false, unpack(data.expressions));
+			this:writeToBuffer(inst, ")");
+			this:Import(op.operator);
+		else
+			local signature = string_format("%s.", inst.library, op.signature);
+			error("Attempt to inject " .. signature .. " but operator was incorrect " .. type(op.operator) .. ".");
+		end
+
+		return op.result, op.rCount, (op.price + price);
+	end;
+
 	if (data.library.data == "system") then
-		local res, count, prc = hook.Run("Expression3.PostCompile.System." .. data.name, this, inst, token, data);
+		local res, count, prc = hook.Run("Expression3.PostCompile.System." .. data.name, this, inst, token, data, compile);
 
 		price = price + (prc or 0);
 
@@ -2782,28 +2807,7 @@ function COMPILER.Compile_FUNC(this, inst, token, data)
 		end
 	end
 
-	if (type(op.operator) == "function") then
-		local signature = string_format("%s.%s", data.library.data, op.signature);
-
-		if op.context then
-			if vargs then vargs = vargs + 1; end
-			this:writeOperationCall2("_FUN", inst, signature, vargs, "CONTEXT", unpack(data.expressions));
-		else
-			this:writeOperationCall2("_FUN", inst, signature, vargs, unpack(data.expressions));
-		end
-
-		this.__functions[signature] = op.operator;
-	elseif (type(op.operator) == "string") then
-		this:writeToBuffer(inst, op.operator .. "(");
-		this:writeArgsToBuffer(inst, false, unpack(data.expressions));
-		this:writeToBuffer(inst, ")");
-		this:Import(op.operator);
-	else
-		local signature = string_format("%s.", inst.library, op.signature);
-		error("Attempt to inject " .. signature .. " but operator was incorrect " .. type(op.operator) .. ".");
-	end
-
-	return op.result, op.rCount, (op.price + price);
+	return compile();
 end
 
 --[[
@@ -2841,6 +2845,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, data)
 			this:writeToBuffer(inst, "if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end\n", var, var, name(class), var);
 			this:writeToBuffer(inst, "if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end\n", var, class, name(class), var, var);
 			this:writeToBuffer(inst, "%s = %s[2];\n", var, var);
+			--this:writeToBuffer(inst, "print('called function')");
 		end
 	end
 
@@ -3227,8 +3232,6 @@ function COMPILER.Compile_GET(this, inst, token, data)
 			end
 		end
 
-		print("GET CLASS: ", class, "returns", op_result, op_count);
-
 		if (not op) then
 			if cls then
 				this:Throw(token, "No such get operation %s[%s,%s]", name(vType), name(iType), name(class));
@@ -3322,7 +3325,7 @@ function COMPILER.Compile_SET(this, inst, token, data)
 		return op.result, op.rCount, (op.price + p1 + p2 + p3);
 	end
 
-	if (keepid) then
+	if (keepclass) then
 		this:writeOperationCall(inst, op, value, index, string_format("%q", cls), expr);
 	else
 		this:writeOperationCall(inst, op, value, index, expr);

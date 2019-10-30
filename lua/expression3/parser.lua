@@ -1169,6 +1169,34 @@ function PARSER.Statment_8(this)
 	return this:Statment_9();
 end
 
+function PARSER.GetTypeInputs(this)
+	
+	if ( this:Accept("cst") ) then
+		return {this.__token.data};
+	end
+
+	this:Require("lpa", "Left parenthesis (( ) expected to open delegate parameters.");
+
+	local parameters = {};
+
+	if (not this:CheckToken("rpa")) then
+
+		while (true) do
+			this:Require("typ", "Parameter type expected for parameter.");
+
+			parameters[#parameters + 1] = this.__token.data;
+
+			if (not this:Accept("com")) then
+				break;
+			end
+		end
+	end
+
+	this:Require("rpa", "Right parenthesis ( )) expected to close delegate parameters.");
+
+	return parameters;
+end
+
 function PARSER.Statment_9(this)
 	if (this:Accept("del")) then
 		local inst = this:StartInstruction("delegate", this.__token);
@@ -1181,25 +1209,7 @@ function PARSER.Statment_9(this)
 
 		local variable = this.__token.data;
 
-		this:Require("lpa", "Left parenthesis (( ) expected to open delegate parameters.");
-
-		local parameters = {};
-
-		if (not this:CheckToken("rpa")) then
-
-			while (true) do
-				this:Require("typ", "Parameter type expected for parameter.");
-
-				parameters[#parameters + 1] = this.__token.data;
-
-				if (not this:Accept("com")) then
-					break;
-				end
-			end
-
-		end
-
-		this:Require("rpa", "Right parenthesis ( ) expected to close delegate parameters.");
+		local parameters = this:GetTypeInputs();
 
 		local lcb = this:Accept("lcb");
 

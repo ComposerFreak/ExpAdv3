@@ -275,13 +275,17 @@ end
 		--print(SERVER, "GET -> ", entity, target, perm);
 
 		if not IsValid(entity) then return false; end
+		
 		if not IsValid(target) then return false; end
 
 		local owner = Owner(entity);
+		
 		if IsValid(owner) and owner == target then return true; end
 
 		local tid = target:UserID();
+		
 		local perms = entity.permissions[tid];
+
 		if not perms then return false; end
 
 		return perms[perm] or flase;

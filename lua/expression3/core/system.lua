@@ -25,12 +25,12 @@
 		local r = func.result;
 		local c = func.count;
 
-		if (r == nil or c == -1) then
-			r, c = "", 0
+		if (r == nil or r == "" or c == -1) then
+			r, c = "_nil", 0;
 		end
 
-		if (result == nil or count == -1) then
-			result, count = "", 0
+		if (result == nil or result == "" or count == -1) then
+			result, count = "", 0;
 		end
 
 		if (result ~= r or count ~= c) then
@@ -81,6 +81,7 @@
 			values[#values + 1] = func_tostring(context, v[1], v[2]);
 		end
 
+		print("System.Print->", unpack(values));
 		context.entity:SendToOwner(EXPR_PRINT_CHAT, unpack(values));
 	end);
 
@@ -145,13 +146,14 @@
 
 	extension:RegisterFunction("system", "invoke", "cls,n,f,...", "", 0, EXPR_LIB.Invoke);
 
-	hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions", function(this, inst, token, data)
+	hook.Add("Expression3.PostCompile.System.invoke", "Expression3.Core.Extensions", function(this, inst, token, data, compile)
 
+		local r, c, prc = compile();
 		-- We need to instruct the compiler what this actualy returns.
 		local class = data.expressions[1].token.data; -- Return class was arg 1.
 		local count = data.expressions[2].token.data; -- Return count was arg 2.
 
-		return class, count;
+		return class, count, prc;
 	end);
 
 --[[

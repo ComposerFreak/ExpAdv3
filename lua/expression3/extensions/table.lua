@@ -15,6 +15,7 @@ local eTable = {};
 local throwif = EXPR_LIB.ThrowIF;
 
 function eTable.get(ctx, tbl, key, type)
+
 	type = type or "_vr";
 
 	if(not tbl or not tbl.tbl) then
@@ -39,6 +40,7 @@ function eTable.get(ctx, tbl, key, type)
 end
 
 function eTable.set(ctx, tbl, key, type, value)
+
 	type = type or "_vr";
 
 	if(not tbl or not tbl.tbl) then
