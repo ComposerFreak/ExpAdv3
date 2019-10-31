@@ -30,7 +30,7 @@
 		end
 
 		if (result == nil or result == "" or count == -1) then
-			result, count = "", 0;
+			result, count = "_nil", 0;
 		end
 
 		if (result ~= r or count ~= c) then
