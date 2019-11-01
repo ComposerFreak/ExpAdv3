@@ -454,11 +454,13 @@ end
 
 function ENT:SetupDataTables()
 	self:NetworkVar("String", 0, "ScriptName");
+	self:NetworkVar("Float", 0, "ServerSoftCPU");
 	self:NetworkVar("Float", 0, "ServerAverageCPU");
 	self:NetworkVar("Bool", 1, "ServerWarning");
 end
 
 if (CLIENT) then
+	AccessorFunc(ENT, "cl_soft_cpu", "ClientSoftCPU", FORCE_NUMBER);
 	AccessorFunc(ENT, "cl_average_cpu", "ClientAverageCPU", FORCE_NUMBER);
 	AccessorFunc(ENT, "cl_cpu_warning", "ClientWarning", FORCE_BOOL);
 end
@@ -469,11 +471,13 @@ function ENT:UpdateQuotaValues()
 	if (context) then
 
 		if (SERVER) then
+			self:SetServerSoftCPU(context.cpu_softusage);
 			self:SetServerAverageCPU(context.cpu_average);
 			self:SetServerWarning(context.cpu_warning);
 		end
 
 		if (CLIENT) then
+			self:SetClientSoftCPU(context.cpu_softusage);
 			self:SetClientAverageCPU(context.cpu_average);
 			self:SetClientWarning(context.cpu_warning);
 		end

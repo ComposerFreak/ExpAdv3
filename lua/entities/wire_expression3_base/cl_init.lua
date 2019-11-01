@@ -150,18 +150,18 @@ local function percent(part, whole)
 	return p;
 end
 
-function ENT:GetDisplayLine(average, warning)
+function ENT:GetDisplayLine(soft, average, warning)
 	if not self.context or not self.context.status then
 		return "Offline";
 	end
 
-	return math.ceil(average * 100) .. "%" .. (warning and "!" or "");
+	return math.ceil(soft * 100) .. "(" .. math.ceil(average * 100) .. "%" .. (warning and "!" or "") .. ")";
 end
 
 function ENT:GetClientDisplayData()
-	return self:GetDisplayLine(self:GetClientAverageCPU(), self:GetClientWarning());
+	return self:GetDisplayLine(self:GetClientSoftCPU(), self:GetClientAverageCPU(), self:GetClientWarning());
 end
 
 function ENT:GetServerDisplayData()
-	return self:GetDisplayLine(self:GetServerAverageCPU(), self:GetServerWarning());
+	return self:GetDisplayLine(self:GetServerSoftCPU(), self:GetServerAverageCPU(), self:GetServerWarning());
 end

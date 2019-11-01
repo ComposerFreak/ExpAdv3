@@ -55,7 +55,9 @@ function CONTEXT.New()
 	tbl.net_total = 0;
 	tbl.cpu_total = 0;
 	tbl.cpu_average = 0;
-	tbl.cpu_softquota = 1;
+	tbl.cpu_timestamp = 0;
+	tbl.cpu_softusage = 0;
+	tbl.cpu_hardusage = 0;
 	
 	return setmetatable(tbl, CONTEXT);
 end
@@ -73,7 +75,7 @@ function CONTEXT:hardTimeLimit()
 end
 
 function CONTEXT:softTimeLimitSize()
-	return 1 /     cvar_softtimesize:GetInt();
+	return 1 / cvar_softtimesize:GetInt();
 end
 
 function CONTEXT:maxRam()
@@ -173,10 +175,12 @@ end
 function CONTEXT:UpdateQuotaValues()
 	if (self.status) then
 
+		self.cpu_softusage = self:movingCPUAverage() / self:softTimeLimit();
+		self.cpu_hardusage = self.cpu_total / self:hardTimeLimit();
+		self.cpu_average = (self.cpu_average * 0.95) + (self.cpu_total * 0.05);
+
 		self.net_total = 0;
 		self.cpu_total = 0;
-		self.cpu_average = 0;
-		self.cpu_softquota = 1;
 
 		if (self.update) then
 			self.update = false;
@@ -193,10 +197,10 @@ local bJit, fdhk, sdhk, ndhk;
 
 function CONTEXT:PreExecute()
 
-	local cpuMarker = SysTime();
+	self.cpu_timestamp = SysTime();
 
 	local cpuCheck = function()
-		self.cpu_total = SysTime() - cpuMarker;
+		self.cpu_total = SysTime() - self.cpu_timestamp;
 
 		local used_ratio = self:movingCPUAverage() / self:softTimeLimit();
 
@@ -235,6 +239,8 @@ end
 
 function CONTEXT:PostExecute()
 	debug.sethook(fdhk, sdhk, ndhk);
+	
+	self.cpu_total = SysTime() - self.cpu_timestamp;
 
 	if (bJit) then
 		jit.on();
