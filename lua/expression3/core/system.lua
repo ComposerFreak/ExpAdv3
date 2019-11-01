@@ -81,7 +81,6 @@
 			values[#values + 1] = func_tostring(context, v[1], v[2]);
 		end
 
-		print("System.Print->", unpack(values));
 		context.entity:SendToOwner(EXPR_PRINT_CHAT, unpack(values));
 	end);
 

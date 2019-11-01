@@ -17,6 +17,75 @@ local CONTEXT = {};
 CONTEXT.__index = CONTEXT;
 
 --[[
+	Perfomance CVARS
+	Based on StarFallEx, all credits for CPU benchmarking goes to origonal authors.
+	Who advised that they stle it from Wiremod E2, so the plot thickens!
+]]
+
+local cvar_softtime;
+local cvar_hardtime;
+local cvar_softtimesize;
+local cvar_netquota;
+local cvar_ram_max;
+
+if SERVER then
+	cvar_softtime = CreateConVar("e3_softtime", 0.005, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.")
+	cvar_hardtime = CreateConVar("e3_hardtime", 0.0075, FCVAR_ARCHIVE, "The max CPU time e3 can reach.")
+	cvar_softtimesize = CreateConVar("e3_timebuffersize", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
+	cvar_ram_max = CreateConVar("e3_ram_max", 1500000, "If ram exceeds this limit (in kB), e3s will be terminated");
+	cvar_netquota = CreateConVar("e3_netquota", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
+end
+
+if CLIENT then
+	cvar_softtime = CreateConVar("e3_softtime_cl", 0.005, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.");
+	cvar_hardtime = CreateConVar("e3_hardtime_cl", 0.0075, FCVAR_ARCHIVE, "The max CPU time e3 can reach.")
+	cvar_softtimesize = CreateConVar("e3_timebuffersize_cl", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
+	cvar_ram_max = CreateConVar("e3_ram_max_cl", 1500000, "If ram exceeds this limit (in kB), e3s will be terminated");
+	cvar_netquota = CreateConVar("e3_netquota_cl", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
+end
+
+--[[
+	Create a new context object
+]]
+
+function CONTEXT.New()
+	local tbl = {};
+
+	tbl.perms = {};
+	tbl.net_total = 0;
+	tbl.cpu_total = 0;
+	tbl.cpu_average = 0;
+	tbl.cpu_softquota = 1;
+	
+	return setmetatable(tbl, CONTEXT);
+end
+
+--[[
+	CVar acessor methods
+]]
+
+function CONTEXT:softTimeLimit()
+	return cvar_softtime:GetFloat();
+end
+
+function CONTEXT:hardTimeLimit()
+	return cvar_hardtime:GetFloat();
+end
+
+function CONTEXT:softTimeLimitSize()
+	return 1 /     cvar_softtimesize:GetInt();
+end
+
+function CONTEXT:maxRam()
+	return cvar_ram_max:GetInt();
+end
+
+function CONTEXT:GetNetQuota()
+	return cvar_netquota:GetInt();
+end
+
+--[[
+
 ]]
 
 local __exe;
@@ -90,27 +159,6 @@ function CONTEXT.Throw(this, msg, fst, ...)
 end
 
 --[[
-	New Context
-]]
-
-function CONTEXT.New()
-	local tbl = {};
-
-	tbl.perms = {};
-
-	tbl.net_total = 0;
-	tbl.cpu_total = 0;
-	tbl.cpu_average = 0;
-	tbl.cpu_critical = 0;
-	tbl.cpu_statistic = 0;
-	tbl.cpu_samples = {};
-	tbl.cpu_warning = false;
-
-	return setmetatable(tbl, CONTEXT);
-end
-
-
---[[
 	PERMISSIONS:
 ]]
 
@@ -119,101 +167,16 @@ function CONTEXT:CanUseEntity(entity)
 end
 
 --[[
-	CPU Benchmarking / Quota
-	Measure: 1000th's of a second.
+	Reset quotas and update context.
 ]]
-
-local len = 100;
-local soft, hard, net;
-
-if (SERVER) then
-	hard = CreateConVar("e3_hardquota", 500, { FCVAR_REPLICATED }, "Absolute max usage quota per one tick.");
-	soft = CreateConVar("e3_softquota", 300, { FCVAR_REPLICATED }, "The max average usage quota.");
-	net = CreateConVar("e3_netquota", 64000, { FCVAR_REPLICATED }, "The max net usage quota in kb.");
-	--len = CreateConVar("e3_maxbuffersize", 100, { FCVAR_REPLICATED }, "Window width of the CPU time quota moving average.");
-end
-
-if (CLIENT) then
-	hard = CreateClientConVar("e3_hardquota", 500, false, false);
-	soft = CreateClientConVar("e3_softquota", 300, false, false);
-	net = CreateConVar("e3_netquota", 64000, false, false);
-	--len = CreateClientConVar("e3_maxbuffersize", 100, false, false);
-end
-
-function CONTEXT:MaxSampleSize()
-	return len; -- len:GetInt();
-end
-
-function CONTEXT:GetSoftQuota()
-	return soft:GetInt() * 0.0001;
-end
-
-function CONTEXT:GetHardQuota()
-	return hard:GetInt() * 0.0001;
-end
-
-function CONTEXT:GetNetQuota()
-	return net:GetInt();
-end
-
---
-
-function CONTEXT:AddSample(sample)
-	local samples, size = self.cpu_samples, #self.cpu_samples
-
-	if (size >= self:MaxSampleSize()) then
-		for i = 1, size do
-			samples[i] = samples[i + 1];
-		end -- Move all samples down 1.
-	end
-
-	samples[size] = sample;
-
-	return size;
-end
-
-function CONTEXT:GetBufferAverage()
-	local average = 0;
-	local samples = #self.cpu_samples;
-
-	for i = 1, samples do
-		average = average + self.cpu_samples[i];
-	end
-
-	return average / samples;
-end
-
-function CONTEXT:GetBufferVariance(average)
-	local average = average or self:GetBufferAverage();
-
-	local sum = 0;
-	local samples = #self.cpu_samples;
-
-	for i = 1, samples do
-		sum = sum + (self.cpu_samples[i] - average) ^ 2;
-	end
-
-	return sum / (samples - 1);
-end
 
 function CONTEXT:UpdateQuotaValues()
 	if (self.status) then
 
-		local average = self:GetBufferAverage()
-
-		local hard = self:GetHardQuota();
-
-		if self.cpu_warning then
-			if self.cpu_total < hard * 0.75 then
-				self.cpu_warning = false;
-			end
-		end
-
 		self.net_total = 0;
-
 		self.cpu_total = 0;
-
-		self.cpu_average = average;
+		self.cpu_average = 0;
+		self.cpu_softquota = 1;
 
 		if (self.update) then
 			self.update = false;
@@ -223,6 +186,7 @@ function CONTEXT:UpdateQuotaValues()
 end
 
 --[[
+	Set up debug hook
 ]]
 
 local bJit, fdhk, sdhk, ndhk;
@@ -231,47 +195,27 @@ function CONTEXT:PreExecute()
 
 	local cpuMarker = SysTime();
 
-	-- http://www.usablestats.com/calcs/tinv
-	-- Degrees of Freedom = BufferN - 1
-	-- One-sided
-	-- Proportion of Area = 1 - x where x is a percentage that represents a level of significance.
-	-- A higher significance means it is harder to quota but you are more sure that the limit has been exceeded.
-	-- A lower significance means it is easier to quota but you are less sure that the limit has been exceeded.
-	-- The default value for x is 0.99
-	local criticalValue = 2.3646;
-
 	local cpuCheck = function()
-		local dt = SysTime() - cpuMarker;
+		self.cpu_total = SysTime() - cpuMarker;
 
-		local samples = self:AddSample(dt);
+		local used_ratio = self:movingCPUAverage() / self:softTimeLimit();
 
-		local average = self:GetBufferAverage();
+		self.cpu_warning = used_ratio > 0.7;
 
-		local variance = self:GetBufferVariance(average);
+		if used_ratio > 1 then
 
-		local soft = self:GetSoftQuota();
-
-		local hard = self:GetHardQuota();
-
-		local statistic = (average - soft) / math.sqrt(variance / samples);
-
-		self.cpu_total = self.cpu_total + dt;
-
-		self.cpu_critical = criticalValue;
-
-		self.cpu_statistic = statistic;
-
-		if statistic > criticalValue then
 			debug.sethook( nil );
-			self:Throw( "Soft CPU Quota Exceeded!");
-		elseif self.cpu_total > hard then
+
+			self:Throw( "CPU Soft Quota Exceeded!");
+
+		elseif self.cpu_total >= self:hardTimeLimit() then
+			
 			debug.sethook( nil );
-			self:Throw( "Hard CPU Quota Exceeded!");
-		elseif self.cpu_total > hard * 0.75 then
-			self.cpu_warning = true;
+
+			self:Throw( "CPU Hard Quota Exceeded!");
+
 		end
 
-		cpuMarker = SysTime();
 	end
 
 	__exe = self;
@@ -285,6 +229,10 @@ function CONTEXT:PreExecute()
 	debug.sethook(cpuCheck, "", 500);
 end
 
+--[[
+
+]]
+
 function CONTEXT:PostExecute()
 	debug.sethook(fdhk, sdhk, ndhk);
 
@@ -293,6 +241,13 @@ function CONTEXT:PostExecute()
 	end
 
 	__exe = nil;
+end
+
+--[[
+]]
+
+function CONTEXT:movingCPUAverage()
+	return self.cpu_average + (self.cpu_total - self.cpu_average) * self:softTimeLimitSize();
 end
 
 --[[

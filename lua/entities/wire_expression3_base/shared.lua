@@ -455,36 +455,29 @@ end
 function ENT:SetupDataTables()
 	self:NetworkVar("String", 0, "ScriptName");
 	self:NetworkVar("Float", 0, "ServerAverageCPU");
-	self:NetworkVar("Float", 1, "ServerTotalCPU");
-	self:NetworkVar("Float", 2, "ServerStatisticCPU");
 	self:NetworkVar("Bool", 1, "ServerWarning");
 end
 
 if (CLIENT) then
 	AccessorFunc(ENT, "cl_average_cpu", "ClientAverageCPU", FORCE_NUMBER);
-	AccessorFunc(ENT, "cl_total_cpu", "ClientTotalCPU", FORCE_NUMBER);
-	AccessorFunc(ENT, "cpu_statistic", "ClientStatisticCPU", FORCE_NUMBER);
 	AccessorFunc(ENT, "cl_cpu_warning", "ClientWarning", FORCE_BOOL);
 end
 
 function ENT:UpdateQuotaValues()
 	local context = self.context;
 
-	if (SERVER) then
-		self:SetServerAverageCPU((context and context.cpu_average or 0) );-- * 1000);
-		self:SetServerTotalCPU((context and context.cpu_total or 0) );-- * 1000);
-		self:SetServerStatisticCPU((context and context.cpu_statistic or 0) );-- * 1000);
-		self:SetServerWarning(context and context.cpu_warning or false);
-	end
-
-	if (CLIENT) then
-		self:SetClientAverageCPU((context and context.cpu_average or 0) );-- * 1000);
-		self:SetClientTotalCPU((context and context.cpu_total or 0) );-- * 1000);
-		self:SetClientStatisticCPU((context and context.cpu_statistic or 0) );-- * 1000);
-		self:SetClientWarning(context and context.cpu_warning or false);
-	end
-
 	if (context) then
+
+		if (SERVER) then
+			self:SetServerAverageCPU(context.cpu_average);
+			self:SetServerWarning(context.cpu_warning);
+		end
+
+		if (CLIENT) then
+			self:SetClientAverageCPU(context.cpu_average);
+			self:SetClientWarning(context.cpu_warning);
+		end
+
 		context:UpdateQuotaValues();
 	end
 end

@@ -150,22 +150,18 @@ local function percent(part, whole)
 	return p;
 end
 
-function ENT:GetDisplayLine(average, statistic, warning)
-	if not self.context then return "Offline"; end
+function ENT:GetDisplayLine(average, warning)
+	if not self.context or not self.context.status then
+		return "Offline";
+	end
 
-	local critical = 2.3646;
-	local hard = self.context:GetHardQuota();
-
-	local softp = percent(statistic, critical);
-	local hardp = percent(average, hard);
-
-	return softp .. "% (" .. hardp .. "%" .. (warning and "!" or "") .. ")";
+	return math.ceil(average * 100) .. "%" .. (warning and "!" or "");
 end
 
 function ENT:GetClientDisplayData()
-	return self:GetDisplayLine(self:GetClientAverageCPU(), self:GetClientStatisticCPU(), self:GetClientWarning());
+	return self:GetDisplayLine(self:GetClientAverageCPU(), self:GetClientWarning());
 end
 
 function ENT:GetServerDisplayData()
-	return self:GetDisplayLine(self:GetServerAverageCPU(), self:GetServerStatisticCPU(), self:GetServerWarning());
+	return self:GetDisplayLine(self:GetServerAverageCPU(), self:GetServerWarning());
 end
