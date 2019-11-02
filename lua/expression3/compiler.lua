@@ -2093,7 +2093,7 @@ function COMPILER.Compile_MOD(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, expr1);
 
-		this:writeToBuffer(inst, "^");
+		this:writeToBuffer(inst, "%");
 
 		this:addInstructionToBuffer(inst, expr2);
 
@@ -3109,7 +3109,7 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 			this:writeToBuffer(inst, "invoke(CONTEXT, %q, %i,", info.resultClass, info.resultCount);
 
 			if (info.signature ~= signature) then
-				this:Throw(token, "Invalid arguments to user function got %s(%s), %s(%s) expected.", expr.variable, names(signature), expr.variable, names(info.signature));
+				this:Throw(token, "Invalid arguments to user function got %s(%s), %s(%s) expected.", expr.data.variable, names(signature), expr.data.variable, names(info.signature));
 			end
 
 			this:addInstructionToBuffer(inst, expr);

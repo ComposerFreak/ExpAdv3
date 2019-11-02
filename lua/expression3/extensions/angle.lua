@@ -94,9 +94,9 @@ end, true)
 --[[
 ]]
 
-extension:RegisterMethod("a", "forward", "", "v", 1, Forward)
-extension:RegisterMethod("a", "up", "", "v", 1, Up)
-extension:RegisterMethod("a", "right", "", "v", 1, Right)
+extension:RegisterMethod("a", "forward", "", "v", 1, "Forward")
+extension:RegisterMethod("a", "up", "", "v", 1, "Up")
+extension:RegisterMethod("a", "right", "", "v", 1, "Right")
 
 --[[
 ]]
@@ -154,9 +154,9 @@ end, true)
 --[[
 ]]
 
-extension:RegisterMethod("a", "rotate", "v,n", "", 0, RotateAroundAxis)
+extension:RegisterMethod("a", "rotate", "v,n", "", 0, "RotateAroundAxis")
 
-extension:RegisterMethod("a", "normalize", "", "", 0, Normalize)
+extension:RegisterMethod("a", "normalize", "", "", 0, "Normalize")
 
 extension:RegisterMethod("a", "ceil", "", "", 0, function(a)
 	a.p = math.ceil(a.p)

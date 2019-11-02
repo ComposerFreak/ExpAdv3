@@ -156,7 +156,7 @@
 
 	extension:RegisterLibrary("string");
 
-	extension:RegisterFunction("string", "toNumber", "n", "s", 1, func, true);
+	extension:RegisterFunction("string", "toNumber", "s", "n", 1, function(s) return tonumber(s) or 0; end, true);
 
 	extension:RegisterMethod("s", "toNumber", "n", "n", 1, function(n, b)
 		return tonumber(n, base) or 0;

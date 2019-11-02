@@ -666,6 +666,7 @@ end
 
 function EXPR_LIB.GetClass(class)
 	if not isstring(class) then
+		debug.Trace();
 		EXPR_LIB.ThrowInternal(0, "EXPR_LIB.GetClass(s) was given %s.", type(class));
 	end
 

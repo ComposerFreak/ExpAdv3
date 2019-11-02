@@ -107,6 +107,8 @@
 	extension:RegisterFunction("math", "atan2", "n,n", "n", 1, math.atan2, true);
 	extension:RegisterFunction("math", "lerp", "n,n,n", "n", 1, Lerp, true);
 
+	extension:RegisterFunction("math", "toString", "n", "s", 1, function(n) return "" .. n; end, true);
+
 --[[
 	*****************************************************************************************************************************************************
 		

@@ -80,8 +80,10 @@ function ENT:SubmitToServer(script)
 
 				chat.AddText("Uploading...");
 			else
-				self:HandelThrown(res);
-				chat.AddText("Failed to validate script (see console).");
+				timer.Simple(0.5, function()
+					self:HandelThrown(res);
+					chat.AddText("Failed to validate script (see console).");
+				end);
 			end
 		end
 

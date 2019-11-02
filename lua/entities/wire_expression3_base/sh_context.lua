@@ -30,7 +30,7 @@ local cvar_ram_max;
 
 if SERVER then
 	cvar_softtime = CreateConVar("e3_softtime", 0.005, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.")
-	cvar_hardtime = CreateConVar("e3_hardtime", 0.0075, FCVAR_ARCHIVE, "The max CPU time e3 can reach.")
+	cvar_hardtime = CreateConVar("e3_hardtime", 0.01, FCVAR_ARCHIVE, "The max CPU time e3 can reach.")
 	cvar_softtimesize = CreateConVar("e3_timebuffersize", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
 	cvar_ram_max = CreateConVar("e3_ram_max", 1500000, "If ram exceeds this limit (in kB), e3s will be terminated");
 	cvar_netquota = CreateConVar("e3_netquota", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
@@ -38,7 +38,7 @@ end
 
 if CLIENT then
 	cvar_softtime = CreateConVar("e3_softtime_cl", 0.005, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.");
-	cvar_hardtime = CreateConVar("e3_hardtime_cl", 0.0075, FCVAR_ARCHIVE, "The max CPU time e3 can reach.")
+	cvar_hardtime = CreateConVar("e3_hardtime_cl", 0.01, FCVAR_ARCHIVE, "The max CPU time e3 can reach.")
 	cvar_softtimesize = CreateConVar("e3_timebuffersize_cl", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
 	cvar_ram_max = CreateConVar("e3_ram_max_cl", 1500000, "If ram exceeds this limit (in kB), e3s will be terminated");
 	cvar_netquota = CreateConVar("e3_netquota_cl", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
@@ -212,11 +212,11 @@ function CONTEXT:PreExecute()
 
 			self:Throw( "CPU Soft Quota Exceeded!");
 
-		elseif self.cpu_total >= self:hardTimeLimit() then
+		--[[elseif self.cpu_total >= self:hardTimeLimit() then
 			
 			debug.sethook( nil );
 
-			self:Throw( "CPU Hard Quota Exceeded!");
+			self:Throw( "CPU Hard Quota Exceeded!");]]
 
 		end
 
