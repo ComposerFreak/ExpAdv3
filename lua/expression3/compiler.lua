@@ -3790,7 +3790,7 @@ function COMPILER.Compile_FEILD(this, inst, token, data)
 			this:Throw(token, "No sutch atribute %s.%s", name(type), var);
 		end
 
-		this:writeToBuffer(inst, var);
+		this:writeToBuffer(inst, info.feild or var);
 
 		return info.class, 1;
 	end

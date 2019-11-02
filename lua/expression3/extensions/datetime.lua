@@ -10,17 +10,45 @@
 	::Time Extention::
 ]]
 
+
 local extension = EXPR_LIB.RegisterExtension("time");
 
 --[[
 	Time Stamp Object
 ]]
 
+local function timestamp(from, utc)
+	return os.date(utc and "!*t" or "*t", from or os.time());
+end
+
 extension:RegisterClass("ts", {"date"}, istable, EXPR_LIB.NOTNIL);
 
 extension:RegisterConstructor("ts", "", function()
 	return {year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0, isdst = false};
-end);
+end, true);
+
+extension:RegisterConstructor("ts", "n", timestamp, true);
+extension:RegisterConstructor("ts", "n,b", timestamp, true);
+
+extension:RegisterConstructor("ts", "b", function(utc)
+	return os.date(utc and "!*t" or "*t", os.time());
+end, true);
+
+--[[
+	Atributes
+]]
+
+extension:RegisterAtribute("ts", "year", "n", "year");
+extension:RegisterAtribute("ts", "month", "n", "month");
+extension:RegisterAtribute("ts", "day", "n", "day");
+
+extension:RegisterAtribute("ts", "hour", "n", "hour");
+extension:RegisterAtribute("ts", "minute", "n", "min");
+extension:RegisterAtribute("ts", "second", "n", "sec");
+
+--[[
+	Time Stamp Methods
+]]
 
 extension:RegisterMethod("ts", "getYear", "", "n", 1, function(ts, v) return ts.year; end, true);
 extension:RegisterMethod("ts", "getMonth", "", "n", 1, function(ts, v) return ts.month; end, true);
@@ -56,7 +84,6 @@ end, true);
 
 extension:RegisterLibrary("time");
 
-
 extension:RegisterFunction("time", "curtime", "", "n", 1, CurTime, true);
 
 extension:RegisterFunction("time", "realtime", "", "n", 1, RealTime, true);
@@ -70,18 +97,7 @@ extension:RegisterFunction("time", "now", "ts", "n", 1, function(ts)
 	return os.time(ts or {});
 end, true);
 
-
-extension:RegisterFunction("time", "from", "n", "ts", 1, function(from)
-	return os.date("*t", from or 0);
-end, true);
-
-extension:RegisterFunction("time", "fromUTC", "n", "ts", 1, function(from)
-	return os.date("!*t", from or 0);
-end, true);
-
 --[[
 ]]
 
 extension:EnableExtension();
-
-

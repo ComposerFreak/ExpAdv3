@@ -14,7 +14,7 @@ hook.Add("Expression3.Entity.BuildSandbox", "Expression3.Timers", function(entit
 	ctx.data.timers = {};
 end);
 
-local extension = EXPR_LIB.RegisterExtension("time");
+local extension = EXPR_LIB.RegisterExtension("timers");
 
 extension:RegisterLibrary("timer");
 

@@ -183,3 +183,19 @@ function Golem.GetDirective( directive )
 		return
 	end
 end
+
+--[[
+	Open Editor
+]]
+
+net.Receive("Expression3.OpenGolem", function() 
+	local entity;
+
+	if net.ReadBool() then entity = net.ReadEntity(); end
+
+	Golem.Open();
+
+	if IsValid(entity) and entity.script then
+		Golem.Instance:NewTab("editor", entity.script, false, entity:GetScriptName() or "generic");
+	end
+end);

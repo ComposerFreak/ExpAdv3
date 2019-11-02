@@ -212,7 +212,7 @@ if CLIENT then
 			end
 
 			local Panel = vgui.Create( "GOLEM_E3GateMenu" )
-			local Sheet = self.pnlTabHolder:AddSheet( "", Panel, "fugue/question.png", function(pnl) self:CloseMenuTab( pnl:GetParent( ), true ) end )
+			local Sheet = self.pnlTabHolder:AddSheet( "", Panel, "fugue/switch.png", function(pnl) self:CloseMenuTab( pnl:GetParent( ), true ) end )
 			self.pnlTabHolder:SetActiveTab( Sheet.Tab )
 			self.Permissions = Sheet
 			Sheet.Panel:RequestFocus( )
@@ -222,7 +222,7 @@ if CLIENT then
 			self.Permissions = nil
 		end );
 
-		editor.tbRight:SetupButton( "Permissions", "fugue/question.png", TOP, function( ) editor:NewTab( "expression 3" ); end )
+		editor.tbRight:SetupButton( "Permissions", "fugue/switch.png", TOP, function( ) editor:NewTab( "expression 3" ); end )
 	end );
 end
 

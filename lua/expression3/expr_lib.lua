@@ -227,6 +227,8 @@ if (not CLIENT) then
 	util.AddNetworkString("Expression3.SendToClient");
 
 	util.AddNetworkString("Expression3.InitializedClient");
+
+	util.AddNetworkString("Expression3.OpenGolem");
 end
 
 --[[
@@ -498,7 +500,7 @@ function EXPR_LIB.RegisterAtribute(class, atribute, type, native)
 	end
 
 	local atr = {};
-	atr.feild = feild;
+	atr.feild = native;
 	atr.class = typ.id;
 	atr.atribute = atribute;
 
@@ -1183,7 +1185,7 @@ local token_run = function(this)
 
 		this:Loop();
 
-		if (i > 25) then
+		if (i > 10) then
 
 			local b = SysTime() - bench;
 
@@ -1279,7 +1281,7 @@ function EXPR_LIB.Validate(cb, script, files)
 	end);
 
 	vldr.start = function()
-		timer.Create(vldr.timer, 0.1, 0, vldr.resume);
+		timer.Create(vldr.timer, 0.01, 0, vldr.resume);
 
 		timer.Create(vldr.timer .. 2, 60, 1, function()
 			if (not vldr.finished) then
