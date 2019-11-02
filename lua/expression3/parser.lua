@@ -1529,7 +1529,7 @@ function PARSER.Expression_8(this)
 end
 
 function PARSER.Expression_9(this)
-	local expr = this:Expression_10();
+	local expr = this:Expression_Trailing( this:Expression_10() );
 
 	while this:Accept("bshl") do
 		local inst = this:StartInstruction("bshl", expr.token);
@@ -1543,7 +1543,7 @@ function PARSER.Expression_9(this)
 end
 
 function PARSER.Expression_10(this)
-	local expr = this:Expression_11();
+	local expr = this:Expression_Trailing( this:Expression_11() );
 
 	while this:Accept("bshr") do
 		local inst = this:StartInstruction("bshr", expr.token);
@@ -1557,7 +1557,7 @@ function PARSER.Expression_10(this)
 end
 
 function PARSER.Expression_11(this)
-	local expr = this:Expression_12();
+	local expr = this:Expression_Trailing( this:Expression_12() );
 
 	while this:Accept("add") do
 		local inst = this:StartInstruction("add", expr.token);
@@ -1571,7 +1571,7 @@ function PARSER.Expression_11(this)
 end
 
 function PARSER.Expression_12(this)
-	local expr = this:Expression_13();
+	local expr = this:Expression_Trailing( this:Expression_13() );
 
 	while this:Accept("sub") do
 		local inst = this:StartInstruction("sub", expr.token);
@@ -1585,7 +1585,7 @@ function PARSER.Expression_12(this)
 end
 
 function PARSER.Expression_13(this)
-	local expr = this:Expression_14();
+	local expr = this:Expression_Trailing( this:Expression_14() );
 
 	while this:Accept("div") do
 		local inst = this:StartInstruction("div", expr.token);
@@ -1600,7 +1600,7 @@ end
 
 function PARSER.Expression_14(this)
 
-	local expr = this:Expression_15();
+	local expr = this:Expression_Trailing( this:Expression_15() );
 
 	while this:Accept("mul") do
 		local inst = this:StartInstruction("mul", expr.token);
@@ -1614,7 +1614,7 @@ function PARSER.Expression_14(this)
 end
 
 function PARSER.Expression_15(this)
-	local expr = this:Expression_16();
+	local expr = this:Expression_Trailing( this:Expression_16() );
 
 	while this:Accept("exp") do
 		local inst = this:StartInstruction("exp", expr.token);
@@ -1628,7 +1628,7 @@ function PARSER.Expression_15(this)
 end
 
 function PARSER.Expression_16(this)
-	local expr = this:Expression_17();
+	local expr = this:Expression_Trailing( this:Expression_17() );
 
 	while this:Accept("mod") do
 		local inst = this:StartInstruction("mod", expr.token);
@@ -1642,7 +1642,7 @@ function PARSER.Expression_16(this)
 end
 
 function PARSER.Expression_17(this)
-	local expr = this:Expression_18();
+	local expr = this:Expression_Trailing( this:Expression_18() );
 
 	if this:Accept("iof") then
 		local inst = this:StartInstruction("iof", expr.token);
