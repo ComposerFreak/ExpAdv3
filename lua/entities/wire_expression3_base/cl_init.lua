@@ -157,7 +157,7 @@ function ENT:GetDisplayLine(soft, average, warning)
 		return "Offline";
 	end
 
-	return math.ceil(soft * 100) .. "% (" .. math.ceil(average * 100) .. "%" .. (warning and "!" or "") .. ")";
+	return math.ceil(average * 100) .. "% (" .. math.ceil(soft * 1000000) .. "us" .. (warning and "!" or "") .. ")";
 end
 
 function ENT:GetClientDisplayData()

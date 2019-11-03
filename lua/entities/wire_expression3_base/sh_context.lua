@@ -23,24 +23,24 @@ CONTEXT.__index = CONTEXT;
 ]]
 
 local cvar_softtime;
-local cvar_hardtime;
+--local cvar_hardtime;
 local cvar_softtimesize;
 local cvar_netquota;
-local cvar_ram_max;
+--local cvar_ram_max;
 
 if SERVER then
 	cvar_softtime = CreateConVar("e3_softtime", 0.005, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.")
-	cvar_hardtime = CreateConVar("e3_hardtime", 0.01, FCVAR_ARCHIVE, "The max CPU time e3 can reach.")
+	--cvar_hardtime = CreateConVar("e3_hardtime", 0.01, FCVAR_ARCHIVE, "The max CPU time e3 can reach.")
 	cvar_softtimesize = CreateConVar("e3_timebuffersize", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
-	cvar_ram_max = CreateConVar("e3_ram_max", 1500000, "If ram exceeds this limit (in kB), e3s will be terminated");
+	--cvar_ram_max = CreateConVar("e3_ram_max", 1500000, "If ram exceeds this limit (in kB), e3s will be terminated");
 	cvar_netquota = CreateConVar("e3_netquota", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
 end
 
 if CLIENT then
 	cvar_softtime = CreateConVar("e3_softtime_cl", 0.005, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.");
-	cvar_hardtime = CreateConVar("e3_hardtime_cl", 0.01, FCVAR_ARCHIVE, "The max CPU time e3 can reach.")
+	--cvar_hardtime = CreateConVar("e3_hardtime_cl", 0.01, FCVAR_ARCHIVE, "The max CPU time e3 can reach.")
 	cvar_softtimesize = CreateConVar("e3_timebuffersize_cl", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
-	cvar_ram_max = CreateConVar("e3_ram_max_cl", 1500000, "If ram exceeds this limit (in kB), e3s will be terminated");
+	--cvar_ram_max = CreateConVar("e3_ram_max_cl", 1500000, "If ram exceeds this limit (in kB), e3s will be terminated");
 	cvar_netquota = CreateConVar("e3_netquota_cl", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
 end
 
@@ -70,17 +70,17 @@ function CONTEXT:softTimeLimit()
 	return cvar_softtime:GetFloat();
 end
 
-function CONTEXT:hardTimeLimit()
+--[[function CONTEXT:hardTimeLimit()
 	return cvar_hardtime:GetFloat();
-end
+end]]
 
 function CONTEXT:softTimeLimitSize()
 	return 1 / cvar_softtimesize:GetInt();
 end
 
-function CONTEXT:maxRam()
+--[[function CONTEXT:maxRam()
 	return cvar_ram_max:GetInt();
-end
+end]]
 
 function CONTEXT:GetNetQuota()
 	return cvar_netquota:GetInt();
@@ -176,7 +176,7 @@ function CONTEXT:UpdateQuotaValues()
 	if (self.status) then
 
 		self.cpu_softusage = self:movingCPUAverage() / self:softTimeLimit();
-		self.cpu_hardusage = self.cpu_total / self:hardTimeLimit();
+		--self.cpu_hardusage = self.cpu_total / self:hardTimeLimit();
 		self.cpu_average = (self.cpu_average * 0.95) + (self.cpu_total * 0.05);
 
 		self.net_total = 0;
