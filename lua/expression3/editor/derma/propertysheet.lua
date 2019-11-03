@@ -125,6 +125,7 @@ end
 
 function PANEL:SetActiveTab( active )
 	if self.m_pActiveTab == active then return end
+	if not IsValid(self.m_pActiveTab) or not ispanel(self.m_pActiveTab) then self.m_pActiveTab = nil end
 	if self.m_pActiveTab then
 		self.m_pActiveTab:GetPanel( ):SetVisible( false )
 		self.m_pActiveTab:SetColor( Color( 100, 100, 100 ) )
