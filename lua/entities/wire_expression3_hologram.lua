@@ -90,11 +90,11 @@ end
 
 if CLIENT then
 	hook.Add( "NetworkEntityCreated", "Expression3.Hologram.Reload", function(ent)
-		if !IsValid(ent) then return end
-		if ent:GetClass() ~= "lemon_holo" then return end
+		if !IsValid(ent) then return; end
+		if ent:GetClass() ~= "wire_expression3_hologram" then return; end
 
 		LinkHoloInfo(ent);
-		if ent.ApplyHoloInfo then ent:ApplyHoloInfo() end
+		if ent.ApplyHoloInfo then ent:ApplyHoloInfo(); end
 	end);
 end
 

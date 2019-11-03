@@ -21,10 +21,10 @@ hook.Add("PlayerInitialSpawn", "Expression3.Entity.InitializeAll", function(ply)
 		for _, context in pairs(EXPR_LIB.GetAll()) do
 			if (IsValid(context.entity)) then
 				net.Start("Expression3.SendToClient")
-					net.WriteEntity(self);
-					net.WriteEntity(self.player);
-					net.WriteString(self.script);
-					net.WriteTable(self.files);
+					net.WriteEntity(context.entity);
+					net.WriteEntity(context.entity.player);
+					net.WriteString(context.entity.script);
+					net.WriteTable(context.entity.files);
 				net.Send(ply);
 			end
 		end
