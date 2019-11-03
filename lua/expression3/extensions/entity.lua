@@ -169,6 +169,18 @@ end, true);
 	Materials
 ]]
 
+local BannedMats = {};
+
+BannedMats["pp/copy"] = true;
+
+hook.Call("Expression3.Banned.Materials", BannedMats);
+
+EXPR_LIB.BannedMats = BannedMats;
+
+--[[
+	Materials
+]]
+
 extension:SetSharedState();
 
 extension:RegisterMethod("e", "getMaterial", "", "s", 1, "GetMaterial");
@@ -178,7 +190,7 @@ extension:RegisterMethod("e", "getSubMaterial", "n", "s", 1, "GetSubMaterial")
 extension:SetServerState();
 
 extension:RegisterMethod("e", "setMaterial", "s", "", 0, function(context, e, s)
-	if context:CanUseEntity(e) then
+	if context:CanUseEntity(e) and not BannedMats[s] then
 		e:SetMaterial(s);
 	end
 end, false);

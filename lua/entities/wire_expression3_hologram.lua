@@ -486,7 +486,7 @@ if SERVER then
 
 			net.WriteUInt( 0, 16 )
 
-			for _, ENT in pairs( ents.FindByClass( "lemon_hologram" ) ) do
+			for _, ENT in pairs( ents.FindByClass( "wire_expression3_hologram" ) ) do
 				ENT:SyncClient( true )
 			end
 
