@@ -120,6 +120,16 @@ extension:RegisterMethod("e", "toLocal", "a", "a", 1, "WorldToLocalAngles");
 
 extension:RegisterMethod("e", "Vel", "", "v", 1, "GetVelocity");
 
+extension:RegisterMethod("e", "VelL", "", "v", 1, function(e)
+	local ph = e:GetPhysicsObject();
+
+	if IsValid(ph) then
+		return ph:WorldToLocal(ph:GetVelocity() + ph:GetPos());
+	end
+
+	return Vector(0,0,0);
+end, true);
+
 extension:RegisterMethod("e", "angVel", "", "a", 1, function(e)
 	local ph = e:GetPhysicsObject();
 
