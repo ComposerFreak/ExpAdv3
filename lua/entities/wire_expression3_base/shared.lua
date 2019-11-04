@@ -52,6 +52,7 @@ function ENT:SetCode(script, files, run)
 			return false;
 		end
 
+		self.validator = nil;
 		self.nativeScript = res.compiled;
 
 		self:BuildContext(res);

@@ -209,14 +209,42 @@ end
 ]]
 
 function ENT:BuildDupeInfo()
-  local info = self.BaseClass.BuildDupeInfo(self) or {}
-  info.script = self.script
-  return info
+	local info = self.BaseClass.BuildDupeInfo(self) or {};
+
+	info.script = self.script;
+	info.files = self.files;
+
+	info.e3_inports = self.wire_inport_tbl;
+	info.e3_outports = self.wire_outport_tbl;
+
+	return info;
 end
 
 function ENT:ApplyDupeInfo(ply, ent, info, GetEntByID)
-	ent.player = ply;
+	self.player = ply;
 	self:SetPlayer(ply);
-	self:SetCode(info.script);
+	self:SetScriptName("Loading from dupe.");
+	self:BuildWiredPorts(info.e3_inports or {}, info.e3_outports or {});
+	self:ReceiveFromClient(ply, info.script, info.files);
+	
 	self.BaseClass.ApplyDupeInfo(self, ply, ent, info, GetEntByID);
 end
+
+--[[
+	Fix advanced dupe attempting to seralize the context witch breaks EVERYTHING.
+	#Fuck you Garry, why you do this?
+]]
+
+local context;
+
+function ENT:PreEntityCopy()
+	context = self.context;
+	self.context = nil;
+	if self.BaseClass.PreEntityCopy then return self.BaseClass.PreEntityCopy(self); end
+end
+
+function ENT:PostEntityCopy()
+	self.context = context;
+	if self.BaseClass.PostEntityCopy then return self.BaseClass.PostEntityCopy(self); end
+end
+
