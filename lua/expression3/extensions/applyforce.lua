@@ -3,6 +3,12 @@ local extension = EXPR_LIB.RegisterExtension("applyforce");
 extension:SetSharedState();
 
 --[[
+	Fast Math access
+]]
+
+local abs = math.abs
+
+--[[
 	Apply Force methods
 ]]
 
@@ -32,6 +38,30 @@ local function applyangForce(ph, a)
 			ph:ApplyForceOffset( up, roll );
 			ph:ApplyForceOffset( up * -1, roll * -1 );
 		end
+	end
+end
+
+local function applyTorque(ph, tq)
+	if tq.x != 0 or tq.y != 0 or tq.z != 0 then
+		
+		local pos = ph:GetPos()
+		local tqamount = tq:Length()
+
+		tq = ph:LocalToWorld(tq) - pos
+
+		local off
+		if abs(tq.x) > tqamount * 0.1 or abs(tq.z) > tqamount * 0.1 then
+			off = Vector(-tq.z, 0, tq.x)
+		else
+			off = Vector(-tq.y, tq.x, 0)
+		end
+
+		off = off:GetNormal() * tqamount * 0.5
+
+		local dir = (tq:Cross(off)):GetNormal()
+
+		ph:ApplyForceOffset(dir, off)
+		ph:ApplyForceOffset(dir * -1, off * -1)
 	end
 end
 
@@ -96,6 +126,16 @@ extension:RegisterMethod("ph", "applyAngForce", "a", "", 0, function(context, ph
 		end
 	end
 end, false);
+
+extension:RegisterMethod("e", "applyTorque", "v", "", 0, function(context, e, v) 
+	if context:CanUseEntity(e) then
+		local ph = e:GetPhysicsObject();
+
+		if IsValid(ph) then
+			applyTorque(ph, v);
+		end
+	end
+end, false)
 
 
 --[[
