@@ -93,8 +93,6 @@
 
 	local function angToQuat(a)
 
-		local a = a:GetAngles()
-
 		local P = a.p * deg2rad * 0.5
 		local Y = a.y * deg2rad * 0.5
 		local R = a.r * deg2rad * 0.5
