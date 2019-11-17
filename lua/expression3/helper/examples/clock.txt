@@ -1,4 +1,10 @@
-@name "Ruskeths E3 Clock";
+@name "E3 Clock";
+
+/*
+    Author - Rusketh
+    Requires Addon - Sprops
+    Description - A simple holographic clock that tells the time.
+*/
 
 server {
     entity gate = system.getEntity();

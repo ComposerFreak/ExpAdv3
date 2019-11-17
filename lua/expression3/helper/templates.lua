@@ -20,13 +20,19 @@ local prettyPerams = EXPR_DOCS.PrettyPerams;
 local prettyReturns = function(op)
 	local rt = op["result type"] or "";
 
-	if rt then rt = prettyPerams(rt); end
+	--if rt then rt = prettyPerams(rt); end
 
 	local rc = tonumber(op["result count"]) or 0;
 
-	if rc == 0 or rt == "" then return "" end
+	if rc == 0 or rt == "" or rt == "NIL" then return "" end
 
-	return string.format("%s (*%i)", rt, rc);
+	local typ = EXPR_LIB.GetClass(rt);
+
+	if typ then rt = typ.name; end
+
+	if rc == 1 then return rt end
+
+	return string.format("%s *%i", rt, rc);
 end
 
 function EXPR_DOCS.PrettyFunction(op)
@@ -255,7 +261,7 @@ function HELPER_PANEL:Init()
 		self:ExpandAll(true);
 	end);
 
-	hook.Run("Expression3.LoadHelperNodes", self);
+	self:Reload();--hook.Run("Expression3.LoadHelperNodes", self);
 end
 
 function HELPER_PANEL:OpenEditor(kv)
@@ -288,6 +294,8 @@ end
 	Reload button
 *********************************************************************************/
 
+local bookmark_icon = "fugue/book-bookmark.png";
+
 function HELPER_PANEL:Reload()
 	local subnodes = self.root_tree.subnodes;
 
@@ -299,6 +307,14 @@ function HELPER_PANEL:Reload()
 
 		self.root_tree.subnodes = {};
 	end
+
+	self:AddNode("Links"):SetIcon("fugue/globe-network.png");
+	self:AddNode("Examples"):SetIcon("fugue/blue-folder--plus.png");
+	self:AddNode("Book Marks"):SetIcon(bookmark_icon);
+
+	self:AddNode("Libraries");
+	self:AddNode("Classes");
+	self:AddNode("Operators");
 
 	hook.Run("Expression3.LoadHelperNodes", self);
 end
@@ -460,7 +476,6 @@ end
 local edit_icon = "fugue/pencil.png";
 local open_book_icon = "fugue/book-open-bookmark.png";
 local closed_book_icon = "fugue/book.png";
-local bookmark_icon = "fugue/book-bookmark.png";
 local goto_icon = "fugue/eye--arrow.png";
 
 function HELPER_PANEL:AddOptionsMenu(node, callback)
@@ -482,8 +497,6 @@ function HELPER_PANEL:AddOptionsMenu(node, callback)
 
 			menu:AddOption( "Book Mark", function()
 				
-				self:AddNode("Book Marks"):SetIcon(bookmark_icon);
-
 				node.isBookMarked = true;
 				node.bookMark = self:AddNode("Book Marks", node:GetText());
 				node.bookMark.BookMarkOff = node;
@@ -562,7 +575,11 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 		local node = pnl:AddNode("Libraries", keyvalues.name);
 
 		pnl:AddHTMLCallback(node, function()
-			return string.format("%s<td><tr>%s</tr><tr>%s</tr></td>%s", pre_html, keyvalues.name, describe(keyvalues.desc), post_html);
+			return toHTML({
+				{"Library", keyvalues.name},
+				keyvalues.example,
+				describe(keyvalues.desc),
+			});
 		end);
 
 		pnl:AddHTMLCallback(node, function() 
@@ -719,6 +736,138 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 end);
 
 /*********************************************************************************
+	Operators are a lot of work
+*********************************************************************************/
+
+local function prettyOp(op)
+	local signature = op.signature;
+
+	signature = signature:upper():Replace("_", "");
+
+	local match1, match2 = string.match(signature, "^([A-Za-z]+)%(([A-Za-z0-9_,]+)%)$");
+
+	if match1 then
+		local args = string.Explode(",", match2);
+
+		local c = #args;
+
+		local token;
+
+		    if match1 == "EQ"  then token = "==";
+		elseif match1 == "NEQ" then token = "!=";
+		elseif match1 == "LEG" then token = "<=";
+		elseif match1 == "GEQ" then token = ">=";
+		elseif match1 == "LTH" then token = "<";
+		elseif match1 == "GTH" then token = ">";
+		elseif match1 == "DIV" then token = "/";
+		elseif match1 == "MUL" then token = "*"; 
+		elseif match1 == "SUB" then token = "-"; 
+		elseif match1 == "ADD" then token = "+"; 
+		elseif match1 == "EXP" then token = "^";
+		elseif match1 == "MOD" then token = "%";
+		elseif match1 == "AND" then token = "&&";
+		elseif match1 == "OR" then token = "||";
+		elseif match1 == "BAND" then token = "&";
+		elseif match1 == "BOR" then token = "|";
+		elseif match1 == "BXOR" then token = "^^";
+		elseif match1 == "BSHL" then token = "<<";
+		elseif match1 == "BSHR" then token = ">>";
+		end
+
+		if token then
+			if c == 2 then return string.format("%s %s %s", args[1], token, args[2]), token; end
+		end
+
+
+
+		if match1 == "SET" then
+			local cls = args[3] or "CLS";
+			if cls and cls == "CLS" then cls = "type"; end
+
+			if c >= 3 then return string.format("%s[%s,%s] = %s", args[1], args[2], cls, args[4] or cls), "[]="; end
+		end
+
+		if match1 == "GET" then
+			local cls = args[3] or "CLS";
+			if cls and cls == "CLS" then cls = "type"; end
+
+			if c >= 2 then return string.format("%s[%s,%s]", args[1], args[2], cls), "[]"; end
+		end
+
+
+
+		    if match1 == "IS" then token = "";
+		elseif match1 == "NOT" then token = "!";
+		elseif match1 == "LEN" then token = "#";
+		elseif match1 == "NEG" then token = "-";
+		end
+
+		if token then
+			if c == 1 then return string.format("%s%s", token, args[2]), token; end
+		end
+
+
+
+		if match1 == "TEN" then
+			if c == 3 then return string.format("%s ? %s : %s", args[1], args[2], args[3]), "?"; end
+		end
+
+
+
+		if match1 == "ITOR" then
+			if c == 1 then return string.format("foreach(type k; type v in %s) {}", args[1]), "foreach"; end
+		end
+
+	end
+
+
+
+	match1, match2 = string.match(op.signature, "^%(([A-Za-z0-9_]+)%)([A-Za-z0-9_]+)$");
+
+	if match1 and match2 then
+		match2 = match2:upper():Replace("_", "");
+
+		local class = EXPR_LIB.GetClass(match1);
+		if class then match1 = class.name; end;
+
+		return string.format("(%s) %s", match1, match2), "casting";
+	end
+
+	return signature, "misc";
+end
+
+/*********************************************************************************
+	Add class nodes to the helper
+*********************************************************************************/
+hook.Add("Expression3.LoadHelperNodes", "Expression3.OperatorHelpers", function(pnl)
+	local op_docs = EXPR_DOCS.GetOperatorDocs();
+
+	op_docs:ForEach( function(i, keyvalues)
+
+		local signature, class = prettyOp(keyvalues);
+
+		local node = pnl:AddNode("Operators", class, signature);
+
+		stateIcon(node, keyvalues.state);
+
+		pnl:AddHTMLCallback(node, function() 
+			return toHTML({
+				{"Operator:", signature},
+				{"Returns:", prettyReturns(keyvalues)},
+				keyvalues.example,
+				describe(keyvalues.desc),
+				state(keyvalues.state),
+			});
+		end);
+
+		pnl:AddOptionsMenu(node, function()
+			return keyvalues;
+		end);
+
+	end);
+end);
+
+/*********************************************************************************
 	Add example nodes to the helper
 *********************************************************************************/
 
@@ -729,10 +878,6 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.Examples", function(pnl)
 	local editor = Golem.GetInstance( );
 
 	local files = file.Find(path .. "*.txt", "GAME");
-
-	local root = pnl:AddNode("Examples");
-	
-	root:SetIcon("fugue/blue-folder--plus.png");
 
 	for i, filename in pairs( files ) do
 		local node = pnl:AddNode("Examples", filename);
@@ -752,10 +897,6 @@ end);
 *********************************************************************************/
 
 hook.Add("Expression3.LoadHelperNodes", "Expression3.Links", function(pnl)
-
-	local root = pnl:AddNode("Links");
-
-	root:SetIcon("fugue/globe-network.png");
 
 	local function addLink(sName, sUrl, sIcon)
 		local node = pnl:AddNode("Links", sName);
