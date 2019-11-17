@@ -74,7 +74,6 @@ local pre_html = [[
 			<style>
 				body {background-color: #000; color: #FFF}
 				table {width: 100%}
-				tr:nth-child(odd) {background: #333}
 			</style>
 
 			<table>		
@@ -173,14 +172,23 @@ function EDITOR_PANEL:Clear()
 	self:InvalidateLayout();
 end
 
-function EDITOR_PANEL:SetValues(kv, csv)
+function EDITOR_PANEL:SetValues(kv, csv, pnl)
 	
 	self:Clear();
 	
 	for k, v in pairs(kv) do
 		self:AddValue(k, v, function(value)
 			kv[k] = value;
-			if csv then csv:insert(nil, csv:FromKV(kv)); end
+
+			if csv then
+				csv:insert(nil, csv:FromKV(kv));
+			end
+
+			if pnl then
+				pnl:WriteLine(Color(255, 0, 0), "Updated Helper Info"); 
+				pnl:WriteLine(Color(255, 0, 0), " Key: ", Color(0, 255, 0), k); 
+				pnl:WriteLine(Color(255, 0, 0), " Value: ", Color(0, 255, 0), value); 
+			end
 		end);
 	end
 end
@@ -247,10 +255,14 @@ function HELPER_PANEL:Init()
 	end;
 
 	self.expt_btn = self.ctrl_pnl:SetupTextBox( "Export Custom Helper Data", "fugue/disk-black.png", RIGHT, function(_, str)
-		if str ~= "" then EXPR_DOCS.SaveChangedDocs(str .. ".txt"); end
+		if str ~= "" then
+			EXPR_DOCS.SaveChangedDocs(str .. ".txt");
+			pnl:WriteLine(Color(255, 255, 255), "Exported Custom Helpers");
+			pnl:WriteLine(Color(0, 255, 0), str .. ".txt");
+		end
 	end, nil);
 
-	self.expt_btn:SetWide(150);
+	self.expt_btn:SetWide(100);
 	self.expt_btn:SetPlaceholderText("file name");
 
 	self.ctrl_pnl:SetupButton("Close All", "fugue/arrow-090-small.png", LEFT, function()
@@ -263,6 +275,7 @@ function HELPER_PANEL:Init()
 
 	self.ctrl_pnl:SetupButton("Reload Helper", "fugue/arrow-circle.png", LEFT, function()
 		self:Reload();
+		pnl:WriteLine(Color(255, 0, 0), "Reloaded Helper");
 	end);
 
 	self:Reload();
@@ -271,7 +284,7 @@ end
 function HELPER_PANEL:OpenEditor(kv, csv)
 	self.cls_btn:SetVisible(true);
 	self.edtr_pnl:SetVisible(true);
-	if kv then self.edtr_pnl:SetValues(kv, csv); end
+	if kv then self.edtr_pnl:SetValues(kv, csv, self); end
 	self:CloseHTML();
 end
 
@@ -294,6 +307,10 @@ function HELPER_PANEL:CloseHTML()
 	self:InvalidateLayout();
 end
 
+function HELPER_PANEL:WriteLine(...)
+	Golem.Print(...);
+end
+
 /*********************************************************************************
 	Reload button
 *********************************************************************************/
@@ -312,13 +329,48 @@ function HELPER_PANEL:Reload()
 		self.root_tree.subnodes = {};
 	end
 
-	self:AddNode("Links"):SetIcon("fugue/globe-network.png");
-	self:AddNode("Examples"):SetIcon("fugue/blue-folder--plus.png");
-	self:AddNode("Book Marks"):SetIcon(bookmark_icon);
+	--e3docs/saved/
 
-	self:AddNode("Libraries");
-	self:AddNode("Classes");
-	self:AddNode("Operators");
+	local Links = self:AddNode("Links");
+	local Examples = self:AddNode("Examples");
+	local BookMarks = self:AddNode("Book Marks");
+	local CustomHelpers = self:AddNode("Custom Helpers");
+	local Libraries = self:AddNode("Libraries");
+	local Classes = self:AddNode("Classes");
+	local Operators = self:AddNode("Operators");
+
+	Links:SetIcon("fugue/globe-network.png");
+	Examples:SetIcon("fugue/blue-folder--plus.png");
+	CustomHelpers:SetIcon("fugue/blue-folder-horizontal-open.png");
+	BookMarks:SetIcon(bookmark_icon);
+
+	self:AddHTMLCallback(BookMarks, function()
+		return toHTML({
+			"<h2>Book Marks:</h2>",
+			"Right click a node to",
+			"save a new book mark.",
+			"",
+			"Right click a book mark",
+			"to go to that node."
+		});
+	end);
+
+	self:AddHTMLCallback(CustomHelpers, function()
+		return toHTML({
+			"<h2>Custom Helpers:</h2>",
+			"Right click a node to",
+			"change its helper data.",
+			"",
+			"Click the export button",
+			"at the bottom of the helper",
+			"to export your custom helper",
+			"information.",
+			"",
+			"Click one of the saved custom",
+			"helper files to load the the",
+			"files saved helper data.",
+		});
+	end);
 
 	hook.Run("Expression3.LoadHelperNodes", self);
 end
@@ -496,6 +548,10 @@ function HELPER_PANEL:AddOptionsMenu(node, callback)
 
 			end):SetIcon(edit_icon);
 		end
+
+		menu:AddOption("Copy to clipboard", function()
+			SetClipboardText(node:GetText());
+		end):SetIcon("fugue/document-copy.png");
 
 		if not node.isBookMarked then
 
@@ -917,6 +973,40 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.Links", function(pnl)
 	hook.Run("Expression3.LoadHelperLinks", addLink);
 
 end);
+
+/*********************************************************************************
+	Add exported data files to the helper
+*********************************************************************************/
+
+hook.Add("Expression3.LoadHelperNodes", "Expression3.SavedHelpers", function(pnl)
+
+	local path = "e3docs/saved/";
+
+	local editor = Golem.GetInstance( );
+
+	local files = file.Find(path .. "*.txt", "DATA");
+
+	for i, filename in pairs( files ) do
+
+		local node = pnl:AddNode("Custom Helpers", filename)
+
+		node:SetIcon("fugue/xfn.png");
+
+		node.DoClick = function()
+			local ok, err = EXPR_DOCS.LoadCustomDocFile(path .. filename, "DATA");
+
+			if ok then
+				pnl:WriteLine(Color(255, 255, 255), "Loaded Custom Helpers ", Color(0, 255, 0), filename);
+			else
+				pnl:WriteLine(Color(255, 255, 255), "Error Loading Custom Helpers ", Color(0, 255, 0), filename);
+				pnl:WriteLine(Color(255, 255, 255), "Error ", Color(0, 255, 0), err);
+			end
+		end;
+	end
+
+end);
+
+
 		
 /*********************************************************************************
 	Add menu to golem

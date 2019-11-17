@@ -222,6 +222,7 @@ end
 
 file.CreateDir("e3docs");
 file.CreateDir("e3docs/csv");
+file.CreateDir("e3docs/saved");
 
 /*********************************************************************************
 	Types
@@ -685,41 +686,45 @@ do
 				for i = 1, total do
 					local value = rows[i];
 
-					local match = string.match(value, "^#([A-Za-z]+)$");
+					if value and value ~= "" then
+						local match = string.match(value, "^#([A-Za-z]+)");
 
-					if match then
-						csv = lk[match:upper()];
+						if match then
+							csv = lk[match:upper()];
+
+							if not csv then
+								return false, "Invalid refrence \"#" .. match .. "\"";
+							end
+						end
 
 						if not csv then
-							return false, "Invalid refrence \"#" .. match .. "\"";
+							return false, "No refrence set";
 						end
-					end
 
-					if not csv then
-						return false, "No refrence set \"#FUNCTION\"";
-					end
+						local values = string.Explode("\t", value);
 
-					local values = string.Explode("\t", value);
+						if csv.pk then
+							local key = values[csv.pk];
 
-					if csv.pk then
-						local key = values[csv.pk];
-
-						if key and key ~= "" then 
-							csv.lk[key] = i - 1;
+							if key and key ~= "" then 
+								csv.lk[key] = i - 1;
+							end
 						end
-					end
 
-					csv.data[i - 1] = values;
+						csv.data[i - 1] = values;
+					end
 				end
 
 			end
+
+			return true;
 		end
 
-		return true;
+		return false, "file is empty.";
 	end;
 
-	function EXPR_DOCS.LoadCustomDocFile(filename)
-		local raw = file.Read(filename, "GAME");
+	function EXPR_DOCS.LoadCustomDocFile(filename, path)
+		local raw = file.Read(filename, path or "GAME");
 
 		local ok, err = LoadCustomDocFile(raw);
 
@@ -728,6 +733,8 @@ do
 			MsgN("Error: ", err);
 			MsgN("File: ", filename);
 		end
+
+		return ok, err;
 	end
 
 	local path = "lua/expression3/helper/custom/";
@@ -774,7 +781,7 @@ do
 
 	function EXPR_DOCS.SaveChangedDocs(filename)
 
-		local path = string.format("e3docs\\csv\\%s", filename);
+		local path = string.format("e3docs/saved/%s", filename);
 
 		local fl = file.Open(path, "w", "DATA");
 
