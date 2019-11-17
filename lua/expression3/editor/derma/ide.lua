@@ -189,7 +189,6 @@ function PANEL:Init( )
 	self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( -1 ) end )
 
 	self.tbRight:SetupButton( "Options", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options" ) end )
-	self.tbRight:SetupButton( "Open user manual", "fugue/question.png", TOP, function( ) self:NewMenuTab( "wiki" ) end )
 	self.tbRight:SetupButton( "Open find & replace", "fugue/magnifier.png", TOP, function( ) self.pnlSearch:Toggle() end )
 
 
@@ -198,7 +197,7 @@ function PANEL:Init( )
 	self.searchOptWhole = self.tbRight:SetupCheckBox( "Match whole word.", "No match whole world.", "fugue\\selection-select.png", "fugue\\selection-select-input.png", TOP, function( ) end );
 	self.searchOptSelection = self.tbRight:SetupCheckBox( "Find in selection.", "Find in script.", "fugue\\selection.png", "fugue\\selection-input.png",  TOP, function( ) end );
 	self.searchOptWrap = self.tbRight:SetupCheckBox( "Wrap around", "No wrap around", "fugue\\arrow-circle.png", "fugue\\arrow-return-000-left.png", TOP, function( ) end );
-	self.searchOptions = { self.searchOptRegex, self.searchOpCase, self.searchOptWhole, self.searchOptSelection, self.searchOptWrap, self.searchOptions };
+	self.searchOptions = { self.searchOptRegex, self.searchOpCase, self.searchOptWhole, self.searchOptSelection, self.searchOptWrap };
 
 	-- self.tbRight:SetupButton( "Visit the wiki", 	"fugue/home.png", 		BOTTOM, function( ) end )
 
@@ -268,15 +267,10 @@ function PANEL:Init( )
 
 
 	Golem.Syntax:Create( "console", self.tbConsoleEditor )
-	--[[Golem.Syntax:Create( "Console", self.tbConsoleEditor )
-	self.tbConsoleEditor.tbConsoleRows = { }
-
-	self:AddPrintOut( Color(255, 255, 0), "Expression 3 Console Initialized:" )
-	]]
 
 	hook.Run( "Expression3.AddGolemTabTypes", self )
 
-	//self:AddCustomTab( bScope, sName, fCreate, fClose )
+	--self:AddCustomTab( bScope, sName, fCreate, fClose )
 
 	self:AddCustomTab( false, "options", function( self )
 		if self.Options then
@@ -294,24 +288,6 @@ function PANEL:Init( )
 		return Sheet
 	end, function( self )
 		self.Options = nil
-	end )
-
-	self:AddCustomTab( false, "wiki", function( self )
-		if self.Wiki then
-			self.pnlSideTabHolder:SetActiveTab( self.Wiki.Tab )
-			self.Wiki.Panel:RequestFocus( )
-			return self.Wiki
-		end
-
-		local Panel = vgui.Create( "GOLEM_Wiki" )
-		local Sheet = self.pnlSideTabHolder:AddSheet( "", Panel, "fugue/question.png", function(pnl) self:CloseMenuTab( pnl:GetParent( ), true ) end )
-		self.pnlSideTabHolder:SetActiveTab( Sheet.Tab )
-		self.Wiki = Sheet
-		Sheet.Panel:RequestFocus( )
-
-		return Sheet
-	end, function( self )
-		self.Wiki = nil
 	end )
 
 	if not self:OpenOldTabs( ) then

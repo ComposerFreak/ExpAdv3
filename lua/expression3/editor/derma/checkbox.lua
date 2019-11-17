@@ -10,14 +10,15 @@
 
 local CHECK = {};
 
+local col = Color(100, 100, 100);
 local tick = Material("fugue\\tick.png");
 local cross = Material("fugue\\cross-button.png");
 
 function CHECK:Init()
 	self.bChecked = false;
-	self:SetTick(tick, self:GetColor());
-	self:SetCross(cross, self:GetColor());
-	self:SetMaterial( self.cross );
+	self:SetTick(tick, col);
+	self:SetCross(cross, col);
+	self:SetValue(false, true);
 end
 
 function CHECK:SetStatic(image)

@@ -35,8 +35,8 @@ end
 
 if (CLIENT) then
 	function ENT:Initialize()
+		self.bDrawSplash = true;
 		self.GPU = GPULib.WireGPU(self)--, WIRE_GPU_HD);
-		local res = self.GPU.Resolution or 512;
 	end
 
 	function ENT:DrawEntityOutline() end
@@ -46,18 +46,41 @@ if (CLIENT) then
 
 		Wire_Render(self)
 
-		local res = self.GPU.Resolution;
-		
-		self.GPU:RenderToGPU( function()
-			if (not self.NoScreenRefresh) then render.Clear( 0, 0, 0, 255 ) end
-			EXPR3_DRAWSCREEN = true;
-			self:CallEvent("", 0, "RenderScreen", {"n", res}, {"n", res}, {"e", self});
-			EXPR3_DRAWSCREEN = false;
-			hook.Call("Expression3.Entity.PostDrawScreen", self.context, self)
-		end);
+		self.GPU:RenderToGPU( self:RenderFromEvent() );
 
 		self.GPU:Render()
 	end
+
+	function ENT:RenderFromEvent()
+		return function()
+			if not self.NoScreenRefresh then render.Clear( 0, 0, 0, 255 ); end
+			
+			EXPR3_DRAWSCREEN = true;
+
+			local res = self.GPU.Resolution or 512;
+
+			local status = self:CallEvent("", 0, "RenderScreen", {"n", res}, {"n", res}, {"e", self});
+			
+			EXPR3_DRAWSCREEN = false;
+
+			if status == nil then self:RenderSplashScreen(res); end
+
+			hook.Call("Expression3.Entity.PostDrawScreen", self.context, self);
+		end;
+	end
+
+	local background = surface.GetTextureID("omicron/bulb");
+
+	function ENT:RenderSplashScreen(res, force)
+		force = force or not self:IsRunning();
+		if self.bDrawSplash or force then
+			surface.SetTexture(background);
+			surface.SetDrawColor(Color(255, 255, 255, 255));
+			surface.DrawTexturedRect(0, 0, res, res);
+			self.bDrawSplash = false;
+		end
+	end
+
 end
 
 function ENT:OnRemove()

@@ -38,6 +38,7 @@ function PANEL:SetupButton( sName, sMaterial, nDock, fDoClick )
 	if fDoClick then
 		btn.DoClick = fDoClick
 	end
+
 	return btn
 end
 
@@ -64,6 +65,21 @@ function PANEL:SetupCheckBox( sOn, sOff, sMaterialT, sMaterialC, nDock, fChanged
 	return btn
 end
 
+
+function PANEL:SetupTextBox( sName, sMaterial, nDock, fDoClick, fChangedValue )
+	local txt = self:Add( "GOLEM_TextEntry" );
+
+	txt:SetFlat( true )
+	txt:SetTooltip( sName );
+	txt:SetMaterial( Material( sMaterial ) );
+	txt:Dock( nDock );
+
+	if fChangedValue then txt.OnValueChange = fChangedValue; end
+
+	if fDoClick then txt.DoClick = fDoClick; end
+
+	return txt;
+end
 
 function PANEL:Paint( w, h )
 	surface.SetDrawColor( 70, 70, 70, 255 )

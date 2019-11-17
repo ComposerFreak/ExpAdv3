@@ -24,6 +24,9 @@
 		"expression3/core/error.lua",
 		"expression3/core/system.lua",
 		"expression3/core/events.lua",
+
+		"expression3/helper/database.lua",
+		"expression3/helper/templates.lua",
 	};
 
 	local path = "expression3/extensions/";

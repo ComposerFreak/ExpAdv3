@@ -31,27 +31,6 @@ if (SERVER) then
 	AddCSLuaFile("expression3/compiler.lua");
 	AddCSLuaFile("expression3/debuger.lua");
 
-	--AddCSLuaFile("expression3/extensions/core.lua");
-	--AddCSLuaFile("expression3/extensions/math.lua");
-	--AddCSLuaFile("expression3/extensions/string.lua");
-	--AddCSLuaFile("expression3/extensions/vector.lua");
-	--AddCSLuaFile("expression3/extensions/vector2.lua");
-	--AddCSLuaFile("expression3/extensions/angle.lua");
-	--AddCSLuaFile("expression3/extensions/entity.lua");
-	--AddCSLuaFile("expression3/extensions/holograms.lua");
-	--AddCSLuaFile("expression3/extensions/table.lua");
-	--AddCSLuaFile("expression3/extensions/network.lua");
-	--AddCSLuaFile("expression3/extensions/color.lua");
-	--AddCSLuaFile("expression3/extensions/render.lua");
-	--AddCSLuaFile("expression3/extensions/player.lua");
-	--AddCSLuaFile("expression3/extensions/timers.lua");
-	--AddCSLuaFile("expression3/extensions/misc.lua");
-	--AddCSLuaFile("expression3/extensions/e2table.lua");
-	--AddCSLuaFile("expression3/extensions/wirelink.lua");
-	--AddCSLuaFile("expression3/extensions/sound.lua");
-	--AddCSLuaFile("expression3/extensions/find.lua");
-	--AddCSLuaFile("expression3/extensions/permissions.lua");
-
 	AddCSLuaFile("expression3/editor.lua");
 	AddCSLuaFile( "expression3/editor.lua");
 	AddCSLuaFile( "expression3/editor/font.lua" );
@@ -71,7 +50,8 @@ if (SERVER) then
 	AddCSLuaFile( "expression3/editor/derma/toolbar.lua" );
 	AddCSLuaFile( "expression3/editor/derma/filemenu.lua" );
 	AddCSLuaFile( "expression3/editor/derma/syntaxer.lua" );
-	AddCSLuaFile( "expression3/editor/derma/wiki.lua" );
+	--AddCSLuaFile( "expression3/editor/derma/wiki.lua" );
+	AddCSLuaFile( "expression3/editor/derma/textentry.lua" );
 	AddCSLuaFile("expression3/editor/derma/checkbox.lua");
 	AddCSLuaFile("expression3/editor/derma/findreplace.lua");
 	AddCSLuaFile("expression3/editor/derma/console2.lua");
@@ -82,13 +62,6 @@ if (SERVER) then
 	AddCSLuaFile("expression3/editor/derma/syntax/syntax_lua.lua");
 	AddCSLuaFile("expression3/editor/derma/syntax/syntax_console.lua");
 
-	AddCSLuaFile("expression3/wiki.lua");
-	AddCSLuaFile("expression3/wiki_inc.lua");
-	AddCSLuaFile("expression3/wiki/html_compiler.lua");
-	AddCSLuaFile("expression3/wiki/inits/autogen.lua");
-	AddCSLuaFile("expression3/wiki/inits/autogen.lua");
-	AddCSLuaFile("expression3/wiki/inits/examples.lua");
-
 	resource.AddFile("models/lemongate/gibsmodel_chipmesh001.mdl");
 	resource.AddFile("models/lemongate/gibsmodel_fanmesh001.mdl");
 	resource.AddFile("models/lemongate/lemongate.mdl");
@@ -97,25 +70,30 @@ if (SERVER) then
 	resource.AddFile("models/shadowscion/lemongate/gate.mdl");
 	resource.AddFile("models/tanknut/cylinder.mdl");
 
+	local addAll;
 
-	local _, folders = file.Find( string.format("%s\\materials\\*", EXPR_ROOT) , "GAME");
-	for _, folder in pairs( folders ) do
-		--print( "E3 - scanning materials: " .. folder );
+	addAll = function(path, gamepath)
 
-		local images = file.Find( string.format("%s\\materials\\%s\\*.png", EXPR_ROOT, folder), "GAME");
-		for _, img in pairs( images ) do
+		local files, folders = file.Find(path, gamepath);
 
-			local png = string.format("materials\\%s\\%s", folder, img);
-			--print( "E3 - resource added: " .. png );
-			resource.AddSingleFile(png);
+		for _, file in pairs(files) do
+			resource.AddFile( string.format("%s/%s", path, file) );
 		end
-	end
 
+		for _, folder in pairs(folders) do
+			addAll( string.format("%s/%s", path, folder), gamepath );
+		end
+	end;
+
+	addAll(string.format("%s/materials", EXPR_ROOT), "GAME");
+	addAll(string.format("%s/models", EXPR_ROOT), "GAME");
+
+	addAll(string.format("%s/lua/expression3/helper/csv", EXPR_ROOT), "GAME");
+	addAll(string.format("%s/lua/expression3/helper/custom", EXPR_ROOT), "GAME");
+	addAll(string.format("%s/lua/expression3/helper/examples", EXPR_ROOT), "GAME");
 
 	include("expression3/expr_lib.lua");
 
 elseif (CLIENT) then
 	include("expression3/expr_lib.lua");
-	include("expression3/wiki.lua");
-	include("expression3/wiki_inc.lua");
 end

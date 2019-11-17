@@ -206,7 +206,7 @@ if CLIENT then
 	hook.Add( "Expression3.AddGolemTabTypes", "PermissionsTab", function(editor)
 		editor:AddCustomTab( true, "expression 3", function( self )
 			if self.Permissions then
-				self.pnlSideTabHolder:SetActiveTab( self.Permissions.Tab )
+				self.pnlTabHolder:SetActiveTab( self.Permissions.Tab )
 				self.Permissions.Panel:RequestFocus( )
 				return self.Permissions
 			end

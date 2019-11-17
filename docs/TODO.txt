@@ -18,6 +18,7 @@
 	[ ] - http
 	[ ] - unitconv
 [ ] - Entity
-	[ ] - Advanced Dupe
+	[X] - Advanced Dupe
 	[X] - Holo data new players
-	[ ] - Ban material "pp/copy"
+	[x] - Ban material "pp/copy"
+	[x] - Default screen

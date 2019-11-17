@@ -111,6 +111,8 @@ function SEARCH:Open(noanim)
 		end
 	end
 
+	self.pEditor.tbRight:InvalidateLayout(false);
+
 	self.query_text:RequestFocus();
 
 	self.bOpen = true;
@@ -133,6 +135,8 @@ function SEARCH:Close(noanim)
 		end
 	end
 
+	self.pEditor.tbRight:InvalidateLayout(false);
+	
 	self.bOpen = false;
 end
 
