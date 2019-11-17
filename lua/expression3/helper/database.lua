@@ -61,10 +61,11 @@ function oCSV:add(...)
 	self:insert(nil, {...});
 end
 
-local function ow(pk, current, new)
+local function ow(pk, current, values)
 	for i = 1, #current do
 		local cur = current[i];
-		if cur and cur ~= "" then new[i] = cur; end
+		local new = values[i];
+		if new ~= "" or not cur then current[i] = new; end
 	end
 
 	return true;

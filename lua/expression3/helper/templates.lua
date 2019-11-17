@@ -635,16 +635,10 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 		local node = pnl:AddNode("Libraries", keyvalues.name);
 
 		pnl:AddHTMLCallback(node, function()
+			local keyvalues = libdocs:ToKV(libdocs.data[i]);
+
 			return toHTML({
 				{"Library", keyvalues.name},
-				keyvalues.example,
-				describe(keyvalues.desc),
-			});
-		end);
-
-		pnl:AddHTMLCallback(node, function() 
-			return toHTML({
-				{"Library:", keyvalues.name},
 				keyvalues.example,
 				describe(keyvalues.desc),
 			});
@@ -668,6 +662,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 		stateIcon(node, keyvalues.state);
 
 		pnl:AddHTMLCallback(node, function() 
+			local keyvalues = fundocs:ToKV(fundocs.data[i]);
+
 			return toHTML({
 				{"Function:", signature},
 				{"Returns:", prettyReturns(keyvalues)},
@@ -702,6 +698,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 			local node = pnl:AddNode("Classes", keyvalues.name);
 
 			pnl:AddHTMLCallback(node, function()
+				local keyvalues = type_docs:ToKV(type_docs.data[i]);
+
 				return toHTML({
 					{"Class:", string.format("%s (%s)", keyvalues.name, EXPR_DOCS.PrettyPerams(keyvalues.id))},
 					{"Extends:", string.format("%s", lk[keyvalues.extends] or "")},
@@ -729,6 +727,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 		stateIcon(node, keyvalues.state);
 
 		pnl:AddHTMLCallback(node, function()
+			local keyvalues = const_docs:ToKV(const_docs.data[i]);
+
 			keyvalues["result type"] = keyvalues.id;
 			keyvalues["result count"] = 1;
 
@@ -753,7 +753,9 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 
 		local node = pnl:AddNode("Classes", lk[keyvalues.id], "Attributes", keyvalues.name);
 
-		pnl:AddHTMLCallback(node, function() 
+		pnl:AddHTMLCallback(node, function()
+			local keyvalues = attr_docs:ToKV(attr_docs.data[i]);
+
 			return toHTML({
 				{"Atribute:", string.format("%s.%s", lk[keyvalues.id], keyvalues.name)},
 				{"Type:", lk[keyvalues.type]},
@@ -779,6 +781,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 		stateIcon(node, keyvalues.state);
 
 		pnl:AddHTMLCallback(node, function() 
+			local keyvalues = method_docs:ToKV(method_docs.data[i]);
+
 			return toHTML({
 				{"Method:", signature},
 				{"Returns:", prettyReturns(keyvalues)},
@@ -911,6 +915,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.OperatorHelpers", function(
 		stateIcon(node, keyvalues.state);
 
 		pnl:AddHTMLCallback(node, function() 
+			local keyvalues = op_docs:ToKV(op_docs.data[i]);
+
 			return toHTML({
 				{"Operator:", signature},
 				{"Returns:", prettyReturns(keyvalues)},
