@@ -11,7 +11,7 @@ local oCSV = {};
 oCSV.__index = oCSV;
 
 function EXPR_DOCS.CSV(pk, ...)
-	local csv = {headers = {...}, data = {}, lk = {}, pk = pk};
+	local csv = {headers = {...}, data = {}, lk = {}, clk = {}, pk = pk};
 	
 	setmetatable(csv, oCSV);
 
@@ -48,6 +48,8 @@ function oCSV:insert(ow, values)
 			end
 
 			self.lk[key] = i;
+
+			self.clk[key] = i;
 		end
 
 	end
@@ -246,18 +248,25 @@ do
 				["desc"] = "",
 			});
 		end
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadDefaultTypeDocs()
+
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("%s/lua/expression3/helper/csv/%s",EXPR_ROOT, filename), "GAME", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalTypeDocs()
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("e3docs/csv/%s", filename), "DATA", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.SaveLocalTypeDocs()
@@ -283,7 +292,7 @@ do
 	end
 
 	function EXPR_DOCS.GenerateDefaultConstructorDocs()
-		
+
 		for _, cls in pairs( EXPR_CLASSES ) do
 			
 			if cls.constructors then
@@ -304,6 +313,8 @@ do
 			end
 
 		end
+
+		docs.clk = {};
 		
 	end
 
@@ -311,12 +322,16 @@ do
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalConstructorDocs()
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.SaveLocalConstructorDocs()
@@ -344,7 +359,7 @@ do
 	end
 
 	function EXPR_DOCS.GenerateDefaultAttributeDocs()
-		
+
 		for _, cls in pairs( EXPR_CLASSES ) do
 			
 			if cls.atributes then
@@ -362,6 +377,8 @@ do
 			end
 
 		end
+
+		docs.clk = {};
 		
 	end
 
@@ -369,12 +386,16 @@ do
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalAttributeDocs()
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.SaveLocalAttributeDocs()
@@ -401,7 +422,7 @@ do
 	end
 
 	function EXPR_DOCS.GenerateDefaultMethodDocs()
-		
+
 		for _, op in pairs( EXPR_METHODS ) do
 				
 			EXPR_DOCS.DescribeMethod({
@@ -416,6 +437,8 @@ do
 			});
 
 		end
+
+		docs.clk = {};
 		
 	end
 
@@ -423,12 +446,16 @@ do
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalMethodDocs()
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.SaveLocalMethodDocs()
@@ -455,7 +482,7 @@ do
 	end
 
 	function EXPR_DOCS.GenerateDefaultOperatorDocs()
-		
+
 		for _, op in pairs( EXPR_OPERATORS ) do
 				
 			EXPR_DOCS.DescribeOperator({
@@ -483,6 +510,8 @@ do
 			});
 
 		end
+
+		docs.clk = {};
 		
 	end
 
@@ -490,12 +519,16 @@ do
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalOperatorDocs()
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.SaveLocalOperatorDocs()
@@ -531,6 +564,8 @@ do
 			});
 
 		end
+
+		docs.clk = {};
 		
 	end
 
@@ -538,12 +573,16 @@ do
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalLibraryDocs()
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.SaveLocalLibraryDocs()
@@ -588,6 +627,8 @@ do
 			end
 
 		end
+
+		docs.clk = {};
 		
 	end
 
@@ -595,12 +636,16 @@ do
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalFunctionDocs()
 		docs:MergeBlankValues(
 			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
 		);
+
+		docs.clk = {};
 	end
 
 	function EXPR_DOCS.SaveLocalFunctionDocs()
@@ -694,6 +739,52 @@ do
 			EXPR_DOCS.LoadCustomDocFile(path .. filename);
 		end
 	end
+
+end
+
+/*********************************************************************************
+	Save custom docs files
+*********************************************************************************/
+do
+	function EXPR_DOCS.ChangedDocs()
+
+		local function write(csv)
+			local a = {};
+
+			for k, i in pairs(csv.clk) do
+				table.insert(a, table.concat(csv.data[i], "\t"));
+			end
+
+			csv.clk = {};
+
+			return table.concat(a, "\n");
+		end
+
+		return table.concat({
+			"#Type", write(EXPR_DOCS.GetTypeDocs()),
+			"#Constructor", write(EXPR_DOCS.GetConstructorDocs()),
+			"#Attribute", write(EXPR_DOCS.GetAttributeDocs()),
+			"#Method", write(EXPR_DOCS.GetMethodDocs()),
+			"#Operator", write(EXPR_DOCS.GetOperatorDocs()),
+			"#Library", write(EXPR_DOCS.GetLibraryDocs()),
+			"#Function", write(EXPR_DOCS.GetFunctionDocs()),
+		}, "\n");
+
+	end
+
+	function EXPR_DOCS.SaveChangedDocs(filename)
+
+		local path = string.format("e3docs\\csv\\%s", filename);
+
+		local fl = file.Open(path, "w", "DATA");
+
+		if fl then
+			fl:Write( EXPR_DOCS.ChangedDocs() );
+
+			fl:Close();
+		end
+	end
+
 end
 
 /*********************************************************************************

@@ -173,13 +173,14 @@ function EDITOR_PANEL:Clear()
 	self:InvalidateLayout();
 end
 
-function EDITOR_PANEL:SetValues(tbl)
+function EDITOR_PANEL:SetValues(kv, csv)
 	
 	self:Clear();
 	
-	for k, v in pairs(tbl) do
+	for k, v in pairs(kv) do
 		self:AddValue(k, v, function(value)
-			tbl[k] = value;
+			kv[k] = value;
+			if csv then csv:insert(nil, csv:FromKV(kv)); end
 		end);
 	end
 end
@@ -226,7 +227,7 @@ function HELPER_PANEL:Init()
 	self.ctrl_pnl:DockMargin(5, 5, 5, 5);
 	self.ctrl_pnl:Dock(BOTTOM);
 
-	self.cls_btn = self.srch_pnl:SetupButton("Expand List", "fugue/arrow-090-small.png", RIGHT, function()
+	self.cls_btn = self.srch_pnl:SetupButton("Expand Browser", "fugue/arrow-090-small.png", RIGHT, function()
 		self.cls_btn:SetVisible(false);
 		self:CloseHTML();
 		self:CloseEditor();
@@ -245,13 +246,12 @@ function HELPER_PANEL:Init()
 		self:SearchAll(str, true);
 	end;
 
-	self.ctrl_pnl:SetupButton("Reload Helper", "fugue/arrow-circle.png", RIGHT, function()
-		self:Reload();
-	end);
+	self.expt_btn = self.ctrl_pnl:SetupTextBox( "Export Custom Helper Data", "fugue/disk-black.png", RIGHT, function(_, str)
+		if str ~= "" then EXPR_DOCS.SaveChangedDocs(str .. ".txt"); end
+	end, nil);
 
-	self.ctrl_pnl:SetupButton("Save Helper Data", "fugue/disk-black.png", RIGHT, function()
-		EXPR_DOCS.SaveLocalDocs();
-	end);
+	self.expt_btn:SetWide(150);
+	self.expt_btn:SetPlaceholderText("file name");
 
 	self.ctrl_pnl:SetupButton("Close All", "fugue/arrow-090-small.png", LEFT, function()
 		self:ExpandAll(false);
@@ -261,13 +261,17 @@ function HELPER_PANEL:Init()
 		self:ExpandAll(true);
 	end);
 
-	self:Reload();--hook.Run("Expression3.LoadHelperNodes", self);
+	self.ctrl_pnl:SetupButton("Reload Helper", "fugue/arrow-circle.png", LEFT, function()
+		self:Reload();
+	end);
+
+	self:Reload();
 end
 
-function HELPER_PANEL:OpenEditor(kv)
+function HELPER_PANEL:OpenEditor(kv, csv)
 	self.cls_btn:SetVisible(true);
 	self.edtr_pnl:SetVisible(true);
-	if kv then self.edtr_pnl:SetValues(kv); end
+	if kv then self.edtr_pnl:SetValues(kv, csv); end
 	self:CloseHTML();
 end
 
@@ -486,9 +490,9 @@ function HELPER_PANEL:AddOptionsMenu(node, callback)
 
 		if callback then
 			menu:AddOption( "Edit", function()
-				local kv = callback();
+				local kv, csv = callback();
 
-				self:OpenEditor(kv);
+				self:OpenEditor(kv, csv);
 
 			end):SetIcon(edit_icon);
 		end
@@ -591,7 +595,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 		end);
 
 		pnl:AddOptionsMenu(node, function()
-			return keyvalues;
+			return keyvalues, libdocs;
 		end);
 
 	end );
@@ -618,7 +622,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 		end);
 
 		pnl:AddOptionsMenu(node, function()
-			return keyvalues;
+			return keyvalues, fundocs;
 		end);
 
 	end );
@@ -651,7 +655,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 			end);
 
 			pnl:AddOptionsMenu(node, function()
-				return keyvalues;
+				return keyvalues, type_docs;
 			end);
 
 		end
@@ -682,7 +686,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 		end);
 
 		pnl:AddOptionsMenu(node, function()
-			return keyvalues;
+			return keyvalues, const_docs;
 		end);
 
 	end );
@@ -703,7 +707,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 		end);
 
 		pnl:AddOptionsMenu(node, function()
-			return keyvalues;
+			return keyvalues, attr_docs;
 		end);
 
 	end );
@@ -729,7 +733,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 		end);
 
 		pnl:AddOptionsMenu(node, function()
-			return keyvalues;
+			return keyvalues, method_docs;
 		end);
 	end );
 
@@ -861,7 +865,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.OperatorHelpers", function(
 		end);
 
 		pnl:AddOptionsMenu(node, function()
-			return keyvalues;
+			return keyvalues, op_docs;
 		end);
 
 	end);
