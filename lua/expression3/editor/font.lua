@@ -8,7 +8,7 @@ surface.CreateFont( "GOLEM_Fixedsys_17", {
 */
 
 
--- surface.CreateFont( "Trebuchet24", { // Goddamit Garry!
+-- surface.CreateFont( "Trebuchet24", { -- Goddamit Garry!
 -- 	font 		= "Trebuchet MS",
 -- 	size 		= 24,
 -- 	weight 		= 900,
@@ -82,11 +82,12 @@ Golem.Font = Font
 table.Empty( cvars.GetConVarCallbacks( "golem_font_name", true ) )
 table.Empty( cvars.GetConVarCallbacks( "golem_font_size", true ) )
 
-CreateClientConVar( "golem_font_name", "Courier New", true, false )
-CreateClientConVar( "golem_font_size", 16, true, false )
+local cvFontName = CreateClientConVar( "golem_font_name", "Courier New", true, false )
+local cvFontSize = CreateClientConVar( "golem_font_size", 16, true, false )
+Golem.ConVars = { cvFontName = cvFontName, cvFontSize = cvFontSize }
 
-cvars.AddChangeCallback( "golem_font_name", function( sCVar, sOld, sNew ) Font:SetFont( sNew, GetConVarNumber( "golem_font_size" ), true ) end )
-cvars.AddChangeCallback( "golem_font_size", function( sCVar, sOld, sNew ) Font:SetFont( GetConVarString( "golem_font_name" ), sNew, true ) end )
+cvars.AddChangeCallback( "golem_font_name", function( sCVar, sOld, sNew ) Font:SetFont( sNew, cvFontSize:GetInt(), true ) end )
+cvars.AddChangeCallback( "golem_font_size", function( sCVar, sOld, sNew ) Font:SetFont( cvFontName:GetString(), sNew, true ) end )
 
 function Font:GetFont( )
 	return self.sFontID
@@ -104,16 +105,16 @@ local function CreateFont( sFont, nSize )
 	return sFontID
 end
 
-// Override
+-- Override
 function Font:OnFontChange( ) end
 
 function Font:SetFont( sFont, nSize, bConVar )
-	sFont = sFont or GetConVarString( "golem_font_name" )
-	nSize = tonumber(nSize) or GetConVarNumber( "golem_font_size" )
+	sFont = sFont or cvFontName:GetString()
+	nSize = tonumber(nSize) or cvFontSize:GetInt()
 
 	if not bConVar then
-		if sFont ~= GetConVarString( "golem_font_name" ) then RunConsoleCommand( "golem_font_name", sFont ) end
-		if nSize ~= GetConVarNumber( "golem_font_size" ) then RunConsoleCommand( "golem_font_size", nSize ) end
+		if sFont ~= cvFontName:GetString() then RunConsoleCommand( "golem_font_name", sFont ) end
+		if nSize ~= cvFontSize:GetInt() then RunConsoleCommand( "golem_font_size", nSize ) end
 	end
 
 	self.sFontID = CreateFont( sFont, nSize )
@@ -122,11 +123,11 @@ function Font:SetFont( sFont, nSize, bConVar )
 end
 
 function Font:ChangeFontSize( nInc, bAbs )
-	return self:SetFont( nil, bAbs and nInc or GetConVarNumber( "golem_font_size" ) + nInc )
+	return self:SetFont( nil, bAbs and nInc or cvFontSize:GetInt() + nInc )
 end
 
 timer.Simple( 0, function( )
-	-- Font.sFontID = CreateFont( GetConVarString( "golem_font_name" ), GetConVarString( "golem_font_size" ) )
+	-- Font.sFontID = CreateFont( cvFontName:GetString(), cvFontSize:GetString() )
 	Font:SetFont( )
 end )
 

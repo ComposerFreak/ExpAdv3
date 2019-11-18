@@ -16,7 +16,7 @@ AccessorFunc(PANEL, "m_nBorderMargin", "BorderMargin");
 function PANEL:Init()
 
 	self.pnl_txt = vgui.Create("DTextEntry", self);
-	self.pnl_txt:SetDrawBackground(false);
+	self.pnl_txt:SetPaintBackground(false);
 	self.pnl_txt:SetDrawBorder(false);
 
 	self.pnl_txt.OnChange = function(_,v) return self:OnChange(v); end
@@ -32,7 +32,7 @@ function PANEL:Init()
 
 	self:DockIcon(LEFT);
 
-	self:SetDrawBackground(true);
+	self:SetPaintBackground(true);
 	self:SetBackgroundColor(Color(255, 255, 255));
 
 	self:SetDrawBorder(true);
@@ -52,7 +52,7 @@ function PANEL:OnEnter() end
 ============================================================================================================================================*/
 
 function PANEL:Paint(w, h)
-	
+
 	local r = self.m_nBorderRadius;
 	local m = self.m_nBorderMargin;
 

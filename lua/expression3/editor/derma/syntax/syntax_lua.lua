@@ -95,10 +95,8 @@ function Syntax:FindValidLines( tLines )
 			end
 
 			if tStart[1] == tEnd[1] then
-				if tStart[1] == nLine then
-			 		if tStart[2] <= nStart and tEnd[2] >= nStart then
-			 			return false
-			 		end
+				if tStart[1] == nLine and ( tStart[2] <= nStart and tEnd[2] >= nStart ) then
+			 		return false
 			 	end
 			else
 			 	if tStart[1] == nLine then
@@ -117,7 +115,7 @@ function Syntax:FindValidLines( tLines )
 	end, ValidLines
 end
 
-// { FoldLevel, Folded, FoldOverride }
+-- { FoldLevel, Folded, FoldOverride }
 function Syntax:MakeFoldData( nExit )
 	local LinesToFold = self.dEditor:ExpandAll( )
 	local ValidLines = self:FindValidLines( )
@@ -282,7 +280,6 @@ function Syntax:Format( Code )
 	local lines = string.Explode( "\n", Code )
 	local ValidLine, Lookup = self:FindValidLines( lines )
 	local indent = 0
-	local line = 1
 	local newline = false
 
 	local i = 0

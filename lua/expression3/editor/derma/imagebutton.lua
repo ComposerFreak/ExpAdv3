@@ -90,7 +90,7 @@ end
 
 local function PaintButton( self, w, h )
 	local col = self:GetColor();
-	
+
 	surface.SetDrawColor( col )
 	surface.DrawRect( 0, 0, w, h )
 

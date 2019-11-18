@@ -77,10 +77,10 @@ function Syntax:FindValidLines( )
 			end
 
 			if Text == "/" then
-				if Line[Char+1] == "/" then // SingleLine comment
+				if Line[Char+1] == "/" then -- SingleLine comment
 					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
 					break
-				elseif Line[Char+1] == "*" then // MultiLine Comment
+				elseif Line[Char+1] == "*" then -- MultiLine Comment
 					bMultilineComment = true
 					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
 					continue
@@ -95,11 +95,9 @@ function Syntax:FindValidLines( )
 				continue
 			end
 
-			if Text == '"' then
-				if Line[Char-1] ~= "\\" then
-					sStringType = Text
-					ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
-				end
+			if Text == '"' and Line[Char-1] ~= "\\" then
+				sStringType = Text
+				ValidLines[#ValidLines+1] = { { Row, Char }, { Row, #Line + 1 } }
 			end
 		end
 
@@ -118,10 +116,8 @@ function Syntax:FindValidLines( )
 			end
 
 			if tStart[1] == tEnd[1] then
-				if tStart[1] == nLine then
-			 		if tStart[2] <= nStart and tEnd[2] >= nStart then
-			 			return false
-			 		end
+				if tStart[1] == nLine and ( tStart[2] <= nStart and tEnd[2] >= nStart ) then
+			 		return false
 			 	end
 			else
 			 	if tStart[1] == nLine then
@@ -140,7 +136,7 @@ function Syntax:FindValidLines( )
 	end
 end
 
-// { FoldLevel, Folded, FoldOverride }
+-- { FoldLevel, Folded, FoldOverride }
 function Syntax:MakeFoldData( nExit )
 	local LinesToFold = self.dEditor:ExpandAll( )
 	local ValidLines = self:FindValidLines( )
@@ -516,11 +512,11 @@ function Syntax:Parse( )
 			if self:NextPattern( "^[a-zA-Z][_A-Za-z0-9]*" ) then
 				local word = self.sBuffer
 
-				// Special keywords that needs extra work
+				-- Special keywords that needs extra work
 				if word == "function" or word == "delegate" then
 					local inline = false
 					if word == "function" then
-						// Check to see if we are defining a inline function or accessing a function from a table.
+						-- Check to see if we are defining a inline function or accessing a function from a table.
 						local match = self:NextPattern( " *[%]%(]", true )
 						if match then
 							if match:sub(-1) == "(" then
@@ -533,7 +529,7 @@ function Syntax:Parse( )
 								self:AddToken( "operator", match )
 								continue
 							end
-						// Check if we are assigning a function to a variable
+						-- Check if we are assigning a function to a variable
 						elseif string_match( self.sLine, "^ +[a-zA-Z][a-zA-Z0-9_]* *=", self.nPosition ) then
 							self:AddToken( "class" )
 							self:NextPattern( "^ +[a-zA-Z][a-zA-Z0-9_]*" )
@@ -547,7 +543,7 @@ function Syntax:Parse( )
 						self:AddToken( "keyword" )
 						self:SkipSpaces( )
 
-						// We are defining a new fundction, time to check for return type
+						-- We are defining a new fundction, time to check for return type
 						if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then
 							if self.tClasses[self.sBuffer] then
 								self:AddToken( "class" )
@@ -558,7 +554,7 @@ function Syntax:Parse( )
 
 						self:SkipSpaces( )
 
-						// Next up is the name of the function
+						-- Next up is the name of the function
 						if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then
 							self:AddUserFunction( self.nRow, self.sBuffer )
 							self:AddToken( "userfunction" )
@@ -570,7 +566,7 @@ function Syntax:Parse( )
 						self:SkipSpaces( )
 					end
 
-					// Time to catch all variables that the function can have
+					-- Time to catch all variables that the function can have
 					while self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) do
 						local sType = ""
 						if self.tClasses[self.sBuffer] then

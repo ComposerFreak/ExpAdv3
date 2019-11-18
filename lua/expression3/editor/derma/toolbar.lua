@@ -3,9 +3,6 @@
 	Author: Oskar
 ============================================================================================================================================*/
 
-local gradient_up = Material( "vgui/gradient-d" )
-local gradient_down = Material( "vgui/gradient-u" )
-
 local PANEL = { }
 
 function PANEL:Init( )

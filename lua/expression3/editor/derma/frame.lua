@@ -3,7 +3,7 @@
 	Author: Oskar
 ============================================================================================================================================*/
 
-local ValidPanel = ValidPanel
+local IsValid = IsValid
 local surface = surface
 local gui = gui
 local math = math
@@ -388,10 +388,10 @@ function PANEL:Paint( w, h )
 end
 
 function PANEL:ShowCloseButton( Bool )
-	if Bool and not ValidPanel( self.btnClose ) then
+	if Bool and not IsValid( self.btnClose ) then
 		self.btnClose = self:Add( "GOLEM_CloseButton" )
 		self.btnClose:SetOffset( -5, 5 )
-	elseif not Bool and ValidPanel( self.btnClose ) then
+	elseif not Bool and IsValid( self.btnClose ) then
 		self.btnClose:Remove( )
 	end
 end
