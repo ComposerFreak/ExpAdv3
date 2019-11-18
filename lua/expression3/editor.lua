@@ -63,14 +63,15 @@ function Golem.Reload( )
 	include( "expression3/editor/derma/ide.lua" )
 	include( "expression3/editor/derma/imagebutton.lua" )
 	include( "expression3/editor/derma/options.lua" )
-	--include( "expression3/editor/derma/wiki.lua" )
 	include( "expression3/editor/derma/propertysheet.lua" )
 	include( "expression3/editor/derma/toolbar.lua" )
 	include( "expression3/editor/derma/filemenu.lua" )
 	include( "expression3/editor/derma/checkbox.lua" )
+	include( "expression3/editor/derma/tree.lua" )
 	include( "expression3/editor/derma/findreplace.lua" )
 	include("expression3/editor/derma/console2.lua");
 	include( "expression3/editor/derma/textentry.lua" );
+	include( "expression3/editor/derma/simpletabs.lua" );
 
 	include( "expression3/editor/derma/syntaxer.lua" )
 	
