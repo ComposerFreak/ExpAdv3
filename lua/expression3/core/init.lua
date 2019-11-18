@@ -31,6 +31,7 @@
 
 		"expression3/permissions/database.lua",
 		"expression3/permissions/gate_browser.lua",
+		"expression3/permissions/url_browser.lua",
 		"expression3/permissions/menu.lua",
 	};
 

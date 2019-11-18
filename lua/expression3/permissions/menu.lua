@@ -8,7 +8,7 @@ do
 
 	function PANEL:Init()
 		self:AddTab("Permissions", "fugue/xfn.png", "GOLEM_E3PermissionTree");
-		self:AddTab("HTTP", "fugue/globe-network.png", "EditablePanel");
+		self:AddTab("HTTP", "fugue/globe-network.png", "GOLEM_E3URLTree");
 
 		self:SetActiveTab("Permissions");
 	end;

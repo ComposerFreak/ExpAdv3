@@ -301,14 +301,84 @@ EXPR_BLACK_LIST = 3;
 EXPR_WHITE_LIST = 3;
 
 /****************************************************************************************************************************
+	Create our filter pattern from our url
+****************************************************************************************************************************/
+
+local function CreateFilter(filter)
+    return string.gsub(filter, "\\?.", {
+        ["\\."]=".", 
+        ["."]="%.", 
+        ["\\%"]="%", 
+        ["%"]="%%",
+        ["*"]="([a-zA-Z0-9_]+)",
+    });
+end
+
+/****************************************************************************************************************************
 	Black List
 ****************************************************************************************************************************/
 
 local black_list = {};
 
 local IsBlackListed = function(url)
+	for _, filter in pairs(black_list) do
+		
+		if string.match(url, filter) then return false; end
+	
+	end
+
+	return true;
 
 end
+
+EXPR_PERMS.IsBlackListed = IsBlackListed;
+
+local BlackListURL = function(url)
+	if url ~= "" and not black_list[url]then
+		black_list[url] = CreateFilter(url);
+	end
+end
+
+EXPR_PERMS.BlackListURL = BlackListURL;
+
+local UnblackListURL = function(url)
+	if black_list[url]then 
+		black_list[url] = nil;
+	end
+end
+
+EXPR_PERMS.UnblackListURL = UnblackListURL;
+
+local LoadBlackList = function()
+	
+	black_list = {};
+
+	local raw = file.Read("e3_url_blacklist", "DATA");
+	local rows = string.Explode("\n", raw or "");
+	
+	for i = 1, #rows do
+		BlackListURL(rows[i]);
+	end
+end
+
+EXPR_PERMS.LoadBlackList = LoadBlackList;
+
+LoadBlackList();
+
+local SaveBlackList = function()
+	
+	local rows = {};
+
+	for url, filter in pairs(black_list) do
+		rows[#rows + 1] = url;
+	end
+
+	local raw = table.concat(rows, "\n");
+
+	file.Write("e3_url_blacklist", raw, "DATA");
+end
+
+EXPR_PERMS.SaveBlackList = SaveBlackList;
 
 /****************************************************************************************************************************
 	WhiteList
@@ -317,8 +387,65 @@ end
 local white_list = {};
 
 local IsWhiteListed = function(url)
+	
+	for _, filter in pairs(white_list) do
+		
+		if string.match(url, filter) then return false; end
+	
+	end
+
+	return true;
 
 end
+
+EXPR_PERMS.IsWhiteListed = IsWhiteListed;
+
+local WhiteListURL = function(url)
+	if url ~= "" and not white_list[url]then
+		white_list[url] = CreateFilter(url);
+	end
+end
+
+EXPR_PERMS.WhiteListURL = WhiteListURL;
+
+local UnwhiteListURL = function(url)
+	if white_list[url]then 
+		white_list[url] = nil;
+	end
+end
+
+EXPR_PERMS.UnwhiteListURL = UnwhiteListURL;
+
+local LoadWhiteList = function()
+	
+	white_list = {};
+
+	local raw = file.Read("e3_url_whitelist", "DATA");
+	local rows = string.Explode("\n", raw or "");
+	
+	for i = 1, #rows do
+		WhiteListURL(rows[i]);
+	end
+end
+
+EXPR_PERMS.LoadWhiteList = LoadWhiteList;
+
+LoadWhiteList();
+
+local SaveWhiteList = function()
+	
+	local rows = {};
+
+	for url, filter in pairs(white_list) do
+		rows[#rows + 1] = url;
+	end
+
+	local raw = table.concat(rows, "\n");
+
+	file.Write("e3_url_whitelist", raw, "DATA");
+end
+
+EXPR_PERMS.SaveWhiteList = SaveWhiteList;
 
 /****************************************************************************************************************************
 	Can access URL
@@ -345,7 +472,7 @@ local CanGetURL = function(entity, url)
 	if r == EXPR_DENY then return false; end
 	if r == EXPR_ALLOW then return true; end
 
-	if r == EXPR_BLACK_LIST then return IsBlackListed(url); end
+	if r == EXPR_BLACK_LIST then return not IsBlackListed(url); end
 	if r == EXPR_WHITE_LIST then return IsWhiteListed(url); end
 
 	if r == EXPR_FRIEND then return FriendCheck(Owner(enity), owner); end
