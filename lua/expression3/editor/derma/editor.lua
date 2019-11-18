@@ -17,28 +17,28 @@ local string_sub 					= string.sub
 local string_gsub 					= string.gsub
 local string_Explode 				= string.Explode
 local string_len 					= string.len
-local string_gmatch 				= string.gmatch
+-- local string_gmatch 				= string.gmatch
 local string_match 					= string.match
 
 local table_remove 					= table.remove
 local table_insert 					= table.insert
 local table_concat 					= table.concat
-local table_Count 					= table.Count
-local table_KeysFromValue 			= table.KeysFromValue
+-- local table_Count 					= table.Count
+-- local table_KeysFromValue 			= table.KeysFromValue
 
 local surface_SetFont 				= surface.SetFont
 local surface_DrawRect 				= surface.DrawRect
 local surface_DrawOutlinedRect 		= surface.DrawOutlinedRect
-local surface_DrawText 				= surface.DrawText
+-- local surface_DrawText 				= surface.DrawText
 local surface_GetTextSize 			= surface.GetTextSize
 local surface_SetDrawColor 			= surface.SetDrawColor
-local surface_SetTextColor 			= surface.SetTextColor
-local surface_SetTextPos 			= surface.SetTextPos
+-- local surface_SetTextColor 			= surface.SetTextColor
+-- local surface_SetTextPos 			= surface.SetTextPos
 local surface_SetMaterial 			= surface.SetMaterial
 local surface_DrawTexturedRect 		= surface.DrawTexturedRect
 
 local input_IsKeyDown 				= input.IsKeyDown
-local input_IsMouseDown 			= input.IsMouseDown
+-- local input_IsMouseDown 			= input.IsMouseDown
 
 local draw_SimpleText 				= draw.SimpleText
 local draw_WordBox 					= draw.WordBox
@@ -46,7 +46,7 @@ local draw_WordBox 					= draw.WordBox
 local BookmarkMaterial 				= Material( "diagona-icons/152.png" )
 
 local C_white = Color( 255, 255, 255 )
-local C_gray = Color( 160, 160, 160 )
+-- local C_gray = Color( 160, 160, 160 )
 
 local Golem = Golem
 local PANEL = { }
@@ -174,7 +174,7 @@ function PANEL:Think( )
 		end
 	end
 
-	local x, y = self:CursorPos( )
+	local x, _ = self:CursorPos( )
 	if x < self.LinePadding then
 		self:SetCursor( "arrow" )
 		return
@@ -801,7 +801,7 @@ end
 function PANEL:OnMousePressed( code )
 	if self.MouseDown then return end
 
-	local x, y = self:CursorPos( )
+	local x, _ = self:CursorPos( )
 	if x < self.LinePadding then return end
 
 	if code == MOUSE_LEFT then
@@ -1415,7 +1415,6 @@ function PANEL:FoldAll( tOld )
 		if #self.tFoldData < #self.tRows then self.tSyntax:MakeFoldData( ) end
 
 		for line = #self.tRows, 1, -1 do
-			local Line = self.tRows[line]
 			local Fold = self.tFoldData[line]
 			if Fold[1] < last or Fold[3] then
 				FoldedLines[#FoldedLines+1] = line
@@ -1516,7 +1515,7 @@ function PANEL:Bookmark( )
 end
 
 function PANEL:NextBookmark( )
-	local tStart, tEnd = self:MakeSelection( self:Selection( ) )
+	local tStart, _ = self:MakeSelection( self:Selection( ) )
 	local pos = tStart.x
 
 	while true do
@@ -1533,7 +1532,7 @@ function PANEL:NextBookmark( )
 end
 
 function PANEL:PreviousBookmark( )
-	local tStart, tEnd = self:MakeSelection( self:Selection( ) )
+	local tStart, _ = self:MakeSelection( self:Selection( ) )
 	local pos = tStart.x
 
 	while true do
@@ -1903,7 +1902,7 @@ function PANEL:PaintCursor( Caret )
 
 			if istable( self.tRows[Caret.x] ) and self.tRows[Caret.x].Primary ~= Caret.x then return end
 
-			if self.Insert or Caret.Insert then
+			if Insert then
 				surface_DrawRect( ( Caret.y - self.Scroll.y ) * width + self.LinePadding, ( Offset + 1 ) * height, width, 1 )
 			else
 				surface_DrawRect( ( Caret.y - self.Scroll.y ) * width + self.LinePadding, Offset * height, 1, height )

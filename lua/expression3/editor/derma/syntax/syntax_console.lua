@@ -1,9 +1,12 @@
-/*============================================================================================================================================
+--[[============================================================================================================================================
 	Console hack
 	Author: Oskar
-============================================================================================================================================*/
+============================================================================================================================================]]
 
-local Syntax = { sName = "console" }
+local Syntax = {
+	sName = "console"
+}
+
 Syntax.__index = Syntax
 
 function Syntax:Init( dEditor )
@@ -14,15 +17,12 @@ function Syntax:Init( dEditor )
 end
 
 function Syntax:GetSyntax( nRow )
-	if self.dEditor.tFormat[nRow] then
-		return self.dEditor.tFormat[nRow]
-	end
+	if self.dEditor.tFormat[nRow] then return self.dEditor.tFormat[nRow] end
 
-	return { { self.dEditor.tRows[nRow], Color(255,255,255) } }
+	return { { self.dEditor.tRows[nRow], Color( 255, 255, 255 ) } }
 end
 
 function Syntax:Parse( )
 end
-
 
 Golem.Syntax:Add( Syntax.sName, Syntax )

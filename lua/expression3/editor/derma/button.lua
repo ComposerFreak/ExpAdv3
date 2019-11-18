@@ -6,9 +6,6 @@
 local surface = surface
 local math = math
 
-local math_Clamp = math.Clamp
-
-local gradient_up = Material( "vgui/gradient-d" )
 local gradient_down = Material( "vgui/gradient-u" )
 
 local PANEL = { }
