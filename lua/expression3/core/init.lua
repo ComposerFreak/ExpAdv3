@@ -27,6 +27,11 @@
 
 		"expression3/helper/database.lua",
 		"expression3/helper/templates.lua",
+		"expression3/helper/derma.lua",
+
+		"expression3/permissions/database.lua",
+		"expression3/permissions/gate_browser.lua",
+		"expression3/permissions/menu.lua",
 	};
 
 	local path = "expression3/extensions/";

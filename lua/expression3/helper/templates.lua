@@ -85,7 +85,7 @@ local post_html = [[
 	</html>
 ]];
 
-local toHTML = function(tbl)
+EXPR_DOCS.toHTML = function(tbl)
 
 	local lines = {pre_html};
 
@@ -106,505 +106,6 @@ local toHTML = function(tbl)
 	return table.concat(lines, "\n"), #tbl;
 
 end
-
-/*********************************************************************************
-	Golem menu panel
-*********************************************************************************/
-local EDITOR_PANEL = {};
-
-local tick = Material("fugue/tick.png");
-local cross = Material("fugue/exclamation-red.png");
-
-function EDITOR_PANEL:Init()
-	self.items = {};
-end
-
-function EDITOR_PANEL:AddValue(name, value, callback)
-	local h = 22;
-	local w = self:GetWide();
-
-	local pnl = self:Add("DHorizontalDivider");
-	pnl:SetSize(w, h);
-
-	pnl.lbl = pnl:Add("DLabel");
-	pnl.lbl:SetText(name);
-	pnl:SetLeftWidth(w * 0.25);
-	pnl:SetLeft(pnl.lbl);
-
-	pnl.txt = pnl:Add("GOLEM_TextEntry");
-	pnl.txt:SetMaterial(tick);
-	pnl.txt:SetPlaceholderText(name);
-	pnl.txt:SetValue(value);
-	pnl:SetRight(pnl.txt);
-
-	local function updateIcon(v)
-		pnl.txt:SetMaterial(value == v and tick or cross);
-	end
-
-	pnl.txt.OnChange = function(_, v)
-		updateIcon(v);
-	end;
-
-	pnl.txt.DoClick = function(_, v)
-		value = v;
-		callback(v);
-		updateIcon(v);
-	end;
-
-	pnl.txt.OnEnter = function(_, v)
-		value = v;
-		callback(v);
-		updateIcon(v);
-	end;
-
-	self.items[name] = pnl;
-
-	return pnl;
-end
-
-function EDITOR_PANEL:Clear()
-	for k, v in pairs(self.items) do
-		v:Remove();
-	end
-
-	self.items = {};
-
-	self:InvalidateLayout();
-end
-
-function EDITOR_PANEL:SetValues(kv, csv, pnl)
-	
-	self:Clear();
-	
-	for k, v in pairs(kv) do
-		self:AddValue(k, v, function(value)
-			kv[k] = value;
-
-			if csv then
-				csv:insert(nil, csv:FromKV(kv));
-			end
-
-			if pnl then
-				pnl:WriteLine(Color(255, 0, 0), "Updated Helper Info"); 
-				pnl:WriteLine(Color(255, 0, 0), " Key: ", Color(0, 255, 0), k); 
-				pnl:WriteLine(Color(255, 0, 0), " Value: ", Color(0, 255, 0), value); 
-			end
-		end);
-	end
-end
-
-vgui.Register("GOLEM_E3HelperEditor", EDITOR_PANEL, "DListLayout");
-
-
-/*********************************************************************************
-	Golem menu panel
-*********************************************************************************/
-
-local HELPER_PANEL = {};
-
-local icon_open = Material("fugue/toggle-small.png");
-local icon_small = Material("fugue/toggle-small-expand.png");
-
-function HELPER_PANEL:Init()
-
-	self:DockPadding(5, 5, 5, 5);
-
-	self.edtr_pnl = self:Add("GOLEM_E3HelperEditor");
-	self.edtr_pnl:SetTall(0);
-	self.edtr_pnl:DockMargin(5, 5, 5, 5);
-	self.edtr_pnl:Dock(TOP);
-
-	self.html_pnl = self:Add("DHTML");
-	self.html_pnl:SetTall(0);
-	self.html_pnl:DockMargin(5, 5, 5, 5);
-	self.html_pnl:Dock(TOP);
-
-	self.srch_pnl = self:Add("GOLEM_Toolbar");
-	self.srch_pnl:SetTall(22);
-	self.srch_pnl:DockMargin(5, 5, 5, 5);
-	self.srch_pnl:Dock(TOP);
-
-	self.root_tree = self:Add("DTree");
-	self.root_tree:SetBackgroundColor(Color(0, 0, 0));
-	self.root_tree:SetWide(200);
-	self.root_tree:DockMargin(5, 5, 5, 5);
-	self.root_tree:Dock(FILL);
-
-	self.ctrl_pnl = self:Add("GOLEM_Toolbar");
-	self.ctrl_pnl:SetTall(22);
-	self.ctrl_pnl:DockMargin(5, 5, 5, 5);
-	self.ctrl_pnl:Dock(BOTTOM);
-
-	self.cls_btn = self.srch_pnl:SetupButton("Expand Browser", "fugue/arrow-090-small.png", RIGHT, function()
-		self.cls_btn:SetVisible(false);
-		self:CloseHTML();
-		self:CloseEditor();
-	end);
-
-	self.cls_btn:SetVisible(false);
-
-	self.srch_txt = self.srch_pnl:SetupTextBox( "Search", "fugue/binocular-small.png", FILL, function(_, str)
-		self:SearchAll(str, true);
-	end, nil);
-
-	self.srch_txt:SetPlaceholderText("Search Helper");
-	self.srch_txt:DockIcon(RIGHT);
-
-	self.srch_txt.OnEnter = function(_, str)
-		self:SearchAll(str, true);
-	end;
-
-	self.expt_btn = self.ctrl_pnl:SetupTextBox( "Export Custom Helper Data", "fugue/disk-black.png", RIGHT, function(_, str)
-		if str ~= "" then
-			EXPR_DOCS.SaveChangedDocs(str .. ".txt");
-			pnl:WriteLine(Color(255, 255, 255), "Exported Custom Helpers");
-			pnl:WriteLine(Color(0, 255, 0), str .. ".txt");
-		end
-	end, nil);
-
-	self.expt_btn:SetWide(100);
-	self.expt_btn:SetPlaceholderText("file name");
-
-	self.ctrl_pnl:SetupButton("Close All", "fugue/arrow-090-small.png", LEFT, function()
-		self:ExpandAll(false);
-	end);
-
-	self.ctrl_pnl:SetupButton("Expand All", "fugue/arrow-270-small.png", LEFT, function()
-		self:ExpandAll(true);
-	end);
-
-	self.ctrl_pnl:SetupButton("Reload Helper", "fugue/arrow-circle.png", LEFT, function()
-		self:Reload();
-		pnl:WriteLine(Color(255, 0, 0), "Reloaded Helper");
-	end);
-
-	self:Reload();
-end
-
-function HELPER_PANEL:OpenEditor(kv, csv)
-	self.cls_btn:SetVisible(true);
-	self.edtr_pnl:SetVisible(true);
-	if kv then self.edtr_pnl:SetValues(kv, csv, self); end
-	self:CloseHTML();
-end
-
-function HELPER_PANEL:CloseEditor()
-	self.edtr_pnl:SetVisible(false);
-	self.edtr_pnl:SetTall(0);
-	self:InvalidateLayout();
-end
-
-function HELPER_PANEL:OpenHTML(h)
-	self.cls_btn:SetVisible(true);
-	self.html_pnl:SetVisible(true);
-	self.html_pnl:SetTall(h);
-	self:CloseEditor();
-end
-
-function HELPER_PANEL:CloseHTML()
-	self.html_pnl:SetVisible(false);
-	self.html_pnl:SetTall(0);
-	self:InvalidateLayout();
-end
-
-function HELPER_PANEL:WriteLine(...)
-	Golem.Print(...);
-end
-
-/*********************************************************************************
-	Reload button
-*********************************************************************************/
-
-local bookmark_icon = "fugue/book-bookmark.png";
-
-function HELPER_PANEL:Reload()
-	local subnodes = self.root_tree.subnodes;
-
-	if subnodes then
-
-		for _, node in pairs(subnodes) do
-			node:Remove();
-		end
-
-		self.root_tree.subnodes = {};
-	end
-
-	--e3docs/saved/
-
-	local Links = self:AddNode("Links");
-	local Examples = self:AddNode("Examples");
-	local BookMarks = self:AddNode("Book Marks");
-	local CustomHelpers = self:AddNode("Custom Helpers");
-	local Libraries = self:AddNode("Libraries");
-	local Classes = self:AddNode("Classes");
-	local Operators = self:AddNode("Operators");
-
-	Links:SetIcon("fugue/globe-network.png");
-	Examples:SetIcon("fugue/blue-folder--plus.png");
-	CustomHelpers:SetIcon("fugue/blue-folder-horizontal-open.png");
-	BookMarks:SetIcon(bookmark_icon);
-
-	self:AddHTMLCallback(BookMarks, function()
-		return toHTML({
-			"<h2>Book Marks:</h2>",
-			"Right click a node to",
-			"save a new book mark.",
-			"",
-			"Right click a book mark",
-			"to go to that node."
-		});
-	end);
-
-	self:AddHTMLCallback(CustomHelpers, function()
-		return toHTML({
-			"<h2>Custom Helpers:</h2>",
-			"Right click a node to",
-			"change its helper data.",
-			"",
-			"Click the export button",
-			"at the bottom of the helper",
-			"to export your custom helper",
-			"information.",
-			"",
-			"Click one of the saved custom",
-			"helper files to load the the",
-			"files saved helper data.",
-		});
-	end);
-
-	hook.Run("Expression3.LoadHelperNodes", self);
-end
-
-/*********************************************************************************
-	Set up and apply custom theme to nodes
-*********************************************************************************/
-
-local function applyCustomSkin(node)
-
-	node:SetIcon("fugue/block.png");
-
-	if node.Expander then
-		function node.Expander.Paint(self, w, h)
-			local mat = self.m_bExpanded and icon_open or icon_small;
-
-			surface.SetDrawColor(255, 255, 255);
-			surface.SetMaterial(mat);
-			surface.DrawTexturedRect(0, 0, w, h);
-		end
-	end
-end
-
-/*********************************************************************************
-	Add new nodes to the helper
-*********************************************************************************/
-
-local addNode;
-
-addNode = function(self, frs, scnd, ...)
-	if not self.subnodes then self.subnodes = { }; end
-
-	local node = self.subnodes[frs];
-
-	if not node then
-		node = self:AddNode(frs);
-
-		applyCustomSkin(node);
-
-		self.subnodes[frs] = node;
-	end
-
-	if not scnd then return node; end
-
-	return addNode(node, scnd, ...);
-end;
-
-
-function HELPER_PANEL:AddNode(frs, scnd, ...)
-	return addNode(self.root_tree, frs, scnd, ...);
-end
-
-/*********************************************************************************
-	Expand all nodes
-*********************************************************************************/
-
-local expandAll;
-
-expandAll = function(node, expand, anim)
-	node:SetExpanded(expand, anim);
-
-	if node.subnodes then
-		for k, v in pairs(node.subnodes) do
-			expandAll(v, expand, anim);
-		end
-	end
-end;
-
-function HELPER_PANEL:ExpandAll(expand, anim)
-	return expandAll(self.root_tree, expand, anim);
-end
-
-/*********************************************************************************
-	Search panels
-*********************************************************************************/
-
-local searchNodes;
-
-searchNodes = function(node, query)
-	local c = 0;
-
-	if node.subnodes then
-		for k, v in pairs(node.subnodes) do
-			c = c + searchNodes(v, query);
-		end
-	end
-
-	local val = node:GetText():upper();
-	local found = string.find(val, query:upper(), 1, true);
-	
-	local visible = true;
-
-	if c == 0 and (not found) then
-		visible = false;
-	end
-
-	if query == "" then
-		visible = true;
-	end
-
-	node:SetVisible(visible);
-
-	if visible then
-		c = c + 1;
-	end
-
-	return c;
-end;
-
-function HELPER_PANEL:SearchAll(query)
-	local c = searchNodes(self.root_tree, query);
-
-	self:ExpandAll(query ~= "");
-
-	return c;
-end
-
-/*********************************************************************************
-	Scroll To
-*********************************************************************************/
-local getY;
-
-getY = function(root, node, x, y)
-	local parent = node:GetParent();
-
-	if parent == root then return x, y; end
-
-	local _x, _y = node:GetPos();
-
-	x = x + _x;
-	y = y + _y;
-
-	return getY(root, parent, x, y);
-end
-
-function HELPER_PANEL:ScrollTo(node)
-	timer.Simple(0.01, function()
-		self.root_tree:ScrollToChild(node);
-	end);
-end
-
-/*********************************************************************************
-	Show html
-*********************************************************************************/
-
-function HELPER_PANEL:AddHTMLCallback(node, callback)
-	node.DoClick = function(this)
-		local str, num = callback();
-		local tall = num and ((num * 25) + 10) or 100;
-		self.html_pnl:SetHTML(str);
-		self:OpenHTML(tall);
-	end;
-end
-
-/*********************************************************************************
-	Show Menu Options
-*********************************************************************************/
-
-local edit_icon = "fugue/pencil.png";
-local open_book_icon = "fugue/book-open-bookmark.png";
-local closed_book_icon = "fugue/book.png";
-local goto_icon = "fugue/eye--arrow.png";
-
-function HELPER_PANEL:AddOptionsMenu(node, callback)
-	
-	node.DoRightClick = function()
-
-		local menu = DermaMenu();
-
-		if callback then
-			menu:AddOption( "Edit", function()
-				local kv, csv = callback();
-
-				self:OpenEditor(kv, csv);
-
-			end):SetIcon(edit_icon);
-		end
-
-		menu:AddOption("Copy to clipboard", function()
-			SetClipboardText(node:GetText());
-		end):SetIcon("fugue/document-copy.png");
-
-		if not node.isBookMarked then
-
-			menu:AddOption( "Book Mark", function()
-				
-				node.isBookMarked = true;
-				node.bookMark = self:AddNode("Book Marks", node:GetText());
-				node.bookMark.BookMarkOff = node;
-				node.bookMark.isBookMarked = true;
-				node.bookMark:SetIcon(node:GetIcon());
-				node.bookMark.DoClick = function()
-					node:DoClick();
-				end;
-
-				self:AddOptionsMenu(node.bookMark);
-
-			end):SetIcon(open_book_icon);
-
-		end
-
-		if node.isBookMarked then
-
-			menu:AddOption( "Remove Book Mark", function()
-				if node.bookMark then
-					node.bookMark:Remove();
-				else
-					node:Remove();
-				end
-
-				node.bookMark = nil;
-				node.isBookMarked = false;
-			end):SetIcon(closed_book_icon);
-
-			if node.BookMarkOff then
-				menu:AddOption( "Goto", function()
-					self.root_tree:SetSelectedItem(node.BookMarkOff);
-					node.BookMarkOff:ExpandTo(true);
-					self:ScrollTo(node);
-				end):SetIcon(goto_icon);
-			end
-
-		end
-
-		menu:Open();
-	end;
-
-end
-
-/*********************************************************************************
-	Add book mark
-*********************************************************************************/
-
-vgui.Register("GOLEM_E3Helper", HELPER_PANEL, "EditablePanel");
 
 /*********************************************************************************
 	Add library nodes to the helper
@@ -637,7 +138,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 		pnl:AddHTMLCallback(node, function()
 			local keyvalues = libdocs:ToKV(libdocs.data[i]);
 
-			return toHTML({
+			return EXPR_DOCS.toHTML({
 				{"Library", keyvalues.name},
 				keyvalues.example,
 				describe(keyvalues.desc),
@@ -664,7 +165,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 		pnl:AddHTMLCallback(node, function() 
 			local keyvalues = fundocs:ToKV(fundocs.data[i]);
 
-			return toHTML({
+			return EXPR_DOCS.toHTML({
 				{"Function:", signature},
 				{"Returns:", prettyReturns(keyvalues)},
 				keyvalues.example,
@@ -700,7 +201,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 			pnl:AddHTMLCallback(node, function()
 				local keyvalues = type_docs:ToKV(type_docs.data[i]);
 
-				return toHTML({
+				return EXPR_DOCS.toHTML({
 					{"Class:", string.format("%s (%s)", keyvalues.name, EXPR_DOCS.PrettyPerams(keyvalues.id))},
 					{"Extends:", string.format("%s", lk[keyvalues.extends] or "")},
 					keyvalues.example,
@@ -732,7 +233,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 			keyvalues["result type"] = keyvalues.id;
 			keyvalues["result count"] = 1;
 
-			return toHTML({
+			return EXPR_DOCS.toHTML({
 				{"Constructor:", string.format("new %s(%s)", keyvalues.name, prettyPerams(keyvalues.parameter))},
 				{"Returns:", prettyReturns(keyvalues)},
 				keyvalues.example,
@@ -756,7 +257,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 		pnl:AddHTMLCallback(node, function()
 			local keyvalues = attr_docs:ToKV(attr_docs.data[i]);
 
-			return toHTML({
+			return EXPR_DOCS.toHTML({
 				{"Atribute:", string.format("%s.%s", lk[keyvalues.id], keyvalues.name)},
 				{"Type:", lk[keyvalues.type]},
 				keyvalues.example,
@@ -783,7 +284,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 		pnl:AddHTMLCallback(node, function() 
 			local keyvalues = method_docs:ToKV(method_docs.data[i]);
 
-			return toHTML({
+			return EXPR_DOCS.toHTML({
 				{"Method:", signature},
 				{"Returns:", prettyReturns(keyvalues)},
 				keyvalues.example,
@@ -917,7 +418,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.OperatorHelpers", function(
 		pnl:AddHTMLCallback(node, function() 
 			local keyvalues = op_docs:ToKV(op_docs.data[i]);
 
-			return toHTML({
+			return EXPR_DOCS.toHTML({
 				{"Operator:", signature},
 				{"Returns:", prettyReturns(keyvalues)},
 				keyvalues.example,
@@ -1012,8 +513,6 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.SavedHelpers", function(pnl
 
 end);
 
-
-		
 /*********************************************************************************
 	Add menu to golem
 *********************************************************************************/
