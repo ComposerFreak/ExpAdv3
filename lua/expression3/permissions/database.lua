@@ -318,7 +318,13 @@ end
 	Black List
 ****************************************************************************************************************************/
 
-local black_list = {};
+local black_list = { };
+
+local GetBlackList = function()
+	return black_list;
+end
+
+EXPR_PERMS.GetBlackList = GetBlackList;
 
 local IsBlackListed = function(url)
 	for _, filter in pairs(black_list) do
@@ -359,11 +365,11 @@ local LoadBlackList = function()
 	for i = 1, #rows do
 		BlackListURL(rows[i]);
 	end
+
+	hook.Run("Rexpression3.BlackList.URL");
 end
 
 EXPR_PERMS.LoadBlackList = LoadBlackList;
-
-LoadBlackList();
 
 local SaveBlackList = function()
 	
@@ -385,6 +391,12 @@ EXPR_PERMS.SaveBlackList = SaveBlackList;
 ****************************************************************************************************************************/
 
 local white_list = {};
+
+local GetWhiteList = function()
+	return white_list;
+end
+
+EXPR_PERMS.GetWhiteList = GetWhiteList;
 
 local IsWhiteListed = function(url)
 	
@@ -429,8 +441,6 @@ local LoadWhiteList = function()
 end
 
 EXPR_PERMS.LoadWhiteList = LoadWhiteList;
-
-LoadWhiteList();
 
 local SaveWhiteList = function()
 	
@@ -481,3 +491,15 @@ local CanGetURL = function(entity, url)
 end;
 
 EXPR_PERMS.CanGetURL = CanGetURL;
+
+/****************************************************************************************************************************
+	Load Everything
+****************************************************************************************************************************/
+
+LoadWhiteList();
+
+LoadBlackList();
+
+hook.Add("Rexpression3.BlackList.URL", "BlackList.Defaults", function()
+	BlackListURL("([0-9]+).([0-9]+).([0-9]+).([0-9]+)");
+end);

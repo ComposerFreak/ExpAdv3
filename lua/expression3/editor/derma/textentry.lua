@@ -157,6 +157,7 @@ importTextFunction("GetValue");
 importTextFunction("UpdateConvarValue");
 importTextFunction("UpdateFromHistory");
 importTextFunction("UpdateFromMenu");
+importTextFunction("RequestFocus");
 
 /*============================================================================================================================================
 	Make this act as a Image Button
@@ -191,3 +192,32 @@ importButtonFunction("GetTooltip");
 importButtonFunction("GetMaterial");
 
 vgui.Register( "GOLEM_TextEntry", PANEL, "EditablePanel" );
+
+/*============================================================================================================================================
+	Make this a pop up
+============================================================================================================================================*/
+
+function Golem.QueryString(icon, cb, txt, place, w)
+	local pnl = vgui.Create("GOLEM_TextEntry");
+
+	if isstring(icon) then icon = Material(icon); end
+	if place then pnl:SetPlaceholderText(place); end
+	if not icon then pnl:ShowIcon(false); end
+	if icon then pnl:SetMaterial(icon); end
+	if txt then pnl:SetValue(txt); end
+
+	if cb then
+		pnl.DoClick = function(_, v) cb(v); pnl:Remove(); end;
+		pnl.OnEnter = function(_, v) cb(v); pnl:Remove(); end;
+	end
+
+	local x, y = input.GetCursorPos();
+
+	pnl.OnCursorExited = function() pnl:Remove(); end;
+	pnl:SetPos(x - 40, y - 10);
+	pnl:SetSize(w or 150, 22);
+	pnl:MakePopup();
+	pnl:RequestFocus();
+
+	return pnl;
+end
