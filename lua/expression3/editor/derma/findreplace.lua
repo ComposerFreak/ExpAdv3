@@ -24,7 +24,7 @@ function SEARCH:Init()
 	self.query_text:SetPaintBackground(false);
 
 	self.replace_text = self:Add("DTextEntry");
-	self.replace_text:SetPaintBackground"someString"(false);
+	self.replace_text:SetPaintBackground(false);
 
 	self.find_prev = self:Add("GOLEM_ImageButton");
 	self.find_prev:SetMaterial( Material("fugue\\arrow-090.png") );

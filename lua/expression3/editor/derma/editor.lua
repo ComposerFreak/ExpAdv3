@@ -748,13 +748,16 @@ function PANEL:_OnTextChanged( )
 	if not ctrlv and text == "\n" then return end
 
 	local bSelection = self:HasSelection( )
+	local cChar = self.tRows[self.Caret.x][self.Caret.y]
 
+	-- print( string.format("%q",text), string.format("%q",cChar) )
+	
 	if bSelection then
 		local selection = self:Selection( )
 		local selectionText = self:GetArea( selection )
 		local bMultiline = selection[1].x ~= selection[2].x
-
-		if text == 1 and AutoParam[text] then
+		
+		if #text == 1 and AutoParam[text] then
 			if not AutoParam[text][2] and bMultiline then
 				self:SetSelection( text )
 			else
@@ -765,21 +768,37 @@ function PANEL:_OnTextChanged( )
 		else
 			self:SetSelection( text )
 		end
-	elseif text == 1 and AutoParam[text] then
-		if
-			self.tRows[self.Caret.x][self.Caret.y] == " " or
-			self.tRows[self.Caret.x][self.Caret.y] == "" or
-			self.tRows[self.Caret.x][self.Caret.y] == AutoParam[text][1]
-		then
-			self:SetSelection( text .. AutoParam[text][1] )
-			self:SetCaret( self:MovePosition( self.Caret, -1 ) )
-		/*elseif SpecialCase[text] and self.tRows[self.Caret.x][self.Caret.y] == text then
-			self:SetCaret( self:MovePosition( self.Caret, 1 ) ) */
+		
+	elseif #text == 1 then 
+		if AutoParam[text] then 
+			if AutoParam[text][2] then -- ([{
+				if cChar == "" or cChar == " " or (AutoParam[cChar] and AutoParam[cChar][2] ) then
+					self:SetSelection( text .. AutoParam[text][1] )
+					self:SetCaret( self:MovePosition( self.Caret, -1 ) )
+				elseif AutoParam[cChar] or SpecialCase[cChar] then 
+					self:SetSelection( text .. AutoParam[text][1] )
+					self:SetCaret( self:MovePosition( self.Caret, -1 ) )
+				else 
+					self:SetSelection( text )
+				end
+			else -- "'
+				if cChar == "" or cChar == " " or (AutoParam[cChar] and AutoParam[cChar][2] ) then
+					self:SetSelection( text .. AutoParam[text][1] )
+					self:SetCaret( self:MovePosition( self.Caret, -1 ) )
+				elseif cChar == '"' or cChar == "'" then
+					self:SetCaret( self:MovePosition( self.Caret, 1 ) )
+				elseif SpecialCase[cChar] then 
+					self:SetSelection( text .. AutoParam[text][1] )
+					self:SetCaret( self:MovePosition( self.Caret, -1 ) )
+				else 
+					self:SetSelection( text )
+				end
+			end 
+		elseif SpecialCase[text] and cChar == text then 
+			self:SetCaret( self:MovePosition( self.Caret, 1 ) )
 		else
 			self:SetSelection( text )
-		end
-	/*elseif #text == 1 and SpecialCase[text] and self.tRows[self.Caret.x][self.Caret.y] == text then
-		self:SetCaret( self:MovePosition( self.Caret, 1 ) ) */
+		end 
 	else
 		self:SetSelection( text )
 	end
