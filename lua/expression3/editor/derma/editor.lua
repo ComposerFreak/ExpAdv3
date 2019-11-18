@@ -17,28 +17,28 @@ local string_sub 					= string.sub
 local string_gsub 					= string.gsub
 local string_Explode 				= string.Explode
 local string_len 					= string.len
-local string_gmatch 				= string.gmatch
+-- local string_gmatch 				= string.gmatch
 local string_match 					= string.match
 
 local table_remove 					= table.remove
 local table_insert 					= table.insert
 local table_concat 					= table.concat
-local table_Count 					= table.Count
-local table_KeysFromValue 			= table.KeysFromValue
+-- local table_Count 					= table.Count
+-- local table_KeysFromValue 			= table.KeysFromValue
 
 local surface_SetFont 				= surface.SetFont
 local surface_DrawRect 				= surface.DrawRect
 local surface_DrawOutlinedRect 		= surface.DrawOutlinedRect
-local surface_DrawText 				= surface.DrawText
+-- local surface_DrawText 				= surface.DrawText
 local surface_GetTextSize 			= surface.GetTextSize
 local surface_SetDrawColor 			= surface.SetDrawColor
-local surface_SetTextColor 			= surface.SetTextColor
-local surface_SetTextPos 			= surface.SetTextPos
+-- local surface_SetTextColor 			= surface.SetTextColor
+-- local surface_SetTextPos 			= surface.SetTextPos
 local surface_SetMaterial 			= surface.SetMaterial
 local surface_DrawTexturedRect 		= surface.DrawTexturedRect
 
 local input_IsKeyDown 				= input.IsKeyDown
-local input_IsMouseDown 			= input.IsMouseDown
+-- local input_IsMouseDown 			= input.IsMouseDown
 
 local draw_SimpleText 				= draw.SimpleText
 local draw_WordBox 					= draw.WordBox
@@ -46,7 +46,7 @@ local draw_WordBox 					= draw.WordBox
 local BookmarkMaterial 				= Material( "diagona-icons/152.png" )
 
 local C_white = Color( 255, 255, 255 )
-local C_gray = Color( 160, 160, 160 )
+-- local C_gray = Color( 160, 160, 160 )
 
 local Golem = Golem
 local PANEL = { }
@@ -79,7 +79,7 @@ function PANEL:Init( )
 	self.pTextEntry:SetMultiline( true )
 	self.pTextEntry:SetSize( 0, 0 )
 
-	self.pTextEntry.m_bDisableTabbing = true // OH GOD YES!!!!! NO MORE HACKS!!!
+	self.pTextEntry.m_bDisableTabbing = true -- OH GOD YES!!!!! NO MORE HACKS!!!
 	self.pTextEntry.OnTextChanged = function( ) self:_OnTextChanged( ) end
 	self.pTextEntry.OnKeyCodeTyped = function( _, code ) self:_OnKeyCodeTyped( code ) end
 
@@ -130,7 +130,7 @@ function PANEL:SetFont( sFont )
 	if self.bCodeFolding then
 		self.FoldingWidth = self.FontHeight
 		for k, v in pairs( self.FoldButtons ) do
-			if ValidPanel( v ) then
+			if IsValid( v ) and ispanel( v ) then
 				v:SetSize( self.FontHeight, self.FontHeight )
 			end
 		end
@@ -174,7 +174,7 @@ function PANEL:Think( )
 		end
 	end
 
-	local x, y = self:CursorPos( )
+	local x, _ = self:CursorPos( )
 	if x < self.LinePadding then
 		self:SetCursor( "arrow" )
 		return
@@ -371,10 +371,10 @@ function PANEL:_OnKeyCodeTyped( code )
 			self:DoUndo( )
 		elseif code == KEY_Y then
 			self:DoRedo( )
-		elseif code == KEY_S then // Save
-			if shift then // ctrl+shift+s
+		elseif code == KEY_S then -- Save
+			if shift then -- ctrl+shift+s
 				self.Master:SaveFile( true, true )
-			else // ctrl+s
+			else -- ctrl+s
 				self.Master:SaveFile( true )
 			end
 		elseif code == KEY_X then
@@ -497,7 +497,7 @@ function PANEL:_OnKeyCodeTyped( code )
 			local old_scroll = self.Scroll:Clone( )
 
 			local str = self:GetSelection( )
-			if ( str != "" ) then -- If you have a selection
+			if ( str ~= "" ) then -- If you have a selection
 				self:SetSelection( str:rep( 2 ) ) -- Repeat it
 			else -- If you don't
 				-- Select the current line
@@ -625,7 +625,7 @@ function PANEL:_OnKeyCodeTyped( code )
 			else
 				-- self:SetCaret( self:SetArea( { self.Caret, self:MovePosition( self.Caret, 1 ) }, "" ) )
 				local buffer = self:GetArea( { Vector2( self.Caret.x, self.Caret.y + 4 ), Vector2( self.Caret.x, 1 ) } )
-				if self.Caret.y % 4 == 1 and string_rep( " ", #( buffer ) ) == buffer and #( self.tRows[self.Caret.x] ) >= self.Caret.y + 4 - 1 then
+				if self.Caret.y % 4 == 1 and string_rep( " ", #buffer ) == buffer and #self.tRows[self.Caret.x] >= self.Caret.y + 4 - 1 then
 					self:SetCaret( self:SetArea( { self.Caret, self:MovePosition( self.Caret, 4 ) }, "" ) )
 				else
 					self:SetCaret( self:SetArea( { self.Caret, self:MovePosition( self.Caret, 1 ) }, "" ) )
@@ -745,18 +745,19 @@ function PANEL:_OnTextChanged( )
 	end
 
 	if text == "" then return end
-	if not ctrlv then
-		if text == "\n" then return end
-	end
+	if not ctrlv and text == "\n" then return end
 
 	local bSelection = self:HasSelection( )
+	local cChar = self.tRows[self.Caret.x][self.Caret.y]
 
+	-- print( string.format("%q",text), string.format("%q",cChar) )
+	
 	if bSelection then
 		local selection = self:Selection( )
 		local selectionText = self:GetArea( selection )
 		local bMultiline = selection[1].x ~= selection[2].x
-
-		if text == 1 and AutoParam[text] then
+		
+		if #text == 1 and AutoParam[text] then
 			if not AutoParam[text][2] and bMultiline then
 				self:SetSelection( text )
 			else
@@ -767,21 +768,37 @@ function PANEL:_OnTextChanged( )
 		else
 			self:SetSelection( text )
 		end
-	elseif text == 1 and AutoParam[text] then
-		if
-			self.tRows[self.Caret.x][self.Caret.y] == " " or
-			self.tRows[self.Caret.x][self.Caret.y] == "" or
-			self.tRows[self.Caret.x][self.Caret.y] == AutoParam[text][1]
-		then
-			self:SetSelection( text .. AutoParam[text][1] )
-			self:SetCaret( self:MovePosition( self.Caret, -1 ) )
-		/*elseif SpecialCase[text] and self.tRows[self.Caret.x][self.Caret.y] == text then
-			self:SetCaret( self:MovePosition( self.Caret, 1 ) ) */
+		
+	elseif #text == 1 then 
+		if AutoParam[text] then 
+			if AutoParam[text][2] then -- ([{
+				if cChar == "" or cChar == " " or (AutoParam[cChar] and AutoParam[cChar][2] ) then
+					self:SetSelection( text .. AutoParam[text][1] )
+					self:SetCaret( self:MovePosition( self.Caret, -1 ) )
+				elseif AutoParam[cChar] or SpecialCase[cChar] then 
+					self:SetSelection( text .. AutoParam[text][1] )
+					self:SetCaret( self:MovePosition( self.Caret, -1 ) )
+				else 
+					self:SetSelection( text )
+				end
+			else -- "'
+				if cChar == "" or cChar == " " or (AutoParam[cChar] and AutoParam[cChar][2] ) then
+					self:SetSelection( text .. AutoParam[text][1] )
+					self:SetCaret( self:MovePosition( self.Caret, -1 ) )
+				elseif cChar == '"' or cChar == "'" then
+					self:SetCaret( self:MovePosition( self.Caret, 1 ) )
+				elseif SpecialCase[cChar] then 
+					self:SetSelection( text .. AutoParam[text][1] )
+					self:SetCaret( self:MovePosition( self.Caret, -1 ) )
+				else 
+					self:SetSelection( text )
+				end
+			end 
+		elseif SpecialCase[text] and cChar == text then 
+			self:SetCaret( self:MovePosition( self.Caret, 1 ) )
 		else
 			self:SetSelection( text )
-		end
-	/*elseif #text == 1 and SpecialCase[text] and self.tRows[self.Caret.x][self.Caret.y] == text then
-		self:SetCaret( self:MovePosition( self.Caret, 1 ) ) */
+		end 
 	else
 		self:SetSelection( text )
 	end
@@ -803,7 +820,7 @@ end
 function PANEL:OnMousePressed( code )
 	if self.MouseDown then return end
 
-	local x, y = self:CursorPos( )
+	local x, _ = self:CursorPos( )
 	if x < self.LinePadding then return end
 
 	if code == MOUSE_LEFT then
@@ -1057,7 +1074,7 @@ Selection stuff
 ---------------------------------------------------------------------------*/
 
 function PANEL:HasSelection( )
-	return self.Caret != self.Start
+	return self.Caret ~= self.Start
 end
 
 function PANEL:Selection( )
@@ -1145,11 +1162,11 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 		end
 	end
 
-	if start != stop then
-		// Merge first and last line
+	if start ~= stop then
+		-- Merge first and last line
 		self.tRows[start.x] = string_sub( self.tRows[start.x], 1, start.y - 1 ) .. string_sub( self.tRows[stop.x], stop.y )
 
-		// Remove deleted lines
+		-- Remove deleted lines
 		for i = start.x + 1, stop.x do
 			table_remove( self.tRows, start.x + 1 )
 			table_remove( self.tFoldData, start.x + 1 )
@@ -1157,7 +1174,7 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 		end
 	end
 
-	if !text or text == "" then
+	if not text or text == "" then
 		self.pScrollBar:SetUp( self.Size.x, #self.tRows + ( math_floor( self:GetTall( ) / self.FontHeight ) - 2 ) )
 		self:CalculateScroll( )
 		self.tSyntax:Parse( )
@@ -1183,7 +1200,7 @@ function PANEL:SetArea( selection, text, isundo, isredo, before, after )
 		end
 	end
 
-	// insert text
+	-- insert text
 	local rows = string_Explode( "\n", text )
 
 	local remainder = string_sub( self.tRows[start.x], start.y )
@@ -1229,7 +1246,7 @@ function PANEL:TextChanged( tSelection, sText )
 	if self.OnTextChanged then self:OnTextChanged( tSelection, sText ) end
 end
 
-// Might need fixing
+-- Might need fixing
 function PANEL:Indent( Shift )
 	local oldSelection = { self:MakeSelection( self:Selection( ) ) }
 	local Scroll = self.Scroll:Clone( )
@@ -1249,10 +1266,10 @@ function PANEL:Indent( Shift )
 		self.Caret = self:MovePosition( self.Caret, -1 )
 	end
 
-	if Shift then // Unindent
+	if Shift then -- Unindent
 		local Temp = string_gsub( self:GetSelection( ), "\n ? ? ? ?", "\n" )
 		self:SetSelection( string_match( Temp, "^ ? ? ? ?(.*)$") )
-	else // Indent
+	else -- Indent
 		self:SetSelection( "    " .. string_gsub( self:GetSelection( ), "\n", "\n    " ) )
 	end
 
@@ -1417,7 +1434,6 @@ function PANEL:FoldAll( tOld )
 		if #self.tFoldData < #self.tRows then self.tSyntax:MakeFoldData( ) end
 
 		for line = #self.tRows, 1, -1 do
-			local Line = self.tRows[line]
 			local Fold = self.tFoldData[line]
 			if Fold[1] < last or Fold[3] then
 				FoldedLines[#FoldedLines+1] = line
@@ -1469,12 +1485,8 @@ function PANEL:ExpandLine( nLine, bInternal )
 		for i = 1, #Data do
 			self.tRows[Data.Primary+i-1] = Data[i]
 
-			if istable( Data[i] ) then
-				if Data[i].Primary == Data.Primary+i-1 then
-					if Data.Primary+i-1 <= nLine and Data[i].Primary+#Data[i]-1 >= nLine then
-						subfolds = true
-					end
-				end
+			if istable( Data[i] ) and Data[i].Primary == Data.Primary+i-1 and (Data.Primary+i-1 <= nLine and Data[i].Primary+#Data[i]-1 >= nLine) then
+				subfolds = true
 			end
 		end
 
@@ -1495,7 +1507,7 @@ function PANEL:SetCodeFolding( bActive )
 	if bActive then
 		self.FoldingWidth = self.FontHeight
 		for k, v in pairs( self.FoldButtons ) do
-			if ValidPanel( v ) then
+			if IsValid( v ) and ispanel( v ) then
 				v:SetSize( self.FontHeight, self.FontHeight )
 			end
 		end
@@ -1522,7 +1534,7 @@ function PANEL:Bookmark( )
 end
 
 function PANEL:NextBookmark( )
-	local tStart, tEnd = self:MakeSelection( self:Selection( ) )
+	local tStart, _ = self:MakeSelection( self:Selection( ) )
 	local pos = tStart.x
 
 	while true do
@@ -1539,7 +1551,7 @@ function PANEL:NextBookmark( )
 end
 
 function PANEL:PreviousBookmark( )
-	local tStart, tEnd = self:MakeSelection( self:Selection( ) )
+	local tStart, _ = self:MakeSelection( self:Selection( ) )
 	local pos = tStart.x
 
 	while true do
@@ -1587,7 +1599,7 @@ function PANEL:Paint( w, h )
 
 	if self.bCodeFolding then
 		for k, v in pairs( self.FoldButtons ) do
-			if ValidPanel(v) then
+			if IsValid( v ) and ispanel( v ) then
 				v:SetVisible( false )
 			end
 		end
@@ -1720,7 +1732,7 @@ end
 function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 	if Row > #self.tRows then return end
 
-	draw_SimpleText( tostring( Row ), self.Font, self.BookmarkWidth + self.LineNumberWidth, self.FontHeight * ( LinePos ), C_white, TEXT_ALIGN_RIGHT )
+	draw_SimpleText( tostring( Row ), self.Font, self.BookmarkWidth + self.LineNumberWidth, self.FontHeight * LinePos, C_white, TEXT_ALIGN_RIGHT )
 
 	if editor_debug_folding then
 		surface_SetDrawColor( 0, 200, 255 )
@@ -1742,22 +1754,20 @@ function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 		end
 	end
 
-	// Setup buttons for codefolding
-	if Row < #self.tRows and self.bCodeFolding then
-		if self.tFoldData[Row][1] < self.tFoldData[Row+1][1] or self.tFoldData[Row][3] then
-			if not ValidPanel( self.FoldButtons[Row] ) then
-				self.FoldButtons[Row] = MakeFoldButton( self )
-			end
-			self.FoldButtons[Row].Row = Row
-			self.FoldButtons[Row]:SetVisible( true )
-			self.FoldButtons[Row]:SetPos( self.BookmarkWidth + self.LineNumberWidth, ( LinePos ) * self.FontHeight )
+	-- Setup buttons for codefolding
+	if Row < #self.tRows and self.bCodeFolding and (self.tFoldData[Row][1] < self.tFoldData[Row+1][1] or self.tFoldData[Row][3]) then
+		if not IsValid( self.FoldButtons[Row] ) or not ispanel( self.FoldButtons[Row]) then
+			self.FoldButtons[Row] = MakeFoldButton( self )
 		end
+		self.FoldButtons[Row].Row = Row
+		self.FoldButtons[Row]:SetVisible( true )
+		self.FoldButtons[Row]:SetPos( self.BookmarkWidth + self.LineNumberWidth, LinePos * self.FontHeight )
 	end
 
 	if self.Bookmarks[Row] then
 		surface_SetDrawColor( 255, 255, 255, 255 )
 		surface_SetMaterial( BookmarkMaterial )
-		surface_DrawTexturedRect( 3, ( LinePos ) * self.FontHeight, 16, 16 )
+		surface_DrawTexturedRect( 3, LinePos * self.FontHeight, 16, 16 )
 	end
 
 	local offset = -self.Scroll.y + 1
@@ -1786,14 +1796,14 @@ function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 		local len = #cell[1]
 		if offset < 0 then
 			if len > -offset then
-				line = cell[1]:sub( 1 - offset )
+				local line = cell[1]:sub( 1 - offset )
 				offset = #line
-				draw_SimpleText( line, self.Font, self.LinePadding, ( LinePos ) * self.FontHeight, cell[2] )
+				draw_SimpleText( line, self.Font, self.LinePadding, LinePos * self.FontHeight, cell[2] )
 			else
 				offset = offset + len
 			end
 		else
-			draw_SimpleText( cell[1], self.Font, offset * self.FontWidth + self.LinePadding, ( LinePos ) * self.FontHeight, cell[2] )
+			draw_SimpleText( cell[1], self.Font, offset * self.FontWidth + self.LinePadding, LinePos * self.FontHeight, cell[2] )
 			offset = offset + len
 		end
 	end
@@ -1838,28 +1848,28 @@ function PANEL:PaintSelection( selection, color, outline )
 			if Row == line and line == endline then -- Same line selection
 				surface_DrawOutlinedRect(
 					char * self.FontWidth + self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth,
-					( LinePos ) * self.FontHeight,
+					LinePos * self.FontHeight,
 					self.FontWidth * ( endchar - char ),
 					self.FontHeight
 				 )
 			elseif Row == line then -- Selection starts on this line
 				surface_DrawOutlinedRect(
 					char * self.FontWidth + self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth,
-					( LinePos ) * self.FontHeight,
+					LinePos * self.FontHeight,
 					self.FontWidth * math_min( self.Size.y - char + 2, length - char + 1 ),
 					self.FontHeight
 				 )
 			elseif Row == endline then -- Selection ends on this line
 				surface_DrawOutlinedRect(
 					self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth,
-					( LinePos ) * self.FontHeight,
+					LinePos * self.FontHeight,
 					self.FontWidth * endchar,
 					self.FontHeight
 				 )
 			elseif Row > line and Row < endline then -- Selection covers this entire line
 				surface_DrawOutlinedRect(
 					self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth,
-					( LinePos ) * self.FontHeight,
+					LinePos * self.FontHeight,
 					self.FontWidth * math_min( self.Size.y + 2, length + 1 ),
 					self.FontHeight
 				 )
@@ -1868,28 +1878,28 @@ function PANEL:PaintSelection( selection, color, outline )
 			if Row == line and line == endline then -- Same line selection
 				surface_DrawRect(
 					char * self.FontWidth + self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth,
-					( LinePos ) * self.FontHeight,
+					LinePos * self.FontHeight,
 					self.FontWidth * ( endchar - char ),
 					self.FontHeight
 				 )
 			elseif Row == line then -- Selection starts on this line
 				surface_DrawRect(
 					char * self.FontWidth + self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth,
-					( LinePos ) * self.FontHeight,
+					LinePos * self.FontHeight,
 					self.FontWidth * math_min( self.Size.y - char + 2, length - char + 1 ),
 					self.FontHeight
 				 )
 			elseif Row == endline then -- Selection ends on this line
 				surface_DrawRect(
 					self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth,
-					( LinePos ) * self.FontHeight,
+					LinePos * self.FontHeight,
 					self.FontWidth * endchar,
 					self.FontHeight
 				 )
 			elseif Row > line and Row < endline then -- Selection covers this entire line
 				surface_DrawRect(
 					self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth,
-					( LinePos ) * self.FontHeight,
+					LinePos * self.FontHeight,
 					self.FontWidth * math_min( self.Size.y + 2, length + 1 ),
 					self.FontHeight
 				 )
@@ -1911,7 +1921,7 @@ function PANEL:PaintCursor( Caret )
 
 			if istable( self.tRows[Caret.x] ) and self.tRows[Caret.x].Primary ~= Caret.x then return end
 
-			if self.Insert or Caret.Insert then
+			if Insert then
 				surface_DrawRect( ( Caret.y - self.Scroll.y ) * width + self.LinePadding, ( Offset + 1 ) * height, width, 1 )
 			else
 				surface_DrawRect( ( Caret.y - self.Scroll.y ) * width + self.LinePadding, Offset * height, 1, height )

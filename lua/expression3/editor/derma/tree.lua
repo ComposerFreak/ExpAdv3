@@ -170,6 +170,7 @@ end
 
 function PANEL:ApplyCustomSkin(node)
 	node:SetIcon(self.m_sDefIcon);
+	node.Label:SetTextColor(Color( 230, 230, 230 ) )
 
 	local icon_open = Material(self.m_sExpandedIcon);
 	local icon_small = Material(self.m_sUnexpandedIcon);

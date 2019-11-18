@@ -3,7 +3,7 @@ Name: GOLEM_IDE
 Author: Oskar
 ============================================================================================================================================*/
 
-local ValidPanel = ValidPanel
+local IsValid = IsValid
 local surface = surface
 local gui = gui
 local math = math
@@ -77,9 +77,9 @@ event.add("UseScreen", "Interact", function(int x, int y, player who) {
 ]]
 
 local function sDefaultScript()
-	local screen = GetConVarString("gmod_toolmode") == "wire_expression3_screen";
-	print("sDefaultScript",screen,GetConVarString("gmod_toolmode"));
-	return screen and sDefaultScreenTab or sDefaultGateTab;
+	local screen = GetConVar("gmod_toolmode"):GetString() == "wire_expression3_screen"
+	print( "sDefaultScript", screen, GetConVar("gmod_toolmode"):GetString() )
+	return screen and sDefaultScreenTab or sDefaultGateTab
 end
 
 AccessorFunc( PANEL, "m_sText", 		"Text", FORCE_STRING )
@@ -110,7 +110,7 @@ function PANEL:Init( )
 	self:SetMinWidth( 800 )
 	self:SetMinHeight( 600 )
 	self:SetScreenLock( true )
-	self:SetKeyBoardInputEnabled( true )
+	self:SetKeyboardInputEnabled( true )
 	self:SetMouseInputEnabled( true )
 
 	self.pImage = vgui.Create( "DImage", self )
@@ -304,7 +304,7 @@ function PANEL:Init( )
 
 	Golem.Font.OnFontChange = function( Font, sFontID )
 		for i = 1, #self.pnlTabHolder.Items do
-			if not self.pnlTabHolder.Items[i].Tab.__type == "editor" then continue end
+			if self.pnlTabHolder.Items[i].Tab.__type ~= "editor" then continue end
 			self.pnlTabHolder.Items[i].Panel:SetFont( sFontID )
 		end
 		self.tbConsoleEditor:SetFont( sFontID )
@@ -459,10 +459,10 @@ function PANEL:NewTab( sType, ... )
 		end
 
 		Editor.OnTextChanged = function( tSelection, sText )
-			timer.Destroy( "Golem_autosave" )
+			timer.Remove( "Golem_autosave" )
 			timer.Create( "Golem_autosave", 0.5, 1, function( )
 				local Tab = Sheet.Tab
-				if not ValidPanel( Tab ) or Tab.__type ~= "editor" or not Tab.__shouldsave then return end
+				if not IsValid( Tab ) or not ispanel( Tab ) or Tab.__type ~= "editor" or not Tab.__shouldsave then return end
 				local sCode = Tab:GetPanel( ):GetCode( )
 				local sPath = "golem_temp/_autosave_.txt"
 
@@ -483,12 +483,12 @@ end
 
 function PANEL:CloseTab( pTab, bSave )
 	if pTab == true then pTab = self.pnlTabHolder:GetActiveTab( ) end
-	if not ValidPanel( pTab ) then return end
+	if not IsValid( pTab ) or not ispanel( pTab ) then return end
 
 	if pTab.__type == "editor" then
 		local Editor = pTab:GetPanel( )
 
-		if bSave and pTab.FilePath and pTab.FilePath ~= "" and pTab.__lang == "e3" then // Ask about this?
+		if bSave and pTab.FilePath and pTab.FilePath ~= "" and pTab.__lang == "e3" then -- Ask about this?
 			self:SaveFile( pTab.FilePath, false, pTab, true )
 		end
 
@@ -524,7 +524,7 @@ end
 
 function PANEL:CloseMenuTab( pTab )
 	if pTab == true then pTab = self.pnlSideTabHolder:GetActiveTab( ) end
-	if not ValidPanel( pTab ) then return end
+	if not IsValid(pTab) or not ispanel(pTab) then return end
 
 	if self.tMenuTypes[pTab.__type] then
 		self.tMenuTypes[pTab.__type].Close( self, pTab, bSave )
@@ -540,7 +540,7 @@ function PANEL:CloseAll( )
 end
 
 function PANEL:CloseAllBut( pTab )
-	if not ValidPanel( pTab ) then return end
+	if not IsValid(pTab) or not ispanel(pTab) then return end
 	local found = 0
 	while #self.pnlTabHolder.Items > 0 + found do
 		if self.pnlTabHolder.Items[found+1].Tab == pTab then
@@ -562,7 +562,7 @@ end
 function PANEL:GetCode( pTab )
 	pTab = pTab or self.pnlTabHolder:GetActiveTab( )
 	if not pTab then return end
-	if not ValidPanel( pTab ) then return end
+	if not IsValid(pTab) or not ispanel(pTab) then return end
 	if pTab.__type ~= "editor" then return end
 	return pTab:GetPanel( ):GetCode( ), pTab.FilePath, pTab:GetName( )
 end
@@ -570,14 +570,14 @@ end
 function PANEL:SetName( sName, pTab )
 	pTab = pTab or self.pnlTabHolder:GetActiveTab( )
 	if not pTab then return end
-	if not ValidPanel( pTab ) then return end
+	if not IsValid(pTab) or not ispanel(pTab) then return end
 	pTab:SetName( sName )
 end
 
 function PANEL:GetName( pTab )
 	pTab = pTab or self.pnlTabHolder:GetActiveTab( )
 	if not pTab then return end
-	if not ValidPanel( pTab ) then return end
+	if not IsValid(pTab) or not ispanel(pTab) then return end
 	return pTab:GetName( )
 end
 
@@ -645,7 +645,7 @@ function PANEL:SaveFile( sPath, bSaveAs, pTab, bNoSound )
 		return true
 	end
 
-	if not ValidPanel( pTab ) then return end
+	if not IsValid(pTab) or not ispanel(pTab) then return end
 	if not string.EndsWith( sPath, ".txt" ) then sPath = sPath .. ".txt" end
 	if not string.StartWith( sPath, "golem/" ) then sPath = "golem/" .. sPath end
 
@@ -692,7 +692,7 @@ local function TempID( )
 end
 
 function PANEL:SaveTempFile( Tab )
-	if not ValidPanel( Tab ) or Tab.__type ~= "editor" or not Tab.__shouldsave then return end
+	if not IsValid( Tab ) or not ispanel( Tab ) or Tab.__type ~= "editor" or not Tab.__shouldsave then return end
 	local sCode = Tab:GetPanel( ):GetCode( )
 	local sPath = Tab.TempFile or "golem_temp/" .. TempID( ) .. ".txt"
 	MakeFolders( sPath )
@@ -742,14 +742,12 @@ function PANEL:OpenOldTabs( )
 
 	local opentabs = false
 	for k, v in pairs( tabs ) do
-		if v and v ~= "" then
-			if file.Exists( v, "DATA" ) then
-				if string.StartWith( v, "golem_temp" ) then
-					if self:LoadTempFile( v ) then opentabs = true end
-				else
-					self:LoadFile( v )
-					opentabs = true
-				end
+		if v and v ~= "" and  file.Exists( v, "DATA" ) then
+			if string.StartWith( v, "golem_temp" ) then
+				if self:LoadTempFile( v ) then opentabs = true end
+			else
+				self:LoadFile( v )
+				opentabs = true
 			end
 		end
 	end
@@ -836,7 +834,7 @@ function PANEL:DoValidate( Goto, Code, Native )
 
 		self.validator = nil;
 
-		timer.Destroy("Golem_Validator");
+		timer.Remove("Golem_Validator");
 	end
 
 	self.validator = EXPR_LIB.Validate(cb, Code);
@@ -858,7 +856,7 @@ end
 function PANEL:OnValidateError( Goto, Thrown )
 	local line, char = 0, 0;
 	local message = "";
-	local file;
+	local File;
 	local func;
 
 	if ( istable(Thrown) ) then
@@ -869,7 +867,7 @@ function PANEL:OnValidateError( Goto, Thrown )
 		end
 
 		if (Thrown.file) then
-			file = Thrown.file;
+			File = Thrown.file;
 		end
 
 		line = Thrown.line or line;
@@ -891,7 +889,7 @@ function PANEL:OnValidateError( Goto, Thrown )
 			location = string.format("at line %i char %i", line, char);
 		end
 
-		if file then
+		if File then
 			location = string.format("%s in %s.txt", location, Thrown.file);
 		end
 	end
@@ -1277,10 +1275,10 @@ function PANEL:SaveCoords( )
 end
 
 function PANEL:ShowCloseButton( Bool )
-	if Bool and not ValidPanel( self.btnClose ) then
+	if Bool and not IsValid( self.btnClose ) then
 		self.btnClose = vgui.Create( "GOLEM_CloseButton", self )
 		self.btnClose:SetOffset( -5, 5 )
-	elseif not Bool and ValidPanel( self.btnClose ) then
+	elseif not Bool and IsValid( self.btnClose ) then
 		self.btnClose:Remove( )
 	end
 end

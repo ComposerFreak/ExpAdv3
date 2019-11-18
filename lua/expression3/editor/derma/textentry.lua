@@ -8,15 +8,15 @@ local PANEL = { };
 AccessorFunc(PANEL, "m_bBackground", "DrawBackground");
 AccessorFunc(PANEL, "m_colBackground", "BackgroundColor");
 
-AccessorFunc(PANEL, "m_bBorder", "DrawBorder");
+AccessorFunc(PANEL, "m_bBorder", "DrawBorder", FORCE_BOOL);
 AccessorFunc(PANEL, "m_colBorder", "BorderColor");
-AccessorFunc(PANEL, "m_nBorderRadius", "BorderRadius");
-AccessorFunc(PANEL, "m_nBorderMargin", "BorderMargin");
+AccessorFunc(PANEL, "m_nBorderRadius", "BorderRadius", FORCE_NUMBER );
+AccessorFunc(PANEL, "m_nBorderMargin", "BorderMargin", FORCE_NUMBER );
 
 function PANEL:Init()
 
 	self.pnl_txt = vgui.Create("DTextEntry", self);
-	self.pnl_txt:SetDrawBackground(false);
+	self.pnl_txt:SetPaintBackground(false);
 	self.pnl_txt:SetDrawBorder(false);
 
 	self.pnl_txt.OnChange = function(_,v) return self:OnChange(v); end
@@ -32,10 +32,11 @@ function PANEL:Init()
 
 	self:DockIcon(LEFT);
 
-	self:SetDrawBackground(true);
+	self:SetPaintBackground(true);
 	self:SetBackgroundColor(Color(255, 255, 255));
 
-	self:SetDrawBorder(true);
+	-- self:SetDrawBorder(true);
+	self:SetDrawBorder(false);
 	self:SetBorderRadius(0);
 	self:SetBorderMargin(2);
 	self:SetBorderColor(Color(0, 0, 0));
@@ -52,7 +53,7 @@ function PANEL:OnEnter() end
 ============================================================================================================================================*/
 
 function PANEL:Paint(w, h)
-	
+
 	local r = self.m_nBorderRadius;
 	local m = self.m_nBorderMargin;
 
@@ -92,23 +93,25 @@ end
 
 function PANEL:PerformLayout( w, h )
 	local m = self.m_nBorderMargin;
+	
+	self.pnl_btn:SizeToContentsX()
 
 	local bx = m;
-	local tx = h + (m * 2);
-	local tw = w - h - (m * 3);
-
+	local tx = self.pnl_btn:GetWide() + (m * 1);
+	local tw = w - self.pnl_btn:GetWide() - (m * 3);
+	
 	if not self.pnl_btn:IsVisible() then
 		tx = m;
 		tw = w - (m * 2);
 	elseif self.nIconDock == RIGHT then
-		bx = w - h - m;
+		bx = w - self.pnl_btn:GetWide() - m;
 		tx = m;
 	end
 
 	h = h - (m * 2);
-
+	
 	self.pnl_btn:SetPos(bx, m);
-	self.pnl_btn:SetSize(h, h);
+	self.pnl_btn:SetTall(h);
 
 	self.pnl_txt:SetPos(tx, m);
 	self.pnl_txt:SetSize(tw, h);
@@ -126,7 +129,7 @@ end
 importTextFunction("AddHistory");
 importTextFunction("GetAutoComplete");
 importTextFunction("GetDisabled");
-importTextFunction("GetDrawBackground");
+importTextFunction("GetPaintBackground");
 importTextFunction("GetDrawBorder");
 importTextFunction("GetEnterAllowed");
 importTextFunction("GetFloat");
@@ -147,6 +150,7 @@ importTextFunction("SetHistoryEnabled");
 importTextFunction("SetTabbingDisabled");
 importTextFunction("SetTextColor");
 importTextFunction("SetUpdateOnType");
+importTextFunction("SetPaintBackground");
 importTextFunction("SetPlaceholderText");
 importTextFunction("SetValue");
 importTextFunction("GetValue");

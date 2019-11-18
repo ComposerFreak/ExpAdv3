@@ -12,6 +12,11 @@ do
 
 		self:SetActiveTab("Permissions");
 	end;
+		
+	function PANEL:Paint( w, h ) 
+		surface.SetDrawColor(30, 30, 30, 255)
+		surface.DrawRect(0, 0, w, h)
+	end
 
 	vgui.Register("GOLEM_E3Permissions", PANEL, "GOLEM_SimpleTabs");
 end

@@ -10,7 +10,7 @@ local meta = { }
 meta.__index = meta
 meta.__type = "vector2"
 
-function meta:__add( other ) // var+var
+function meta:__add( other ) -- var+var
 	if isnumber( other ) then
 		return Vector2( self.x + other, self.y + other )
 	elseif istable( other ) and other.__type == "vector2" then
@@ -18,7 +18,7 @@ function meta:__add( other ) // var+var
 	end
 end
 
-function meta:__sub( other ) // -var
+function meta:__sub( other ) -- -var
 	if isnumber( other ) then
 		return Vector2( self.x - other, self.y - other )
 	elseif istable( other ) and other.__type == "vector2" then
@@ -26,7 +26,7 @@ function meta:__sub( other ) // -var
 	end
 end
 
-function meta:__mul( other ) // var*var
+function meta:__mul( other ) -- var*var
 	if isnumber( other ) then
 		return Vector2( self.x * other, self.y * other )
 	elseif istable( other ) and other.__type == "vector2" then
@@ -34,7 +34,7 @@ function meta:__mul( other ) // var*var
 	end
 end
 
-function meta:__div( other ) // var/var
+function meta:__div( other ) -- var/var
 	if isnumber( other ) then
 		return Vector2( self.x / other, self.y / other )
 	elseif istable( other ) and other.__type == "vector2" then
@@ -42,36 +42,36 @@ function meta:__div( other ) // var/var
 	end
 end
 
-function meta:__mod( other ) // var%var
+function meta:__mod( other ) -- var%var
 	return Vector2( self.x % other.x, self.y % other.y )
 end
 
-function meta:__pow( other ) // var^var
+function meta:__pow( other ) -- var^var
 	return Vector2( self.x ^ other.x, self.y ^ other.y )
 end
 
-function meta:__unm( ) // -var
+function meta:__unm( ) -- -var
 	return Vector2( self.x * -1, self.y * -1 )
 end
 
-// #var
+-- #var
 function meta:__len( ) -- Garry has broken this =(
 	return math.sqrt( self.x * self.x + self.y * self.y )
 end
 
-function meta:__eq( other ) // var==var
+function meta:__eq( other ) -- var==var
 	return self.x == other.x and self.y == other.y
 end
 
-function meta:__lt( other ) // var<var
+function meta:__lt( other ) -- var<var
 	return self.x < other.x and self.y < other.y
 end
 
-function meta:__le( other ) // var<=var
+function meta:__le( other ) -- var<=var
 	return self.x <= other.x and self.y <= other.y
 end
 
-function meta:__call( x, y ) // var()
+function meta:__call( x, y ) -- var()
 	return self.x + (x or 0), self.y + (y or 0)
 end
 

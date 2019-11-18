@@ -114,6 +114,7 @@ function HELPER_PANEL:Init()
 
 	self.cls_btn = self.srch_pnl:SetupButton("Expand Browser", "fugue/arrow-090.png", RIGHT, function()
 		self.cls_btn:SetVisible(false);
+		self.srch_pnl:InvalidateLayout()
 		self:CloseHTML();
 		self:CloseEditor();
 	end);
@@ -184,7 +185,7 @@ function HELPER_PANEL:Reload()
 
 	local Links = self:AddNode("Links");
 	local Examples = self:AddNode("Examples");
-	local BookMarks = self:AddNode("Book Marks");
+	local BookMarks = self:AddNode("Bookmarks");
 	local CustomHelpers = self:AddNode("Custom Helpers");
 	local Libraries = self:AddNode("Libraries");
 	local Classes = self:AddNode("Classes");
@@ -197,11 +198,11 @@ function HELPER_PANEL:Reload()
 
 	self:AddHTMLCallback(BookMarks, function()
 		return EXPR_DOCS.toHTML({
-			"<h2>Book Marks:</h2>",
+			"<h2>Bookmarks:</h2>",
 			"Right click a node to",
-			"save a new book mark.",
+			"save a new bookmark.",
 			"",
-			"Right click a book mark",
+			"Right click a bookmark",
 			"to go to that node."
 		});
 	end);
@@ -264,10 +265,10 @@ function HELPER_PANEL:AddOptionsMenu(node, callback)
 
 		if not node.isBookMarked then
 
-			menu:AddOption( "Book Mark", function()
+			menu:AddOption( "Bookmark", function()
 				
 				node.isBookMarked = true;
-				node.bookMark = self:AddNode("Book Marks", node:GetText());
+				node.bookMark = self:AddNode("Bookmarks", node:GetText());
 				node.bookMark.BookMarkOff = node;
 				node.bookMark.isBookMarked = true;
 				node.bookMark:SetIcon(node:GetIcon());
@@ -283,7 +284,7 @@ function HELPER_PANEL:AddOptionsMenu(node, callback)
 
 		if node.isBookMarked then
 
-			menu:AddOption( "Remove Book Mark", function()
+			menu:AddOption( "Remove Bookmark", function()
 				if node.bookMark then
 					node.bookMark:Remove();
 				else
@@ -307,6 +308,11 @@ function HELPER_PANEL:AddOptionsMenu(node, callback)
 		menu:Open();
 	end;
 
+end
+
+function HELPER_PANEL:Paint( w, h ) 
+	surface.SetDrawColor(30, 30, 30, 255)
+	surface.DrawRect(0, 0, w, h)
 end
 
 vgui.Register("GOLEM_E3Helper", HELPER_PANEL, "GOLEM_Tree");

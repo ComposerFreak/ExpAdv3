@@ -5,14 +5,11 @@
 local TABPANEL = {};
 
 function TABPANEL:Init()
-	self:DockPadding(5, 5, 5, 5);
-
 	self.pnl_tbr = self:Add("GOLEM_Toolbar");
-	self.pnl_tbr:DockMargin(5, 5, 5, 5);
+	self.pnl_tbr:DockMargin(10, 10, 10, 0);
 	self.pnl_tbr:Dock(TOP);
 
 	self.pnl_cnvs = self:Add("EditablePanel");
-	self.pnl_cnvs:DockMargin(5, 5, 5, 5);
 	self.pnl_cnvs:Dock(FILL);
 
 	self.sheets = {};

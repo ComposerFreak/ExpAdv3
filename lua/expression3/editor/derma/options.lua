@@ -281,7 +281,7 @@ function PANEL:Init()
 
 	--------Font stuff--------
 	local editorFont = self:Add("DComboBox")
-	editorFont:SetValue(GetConVarString("golem_font_name"))
+	editorFont:SetValue(GetConVar("golem_font_name"):GetString())
 	editorFont:AddChoice("Consolas")
 	editorFont:AddChoice("Courier New")
 	editorFont:AddChoice("DejaVu Sans Mono")
@@ -295,7 +295,7 @@ function PANEL:Init()
 
 	--------
 	local editorFontSize = self:Add("DComboBox")
-	editorFontSize:SetValue( GetConVarNumber("golem_font_size"))
+	editorFontSize:SetValue(GetConVar("golem_font_size"):GetInt())
 	for i = 10, 30 do
 		editorFontSize:AddChoice(i)
 	end

@@ -21,10 +21,10 @@ function SEARCH:Init()
 	self:SetSize(300, 50);
 
 	self.query_text = self:Add("DTextEntry");
-	self.query_text:SetDrawBackground(false);
+	self.query_text:SetPaintBackground(false);
 
 	self.replace_text = self:Add("DTextEntry");
-	self.replace_text:SetDrawBackground(false);
+	self.replace_text:SetPaintBackground(false);
 
 	self.find_prev = self:Add("GOLEM_ImageButton");
 	self.find_prev:SetMaterial( Material("fugue\\arrow-090.png") );
@@ -136,7 +136,7 @@ function SEARCH:Close(noanim)
 	end
 
 	self.pEditor.tbRight:InvalidateLayout(false);
-	
+
 	self.bOpen = false;
 end
 
@@ -190,7 +190,7 @@ function SEARCH:GetIDE( )
 
 	if not pTab then return end
 
-	if not ValidPanel( pTab ) then return end
+	if not IsValid( pTab ) or not ispanel( pTab ) then return end
 
 	if pTab.__type ~= "editor" then return end
 
@@ -301,7 +301,7 @@ function SEARCH:FindResults(maxResults)
 	local offset = caretPos;
 	local maxoffset = self:CaretToPos(ide, endPos);
 
-	local tempStart, tempStop = string.find(code, query, 1, !bAllowRegex);
+	local tempStart, tempStop = string.find(code, query, 1, not bAllowRegex);
 
 	if (not tempStart or not tempStop) then
 		return;
@@ -314,7 +314,7 @@ function SEARCH:FindResults(maxResults)
 			break;
 		end
 
-		local start, stop = string.find(code, query, offset, !bAllowRegex);
+		local start, stop = string.find(code, query, offset, not bAllowRegex);
 
 		if (not start or not stop) then
 			if (bWrapAround and not bInSelection) then

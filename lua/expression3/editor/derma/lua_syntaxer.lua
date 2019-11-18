@@ -12,7 +12,6 @@ Syntaxer.First = true
 
 local tonumber, pairs, Color = tonumber, pairs, Color
 
-local table_concat = table.concat
 local string_find = string.find
 local string_gmatch = string.gmatch
 local string_gsub = string.gsub
@@ -97,35 +96,35 @@ function Syntaxer:ResetTokenizer( Row )
 		for n = 1, #tLine do
 			if not bComment and not bString then
 				if tLine[n] == "/" then
-					if tLine[n+1] == "/" then // Single line comment
+					if tLine[n+1] == "/" then -- Single line comment
 						sLine = string_sub( sLine, 0, n-1 )
 						break
-					elseif tLine[n+1] == "*" then // Multi line comment
+					elseif tLine[n+1] == "*" then -- Multi line comment
 						bComment = true
 						skip[#skip+1] = {n, #tLine}
 					end
-				elseif tLine[n] == "\"" and tLine[n-1] ~= "\\" then // Single line string
+				elseif tLine[n] == "\"" and tLine[n-1] ~= "\\" then -- Single line string
 					bString = "\""
 					skip[#skip+1] = {n, #tLine}
-				elseif tLine[n] == "'" and tLine[n-1] ~= "\\" then // Multi line string
+				elseif tLine[n] == "'" and tLine[n-1] ~= "\\" then -- Multi line string
 					bString = "'"
 					skip[#skip+1] = {n, #tLine}
 				end
-			elseif bComment and tLine[n] == "/" and tLine[n-1] == "*" then // End multi line comment
+			elseif bComment and tLine[n] == "/" and tLine[n-1] == "*" then -- End multi line comment
 				if skip[#skip] then
 					skip[#skip][2] = n
 				else
 					skip[#skip+1] = {1, n}
 				end
 				bComment = nil
-			elseif bString and tLine[n] == bString and tLine[n-1] ~= "\\" then // End string
+			elseif bString and tLine[n] == bString and tLine[n-1] ~= "\\" then -- End string
 				if bString == "\"" then
 					if skip[#skip] then
 						skip[#skip][2] = n
 					else
 						skip[#skip+1] = {1, n}
 					end
-				else // Multi line string
+				else -- Multi line string
 					if skip[#skip] then
 						skip[#skip][2] = n
 					else
@@ -391,15 +390,13 @@ function Syntaxer:Parse( nRow )
 
 		if self:NextPattern( "^[a-zA-Z][a-zA-Z0-9_]*" ) then
 			local word = self.sTokenData
-			local keyword = ( self.sChar or "" ) != "("
+			local keyword = ( self.sChar or "" ) ~= "("
 
-			// Special keywords that needs extra work
+			-- Special keywords that needs extra work
 			if word == "function" then
-				if word == "function" then
-					if self.sChar == "(" then
-						self:AddToken( "keyword" )
-						continue
-					end
+				if word == "function" and self.sChar == "(" then
+					self:AddToken( "keyword" )
+					continue
 				end
 
 				self:AddToken( "keyword" )
@@ -542,7 +539,7 @@ function Syntaxer:Parse( nRow )
 				continue
 			end
 
-			// All other keywords
+			-- All other keywords
 			if keywords[word][1] then
 				if keywords[word][2] then
 					self:AddToken( "keyword" )
@@ -678,7 +675,7 @@ function Syntaxer:Parse( nRow )
 		elseif self.sChar == "/" then
 			self:NextCharacter( )
 
-			if self.sChar == "*" then // Multiline comment
+			if self.sChar == "*" then -- Multiline comment
 				self.bBlockComment = true
 				while self.sChar do
 					if self.sChar == "*" then
@@ -694,7 +691,7 @@ function Syntaxer:Parse( nRow )
 					self:NextCharacter( )
 				end
 				self:AddToken( "comment" )
-			elseif self.sChar == "/" then // Singleline comment
+			elseif self.sChar == "/" then -- Singleline comment
 				self:NextPattern( ".*" )
 				self:AddToken( "comment" )
 			else

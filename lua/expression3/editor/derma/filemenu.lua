@@ -373,16 +373,14 @@ function PANEL:BuildPathBar( Parent )
 	self.PathEntry:Dock( FILL )
 
 	function self.PathEntry.OnEnter( Entry )
-		local Path = Entry:GetValue( )
+		local sPath = Entry:GetValue( )
 
-		if Path:Right( 1 ) == "/" then
-			Path = Path:sub( 1, #Path - 1 )
+		if sPath:Right( 1 ) == "/" then
+			sPath = sPath:sub( 1, #sPath - 1 )
 		end
 
-		if string.StartWith( Path, "golem" ) then
-			if file.IsDir( Path, "DATA" ) then
-				self:OpenFolder( Path )
-			end
+		if string.StartWith( sPath, "golem" ) and  file.IsDir( sPath, "DATA" ) then
+			self:OpenFolder( sPath )
 		end
 	end
 
