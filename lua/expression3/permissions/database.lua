@@ -503,3 +503,15 @@ LoadBlackList();
 hook.Add("Rexpression3.BlackList.URL", "BlackList.Defaults", function()
 	BlackListURL("([0-9]+).([0-9]+).([0-9]+).([0-9]+)");
 end);
+
+/****************************************************************************************************************************
+	Inject url methods
+****************************************************************************************************************************/
+
+hook.Add("Expression3.Entity.BuildSandbox", "Expression3.URLPermissions", function(entity, context, env)
+	entity.getURLPerm = GetURLPerm;
+	entity.canGetURL = CanGetURL;
+
+	context.getURLPerm = function(context, ng) return GetURLPerm(context.entity, ng); end;
+	context.canGetURL = function(context, url) return CanGetURL(context.entity, url); end;
+end);
