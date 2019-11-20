@@ -52,6 +52,7 @@ function Golem.Reload( )
 	end
 
 
+	include( "expression3/editor/derma/autocomplete.lua" )
 	include( "expression3/editor/derma/button.lua" )
 	include( "expression3/editor/derma/closebutton.lua" )
 	include( "expression3/editor/derma/editor.lua" )
@@ -69,9 +70,9 @@ function Golem.Reload( )
 	include( "expression3/editor/derma/checkbox.lua" )
 	include( "expression3/editor/derma/tree.lua" )
 	include( "expression3/editor/derma/findreplace.lua" )
-	include("expression3/editor/derma/console2.lua");
-	include( "expression3/editor/derma/textentry.lua" );
-	include( "expression3/editor/derma/simpletabs.lua" );
+	include( "expression3/editor/derma/console2.lua" )
+	include( "expression3/editor/derma/textentry.lua" )
+	include( "expression3/editor/derma/simpletabs.lua" )
 
 	include( "expression3/editor/derma/syntaxer.lua" )
 	
