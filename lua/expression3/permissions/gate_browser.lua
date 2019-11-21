@@ -32,13 +32,14 @@ function PANEL:AddGlobalNode()
 	for perm, data in pairs(EXPR_LIB.PERMS) do
 		
 		local pNode = self:AddNode(oNode, perm);
-		local btn = self:EmbedButton(pNode, "GOLEM_CheckBox", 24, 0);
+		local btn = self:EmbedButton(pNode, "GOLEM_StateBox", 24, 0);
 		
 		pNode:SetIcon(data[2]);
+		pNode:SetTooltip(data[3]);
 
-		btn:SetTick(nil, nil, EXPR_ALLOW);
-		btn:SetCross(nil, nil, EXPR_DENY);
-		btn:AddState("friends", EXPR_FRIEND, "fugue/hand-shake.png");
+		btn:AddState("allow", EXPR_ALLOW, "fugue/tick.png", "Allowed");
+		btn:AddState("deny", EXPR_DENY, "fugue/cross-button.png", "Denied");
+		btn:AddState("friends", EXPR_FRIEND, "fugue/hand-shake.png", "Friends Only");
 
 		btn:PollFromCallback(function()
 			return EXPR_PERMS.GetGlobal(LocalPlayer(), perm), true;
@@ -58,11 +59,12 @@ function PANEL:AddGlobalURLNode(oNode)
 	local btn = self:EmbedButton(pNode, "GOLEM_StateBox", 24, 0);
 	
 	pNode:SetIcon("fugue/monitor-network.png");
+	pNode:SetTooltip("How are http and url requests handled.");
 
-	btn:AddState("deny", EXPR_DENY, "fugue/cross-button.png");
-	btn:AddState("whitelist", EXPR_WHITE_LIST, "fugue/quill.png");
-	btn:AddState("blacklist", EXPR_BLACK_LIST, "fugue/exclamation-circle.png");
-	btn:AddState("friends", EXPR_FRIENDS, "fugue/hand-shake.png");
+	btn:AddState("deny", EXPR_DENY, "fugue/cross-button.png", "Denied");
+	btn:AddState("whitelist", EXPR_WHITE_LIST, "fugue/quill.png", "Use Whitelist");
+	btn:AddState("blacklist", EXPR_BLACK_LIST, "fugue/exclamation-circle.png", "Use blacklist");
+	btn:AddState("friends", EXPR_FRIENDS, "fugue/hand-shake.png", "Friends Only");
 
 	btn:PollFromCallback(function()
 		return EXPR_PERMS.GetGlobal(LocalPlayer(), "URL"), true;
@@ -98,9 +100,10 @@ function PANEL:AddEntity(entity)
 			local btn = self:EmbedButton(pNode, "GOLEM_CheckBox", 24, 0);
 			
 			pNode:SetIcon(data[2]);
+			pNode:SetTooltip(data[3]);
 
-			btn:SetTick(nil, nil, EXPR_ALLOW);
-			btn:SetCross(nil, nil, EXPR_DENY);
+			btn:AddState("allow", EXPR_ALLOW, "fugue/tick.png", "Allowed");
+			btn:AddState("deny", EXPR_DENY, "fugue/cross-button.png", "Denied");
 			btn:AddState("global", EXPR_FRIEND, "fugue/globe-network.png");
 
 			btn:PollFromCallback(function()
@@ -124,6 +127,7 @@ function PANEL:AddEntityURLNode(eNode, entity)
 	local btn = self:EmbedButton(pNode, "GOLEM_StateBox", 24, 0);
 	
 	pNode:SetIcon("fugue/monitor-network.png");
+	pNode:SetTooltip("How are http and url requests handled.");
 
 	btn:AddState("deny", EXPR_DENY, "fugue/cross-button.png");
 	btn:AddState("whitelist", EXPR_WHITE_LIST, "fugue/quill.png");

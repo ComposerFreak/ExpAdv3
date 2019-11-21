@@ -458,6 +458,47 @@ end
 EXPR_PERMS.SaveWhiteList = SaveWhiteList;
 
 /****************************************************************************************************************************
+	Access History
+****************************************************************************************************************************/
+
+local url_history = {};
+
+local GetHistory = function()
+	return url_history;
+end
+
+EXPR_PERMS.GetHistory = GetHistory;
+
+local ClearHistory = function()
+	url_history = {};
+end
+
+EXPR_PERMS.ClearHistory = ClearHistory;
+
+local AddURLHistory = function(entity, url, result)
+	local list = url_history[url];
+	
+	if not list then 
+		list = {};
+		url_history[url] = list
+	end
+
+	local id = entity:EntIndex();
+
+	local sublist = list[id];
+
+	if not sublist then 
+		sublist = {c = 0};
+		list[id] = sublist
+	end
+
+	sublist.r = result;
+	sublist.c = sublist.c + 1;
+end
+
+EXPR_PERMS.ClearHistory = ClearHistory;
+
+/****************************************************************************************************************************
 	Can access URL
 ****************************************************************************************************************************/
 
@@ -473,11 +514,20 @@ end
 
 EXPR_PERMS.GetURLPerm = GetURLPerm;
 
-local CanGetURL = function(entity, url)
+local CanGetURL = function(entity, url, perm)
 	
 	local r = GetURLPerm(entity);
 
-	if r == EXPR_GLOBAL then r = GetGlobal(LocalPlayer(), "URL"); end
+	if perm and r ~= EXPR_DENY then
+
+		local r2 = Get(entity, LocalPlayer(), perm);
+		
+		if r2 == EXPR_DENY then return false; end
+	end
+
+	if r == EXPR_GLOBAL then r = GetGlobal(LocalPlayer(), perm or "URL"); end
+
+	AddURLHistory(entity, url, r);
 	
 	if r == EXPR_DENY then return false; end
 	if r == EXPR_ALLOW then return true; end

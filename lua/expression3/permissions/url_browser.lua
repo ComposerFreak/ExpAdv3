@@ -22,6 +22,7 @@ function PANEL:Reload(b)
 
 	self:LoadWhiteList();
 	self:LoadBlackList();
+	self:LoadHistory();
 end
 
 /*********************************************************************************
@@ -70,11 +71,13 @@ function PANEL:LoadBlackList()
 	
 	self.btn_black.DoClick = function()
 
-		Golem.QueryString(add_icon, function(url)
-
-			self:ListedNode("Black List", "Black list", url, EXPR_PERMS.BlackListURL, EXPR_PERMS.UnblackListURL);
-
-		end, "", "Black list url");
+		self:CustomSearchPanel(add_icon, "Add to black list.", "url",
+			function(_, url)
+				EXPR_PERMS.BlackListURL(url);
+				self:ResetSearchPanel();
+				self:ListedNode("Black List", "Black list", url, EXPR_PERMS.BlackListURL, EXPR_PERMS.UnblackListURL);
+			end,
+		"", name);
 
 	end;
 
@@ -96,6 +99,9 @@ end
 
 function PANEL:ListedNode(node, name, url, add, remove)
 	local node = self:AddNode(node, url);
+	node:SetText(string.sub(url, 1, 25));
+	node:SetTooltip(url);
+
 	local edit = self:EmbedButton(node, "GOLEM_ImageButton", 25, 0);
 	local del = self:EmbedButton(node, "GOLEM_ImageButton", 50, 0);
 
@@ -104,13 +110,15 @@ function PANEL:ListedNode(node, name, url, add, remove)
 	
 	edit.DoClick = function()
 		
-		Golem.QueryString(edit_icon, function(_url)
-			
-			add(_url);
-			remove(url);
-			node:SetText(_url);
-
-		end, "", name);
+		self:CustomSearchPanel(edit_icon, "Apply changes.", url,
+			function(_, _url)
+				add(_url);
+				remove(url);
+				node:Remove();
+				self:ListedNode(node, name, _url, add, remove)
+				self:ResetSearchPanel();
+			end,
+		url);
 
 	end;
 	
@@ -120,6 +128,46 @@ function PANEL:ListedNode(node, name, url, add, remove)
 	end;
 
 	return node;
+end
+
+
+/*********************************************************************************
+	History Node
+*********************************************************************************/
+
+function PANEL:LoadHistory()
+	self.node_history = self:AddNode("History");
+
+	local rfsh = self:EmbedButton(self.node_history, "GOLEM_ImageButton", 25, 0);
+	rfsh:SetIcon("fugue/arrow-circle.png");
+	rfsh:SetToolTip("Refresh history.");
+
+	rfsh.DoClick = function()
+		for url, ents in pairs(EXPR_PERMS.GetHistory()) do
+			local node = self:AddNode("History", url);
+			node:SetText(string.sub(url, 1, 25));
+			node:SetTooltip(url);
+
+			local wlst = self:EmbedButton(node, "GOLEM_ImageButton", 25, 0);
+			wlst:SetIcon("fugue/quill.png");
+			wlst:SetToolTip("Add to white list.");
+
+			local blst = self:EmbedButton(node, "GOLEM_ImageButton", 50, 0);
+			blst:SetIcon("fugue/exclamation-circle.png");
+			blst:SetToolTip("Add to black list.");
+
+			wlst.DoClick = function()
+				self:ListedNode("White List", "White list", url, EXPR_PERMS.WhiteListURL, EXPR_PERMS.UnwhiteListURL);
+			end;
+
+			blst.DoClick = function()
+				self:ListedNode("Black List", "Black list", url, EXPR_PERMS.BlackListURL, EXPR_PERMS.UnblackListURL);
+			end;
+		end
+	end;
+
+	rfsh.DoClick();
+
 end
 
 vgui.Register("GOLEM_E3URLTree", PANEL, "GOLEM_Tree");

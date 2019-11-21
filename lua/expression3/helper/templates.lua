@@ -108,6 +108,32 @@ EXPR_DOCS.toHTML = function(tbl)
 end
 
 /*********************************************************************************
+	Add export state icons to nodes
+*********************************************************************************/
+
+local function addSaveStateIcon(pnl, node, docs, i, keyvalues)
+	if docs then
+		local btn = pnl:EmbedButton(node, "GOLEM_StateBox", 24, 0);
+
+		--btn:AddState("v", nil, nil);
+		btn:AddState("n", false, "fugue/minus-small-circle.png");
+		btn:AddState("y", true, "fugue/tick-small-circle.png");
+
+		if i then
+			btn:PollFromCallback(function()
+				return docs.clk[i];
+			end);
+	
+			btn.ChangedValue = function(value)
+				docs.clk[i] = value;
+			end;
+		end
+	end
+
+end
+
+
+/*********************************************************************************
 	Add library nodes to the helper
 *********************************************************************************/
 local function describe(str)
@@ -149,6 +175,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 			return keyvalues, libdocs;
 		end);
 
+		addSaveStateIcon(pnl, node, libdocs, i, keyvalues);
+
 	end );
 
 
@@ -177,6 +205,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 		pnl:AddOptionsMenu(node, function()
 			return keyvalues, fundocs;
 		end);
+
+		addSaveStateIcon(pnl, node, fundocs, i, keyvalues);
 
 	end );
 
@@ -213,6 +243,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 				return keyvalues, type_docs;
 			end);
 
+			addSaveStateIcon(pnl, node, type_docs, i, keyvalues);
+
 		end
 
 	end );
@@ -246,6 +278,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 			return keyvalues, const_docs;
 		end);
 
+		addSaveStateIcon(pnl, node, const_docs, i, keyvalues);
+
 	end );
 
 	local attr_docs = EXPR_DOCS.GetAttributeDocs();
@@ -268,6 +302,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 		pnl:AddOptionsMenu(node, function()
 			return keyvalues, attr_docs;
 		end);
+
+		addSaveStateIcon(pnl, node, attr_docs, i, keyvalues);
 
 	end );
 
@@ -296,6 +332,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 		pnl:AddOptionsMenu(node, function()
 			return keyvalues, method_docs;
 		end);
+
+		addSaveStateIcon(pnl, node, method_docs, i, keyvalues);
 	end );
 
 end);
@@ -430,6 +468,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.OperatorHelpers", function(
 		pnl:AddOptionsMenu(node, function()
 			return keyvalues, op_docs;
 		end);
+
+		addSaveStateIcon(pnl, node, op_docs, i, keyvalues);
 
 	end);
 end);

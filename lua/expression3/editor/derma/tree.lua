@@ -120,6 +120,34 @@ function PANEL:GetSearchPanel()
 end
 
 /*********************************************************************************
+	Customize Search Panel
+*********************************************************************************/
+
+function PANEL:CustomSearchPanel(icon, text, tooltip, cb, value)
+	if value then self.srch_txt:SetValue(value); end
+	self.srch_txt:SetMaterial(icon);
+	self.srch_txt:SetToolTip(text);
+	self.srch_txt:SetPlaceholderText(tooltip);
+	self.srch_txt.OnEnter = cb;
+	self.srch_txt.DoClick = cb;
+end
+
+/*********************************************************************************
+	Reset Search Panel
+*********************************************************************************/
+do
+	local binocular = Material("fugue/binocular.png");
+	
+	local cb = function(_, str)
+		self:SearchAll(str, true);
+	end;
+
+	function PANEL:ResetSearchPanel()
+		self:CustomSearchPanel(binocular, "Search", "Search...", cb, "");
+	end
+end
+
+/*********************************************************************************
 	Control Panel
 *********************************************************************************/
 

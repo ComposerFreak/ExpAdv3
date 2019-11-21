@@ -15,7 +15,7 @@ AccessorFunc(PANEL, "m_nBorderMargin", "BorderMargin", FORCE_NUMBER );
 
 function PANEL:Init()
 
-	self.pnl_txt = vgui.Create("DTextEntry", self);
+	self.pnl_txt = self:Add("DTextEntry");
 	self.pnl_txt:SetPaintBackground(false);
 	self.pnl_txt:SetDrawBorder(false);
 
@@ -47,6 +47,18 @@ function PANEL:DoClick() end
 function PANEL:OnChange() end
 
 function PANEL:OnEnter() end
+
+/*============================================================================================================================================
+	Value
+============================================================================================================================================*/
+
+function PANEL:SetValue(v)
+	self.pnl_txt:SetValue(v);
+end
+
+function PANEL:GetValue()
+	return self.pnl_txt:GetValue();
+end
 
 /*============================================================================================================================================
 	Paint
@@ -152,8 +164,6 @@ importTextFunction("SetTextColor");
 importTextFunction("SetUpdateOnType");
 importTextFunction("SetPaintBackground");
 importTextFunction("SetPlaceholderText");
-importTextFunction("SetValue");
-importTextFunction("GetValue");
 importTextFunction("UpdateConvarValue");
 importTextFunction("UpdateFromHistory");
 importTextFunction("UpdateFromMenu");

@@ -49,7 +49,7 @@ function oCSV:insert(ow, values)
 
 			self.lk[key] = i;
 
-			self.clk[key] = i;
+			self.clk[i] = true;
 		end
 
 	end
@@ -759,8 +759,10 @@ do
 		local function write(csv)
 			local a = {};
 
-			for k, i in pairs(csv.clk) do
-				table.insert(a, table.concat(csv.data[i], "\t"));
+			for i, v in pairs(csv.clk) do
+				if v and csv.data[i] then
+					table.insert(a, table.concat(csv.data[i], "\t"));
+				end
 			end
 
 			csv.clk = {};
