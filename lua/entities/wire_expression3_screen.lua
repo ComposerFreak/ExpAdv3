@@ -42,7 +42,9 @@ if (CLIENT) then
 	function ENT:DrawEntityOutline() end
 
 	function ENT:Draw()
-		self:DrawModel()
+		--self:DrawModel()
+
+		self:DoNormalDraw();
 
 		Wire_Render(self)
 
@@ -99,7 +101,7 @@ function ENT:GetCursor(ply)
 	local Normal, Pos, monitor, Ang
 	
 	-- Get monitor screen pos & size
-	monitor = WireGPU_Monitors[ self:GetModel() ]
+	local monitor = WireGPU_Monitors[ self:GetModel() ]
 
 	-- Monitor does not have a valid screen point
 	if (not monitor) then
@@ -134,6 +136,28 @@ function ENT:GetCursor(ply)
 	end
 
 	return -1,-1
+end
+
+function ENT:ScreenToLocalVector( x, y )
+	local Monitor = WireGPU_Monitors[ self:GetModel() ];
+
+	if !Monitor then return Vector( 0, 0, 0) end
+
+	local scrSize = Monitor.RS;
+	local res = self.GPU.Resolution or 512;
+
+	local x = x - (scrSize * 0.5) * (Monitor.RS / Monitor.RatioX);
+	local y = y - (scrSize * 0.5) * res;
+	
+	local Vec = Vector( x, -y, 0 )
+
+	Vec:Rotate( Monitor.rot )
+
+	return Vec + Monitor.offset
+end
+
+function ENT:ScreenToWorld( x, y )
+	return self:LocalToWorld( self:ScreenToLocalVector( x, y ) )
 end
 
 if (SERVER) then

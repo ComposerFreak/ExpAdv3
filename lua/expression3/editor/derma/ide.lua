@@ -40,40 +40,48 @@ local sDefaultScreenTab = [[
 @name "Generic Screen";
 
 /*
-	Generic Screen Code.
-	This code uses another E3-Gates Screen events,
-	providing an additonal parameter for the screens entity.
+    Generic Screen Code.
+    This code uses another E3-Gates Screen events,
+    providing an additonal parameter for the screens entity.
 
-	Wiki: https://github.com/Rusketh/ExpAdv3/wiki or [?].
+    Wiki: https://github.com/Rusketh/ExpAdv3/wiki or [?].
 */
 
 entity gate = new entity(0);
 
 server {
-	event.add("Trigger", "E3", function(string port) {
-		if (port == "E3") {
-			@input entity E3;
-			gate = E3;
-			stream bf = net.start("E3");
-			bf.writeShort(E3.id());
-			net.sendToClients(bf);
-		}
-	});
+    event.add("Trigger", "E3", function(string port) {
+        if (port == "E3") {
+            @input entity E3;
+            gate = E3;
+            stream bf = net.start("E3");
+            bf.writeShort(E3.id());
+            net.sendToClients(bf);
+        }
+    });
 }
 
 client {
-	net.receive("E3", function(stream bf) {
-		gate = new entity(bf.readShort());
-	});
-
-	event.add("RenderScreen", "Render", function(int w, int h) {
-		event.call(gate, "RenderScreen", w, h, system.getEntity());
-	});
+    net.receive("E3", function(stream bf) {
+        gate = new entity(bf.readShort());
+    });
+    
+    function void renderDefault(int w, int h) {
+        render.setTexture("omicron/bulb");
+        render.setColor(new color(255, 255, 255, 255));
+        render.drawBox(new vector2(0, 0), new vector2(w, h));
+    }
+    
+    event.add("RenderScreen", "Render", function(int w, int h) {
+        renderDefault(w, h);
+        event.call(gate, "RenderScreen", w, h, system.getEntity());
+    });
 }
 
 event.add("UseScreen", "Interact", function(int x, int y, player who) {
-	event.call(gate, "Interact", x, y, who, system.getEntity());
+    event.call(gate, "Interact", x, y, who, system.getEntity());
 });
+
 ]]
 
 local function sDefaultScript()
