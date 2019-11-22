@@ -225,13 +225,73 @@ file.CreateDir("e3docs");
 file.CreateDir("e3docs/csv");
 file.CreateDir("e3docs/saved");
 
+
+/*********************************************************************************
+	Events
+*********************************************************************************/
+
+do
+	local filename = "events.txt"
+
+	local docs = EXPR_DOCS.CSV(1, "signature", "name", "parameter", "result type", "result count", "state", "desc", "example");
+
+	function EXPR_DOCS.GetEventDocs()
+		return docs;
+	end
+
+	function EXPR_DOCS.DescribeEvent(keyvalues)
+		docs:insert(ow, docs:FromKV(keyvalues));
+	end
+
+	function EXPR_DOCS.GenerateDefaultEventDocs()
+
+		for _, op in pairs( EXPR_EVENTS ) do
+				
+			EXPR_DOCS.DescribeEvent({
+				["signature"] = op.signature,
+				["name"] = op.name,
+				["parameter"] = op.parameter,
+				["result type"] = op.result,
+				["result count"] = op.rCount,
+				["state"] = op.state,
+				["desc"] = "",
+			});
+
+		end
+
+		docs.clk = {};
+		
+	end
+
+	function EXPR_DOCS.LoadDefaultEventDocs()
+		docs:MergeBlankValues(
+			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
+		);
+
+		docs.clk = {};
+	end
+
+	function EXPR_DOCS.LoadLocalEventDocs()
+		docs:MergeBlankValues(
+			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
+		);
+
+		docs.clk = {};
+	end
+
+	function EXPR_DOCS.SaveLocalEventDocs()
+		EXPR_DOCS.saveCSV(docs, string.format("e3docs\\csv\\%s", filename), "DATA")
+	end
+
+end
+
 /*********************************************************************************
 	Types
 *********************************************************************************/
 do
 	local filename = "types.txt"
 
-	local docs = EXPR_DOCS.CSV(1, "id", "name", "extends", "desc", "example");
+	local docs = EXPR_DOCS.CSV(1, "id", "name", "extends", "desc", "example", "state");
 
 	function EXPR_DOCS.GetTypeDocs()
 		return docs;
@@ -247,6 +307,7 @@ do
 				["id"] = data.id,
 				["name"] = data.name,
 				["extends"] = data.base,
+				["state"] = data.state,
 				["desc"] = "",
 			});
 		end
@@ -802,6 +863,7 @@ end
 *********************************************************************************/
 function EXPR_DOCS.GenerateDefaults()
 	print("E3 - Generating Default Helper Data.");
+	EXPR_DOCS.GenerateDefaultEventDocs();
 	EXPR_DOCS.GenerateDefaultTypeDocs();
 	EXPR_DOCS.GenerateDefaultConstructorDocs();
 	EXPR_DOCS.GenerateDefaultAttributeDocs();
@@ -816,6 +878,7 @@ end
 *********************************************************************************/
 function EXPR_DOCS.LoadLocalDocs()
 	print("E3 - Loading Local Helper Data.");
+	EXPR_DOCS.LoadLocalEventDocs();
 	EXPR_DOCS.LoadLocalTypeDocs();
 	EXPR_DOCS.LoadLocalConstructorDocs();
 	EXPR_DOCS.LoadLocalAttributeDocs();
@@ -830,6 +893,7 @@ end
 *********************************************************************************/
 function EXPR_DOCS.SaveLocalDocs()
 	print("E3 - Saving Local Helper Data.");
+	EXPR_DOCS.SaveLocalEventDocs();
 	EXPR_DOCS.SaveLocalTypeDocs();
 	EXPR_DOCS.SaveLocalConstructorDocs();
 	EXPR_DOCS.SaveLocalAttributeDocs();

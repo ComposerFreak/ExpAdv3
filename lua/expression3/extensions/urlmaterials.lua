@@ -21,10 +21,12 @@ end);
 
 ]]
 
-local TextureSize = max_size:GetInt();
+local TextureSize = 512;
 local HTML = HTML
 local URLQueue = { }
 local CanLoad = true
+
+if CLIENT then TextureSize = max_size:GetInt(); end
 
 --[[
 

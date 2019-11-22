@@ -35,6 +35,10 @@ local prettyReturns = function(op)
 	return string.format("%s *%i", rt, rc);
 end
 
+function EXPR_DOCS.PrettyEvent(op)
+	return string.format("%s(%s)", op.name, prettyPerams(op.parameter));
+end
+
 function EXPR_DOCS.PrettyFunction(op)
 	return string.format("%s.%s(%s)", op.library, op.name, prettyPerams(op.parameter));
 end
@@ -132,10 +136,10 @@ local function addSaveStateIcon(pnl, node, docs, i, keyvalues)
 
 end
 
-
 /*********************************************************************************
-	Add library nodes to the helper
+	state and description helpers
 *********************************************************************************/
+
 local function describe(str)
 	if str and str ~= "" then return str; end
 	return "No helper data avalible.";
@@ -152,6 +156,45 @@ local function stateIcon(node, n)
 	if n == EXPR_CLIENT then node:SetIcon("fugue/state-client.png") end
 	return node:SetIcon("fugue/state-shared.png");
 end
+
+/*********************************************************************************
+	Add event nodes to the helper
+*********************************************************************************/
+
+hook.Add("Expression3.LoadHelperNodes", "Expression3.EventHelpers", function(pnl)
+	local event_docs = EXPR_DOCS.GetEventDocs();
+
+	event_docs:ForEach( function(i, keyvalues)
+		local signature = EXPR_DOCS.PrettyEvent(keyvalues);
+
+		local node = pnl:AddNode("Events", signature);
+
+		stateIcon(node, keyvalues.state);
+
+		pnl:AddHTMLCallback(node, function()
+			local keyvalues = event_docs:ToKV(event_docs.data[i]);
+
+			return EXPR_DOCS.toHTML({
+				{"Event:", string.format("%s(%s)", keyvalues.name, EXPR_DOCS.PrettyPerams(keyvalues.parameter))},
+				{"Returns:", prettyReturns(keyvalues)},
+				keyvalues.example,
+				describe(keyvalues.desc),
+				state(keyvalues.state),
+			});
+		end);
+
+		pnl:AddOptionsMenu(node, function()
+			return keyvalues, type_docs;
+		end);
+
+		addSaveStateIcon(pnl, node, type_docs, i, keyvalues);
+
+	end );
+end);
+
+/*********************************************************************************
+	Add library nodes to the helper
+*********************************************************************************/
 
 hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(pnl)
 	
@@ -227,6 +270,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 			lk[keyvalues.id] = keyvalues.name;
 
 			local node = pnl:AddNode("Classes", keyvalues.name);
+			
+			stateIcon(node, keyvalues.state);
 
 			pnl:AddHTMLCallback(node, function()
 				local keyvalues = type_docs:ToKV(type_docs.data[i]);
@@ -236,6 +281,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 					{"Extends:", string.format("%s", lk[keyvalues.extends] or "")},
 					keyvalues.example,
 					describe(keyvalues.desc),
+					state(keyvalues.state),
 				});
 			end);
 

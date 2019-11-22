@@ -185,7 +185,7 @@
 		Extension:RegisterFunction(str library, str name, str parameters, str type, number amount of values returned, (obj = function(ctx*, ...)) function, boolean exclude context)
 			Calls EXPR_LIB.RegisterFunction(...) at the correct time with all given valid parameters.
 
-		REMOVED: Extension:RegisterEvent(str name, str parameters, str type, number amount of values returned)
+		Extension:RegisterEvent(str name, str parameters, str type, number amount of values returned)
 			Calls EXPR_LIB.RegisterEvent(...) at the correct time with all given valid parameters.
 
 		Extension:EnableExtension()
@@ -250,7 +250,7 @@ local classIDs;
 local loadClasses = false;
 
 --[[
-	Prices are currently not used for anything, but might be switching over soon.
+	Prices are currently not used for anything, they where a back up plan.
 ]]
 
 EXPR_MIN = 1;
@@ -295,9 +295,50 @@ function EXPR_LIB.RegisterPermission(name, image, desc)
 	EXPR_LIB.PERMS[name] = {name, image, desc};
 end
 
+
+
+--[[
+	
+]]
+
+local events = {};
+local loadEvents = false;
+
+function EXPR_LIB.RegisterEvent(name, parameter, type, count)
+	if (not loadEvents) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Event %s(%s) outside of Hook::Expression3.LoadEvents", name, parameter);
+	end
+
+	local state, signature = EXPR_LIB.SortArgs(parameter);
+
+	if (not state) then
+		EXPR_LIB.ThrowInternal(0, "%s for Event %s(%s)", signature, name, parameter);
+	end
+
+	if not type then type = "_nil"; end
+
+	local res = EXPR_LIB.GetClass(type);
+
+	if (not res) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register Event %s(%s) with none existing return class %s", name, parameter, type);
+	end
+
+	local evt = {};
+	evt.name = name;
+	evt.state = STATE;
+	evt.parameter = signature;
+	evt.signature = string.format("%s(%s)", name, signature);
+	evt.result = res.id;
+	evt.rCount = count or 0;
+	events[evt.signature] = evt;
+
+	return evt;
+end
+
 --[[
 
 ]]
+
 function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 
 	if (not loadClasses) then
@@ -342,6 +383,9 @@ function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 
 	return class;
 end
+
+--[[
+]]
 
 function EXPR_LIB.RegisterExtendedClass(id, name, base, isType, isValid)
 
@@ -777,6 +821,10 @@ function Extension.RegisterPermission(this, name, image, desc)
 	this.perms[#this.perms+1] = {name, image, desc};
 end
 
+function Extension.RegisterEvent(this, name, parameter, type, count)
+	this.events[#this.events+1] = {name, parameter, type, count, this.state};
+end
+
 function Extension.RegisterClass(this, id, name, isType, isValid)
 	local entry = {id, name, isType, isValid, this.state};
 	this.classes[#this.classes + 1] = entry;
@@ -860,6 +908,20 @@ function Extension.EnableExtension(this)
 	hook.Add("Expression3.LoadPerms", "Expression3.Extention." .. this.name, function()
 		for _, v in pairs(this.perms) do
 			EXPR_LIB.RegisterPermission(v[1], v[2], v[3]);
+		end
+	end);
+
+	local events = {};
+
+	hook.Add("Expression3.LoadEvents", "Expression3.Extension." .. this.name, function()
+		for _, v in pairs(this.events) do
+			if (not v[0]) then
+				STATE = v[5];
+
+				local op = this:CheckRegistration(EXPR_LIB.RegisterEvent, v[1], v[2], v[3], v[4]);
+				op.extension = this.name;
+				events[op.name] = op;
+			end
 		end
 	end);
 
@@ -1095,6 +1157,13 @@ function EXPR_LIB.Initialize()
 	loadAtributes = true;
 	hook.Run("Expression3.LoadAtributes");
 	loadAtributes = false;
+
+	events = {};
+	loadEvents = true;
+	hook.Run("Expression3.LoadEvents");
+	
+	loadEvents = false;
+	EXPR_EVENTS = events;
 
 	operators = {};
 	castOperators = {};

@@ -70,14 +70,19 @@ end
 ]]
 
 if CLIENT then
-  local data = {
-    ["$basetexture"] = "e3_ring_rt",
-    ["$translucent"] = 1,
-    --["$basetexturetransform"] = "center .5 .5 scale 1 1 rotate 0 translate 0 0",
-  };
+  local createRingMat = function()
+    local data = {
+      ["$basetexture"] = "e3_ring_rt",
+      ["$translucent"] = 1,
+      --["$basetexturetransform"] = "center .5 .5 scale 1 1 rotate 0 translate 0 0",
+    };
 
-  EXPR_LIB.RING_RT = EXPR_LIB.RING_RT or GetRenderTarget( "e3_ring_rt", 512, 512);
-  EXPR_LIB.RING_MAT = EXPR_LIB.RING_MAT or CreateMaterial("sprites/e3_ring_mat", "UnlitGeneric", data);
+    EXPR_LIB.RING_RT = EXPR_LIB.RING_RT or GetRenderTarget( "e3_ring_rt", 512, 512);
+    EXPR_LIB.RING_MAT = EXPR_LIB.RING_MAT or CreateMaterial("sprites/e3_ring_mat", "UnlitGeneric", data);
+  end
+
+  createRingMat();
+
 end
 
 --[[
@@ -92,13 +97,19 @@ function ENT:Initialize()
 end
 
 --[[
-  Rotation
+  Rotation & Movment
 ]]
 
 function ENT:Think()
   local player = self:GetParent();
   self:SetAngles( Angle(0, RealTime() * -10, 0) );
-  if (IsValid(player)) then self:SetPos(player:GetPos() + Vector(0, 0, 20) ); end
+
+  if (IsValid(player)) then
+    local height = (player:OBBMaxs() - player:OBBMins()).z;
+    local off = 20 + math.abs( math.sin(CurTime() * 0.5) * (height - 20));
+    self:SetPos(player:GetPos() + Vector(0, 0, off) );
+  end
+
 end
 
 --[[
@@ -221,7 +232,9 @@ if CLIENT then
         render.SetViewPort(0, 0, w, h);
       render.SetRenderTarget();
 
-      EXPR_LIB.RING_MAT:SetTexture("$basetexture", EXPR_LIB.RING_RT);
+      if EXPR_LIB.RING_MAT and EXPR_LIB.RING_RT then
+        EXPR_LIB.RING_MAT:SetTexture("$basetexture", EXPR_LIB.RING_RT);
+      end
   end
 
   function ENT:Draw()
