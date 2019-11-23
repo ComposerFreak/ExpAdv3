@@ -1,0 +1,48 @@
+signature	id	name	type	desc
+_v2.y	_v2	y	n	Y position of vector2.
+_v2.x	_v2	x	n	X position of vector2.
+_trr.hit_group	_trr	hit_group	n	
+_trr.hit_sky	_trr	hit_sky	b	
+_trr.hitbox	_trr	hitbox	n	
+_trr.hitbox_bone	_trr	hitbox_bone	n	
+_trr.hit_world	_trr	hit_world	b	
+_trr.distance	_trr	distance	n	
+_trr.hit_norm	_trr	hit_norm	v	The direction of the surface that was hit as a normal vector (vector with length of 1).
+_trr.hit_pos	_trr	hit_pos	v	The position the trace stopped.
+_trr.hit	_trr	hit	b	Indicates whether the trace hit something.
+_trr.hit_nodraw	_trr	hit_nodraw	b	Indicates whenever the trace hit a no-draw brush
+_trr.entity	_trr	entity	e	The entity hit by the trace.
+_trr.material_type	_trr	material_type	n	See https://wiki.garrysmod.com/page/Enums/MAT
+_trr.fraction	_trr	fraction	n	This indicates the how much of your trace length was used from 0-1
+_trr.normal	_trr	normal	n	The direction of the trace as a normal vector (vector with length of 1).
+_trr.fraction_solid	_trr	fraction_solid	n	Given the trace started in a solid enviroment, this will return at what distance the trace left the solid from 0-1. Doesn't work if the trace hit a non-worldspawn entity.
+_trr.hit_bone	_trr	hit_bone	n	The physics object id, of the physics object hit by the trace.
+_trr.start_solid	_trr	start_solid	b	True if the trace hit a none solid object.
+_trr.hit_noneworld	_trr	hit_noneworld	b	True if the trace hit a none world object.
+_trr.hit_texture	_trr	hit_texture	s	The surface material (not texture) of whatever the trace hit. Will be "**displacement**" if the trace hit a displacement, and **studio** if it hit a prop.
+v.y	v	y	n	Y position of vector.
+v.x	v	x	n	X position of vector.
+v.z	v	z	n	Z position of vector.
+_tr.hit_water	_tr	hit_water	b	If true the created trace will hit water.
+_tr.default_zero	_tr	default_zero	b	If true the created trace will default its hit position to 0.
+_tr.ignore_entitys	_tr	ignore_entitys	b	If true the created trace will not hit entities.
+_tr.ignore_world	_tr	ignore_world	b	If true the created trace will not hit the world.
+_tr.start	_tr	start	v	This is the start position of the created trace.
+_tr.end	_tr	end	v	This is the end position of the created trace.
+_ts.day	_ts	day	n	
+_ts.minute	_ts	minute	n	
+_ts.second	_ts	second	n	
+_ts.year	_ts	year	n	
+_ts.month	_ts	month	n	
+_ts.hour	_ts	hour	n	
+q.r	q	r	n	
+q.k	q	k	n	
+q.j	q	j	n	
+q.i	q	i	n	
+c.r	c	r	n	
+c.b	c	b	n	
+c.a	c	a	n	
+c.g	c	g	n	
+a.y	a	y	n	
+a.r	a	r	n	
+a.p	a	p	n	

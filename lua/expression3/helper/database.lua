@@ -18,8 +18,19 @@ function EXPR_DOCS.CSV(pk, ...)
 	return csv;
 end
 
-function oCSV:insert(ow, values)
+local function ow(pk, current, values)
+	for i = 1, #current do
+		local cur = current[i];
+		local new = values[i];
+		if new ~= "" or not cur then current[i] = new; end
+	end
 
+	return true;
+end
+
+function oCSV:insert(values)
+
+	if not self.clk then self.clk = {}; end
 	if not self.data then self.data = {}; end
 
 	local i = #self.data + 1;
@@ -36,45 +47,44 @@ function oCSV:insert(ow, values)
 
 			if current then
 
-				if ow then
+				local inserted;
 
-					if not ow(self.pk, current, values) then
+				for j = 1, #current do
+					local new = values[j];
 
-						return false;
-
+					if new ~= "" and new ~= current[j] then
+						inserted = true;
+						current[j] = new;
 					end
-
 				end
+
+				if not inserted then return false; end
+
+				self.clk[i] = true;
+
+				return true;
 			end
-
+			
 			self.lk[key] = i;
-
-			self.clk[i] = true;
 		end
-
 	end
 
+	self.clk[i] = true;
 	self.data[i] = values;
+
+	--print("insert: ", i, key, " -> ", unpack(values));
+
+	return true;
 end
 
 function oCSV:add(...)
-	self:insert(nil, {...});
-end
-
-local function ow(pk, current, values)
-	for i = 1, #current do
-		local cur = current[i];
-		local new = values[i];
-		if new ~= "" or not cur then current[i] = new; end
-	end
-
-	return true;
+	self:insert({...});
 end
 
 function oCSV:MergeBlankValues(with)
 	if with and with.data then
 		for i = 1, #with.data do
-			oCSV:insert(ow, with.data[i]);
+			oCSV:insert(with.data[i]);
 		end
 	end
 end
@@ -135,56 +145,36 @@ end
 /*********************************************************************************
 	Load CSV
 *********************************************************************************/
-function EXPR_DOCS.CSVFromString(str, pk)
-	local result = EXPR_DOCS.CSV(pk);
+function EXPR_DOCS.CSVFromString(str, pk, csv)
+	local result = csv or EXPR_DOCS.CSV(pk);
 
 	if str and str ~= "" then
 
 		local rows = string.Explode("\n", str);
-
 		local total = #rows;
 
-		pk = pk or 1;
-
-		if total >= 1 then
-			result.headers = string.Explode("\t", rows[1]);
-		end
-
-		if total >= 2 then
+		if rows[1] then
+			if not csv then result.headers = string.Explode("\t", rows[1]); end
 
 			for i = 2, total do
-				local values = string.Explode("\t", rows[i]);
-
-				if pk then
-					local key = values[pk];
-
-					if key and key ~= "" then 
-						result.lk[key] = i - 1;
-					end
-				end
-
-				result.data[i - 1] = values;
+				result:insert(string.Explode("\t", rows[i]));
 			end
-
 		end
+
 	end
 
 	return result;
 end
 
 function EXPR_DOCS.loadCSV(filename, path, pk)
-	local str = "";
-	local fl = file.Open(filename, "r", path or "DATA");
-
-	if fl then
-		str = fl:Read(fl:Size());
-
-		fl:Close();
-	end
-
+	local str = file.Read(filename, path or "DATA");
 	return EXPR_DOCS.CSVFromString(str, pk);
 end
 
+function EXPR_DOCS.MergeCSV(filename, path, csv, pk)
+	local str = file.Read(filename, path or "DATA");
+	return EXPR_DOCS.CSVFromString(str, pk, csv);
+end
 /*********************************************************************************
 	Write CSV
 *********************************************************************************/
@@ -207,14 +197,8 @@ function EXPR_DOCS.CSVToString(csv)
 	return table.concat(lines, "\n");
 end
 
-function EXPR_DOCS.saveCSV(csv, filename, path)
-	local fl = file.Open(filename, "w", path or "DATA");
-
-	if fl then
-		fl:Write( EXPR_DOCS.CSVToString(csv) );
-
-		fl:Close();
-	end
+function EXPR_DOCS.saveCSV(csv, filename)
+	file.Write(filename, EXPR_DOCS.CSVToString(csv));
 end
 
 /*********************************************************************************
@@ -240,7 +224,7 @@ do
 	end
 
 	function EXPR_DOCS.DescribeEvent(keyvalues)
-		docs:insert(ow, docs:FromKV(keyvalues));
+		docs:insert(docs:FromKV(keyvalues));
 	end
 
 	function EXPR_DOCS.GenerateDefaultEventDocs()
@@ -264,23 +248,17 @@ do
 	end
 
 	function EXPR_DOCS.LoadDefaultEventDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("lua/expression3/helper/csv/%s", filename), "GAME", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalEventDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("e3docs/csv/%s", filename), "DATA", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.SaveLocalEventDocs()
-		EXPR_DOCS.saveCSV(docs, string.format("e3docs\\csv\\%s", filename), "DATA")
+		EXPR_DOCS.saveCSV(docs, string.format("e3docs/csv/%s", filename), "DATA")
 	end
 
 end
@@ -298,7 +276,7 @@ do
 	end
 
 	function EXPR_DOCS.DescribeType(keyvalues)
-		docs:insert(ow, docs:FromKV(keyvalues));
+		docs:insert(docs:FromKV(keyvalues));
 	end
 
 	function EXPR_DOCS.GenerateDefaultTypeDocs()
@@ -316,19 +294,12 @@ do
 	end
 
 	function EXPR_DOCS.LoadDefaultTypeDocs()
-
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("%s/lua/expression3/helper/csv/%s",EXPR_ROOT, filename), "GAME", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("lua/expression3/helper/csv/%s", filename), "GAME", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalTypeDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("e3docs/csv/%s", filename), "DATA", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("e3docs/csv/%s", filename), "DATA", docs, 1);
 		docs.clk = {};
 	end
 
@@ -351,7 +322,7 @@ do
 	end
 
 	function EXPR_DOCS.DescribeConstructor(keyvalues)
-		docs:insert(ow, docs:FromKV(keyvalues));
+		docs:insert(docs:FromKV(keyvalues));
 	end
 
 	function EXPR_DOCS.GenerateDefaultConstructorDocs()
@@ -382,23 +353,17 @@ do
 	end
 
 	function EXPR_DOCS.LoadDefaultConstructorDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("lua/expression3/helper/csv/%s", filename), "GAME", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalConstructorDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("e3docs/csv/%s", filename), "DATA", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.SaveLocalConstructorDocs()
-		EXPR_DOCS.saveCSV(docs, string.format("e3docs\\csv\\%s", filename), "DATA")
+		EXPR_DOCS.saveCSV(docs, string.format("e3docs/csv/%s", filename), "DATA")
 	end
 
 end
@@ -418,7 +383,7 @@ do
 	function EXPR_DOCS.DescribeAttribute(keyvalues)
 		local id, name = keyvalues.id, keyvalues.name;
 		if id and name then keyvalues.signature = keyvalues.signature or (id .. "." .. name); end
-		docs:insert(ow, docs:FromKV(keyvalues));
+		docs:insert(docs:FromKV(keyvalues));
 	end
 
 	function EXPR_DOCS.GenerateDefaultAttributeDocs()
@@ -446,23 +411,17 @@ do
 	end
 
 	function EXPR_DOCS.LoadDefaultAttributeDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("lua/expression3/helper/csv/%s", filename), "GAME", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalAttributeDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("e3docs/csv/%s", filename), "DATA", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.SaveLocalAttributeDocs()
-		EXPR_DOCS.saveCSV(docs, string.format("e3docs\\csv\\%s", filename), "DATA")
+		EXPR_DOCS.saveCSV(docs, string.format("e3docs/csv/%s", filename), "DATA")
 	end
 
 end
@@ -481,7 +440,7 @@ do
 	end
 
 	function EXPR_DOCS.DescribeMethod(keyvalues)
-		docs:insert(ow, docs:FromKV(keyvalues));
+		docs:insert(docs:FromKV(keyvalues));
 	end
 
 	function EXPR_DOCS.GenerateDefaultMethodDocs()
@@ -506,23 +465,17 @@ do
 	end
 
 	function EXPR_DOCS.LoadDefaultMethodDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("lua/expression3/helper/csv/%s", filename), "GAME", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalMethodDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("e3docs/csv/%s", filename), "DATA", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.SaveLocalMethodDocs()
-		EXPR_DOCS.saveCSV(docs, string.format("e3docs\\csv\\%s", filename), "DATA")
+		EXPR_DOCS.saveCSV(docs, string.format("e3docs/csv/%s", filename), "DATA")
 	end
 
 end
@@ -541,7 +494,7 @@ do
 	end
 
 	function EXPR_DOCS.DescribeOperator(keyvalues)
-		docs:insert(ow, docs:FromKV(keyvalues));
+		docs:insert(docs:FromKV(keyvalues));
 	end
 
 	function EXPR_DOCS.GenerateDefaultOperatorDocs()
@@ -579,23 +532,17 @@ do
 	end
 
 	function EXPR_DOCS.LoadDefaultOperatorDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("lua/expression3/helper/csv/%s", filename), "GAME", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalOperatorDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("e3docs/csv/%s", filename), "DATA", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.SaveLocalOperatorDocs()
-		EXPR_DOCS.saveCSV(docs, string.format("e3docs\\csv\\%s", filename), "DATA")
+		EXPR_DOCS.saveCSV(docs, string.format("e3docs/csv/%s", filename), "DATA")
 	end
 
 end
@@ -614,7 +561,7 @@ do
 	end
 
 	function EXPR_DOCS.DescribeLibrary(keyvalues)
-		docs:insert(ow, docs:FromKV(keyvalues));
+		docs:insert(docs:FromKV(keyvalues));
 	end
 
 	function EXPR_DOCS.GenerateDefaultLibraryDocs()
@@ -633,23 +580,17 @@ do
 	end
 
 	function EXPR_DOCS.LoadDefaultLibraryDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("lua/expression3/helper/csv/%s", filename), "GAME", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalLibraryDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("e3docs/csv/%s", filename), "DATA", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.SaveLocalLibraryDocs()
-		EXPR_DOCS.saveCSV(docs, string.format("e3docs\\csv\\%s", filename), "DATA")
+		EXPR_DOCS.saveCSV(docs, string.format("e3docs/csv/%s", filename), "DATA")
 	end
 
 end
@@ -669,7 +610,7 @@ do
 	end
 
 	function EXPR_DOCS.DescribeFunction(keyvalues)
-		docs:insert(ow, docs:FromKV(keyvalues));
+		docs:insert(docs:FromKV(keyvalues));
 	end
 
 	function EXPR_DOCS.GenerateDefaultFunctionDocs()
@@ -696,18 +637,12 @@ do
 	end
 
 	function EXPR_DOCS.LoadDefaultFunctionDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("%s\\docs\\%s",EXPR_ROOT, filename), "GAME", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("lua/expression3/helper/csv/%s", filename), "GAME", docs, 1);
 		docs.clk = {};
 	end
 
 	function EXPR_DOCS.LoadLocalFunctionDocs()
-		docs:MergeBlankValues(
-			EXPR_DOCS.loadCSV(string.format("e3docs\\csv\\%s", filename), "DATA", 1)
-		);
-
+		EXPR_DOCS.MergeCSV(string.format("e3docs/csv/%s", filename), "DATA", docs, 1);
 		docs.clk = {};
 	end
 
@@ -871,6 +806,15 @@ function EXPR_DOCS.GenerateDefaults()
 	EXPR_DOCS.GenerateDefaultOperatorDocs();
 	EXPR_DOCS.GenerateDefaultLibraryDocs();
 	EXPR_DOCS.GenerateDefaultFunctionDocs();
+	
+	EXPR_DOCS.LoadDefaultEventDocs();
+	EXPR_DOCS.LoadDefaultTypeDocs();
+	EXPR_DOCS.LoadDefaultConstructorDocs();
+	EXPR_DOCS.LoadDefaultAttributeDocs();
+	EXPR_DOCS.LoadDefaultMethodDocs();
+	EXPR_DOCS.LoadDefaultOperatorDocs();
+	EXPR_DOCS.LoadDefaultLibraryDocs();
+	EXPR_DOCS.LoadDefaultFunctionDocs();
 end
 
 /*********************************************************************************

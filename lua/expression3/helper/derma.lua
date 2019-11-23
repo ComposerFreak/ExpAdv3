@@ -74,7 +74,7 @@ function EDITOR_PANEL:SetValues(kv, csv, pnl)
 			kv[k] = value;
 
 			if csv then
-				csv:insert(nil, csv:FromKV(kv));
+				csv:insert(csv:FromKV(kv));
 			end
 
 			if pnl then
