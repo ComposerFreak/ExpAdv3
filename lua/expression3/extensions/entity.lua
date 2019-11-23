@@ -481,4 +481,18 @@ end, true);
 	End of extention.
 ]]
 
+extension:RegisterMethod( "e", "constrainedEntities", "", "t", 1, function(entity)
+	local t = {};
+	if IsValid(entity) then
+		for _, subent in pairs( constraint.GetAllConstrainedEntities(entity) ) do
+			t[#t + 1] = {"e", subent};
+		end
+	end
+	return {tbl = t, children = {}, parents = {}, size = #t};
+end, true);
+
+--[[
+	End of extention.
+]]
+
 extension:EnableExtension();
