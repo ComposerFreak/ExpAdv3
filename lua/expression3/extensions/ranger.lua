@@ -1,60 +1,181 @@
 local extension = EXPR_LIB.RegisterExtension("ranger");
 
+extension:SetSharedState();
+
+extension:RegisterLibrary("ranger");
+
 --[[
-	Traces aka rangers
+	Default Settings
 ]]
 
-local function notNil(v)
-	return v ~= nil;
+local setDefaults = function(ctx)
+	ctx.data.ranger = {
+		hit_water = false,
+		hit_entitys = true,
+		ignore_world = false,
+		default_zero = true,
+		filter = {},
+	};
 end
 
-local vector_zero = Vector(0, 0 , 0);
+hook.Add("Expression3.Entity.BuildSandbox", "Expression3.Rangers", function(entity, ctx)
+	ctx.data.ranger_persist = true;
+	setDefaults(ctx);
+end);
 
-local function DoTrace(trace, start, stop, distance)
-	start, stop = start or trace.start, stop or trace.stop;
+--[[
+	Ranger Data
+]]
 
-	if (distance) then
-		stop = start + (stop:GetNormalized( ) * distance);
+extension:RegisterClass("rd", {"rangerdata"}, istable, notnil);
+extension:RegisterAtribute("rd", "hit", "b", "Hit");
+extension:RegisterAtribute("rd", "hit_sky", "b", "HitSky");
+extension:RegisterAtribute("rd", "hit_nodraw", "b", "HitNoDraw");
+extension:RegisterAtribute("rd", "hit_world", "b", "HitWorld");
+extension:RegisterAtribute("rd", "hit_noneworld", "b", "HitNonWorld");
+extension:RegisterAtribute("rd", "start_solid", "b", "StartSolid");
+extension:RegisterAtribute("rd", "hit_pos", "v", "HitPos");
+extension:RegisterAtribute("rd", "hit_norm", "v", "HitNormal");
+extension:RegisterAtribute("rd", "normal", "v", "Normal");
+extension:RegisterAtribute("rd", "normal", "n", "Normal");
+extension:RegisterAtribute("rd", "fraction", "n", "Fraction");
+extension:RegisterAtribute("rd", "fraction_solid", "n", "FractionLeftSolid");
+extension:RegisterAtribute("rd", "hit_group", "n", "HitGroup");
+extension:RegisterAtribute("rd", "hitbox", "n", "HitBox");
+extension:RegisterAtribute("rd", "hit_bone", "n", "PhysicsBone");
+extension:RegisterAtribute("rd", "hitbox_bone", "n", "HitBoxBone");
+extension:RegisterAtribute("rd", "material_type", "n", "MatType");
+extension:RegisterAtribute("rd", "distance", "n", "Distance");
+extension:RegisterAtribute("rd", "hit_texture", "s", "HitTexture");
+extension:RegisterAtribute("rd", "entity", "e", "Entity");
+
+--[[
+	Ranger Settings
+]]
+
+extension:RegisterFunction("ranger", "reset", "", "", 0, setDefaults, false);
+
+extension:RegisterFunction("ranger", "hitWater", "b", "", 0, function(ctx, value)
+	ctx.data.ranger.hit_water = value;
+end, false);
+
+extension:RegisterFunction("ranger", "hitWater", "", "b", 1, function(ctx)
+	return ctx.data.ranger.hit_water or false;
+end, false);
+
+
+extension:RegisterFunction("ranger", "hitEntities", "b", "", 0, function(ctx, value)
+	ctx.data.ranger.hit_entitys = value;
+end, false);
+
+extension:RegisterFunction("ranger", "hitEntities", "", "b", 1, function(ctx)
+	return ctx.data.ranger.hit_entitys or false;
+end, false);
+
+
+extension:RegisterFunction("ranger", "ignoreWorld", "b", "", 0, function(ctx, value)
+	ctx.data.ranger.ignore_world = value;
+end, false);
+
+extension:RegisterFunction("ranger", "ignoreWorld", "", "b", 1, function(ctx)
+	return ctx.data.ranger.ignore_world or false;
+end, false);
+
+
+extension:RegisterFunction("ranger", "defaultZero", "b", "", 0, function(ctx, value)
+	ctx.data.ranger.default_zero = value;
+end, false);
+
+extension:RegisterFunction("ranger", "defaultZero", "", "b", 1, function(ctx)
+	return ctx.data.ranger.default_zero or false;
+end, false);
+
+
+extension:RegisterFunction("ranger", "persist", "b", "", 0, function(ctx, value)
+	ctx.data.ranger_persist = value;
+end, false);
+
+extension:RegisterFunction("ranger", "persist", "", "b", 1, function(ctx)
+	return ctx.data.ranger_persist or false;
+end, false);
+
+--[[
+	Filter
+]]
+
+extension:RegisterFunction("ranger", "filter", "e", "", 0, function(ctx, ent)
+	local filter = ctx.data.ranger.filter;
+	filter[#filter + 1] = ent;
+end, false);
+
+extension:RegisterFunction("ranger", "filter", "t", "", 0, function(ctx, tbl)
+	if not tbl or not tbl.tbl then return; end
+	local filter = ctx.data.ranger.filter;
+	for _, vr in pairs(tbl.tbl) do
+		if vr and vr[1] == "e" and vr[2] then filter[#filter + 1] = vr[2]; end
+	end
+end, false);
+
+extension:RegisterFunction("ranger", "filter", "", "t", 1, function(ctx)
+	local t = {};
+	local filter = ctx.data.ranger.filter;
+
+	for _, e in pairs(filter) do
+		t[#t + 1] = e;
 	end
 
-	trace.start, trace.stop = start, stop;
+	return {tbl = t, children = {}, parents = {}, size = #t};
+end, false);
 
-	local iworld = trace.ignore_world;
-	local data = {start = start, endpos = stop, filter = filter};
+extension:RegisterFunction("ranger", "clearFilter", "", "", 0, function(ctx, ent)
+	ctx.data.ranger.filter = {};
+end, false);
 
-	if (trace.hit_water) then
-		if (not trace.ignore_entitys) then
-			data.mask = -1;
+--[[
+	Ranger Trace Function
+]]
+
+local vector_zero = Vector(0, 0 , 0)
+
+local DoTrace = function(ctx, start, stop, min, max)
+
+	local mask;
+	local persist = ctx.data.ranger_persist;
+	local data = ctx.data.ranger or {};
+	local iworld = data.ignore_world;
+
+	if data.hit_water then
+		if data.hit_entitys then
+			mask = -1;
 		elseif (iworld) then
 			iworld = false;
-			data.mask = MASK_WATER;
+			mask = MASK_WATER;
 		else
-			data.mask = bit.bor(MASK_WATER, CONTENTS_SOLID);
+			mask = bit.bor(MASK_WATER, CONTENTS_SOLID);
 		end
-	elseif (trace.ignore_entitys) then
-		if (iworld) then
+	elseif not data.hit_entitys then
+		if iworld then
 			iworld = false;
-			data.mask = 0;
+			mask = 0;
 		else
-			data.mask = MASK_NPCWORLDSTATIC;
+			mask = MASK_NPCWORLDSTATIC;
 		end
 	end
 
 	local result;
 
-	if (trace.mins and trace.maxs) then
-		data.mins, data.maxs = trace.maxs, trace.maxs;
-		result = util.TraceHull(data);
+	if not min or not max then
+		result = util.TraceLine({start = start, endpos = stop, filter = data.filter, mask = mask, ignoreworld = iworld});
 	else
-		result = util.TraceLine(data);
+		result = util.TraceHull({start = start, endpos = stop, filter = data.filter, mask = mask, ignoreworld = iworld, maxs = max, mins = min});
 	end
 
-	if (iworld and result.HitWorld) then
-		result.HitPos = trace.default_zero and start or stop;
+	if data.ignore_world and result.HitWorld then
+		result.HitPos = data.default_zero and start or stop;
 		result.HitWorld = false;
 		result.Hit = false;
-	elseif (trace.default_zero and not trace.Hit) then
-		trace.HitPos = start
+	elseif data.default_zero and not result.Hit then
+		result.HitPos = start
 	end
 
 	result.Hit = result.Hit or false;
@@ -78,79 +199,37 @@ local function DoTrace(trace, start, stop, distance)
 	result.Entity = result.Entity or Entity(0);
 	result.Distance = start:Distance(result.HitPos or start);
 
+	if not persist then
+		setDefaults(ctx);
+	end
+
 	return result;
 end
 
-extension:RegisterClass("tr", {"trace", "trace.ranger", "ranger"}, istable, notnil);
-
-extension:RegisterConstructor("tr", "", function()
-	return {
-		start = vector_zero,
-		stop = vector_zero,
-		default_zero = false,
-		ignore_world = false,
-		hit_water = false,
-		ignore_entitys = false,
-		mins = false,
-		maxs = false,
-		filter = {},
-	}
-end, true);
-
-extension:RegisterAtribute("tr", "default_zero", "b");
-extension:RegisterAtribute("tr", "ignore_world", "b");
-extension:RegisterAtribute("tr", "ignore_entitys", "b");
-extension:RegisterAtribute("tr", "hit_water", "b");
-
-extension:RegisterAtribute("tr", "start", "v", "start");
-extension:RegisterAtribute("tr", "end", "v", "stop");
-
-extension:RegisterMethod("tr", "setHull", "v,v", "", 0, function(trace, min, max)
-	trace.mins = min;
-	trace.maxs = max;
-end, true);
-
-extension:RegisterMethod("tr", "setNoHull", "", "", 0, function(trace)
-	trace.mins = nil;
-	trace.maxs = nil;
-end, true);
-
-extension:RegisterMethod("tr", "getHull", "", "v", 2, function(trace)
-	return trace.mins or vector_zero, trace.maxs or vector_zero;
-end, true);
-
-extension:RegisterMethod("tr", "fire", "", "trr", 1, DoTrace, true);
-
-extension:RegisterMethod("tr", "fire", "v,v", "trr", 1, DoTrace, true);
-
-extension:RegisterMethod("tr", "fire", "v,v,n", "trr", 1, DoTrace, true);
-
 --[[
-	Trace Results
+	Ranger Offset
 ]]
 
-extension:RegisterClass("trr", {"trace.result", "rangerData"}, istable, notnil);
+extension:RegisterFunction("ranger", "offset", "v,v", "rd", 1, DoTrace, false);
 
-extension:RegisterAtribute("trr", "hit", "b", "Hit");
-extension:RegisterAtribute("trr", "hit_sky", "b", "HitSky");
-extension:RegisterAtribute("trr", "hit_nodraw", "b", "HitNoDraw");
-extension:RegisterAtribute("trr", "hit_world", "b", "HitWorld");
-extension:RegisterAtribute("trr", "hit_noneworld", "b", "HitNonWorld");
-extension:RegisterAtribute("trr", "start_solid", "b", "StartSolid");
-extension:RegisterAtribute("trr", "hit_pos", "v", "HitPos");
-extension:RegisterAtribute("trr", "hit_norm", "v", "HitNormal");
-extension:RegisterAtribute("trr", "normal", "v", "Normal");
-extension:RegisterAtribute("trr", "normal", "n", "Normal");
-extension:RegisterAtribute("trr", "fraction", "n", "Fraction");
-extension:RegisterAtribute("trr", "fraction_solid", "n", "FractionLeftSolid");
-extension:RegisterAtribute("trr", "hit_group", "n", "HitGroup");
-extension:RegisterAtribute("trr", "hitbox", "n", "HitBox");
-extension:RegisterAtribute("trr", "hit_bone", "n", "PhysicsBone");
-extension:RegisterAtribute("trr", "hitbox_bone", "n", "HitBoxBone");
-extension:RegisterAtribute("trr", "material_type", "n", "MatType");
-extension:RegisterAtribute("trr", "distance", "n", "Distance");
-extension:RegisterAtribute("trr", "hit_texture", "s", "HitTexture");
-extension:RegisterAtribute("trr", "entity", "e", "Entity");
+extension:RegisterFunction("ranger", "offset", "v,v,n", "rd", 1, function(ctx, start, dir, range)
+	return DoTrace(ctx, start, start + (dir * range));
+end, false);
 
+--[[
+	Ranger OffsetHull
+]]
+
+extension:RegisterFunction("ranger", "offsetHull", "v,v,v,v", "rd", 1, function(ctx, start, stop, min, max)
+	return DoTrace(ctx, start, stop, min, max);
+end, false);
+
+extension:RegisterFunction("ranger", "offsetHull", "v,v,n,v,v", "rd", 1, function(ctx, start, dir, range, min, max)
+	return DoTrace(ctx, start, start + (dir * range), min, max);
+end, false);
+
+--[[
+	Enable Extention
+]]
 
 extension:EnableExtension();
