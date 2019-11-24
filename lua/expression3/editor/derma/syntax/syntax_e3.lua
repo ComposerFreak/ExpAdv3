@@ -20,15 +20,19 @@ function Syntax:Init( dEditor )
 	self.dEditor:SetSyntax( self )
 	self.dEditor:SetCodeFolding( true )
 	self.dEditor:SetParamMatching( true )
+	
 	self.tInterfaces = { }
 	self.tVariables = { }
 	self.tUserFunctions = { }
 	self.tFunctions = { }
+	self.tAttributes = { }
+	
 	self:BuildTokensTable( )
 	self:BuildKeywordsTable( )
 	self:BuildClassTable( )
 	self:BuildLibraryMethods( )
 	self:BuildClassMethods( )
+	self:BuildAttributes( )
 end
 
 --[[---------------------------------------------------------------------------
@@ -290,7 +294,8 @@ local colors = {
 	["class"] = Color( 140, 200, 50 ),
 	["userfunction"] = Color( 102, 122, 102 ),
 	["variable"] = Color( 0, 180, 80 ),
-	["directive"] = Color( 89, 135, 126 )
+	["directive"] = Color( 89, 135, 126 ),
+	["attribute"] = Color( 100, 100, 200 ),
 }
 
 -- ["prediction"]   = Color( 0xe3, 0xb5, 0x2d ),
@@ -379,6 +384,17 @@ function Syntax:BuildClassMethods( )
 	end
 	-- PrintTableGrep( self.tMethods )
 end
+
+function Syntax:BuildAttributes( )
+	self.tAttributes = { }
+	
+	for sClass, tData in pairs( EXPR_CLASSES ) do
+		self.tAttributes[sClass] = { }
+		for sAttrName, tAttrData in pairs( tData.attributes ) do
+			self.tAttributes[sClass][sAttrName] = true 
+		end
+	end
+end 
 
 --[[---------------------------------------------------------------------------
 Syntaxer
@@ -774,7 +790,7 @@ function Syntax:Parse( )
 
 					continue
 				end
-
+				
 				if self.tLibrary[word] then
 					local lib = self.tLibrary[word]
 					self:AddToken( "library" )
@@ -790,10 +806,10 @@ function Syntax:Parse( )
 							self:AddToken( "notfound" )
 						end
 					end
-
+					
 					continue
 				end
-
+				
 				if self.tVariables[word] and self.nRow >= self.tVariables[word][1] then
 					self:AddToken( "variable" )
 					self:SkipSpaces( )
@@ -801,25 +817,27 @@ function Syntax:Parse( )
 					if self:NextPattern( "^%." ) then
 						self:AddToken( "operator" )
 						self:SkipSpaces( )
-
-						if self:NextPattern( "^[a-z][a-zA-Z0-9]*" ) then
+						
+						if self:NextPattern( "^[a-z][a-zA-Z0-9_]*" ) then
 							local s = self.sBuffer
-
+							
 							if self.tMethods[self.tVariables[word][2]] and self.tMethods[self.tVariables[word][2]][s] then
 								self:AddToken( "function" )
+							elseif self.tAttributes[self.tVariables[word][2]] and self.tAttributes[self.tVariables[word][2]][s] then
+								self:AddToken( "attribute" )
 							end
 						end
 					end
-
+					
 					self:AddToken( "notfound" )
 					continue
 				end
-
+				
 				if self.tUserFunctions[self.sBuffer] and self.tUserFunctions[self.sBuffer] <= self.nRow then
 					self:AddToken( "userfunction" )
 					continue
 				end
-
+				
 				if self.tFunctions[word] then
 					self:AddToken( "function" )
 					continue

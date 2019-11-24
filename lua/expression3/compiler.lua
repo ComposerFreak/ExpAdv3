@@ -1006,7 +1006,7 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 		local class, scope, info = this:GetVariable(var);
 
 		if info then
-				if (info.atribute) then
+				if (info.attribute) then
 				this:writeToBuffer(inst, "this.");
 			end
 
@@ -2405,7 +2405,7 @@ function COMPILER.Compile_VAR(this, inst, token, data)
 	local c, s, var = this:GetVariable(data.variable);
 
 	if (var) then
-		if (var.atribute) then
+		if (var.attribute) then
 			this:writeToBuffer(inst, "this.");
 		end
 
@@ -3654,7 +3654,7 @@ function COMPILER.AssToClass(this, token, declaired, varName, class, scope)
 	if (declaired) then
 		local userclass = this:GetOption("userclass");
 		userclass.memory[varName] = info;
-		info.atribute = true;
+		info.attribute = true;
 		info.prefix = "vars";
 	end
 
@@ -3769,7 +3769,7 @@ end
 ]]
 
 
-function COMPILER.Compile_FEILD(this, inst, token, data)
+function COMPILER.Compile_FIELD(this, inst, token, data)
 	local expr = data.expr;
 	local type, count, price = this:Compile(expr);
 	local userclass = this:GetUserClass(type);
@@ -3781,16 +3781,16 @@ function COMPILER.Compile_FEILD(this, inst, token, data)
 	this:writeToBuffer(inst, ".");
 
 	if (not userclass) then
-		-- this:Throw(token, "Unable to reference feild %s.%s here", name(type), inst.__feild.data);
+		-- this:Throw(token, "Unable to reference field %s.%s here", name(type), inst.__field.data);
 
 		local cls = E3Class(type);
-		local info = cls.atributes[var];
+		local info = cls.attributes[var];
 
 		if (not info) then
-			this:Throw(token, "No sutch atribute %s.%s", name(type), var);
+			this:Throw(token, "No sutch attribute %s.%s", name(type), var);
 		end
 
-		this:writeToBuffer(inst, info.feild or var);
+		this:writeToBuffer(inst, info.field or var);
 
 		return info.class, 1;
 	end
@@ -3798,7 +3798,7 @@ function COMPILER.Compile_FEILD(this, inst, token, data)
 	local info = userclass.memory[var];
 
 	if (not info) then
-		this:Throw(token, "No sutch atribute %s.%s", type, var);
+		this:Throw(token, "No sutch attribute %s.%s", type, var);
 	end
 
 	if (info) then
@@ -3811,7 +3811,7 @@ function COMPILER.Compile_FEILD(this, inst, token, data)
 	return info.class, 1, (price + EXPR_MIN);
 end
 
-function COMPILER.Compile_DEF_FEILD(this, inst, token, data)
+function COMPILER.Compile_DEF_FIELD(this, inst, token, data)
 	local tArgs = #data.expressions;
 	local userclass = this:GetOption("userclass");
 
@@ -3869,10 +3869,10 @@ function COMPILER.Compile_DEF_FEILD(this, inst, token, data)
 	return "", 0, price;
 end
 
-function COMPILER.Compile_SET_FEILD(this, inst, token, data)
+function COMPILER.Compile_SET_FIELD(this, inst, token, data)
 
 	local info;
-	local atribute = data.var.data;
+	local attribute = data.var.data;
 	local expressions = data.expressions;
 	local r1, c1, p1 = this:Compile(expressions[1]);
 	local r2, c2, p2 = this:Compile(expressions[2]);
@@ -3880,17 +3880,17 @@ function COMPILER.Compile_SET_FEILD(this, inst, token, data)
 
 	if (not cls) then
 		local userclass = this:GetClassOrInterface(r1);
-		info = userclass.memory[atribute];
+		info = userclass.memory[attribute];
 	else
-		info = cls.atributes[atribute];
+		info = cls.attributes[attribute];
 	end
 
 	if (not info) then
-		this:Throw(token, "No sutch atribute %s.%s", name(r1), atribute);
+		this:Throw(token, "No sutch attribute %s.%s", name(r1), attribute);
 	end
 
 	if (info.class ~= r2) then
-		this:Throw( token, "Can not assign atribute %s.%s of type %s with %s", name(r1), atribute, name(info.class), name(r2));
+		this:Throw( token, "Can not assign attribute %s.%s of type %s with %s", name(r1), attribute, name(info.class), name(r2));
 	end
 
 	this:writeToBuffer(inst, "\n");
@@ -3898,9 +3898,9 @@ function COMPILER.Compile_SET_FEILD(this, inst, token, data)
 	this:addInstructionToBuffer(inst, expressions[1]);
 
 	if (not cls) then
-		this:writeToBuffer(inst, ".vars.%s = ", atribute);
-	elseif (info.feild) then
-		this:writeToBuffer(inst, ".%s = ", info.feild);
+		this:writeToBuffer(inst, ".vars.%s = ", attribute);
+	elseif (info.field) then
+		this:writeToBuffer(inst, ".%s = ", info.field);
 	end
 
 	this:addInstructionToBuffer(inst, expressions[2]);

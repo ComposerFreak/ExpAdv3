@@ -97,13 +97,13 @@ extension:RegisterConstructor("tr", "", function()
 	}
 end, true);
 
-extension:RegisterAtribute("tr", "default_zero", "b");
-extension:RegisterAtribute("tr", "ignore_world", "b");
-extension:RegisterAtribute("tr", "ignore_entitys", "b");
-extension:RegisterAtribute("tr", "hit_water", "b");
+extension:RegisterAttribute("tr", "default_zero", "b");
+extension:RegisterAttribute("tr", "ignore_world", "b");
+extension:RegisterAttribute("tr", "ignore_entitys", "b");
+extension:RegisterAttribute("tr", "hit_water", "b");
 
-extension:RegisterAtribute("tr", "start", "v", "start");
-extension:RegisterAtribute("tr", "end", "v", "stop");
+extension:RegisterAttribute("tr", "start", "v", "start");
+extension:RegisterAttribute("tr", "end", "v", "stop");
 
 extension:RegisterMethod("tr", "setHull", "v,v", "", 0, function(trace, min, max)
 	trace.mins = min;
@@ -131,26 +131,26 @@ extension:RegisterMethod("tr", "fire", "v,v,n", "trr", 1, DoTrace, true);
 
 extension:RegisterClass("trr", {"trace.result", "rangerData"}, istable, notnil);
 
-extension:RegisterAtribute("trr", "hit", "b", "Hit");
-extension:RegisterAtribute("trr", "hit_sky", "b", "HitSky");
-extension:RegisterAtribute("trr", "hit_nodraw", "b", "HitNoDraw");
-extension:RegisterAtribute("trr", "hit_world", "b", "HitWorld");
-extension:RegisterAtribute("trr", "hit_noneworld", "b", "HitNonWorld");
-extension:RegisterAtribute("trr", "start_solid", "b", "StartSolid");
-extension:RegisterAtribute("trr", "hit_pos", "v", "HitPos");
-extension:RegisterAtribute("trr", "hit_norm", "v", "HitNormal");
-extension:RegisterAtribute("trr", "normal", "v", "Normal");
-extension:RegisterAtribute("trr", "normal", "n", "Normal");
-extension:RegisterAtribute("trr", "fraction", "n", "Fraction");
-extension:RegisterAtribute("trr", "fraction_solid", "n", "FractionLeftSolid");
-extension:RegisterAtribute("trr", "hit_group", "n", "HitGroup");
-extension:RegisterAtribute("trr", "hitbox", "n", "HitBox");
-extension:RegisterAtribute("trr", "hit_bone", "n", "PhysicsBone");
-extension:RegisterAtribute("trr", "hitbox_bone", "n", "HitBoxBone");
-extension:RegisterAtribute("trr", "material_type", "n", "MatType");
-extension:RegisterAtribute("trr", "distance", "n", "Distance");
-extension:RegisterAtribute("trr", "hit_texture", "s", "HitTexture");
-extension:RegisterAtribute("trr", "entity", "e", "Entity");
+extension:RegisterAttribute("trr", "hit", "b", "Hit");
+extension:RegisterAttribute("trr", "hit_sky", "b", "HitSky");
+extension:RegisterAttribute("trr", "hit_nodraw", "b", "HitNoDraw");
+extension:RegisterAttribute("trr", "hit_world", "b", "HitWorld");
+extension:RegisterAttribute("trr", "hit_noneworld", "b", "HitNonWorld");
+extension:RegisterAttribute("trr", "start_solid", "b", "StartSolid");
+extension:RegisterAttribute("trr", "hit_pos", "v", "HitPos");
+extension:RegisterAttribute("trr", "hit_norm", "v", "HitNormal");
+extension:RegisterAttribute("trr", "normal", "v", "Normal");
+extension:RegisterAttribute("trr", "normal", "n", "Normal");
+extension:RegisterAttribute("trr", "fraction", "n", "Fraction");
+extension:RegisterAttribute("trr", "fraction_solid", "n", "FractionLeftSolid");
+extension:RegisterAttribute("trr", "hit_group", "n", "HitGroup");
+extension:RegisterAttribute("trr", "hitbox", "n", "HitBox");
+extension:RegisterAttribute("trr", "hit_bone", "n", "PhysicsBone");
+extension:RegisterAttribute("trr", "hitbox_bone", "n", "HitBoxBone");
+extension:RegisterAttribute("trr", "material_type", "n", "MatType");
+extension:RegisterAttribute("trr", "distance", "n", "Distance");
+extension:RegisterAttribute("trr", "hit_texture", "s", "HitTexture");
+extension:RegisterAttribute("trr", "entity", "e", "Entity");
 
 
 extension:EnableExtension();

@@ -116,8 +116,8 @@ end, true);
 
 --[[
 ]]
-extension:RegisterAtribute("v2", "x", "n");
-extension:RegisterAtribute("v2", "y", "n");
+extension:RegisterAttribute("v2", "x", "n");
+extension:RegisterAttribute("v2", "y", "n");
 
 extension:RegisterMethod("v2", "getX", "", "n", 1, function(v)
 	return v.x;

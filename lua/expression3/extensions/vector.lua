@@ -143,9 +143,9 @@ end, false);
 	Method
 ]]
 
-extension:RegisterAtribute("v", "x", "n");
-extension:RegisterAtribute("v", "y", "n");
-extension:RegisterAtribute("v", "z", "n");
+extension:RegisterAttribute("v", "x", "n");
+extension:RegisterAttribute("v", "y", "n");
+extension:RegisterAttribute("v", "z", "n");
 
 extension:RegisterMethod("v", "getX", "", "n", 1, function(v)
 	return v.x;

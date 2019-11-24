@@ -1334,8 +1334,8 @@ end
 
 function PARSER.Statment_13(this, expr)
 	if (this:Accept("prd")) then
-		local inst = this:StartInstruction("set_feild", expr.token);
-		local var = this:Require("var", "Atribute expected after (.)");
+		local inst = this:StartInstruction("set_field", expr.token);
+		local var = this:Require("var", "Attribute expected after (.)");
 		this:Require("ass", "Assigment operator (=) expected after index operator.");
 		return this:EndInstruction(inst, {var = var; expressions = {expr, this:Expression_1()}});
 	end
@@ -1997,7 +1997,7 @@ function PARSER.Expression_Trailing(this, expr)
 				expr = this:EndInstruction(inst, {method = method.data; expressions = expressions});
 			else
 				-- Check for an ass instruction and locate it,
-				-- If we are at our set atribute then we break.
+				-- If we are at our set attribute then we break.
 
 				if (this:StatmentContains(varToken, "ass")) then
 					local excluded = this:LastInStatment(this:OffsetToken(this.__prd, -1), "prd", "ass");
@@ -2008,7 +2008,7 @@ function PARSER.Expression_Trailing(this, expr)
 					end
 				end
 
-				inst.type = "feild";
+				inst.type = "field";
 
 				expr = this:EndInstruction(inst, {expr = expr; var = varToken});
 			end
@@ -2188,7 +2188,7 @@ function PARSER.ClassStatment_1(this)
 			return this:ClassStatment_2();
 		end
 
-		local inst = this:StartInstruction("def_feild", this.__token);
+		local inst = this:StartInstruction("def_field", this.__token);
 
 		local type = this.__token.data;
 

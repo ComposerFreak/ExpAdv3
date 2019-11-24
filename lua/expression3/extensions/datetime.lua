@@ -35,16 +35,16 @@ extension:RegisterConstructor("ts", "b", function(utc)
 end, true);
 
 --[[
-	Atributes
+	Attributes
 ]]
 
-extension:RegisterAtribute("ts", "year", "n", "year");
-extension:RegisterAtribute("ts", "month", "n", "month");
-extension:RegisterAtribute("ts", "day", "n", "day");
+extension:RegisterAttribute("ts", "year", "n", "year");
+extension:RegisterAttribute("ts", "month", "n", "month");
+extension:RegisterAttribute("ts", "day", "n", "day");
 
-extension:RegisterAtribute("ts", "hour", "n", "hour");
-extension:RegisterAtribute("ts", "minute", "n", "min");
-extension:RegisterAtribute("ts", "second", "n", "sec");
+extension:RegisterAttribute("ts", "hour", "n", "hour");
+extension:RegisterAttribute("ts", "minute", "n", "min");
+extension:RegisterAttribute("ts", "second", "n", "sec");
 
 --[[
 	Time Stamp Methods
