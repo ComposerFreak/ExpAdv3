@@ -83,9 +83,9 @@ end, true);
 	Methods
 ]]
 
-extension:RegisterAtribute("a", "p", "n");
-extension:RegisterAtribute("a", "y", "n");
-extension:RegisterAtribute("a", "r", "n");
+extension:RegisterAttribute("a", "p", "n");
+extension:RegisterAttribute("a", "y", "n");
+extension:RegisterAttribute("a", "r", "n");
 
 extension:RegisterMethod("a", "isValid", "", "b", 1, function(a)
 	return IsValid(a)

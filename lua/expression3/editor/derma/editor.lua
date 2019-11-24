@@ -517,6 +517,18 @@ function PANEL:_OnKeyCodeTyped( code )
 			self:Bookmark( )
 		elseif code == KEY_SPACE then
 			self.Master:DoValidate( true )
+		elseif code == KEY_BACKSPACE then 
+			if self:HasSelection() then 
+				self:FoldAll( tFolds )
+				self:SetSelection( "" )
+				tFolds = self:ExpandAll( )
+			else
+				self.Start = self:wordLeft( self.Caret, true ) 
+				if self.Start.y <= 0 then self.Start.y = 1 end 
+				if self.Start.x <= 0 then self.Start.x = 1 end 
+				self:SetSelection( "" )
+				self:ScrollCaret( )
+			end 
 		end
 	else
 		if code == KEY_ENTER then

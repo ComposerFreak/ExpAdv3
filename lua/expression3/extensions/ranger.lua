@@ -28,26 +28,26 @@ end);
 ]]
 
 extension:RegisterClass("rd", {"rangerdata"}, istable, notnil);
-extension:RegisterAtribute("rd", "hit", "b", "Hit");
-extension:RegisterAtribute("rd", "hit_sky", "b", "HitSky");
-extension:RegisterAtribute("rd", "hit_nodraw", "b", "HitNoDraw");
-extension:RegisterAtribute("rd", "hit_world", "b", "HitWorld");
-extension:RegisterAtribute("rd", "hit_noneworld", "b", "HitNonWorld");
-extension:RegisterAtribute("rd", "start_solid", "b", "StartSolid");
-extension:RegisterAtribute("rd", "hit_pos", "v", "HitPos");
-extension:RegisterAtribute("rd", "hit_norm", "v", "HitNormal");
-extension:RegisterAtribute("rd", "normal", "v", "Normal");
-extension:RegisterAtribute("rd", "normal", "n", "Normal");
-extension:RegisterAtribute("rd", "fraction", "n", "Fraction");
-extension:RegisterAtribute("rd", "fraction_solid", "n", "FractionLeftSolid");
-extension:RegisterAtribute("rd", "hit_group", "n", "HitGroup");
-extension:RegisterAtribute("rd", "hitbox", "n", "HitBox");
-extension:RegisterAtribute("rd", "hit_bone", "n", "PhysicsBone");
-extension:RegisterAtribute("rd", "hitbox_bone", "n", "HitBoxBone");
-extension:RegisterAtribute("rd", "material_type", "n", "MatType");
-extension:RegisterAtribute("rd", "distance", "n", "Distance");
-extension:RegisterAtribute("rd", "hit_texture", "s", "HitTexture");
-extension:RegisterAtribute("rd", "entity", "e", "Entity");
+extension:RegisterAttribute("rd", "hit", "b", "Hit");
+extension:RegisterAttribute("rd", "hit_sky", "b", "HitSky");
+extension:RegisterAttribute("rd", "hit_nodraw", "b", "HitNoDraw");
+extension:RegisterAttribute("rd", "hit_world", "b", "HitWorld");
+extension:RegisterAttribute("rd", "hit_noneworld", "b", "HitNonWorld");
+extension:RegisterAttribute("rd", "start_solid", "b", "StartSolid");
+extension:RegisterAttribute("rd", "hit_pos", "v", "HitPos");
+extension:RegisterAttribute("rd", "hit_norm", "v", "HitNormal");
+extension:RegisterAttribute("rd", "normal", "v", "Normal");
+extension:RegisterAttribute("rd", "normal", "n", "Normal");
+extension:RegisterAttribute("rd", "fraction", "n", "Fraction");
+extension:RegisterAttribute("rd", "fraction_solid", "n", "FractionLeftSolid");
+extension:RegisterAttribute("rd", "hit_group", "n", "HitGroup");
+extension:RegisterAttribute("rd", "hitbox", "n", "HitBox");
+extension:RegisterAttribute("rd", "hit_bone", "n", "PhysicsBone");
+extension:RegisterAttribute("rd", "hitbox_bone", "n", "HitBoxBone");
+extension:RegisterAttribute("rd", "material_type", "n", "MatType");
+extension:RegisterAttribute("rd", "distance", "n", "Distance");
+extension:RegisterAttribute("rd", "hit_texture", "s", "HitTexture");
+extension:RegisterAttribute("rd", "entity", "e", "Entity");
 
 --[[
 	Ranger Settings

@@ -118,6 +118,7 @@ end
 --[[
 ]]
 
+EXPR_LIB.TABLE = eTable;
 
 --[[
 ]]

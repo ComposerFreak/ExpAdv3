@@ -337,7 +337,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 		pnl:AddHTMLCallback(node, function()
 			local keyvalues = attr_docs:ToKV(attr_docs.data[i]);
 			return EXPR_DOCS.toHTML({
-				{"Atribute:", string.format("%s.%s", lk[keyvalues.id], keyvalues.name)},
+				{"Attribute:", string.format("%s.%s", lk[keyvalues.id], keyvalues.name)},
 				{"Type:", lk[keyvalues.type]},
 				keyvalues.example,
 				describe(keyvalues.desc),

@@ -390,13 +390,13 @@ do
 
 		for _, cls in pairs( EXPR_CLASSES ) do
 			
-			if cls.atributes then
+			if cls.attributes then
 
-				for _, op in pairs(cls.atributes) do
+				for _, op in pairs(cls.attributes) do
 					EXPR_DOCS.DescribeAttribute({
-						["signature"] = cls.id .. "." .. op.atribute,
+						["signature"] = cls.id .. "." .. op.attribute,
 						["id"] = cls.id,
-						["name"] = op.atribute,
+						["name"] = op.attribute,
 						["type"] = op.class,
 						["desc"] = "",
 					});

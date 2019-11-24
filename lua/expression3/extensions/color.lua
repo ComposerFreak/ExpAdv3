@@ -112,10 +112,10 @@ end, true);
 	Method
 ]]
 
-extension:RegisterAtribute("c", "r", "n");
-extension:RegisterAtribute("c", "g", "n");
-extension:RegisterAtribute("c", "b", "n");
-extension:RegisterAtribute("c", "a", "n");
+extension:RegisterAttribute("c", "r", "n");
+extension:RegisterAttribute("c", "g", "n");
+extension:RegisterAttribute("c", "b", "n");
+extension:RegisterAttribute("c", "a", "n");
 
 extension:RegisterMethod("c", "getR", "", "n", 1, function(c)
 	return c.r;

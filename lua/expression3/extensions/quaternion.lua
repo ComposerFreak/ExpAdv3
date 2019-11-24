@@ -146,10 +146,10 @@
 	*****************************************************************************************************************************************************
 ]]--
 
-	extension:RegisterAtribute("q", "r", "n")
-	extension:RegisterAtribute("q", "i", "n")
-	extension:RegisterAtribute("q", "j", "n")
-	extension:RegisterAtribute("q", "k", "n")
+	extension:RegisterAttribute("q", "r", "n")
+	extension:RegisterAttribute("q", "i", "n")
+	extension:RegisterAttribute("q", "j", "n")
+	extension:RegisterAttribute("q", "k", "n")
 
 	--[[ Set Quaternion ]]--
 
