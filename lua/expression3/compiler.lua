@@ -1340,11 +1340,12 @@ function COMPILER.Compile_TEN(this, inst, token, data)
 	local expr3 = data.expr3;
 	local r3, c3, p3 = this:Compile(expr3);
 
+	local price = p1 + p2 + p3;
 	local op = this:GetOperator("ten", r1, r2, r3);
 
-	if (not op) then
+	if not op and not (r1 == "b" and r2 == r3) then
 		this:Throw(expr.token, "Tenary operator (A ? B : C) does not support '%s ? %s : %s'", name(r1), name(r2), name(r3));
-	elseif (not op.operator) then
+	elseif (not op or not op.operator) then
 		this:writeToBuffer(inst, "(");
 
 		this:addInstructionToBuffer(inst, expr1);
@@ -1362,11 +1363,13 @@ function COMPILER.Compile_TEN(this, inst, token, data)
 		this:writeOperationCall(inst, op, expr1, expr2, expr3);
 	end
 
-	local price = p1 + p2 + p3 + op.price;
+	if op then
+		this:CheckState(op.state, token, "Tenary operator (A ? B : C)");
 
-	this:CheckState(op.state, token, "Tenary operator (A ? B : C)");
+		return op.result, op.rCount, price + op.price;
+	end
 
-	return op.result, op.rCount, price;
+	return r2, 1, price + EXPR_MIN;
 end
 
 
@@ -2955,7 +2958,7 @@ function COMPILER.Compile_RETURN(this, inst, token, data)
 	end
 
 	if (count ~= outCount) then
-		this:Throw(expr.token, "Can not return %i %s('s) here, %i %s('s) expected.", name(outCount), name(outClass), count, name(outClass));
+		this:Throw(expr.token, "Can not return %i %s('s) here, %i %s('s) expected.", outCount, name(outClass), count, name(outClass));
 	end
 
 	return nil, nil, price;

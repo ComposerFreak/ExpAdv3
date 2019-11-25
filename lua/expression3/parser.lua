@@ -565,6 +565,8 @@ function PARSER.Block_1(this, _end, lcb)
 
 		local stmt = this:Statment_1();
 
+		this:Accept("sep");
+		
 		this:PopScope()
 
 		return this:EndInstruction(seq, {stmts = {stmt}});
