@@ -57,7 +57,9 @@ function Golem.Reload( )
 	include( "expression3/editor/derma/textentry.lua" )
 	include( "expression3/editor/derma/toolbar.lua" )
 	include( "expression3/editor/derma/tree.lua" )
-		
+	
+	include( "expression3/editor/derma/syntaxer.lua" ) 
+	
 	include( "expression3/editor/derma/syntax.lua" ) 
 	include( "expression3/editor/derma/syntax/syntax_e3.lua" )
 	include( "expression3/editor/derma/syntax/syntax_lua.lua" )
