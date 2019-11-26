@@ -363,6 +363,7 @@ function Syntax:BuildLibraryMethods( )
 
 	for sLib, tData in pairs( EXPR_LIBRARIES ) do
 		self.tLibrary[sLib] = { }
+		self.tConstants[sLib] = { } 
 
 		for k, v in pairs( tData._functions ) do
 			self.tLibrary[sLib][v.name] = true
