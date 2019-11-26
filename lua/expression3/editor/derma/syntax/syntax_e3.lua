@@ -26,6 +26,7 @@ function Syntax:Init( dEditor )
 	self.tUserFunctions = { }
 	self.tFunctions = { }
 	self.tAttributes = { }
+	self.tConstants = { }
 	
 	self:BuildTokensTable( )
 	self:BuildKeywordsTable( )
@@ -286,6 +287,7 @@ local colors = {
 	["comment"] = Color( 128, 128, 128 ),
 	["function"] = Color( 80, 160, 240 ),
 	["library"] = Color( 80, 160, 240 ),
+	["constant"] = Color( 80, 160, 240 ),
 	["keyword"] = Color( 0, 120, 240 ),
 	["notfound"] = Color( 240, 160, 0 ),
 	["number"] = Color( 0, 200, 0 ),
@@ -357,12 +359,17 @@ end
 
 function Syntax:BuildLibraryMethods( )
 	self.tLibrary = { }
+	self.tConstants = { }
 
 	for sLib, tData in pairs( EXPR_LIBRARIES ) do
 		self.tLibrary[sLib] = { }
 
 		for k, v in pairs( tData._functions ) do
 			self.tLibrary[sLib][v.name] = true
+		end
+		
+		for k,v in pairs( tData._constants ) do
+			self.tConstants[sLib][v.name] = true 
 		end
 	end
 end
@@ -787,21 +794,24 @@ function Syntax:Parse( )
 							self:AddToken( "operator" )
 						end
 					end
-
+					
 					continue
 				end
 				
 				if self.tLibrary[word] then
-					local lib = self.tLibrary[word]
 					self:AddToken( "library" )
 					self:SkipSpaces( )
+					
 					if not self:NextPattern( "^%." ) then continue end
+					
 					self:AddToken( "operator" )
 					self:SkipSpaces( )
-
-					if self:NextPattern( "^[a-z][a-zA-Z0-9]*" ) then
-						if lib[self.sBuffer] then
+					
+					if self:NextPattern( "^[a-z][a-zA-Z0-9_]*" ) then
+						if self.tLibrary[word] and self.tLibrary[word][self.sBuffer] then
 							self:AddToken( "function" )
+						elseif self.tConstants[word] and self.tConstants[word][self.sBuffer] then 
+							self:AddToken( "constant" )
 						else
 							self:AddToken( "notfound" )
 						end

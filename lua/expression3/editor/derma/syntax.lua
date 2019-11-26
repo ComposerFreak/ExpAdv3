@@ -35,8 +35,16 @@ function Syntax:SetColor( sName, sColor, cColor )
 	self:Update( )
 end
 
+function Syntax:GetColor( sName, sColor )
+	if not tColorData[sName] or not tColorData[sName][sColor] then 
+		ErrorNoHalt( string.format( "Tried to get invalid color %q from language %q", sColor, sName ) ) 
+		return Color( 255, 255, 255, 255)
+	end 
+	return tColorData[sName][sColor]
+end
+
 function Syntax:Add( sName, tData )
-	if tLangList[sName] then return ErrorNoHalt( string.format( "Syntax %q already created.", sName ) ) end
+	if tLangList[sName] then return ErrorNoHalt( string.format( "Syntax %q already created.\n", sName ) ) end
 	tLangList[sName] = tData
 	print( "Adding syntax:", sName )
 end
