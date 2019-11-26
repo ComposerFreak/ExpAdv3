@@ -653,6 +653,61 @@ do
 end
 
 /*********************************************************************************
+	Constants
+*********************************************************************************/
+
+do
+	local filename = "constants.txt"
+
+	local docs = EXPR_DOCS.CSV(1, "signature", "library", "name", "result type", "result count", "state", "desc", "example");
+
+	function EXPR_DOCS.GetConstantDocs()
+		return docs;
+	end
+
+	function EXPR_DOCS.DescribeConstant(keyvalues)
+		docs:insert(docs:FromKV(keyvalues));
+	end
+
+	function EXPR_DOCS.GenerateDefaultConstantDocs()
+		
+		for _, lib in pairs( EXPR_LIBRARIES ) do
+			
+			for __, op in pairs(lib._constants)	do
+				EXPR_DOCS.DescribeConstant({
+					["signature"] = op.signature,
+					["library"] = lib.name,
+					["name"] = op.name,
+					["result type"] = op.result,
+					["result count"] = 1,
+					["state"] = op.state,
+					["desc"] = "",
+				});
+			end
+
+		end
+
+		docs.clk = {};
+		
+	end
+
+	function EXPR_DOCS.LoadDefaultConstantDocs()
+		EXPR_DOCS.MergeCSV(string.format("lua/expression3/helper/csv/%s", filename), "GAME", docs, 1);
+		docs.clk = {};
+	end
+
+	function EXPR_DOCS.LoadLocalConstantDocs()
+		EXPR_DOCS.MergeCSV(string.format("e3docs/csv/%s", filename), "DATA", docs, 1);
+		docs.clk = {};
+	end
+
+	function EXPR_DOCS.SaveLocalConstantDocs()
+		EXPR_DOCS.saveCSV(docs, string.format("e3docs\\csv\\%s", filename), "DATA")
+	end
+
+end
+
+/*********************************************************************************
 	Load custom docs files
 *********************************************************************************/
 
@@ -670,6 +725,7 @@ do
 				OPERATOR = EXPR_DOCS.GetOperatorDocs(),
 				LIBRARY = EXPR_DOCS.GetLibraryDocs(),
 				FUNCTION = EXPR_DOCS.GetFunctionDocs(),
+				CONSTANT = EXPR_DOCS.GetConstantDocs(),
 			};
 
 			local csv;
@@ -774,6 +830,7 @@ do
 			"#Operator", write(EXPR_DOCS.GetOperatorDocs()),
 			"#Library", write(EXPR_DOCS.GetLibraryDocs()),
 			"#Function", write(EXPR_DOCS.GetFunctionDocs()),
+			"#Constant", write(EXPR_DOCS.GetConstantDocs()),
 		}, "\n");
 
 	end
@@ -806,6 +863,7 @@ function EXPR_DOCS.GenerateDefaults()
 	EXPR_DOCS.GenerateDefaultOperatorDocs();
 	EXPR_DOCS.GenerateDefaultLibraryDocs();
 	EXPR_DOCS.GenerateDefaultFunctionDocs();
+	EXPR_DOCS.GenerateDefaultConstantDocs();
 	
 	EXPR_DOCS.LoadDefaultEventDocs();
 	EXPR_DOCS.LoadDefaultTypeDocs();
@@ -815,6 +873,7 @@ function EXPR_DOCS.GenerateDefaults()
 	EXPR_DOCS.LoadDefaultOperatorDocs();
 	EXPR_DOCS.LoadDefaultLibraryDocs();
 	EXPR_DOCS.LoadDefaultFunctionDocs();
+	EXPR_DOCS.LoadDefaultConstantDocs();
 end
 
 /*********************************************************************************
@@ -830,6 +889,7 @@ function EXPR_DOCS.LoadLocalDocs()
 	EXPR_DOCS.LoadLocalOperatorDocs();
 	EXPR_DOCS.LoadLocalLibraryDocs();
 	EXPR_DOCS.LoadLocalFunctionDocs();
+	EXPR_DOCS.LoadLocalConstantDocs();
 end
 
 /*********************************************************************************
@@ -845,6 +905,7 @@ function EXPR_DOCS.SaveLocalDocs()
 	EXPR_DOCS.SaveLocalOperatorDocs();
 	EXPR_DOCS.SaveLocalLibraryDocs();
 	EXPR_DOCS.SaveLocalFunctionDocs();
+	EXPR_DOCS.SaveLocalConstantDocs();
 end
 
 /*********************************************************************************

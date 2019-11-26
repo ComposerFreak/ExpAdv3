@@ -2706,6 +2706,29 @@ function COMPILER.Compile_METH(this, inst, token, data)
 	return op.result, op.rCount, (op.price + price);
 end
 
+function COMPILER.Compile_CONST(this, inst, token, data)
+	local library = data.library.data;
+	local lib = EXPR_LIBRARIES[library];
+
+	if (not lib) then
+		this:Throw(token, "Library %s does not exist.", library);
+	end
+
+	local op = lib._constants[data.name];
+
+	if (not lib) then
+		this:Throw(token, "No such constant %.%s", library, data.name);
+	end
+
+	if not op.native then
+		this:Throw(token, "Constant %.%s is beyound modern science :(", library, data.name);
+	end
+
+	this:writeToBuffer(inst, op.value);
+
+	return op.result, 1, 0;
+end
+
 function COMPILER.Compile_FUNC(this, inst, token, data)
 	local lib = EXPR_LIBRARIES[data.library.data];
 
@@ -3047,9 +3070,8 @@ function COMPILER.Compile_FUNCT(this, inst, token, data)
 
 	this:SetOption("loop", false);
 	this:SetOption("udf", (this:GetOption("udf") or 0) + 1);
-
 	this:SetOption("canReturn", true);
-	this:SetOption("retunClass", data.resultClass);
+	this:SetOption("retunClass", data.resultClass or "");
 	this:SetOption("retunCount", -1); -- Indicate we do not know this yet.
 
 	this:Compile(data.block);
@@ -3057,6 +3079,8 @@ function COMPILER.Compile_FUNCT(this, inst, token, data)
 	this:addInstructionToBuffer(inst, data.block);
 
 	local count = this:GetOption("retunCount");
+	this:SetOption("retunClass", "?");
+	this:SetOption("retunCount", -1); -- Indicate we do not know this yet.
 
 	this:PopScope();
 

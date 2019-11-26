@@ -83,6 +83,12 @@ if CLIENT then
 
   createRingMat();
 
+  timer.Create("Expression3.RingMaterial", 10, 0, function()
+    if not EXPR_LIB.RING_RT or not EXPR_LIB.RING_MAT then
+      createRingMat();
+    end
+  end);
+
 end
 
 --[[
@@ -109,22 +115,6 @@ function ENT:Think()
     local off = 20 + math.abs( math.sin(CurTime() * 0.5) * (height - 20));
     self:SetPos(player:GetPos() + Vector(0, 0, off) );
   end
-
-end
-
---[[
-  Developemnt code.
-]]
-
-if (SERVER) then
-  --[[hook.Add("InitPostEntity", "Epression3.RingTest", function()
-    local ent = ents.Create("e3_ring");
-
-    if ent then
-      ent:SetPos( Vector(147, 210, -11942) );
-      ent:Spawn();
-    end
-  end);]]
 
 end
 
@@ -238,6 +228,8 @@ if CLIENT then
   end
 
   function ENT:Draw()
+
+    if not EXPR_LIB.RING_RT or not EXPR_LIB.RING_MAT then return; end
 
     render.MaterialOverride(EXPR_LIB.RING_MAT);
 

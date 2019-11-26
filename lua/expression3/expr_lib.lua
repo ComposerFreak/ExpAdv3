@@ -643,7 +643,7 @@ function EXPR_LIB.RegisterLibrary(name)
 	local lib = {};
 	lib.name = string.lower(name);
 	lib._functions = {};
-	lib.constants = {}; -- Future implementation.
+	lib._constants = {};
 
 	libraries[lib.name] = lib;
 
@@ -697,6 +697,62 @@ end
 
 --[[
 ]]
+
+
+--[[
+
+]]
+
+local constants;
+local loadConstants = false;
+
+function EXPR_LIB.RegisterConstant(library, name, type, value, native)
+	if (not loadConstants) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register constant %s.%s outside of Hook::Expression3.LoadConstantss", library, name);
+	end
+
+	local lib = libraries[string.lower(library)];
+
+	if (not lib) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register constant %s.%s to none existing library %s", library, name, library);
+	end
+
+	local res = EXPR_LIB.GetClass(type);
+
+	if (not res) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register constant %s.%s of none existing class %s", library, name, type);
+	end
+
+	if native then
+		if not isstring(value) then
+			EXPR_LIB.ThrowInternal(0, "Attempt to register constant %s.%s using invalid native value %s", library, name, tostring(value));
+		end
+	elseif isstring(value) then
+		native = true;
+		value = string.format(" %q ", value);
+	elseif isnumber(value) then
+		native = true;
+		value = string.format(" %i ", value);
+	else
+		EXPR_LIB.ThrowInternal(0, "Attempt to register constant %s.%s using invalid value %s", library, name, tostring(value));
+	end
+
+	local signature = string.format("%s.%s", library, name);
+
+	local op = {};
+	op.name = name;
+	op.state = STATE;
+	op.result = res.id;
+	op.value = value;
+	op.native = native;
+	op.signature = signature;
+
+	lib._constants[op.name] = op;
+
+	--MsgN("Registered constant ", library, ".", op.name);
+
+	return op;
+end
 
 function EXPR_LIB.GetAllClasses()
 	local res = {};
@@ -792,6 +848,7 @@ function EXPR_LIB.RegisterExtension(name)
 	ext.castOperators = {};
 	ext.libraries = {};
 	ext.functions = {};
+	ext.constants = {};
 	ext.events = {};
 
 	return setmetatable(ext, Extension);
@@ -884,6 +941,11 @@ end
 function Extension.RegisterFunction(this, library, name, parameter, type, count, _function, excludeContext)
 	local entry = {library, name, parameter, type, count, _function, excludeContext, this.state, this.price};
 	this.functions[#this.functions + 1] = entry;
+end
+
+function Extension.RegisterConstant(this, library, name, type, value, native)
+	local entry = {library, name, type, value, native, this.state};
+	this.constants[#this.constants + 1] = entry;
 end
 
 function Extension.CheckRegistration(this, _function, ...)
@@ -1032,6 +1094,18 @@ function Extension.EnableExtension(this)
 			local op = this:CheckRegistration(EXPR_LIB.RegisterFunction, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
 			op.extension = this.name;
 			functions[op.signature] = op;
+		end
+	end);
+
+	local constants = {};
+
+	hook.Add("Expression3.LoadConstants", "Expression3.Extension." .. this.name, function()
+		for _, v in pairs(this.constants) do
+			STATE = v[6];
+
+			local op = this:CheckRegistration(EXPR_LIB.RegisterConstant, v[1], v[2], v[3], v[4], v[5]);
+			op.extension = this.name;
+			constants[op.signature] = op;
 		end
 	end);
 
@@ -1213,6 +1287,11 @@ function EXPR_LIB.Initialize()
 	loadFunctions = true;
 	hook.Run("Expression3.LoadFunctions");
 	loadFunctions = false;
+
+	constants = {};
+	loadConstants = true;
+	hook.Run("Expression3.LoadConstants");
+	loadConstants = false;
 
 	for id, class in pairs(classes) do
 		extendClass(id, class.base);

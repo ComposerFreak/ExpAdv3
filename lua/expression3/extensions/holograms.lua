@@ -286,12 +286,12 @@ end, IsValid);
 ]]
 
 -- Hologram -> Entity
-extension:RegisterCastingOperator("h", "e", function(ctx, obj)
+extension:RegisterCastingOperator("e", "h", function(ctx, obj)
 	return obj;
 end, false);
 
 -- Entity <- Hologram
-extension:RegisterCastingOperator("e", "h", function(ctx, obj)
+extension:RegisterCastingOperator("h", "e", function(ctx, obj)
 	if (not IsValid(obj) and obj:GetClass() == "wire_expression3_hologram") then
 		return obj;
 	end

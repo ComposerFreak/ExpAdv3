@@ -477,7 +477,17 @@ extension:RegisterMethod( "e", "setTrails", "n,n,n,s,c,n,b", "", 0, function(con
 	end
 end, true);
 
+--[[
+	Vehicles
+]]
 
+extension:RegisterMethod("e", "getDriver", "", "p", 1, function(e)
+	if IsValid(e) and e:IsVehicle() then return e:GetDriver(); end;
+end, true);
+
+extension:RegisterMethod("e", "setPassenger", "", "p", 1, function(e)
+	if IsValid(e) and e:IsVehicle() then return e:GetPassenger(); end;
+end, true);
 
 --[[
 	End of extention.

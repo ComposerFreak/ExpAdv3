@@ -271,18 +271,6 @@ extension:RegisterFunction("players", "getAllByName", "s", "t", 1, function(s)
 end, true);
 
 --[[
-	Key Press Events
-]]
-
-hook.Add("PlayerButtonDown", "Expression3.Event", function(ply, button)
-	EXPR_LIB.CallEvent("*", 0, "PlayerButtonDown", {"p", ply}, {"n", button})
-end)
-
-hook.Add("PlayerButtonUp", "Expression3.Event", function(ply, button)
-	EXPR_LIB.CallEvent("*", 0, "PlayerButtonUp", {"p", ply}, {"n", button})
-end)
-
---[[
 	Chat Events
 ]]
 
@@ -321,53 +309,6 @@ end)
 hook.Add("PlayerDeath", "Expression3.Event", function(ply, wep, attacker)
 	EXPR_LIB.CallEvent("*", 0, "OnPlayerDeath", {"p", ply}, {"e", wep}, {"e", attacker});
 end)
-
---[[
-	Wiki Info
-]]
-
-EXPR_LIB.WikiEvents = EXPR_LIB.WikiEvents or {};
-
-EXPR_LIB.WikiEvents["PlayerButtonDown"] = {
-	parameter = "p,n",
-	state = 1
-};
-
-EXPR_LIB.WikiEvents["PlayerButtonUp"] = {
-	parameter = "p,n",
-	state = 1
-};
-
-EXPR_LIB.WikiEvents["OnPlayerChat"] = {
-	parameter = "p,s,b,d",
-	result = "b",
-	state = 2
-};
-
-EXPR_LIB.WikiEvents["PlayerSay"] = {
-	parameter = "p,s,b",
-	state = 0
-};
-
-EXPR_LIB.WikiEvents["OnPlayerSpawn"] = {
-	parameter = "p",
-	state = 0
-};
-
-EXPR_LIB.WikiEvents["OnPlayerJoin"] = {
-	parameter = "p",
-	state = 0
-};
-
-EXPR_LIB.WikiEvents["OnPlayerDisconnect"] = {
-	parameter = "p",
-	state = 0
-};
-
-EXPR_LIB.WikiEvents["OnPlayerDeath"] = {
-	parameter = "p,e,e",
-	state = 0
-};
 
 --[[
 	End of extention

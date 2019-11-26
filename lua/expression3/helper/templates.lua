@@ -229,7 +229,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 		local signature = EXPR_DOCS.PrettyFunction(keyvalues);
 		local result = EXPR_DOCS.PrettyReturn(keyvalues);
 		
-		local node = pnl:AddNode("Libraries", keyvalues.library, signature);
+		local node = pnl:AddNode("Libraries", keyvalues.library, "Functions", signature);
 
 		stateIcon(node, keyvalues.state);
 
@@ -250,6 +250,34 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 		end);
 
 		addSaveStateIcon(pnl, node, fundocs, i, keyvalues);
+
+	end );
+
+
+	local constdocs = EXPR_DOCS.GetConstantDocs();
+
+	constdocs:ForEach( function(i, keyvalues)
+		local node = pnl:AddNode("Libraries", keyvalues.library, "Constants", keyvalues.signature);
+
+		stateIcon(node, keyvalues.state);
+
+		pnl:AddHTMLCallback(node, function() 
+			local keyvalues = constdocs:ToKV(constdocs.data[i]);
+
+			return EXPR_DOCS.toHTML({
+				{"Constant:", keyvalues.signature},
+				{"Returns:", prettyReturns(keyvalues)},
+				keyvalues.example,
+				describe(keyvalues.desc),
+				state(keyvalues.state),
+			});
+		end);
+
+		pnl:AddOptionsMenu(node, function()
+			return keyvalues, constdocs;
+		end);
+
+		addSaveStateIcon(pnl, node, constdocs, i, keyvalues);
 
 	end );
 

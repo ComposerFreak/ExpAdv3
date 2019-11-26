@@ -110,8 +110,6 @@
 	extension:RegisterEvent("UseScreen", "n,n,p,e");
 	extension:RegisterEvent("RenderScreen", "n,n,e");
 	extension:RegisterEvent("think", "");
-	extension:RegisterEvent("PlayerButtonDown","p,n");
-	extension:RegisterEvent("PlayerButtonUp","p,n");
 	extension:RegisterEvent("PlayerSay","p,t,b");
 	extension:RegisterEvent("OnPlayerchat","p,t,b,b");
 	extension:RegisterEvent("OnPlayerSpawn", "p");

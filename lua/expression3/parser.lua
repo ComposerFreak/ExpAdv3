@@ -1804,11 +1804,14 @@ function PARSER.Expression_25(this)
 				return this:Expression_26();
 			end
 
+			local name = this:Require("var", "function name expected after library name");
+
+			if not this:Accept("lpa") then
+				local inst = this:StartInstruction("const", token);
+				return this:EndInstruction(inst, {library = library; name = name.data});
+			end
+
 			local inst = this:StartInstruction("func", token);
-
-			local name = this:Require("var", "function expected after library name");
-
-			this:Require("lpa", "Left parenthesis (( ) expected to open function parameters.")
 
 			local expressions = {};
 
