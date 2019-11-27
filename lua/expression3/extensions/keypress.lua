@@ -13,69 +13,69 @@ extension:RegisterPermission("Key-Press", "fugue/controller-d-pad.png", "e gate 
 ]]
 
 extension:RegisterMethod("p", "keyForward", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_FORWARD));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_FORWARD));
 end, false);
 
 extension:RegisterMethod("p", "keyLeft", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_MOVELEFT));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_MOVELEFT));
 end, false);
 
 extension:RegisterMethod("p", "keyBack", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_BACK));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_BACK));
 end, false);
 
 extension:RegisterMethod("p", "keyRight", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_MOVERIGHT));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_MOVERIGHT));
 end, false);
 
 extension:RegisterMethod("p", "keyJump", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_JUMP));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_JUMP));
 end, false);
 
 extension:RegisterMethod("p", "keyAttack1", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_ATTACK));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_ATTACK));
 end, false);
 
 extension:RegisterMethod("p", "keyAttack2", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_ATTACK2));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_ATTACK2));
 end, false);
 
 extension:RegisterMethod("p", "keyUse", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_USE));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_USE));
 end, false);
 
 extension:RegisterMethod("p", "keyReload", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_RELOAD));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_RELOAD));
 end, false);
 
 extension:RegisterMethod("p", "keyZoom", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_ZOOM));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_ZOOM));
 end, false);
 
 extension:RegisterMethod("p", "keyWalk", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_WALK));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_WALK));
 end, false);
 
 extension:RegisterMethod("p", "keySprint", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_SPEED));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_SPEED));
 end, false);
 
 extension:RegisterMethod("p", "keyLeftTurn", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_LEFT));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_LEFT));
 end, false);
 
 extension:RegisterMethod("p", "keyRightTurn", "", "b", 1, function(ctx, e)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(IN_RIGHT));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(IN_RIGHT));
 end, false);
 
 extension:RegisterMethod("p", "keyDuck", "", "b", 1, function(ctx, e)
 	if not IsValid(e) or not e:IsPlayer() then return false; end
-	if not ctx:getPerm(e, "Key-Press") then return false; end
+	if not ctx:ppPlayer(e, "Key-Press") then return false; end
 	return (e:KeyDown(IN_DUCK) or e:GetInfoNum("gmod_vehicle_viewmode", 0) >= 1);
 end, false);
 
 extension:RegisterMethod("p", "keyDown", "n", "b", 1, function(ctx, e, k)
-	return (IsValid(e) and e:IsPlayer() and ctx:getPerm(e, "Key-Press") and e:KeyDown(k));
+	return (IsValid(e) and e:IsPlayer() and ctx:ppPlayer(e, "Key-Press") and e:KeyDown(k));
 end, false);
 
 --[[
@@ -92,9 +92,13 @@ extension:RegisterEvent("PlayerButtonDown","p,n");
 extension:RegisterEvent("PlayerButtonUp","p,n");
 
 local call = function(ply, event, button)
+
 	for _, context in pairs(EXPR_LIB.GetAll()) do
-		if IsValid(context.entity) and context:getPerm(ply, "Key-Press") then
-			context.entity:CallEvent("*", 0, name, {"p", ply}, {"n", button});
+
+		if IsValid(context.entity) then
+			local perm = context:ppPlayer(ply, "Key-Press");
+
+			if perm then context.entity:CallEvent("*", 0, event, {"p", ply}, {"n", button}); end
 		end
 	end
 end

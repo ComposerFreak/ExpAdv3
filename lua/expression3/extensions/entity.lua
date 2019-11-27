@@ -33,7 +33,6 @@ extension:RegisterWiredOutport("e", "ENTITY");
 --[[
 	Operators
 ]]
-
 extension:RegisterOperator("eq", "e,e", "b", 1);
 extension:RegisterOperator("neq", "e,e", "b", 1);
 
@@ -41,9 +40,15 @@ extension:RegisterOperator("neq", "e,e", "b", 1);
 	IsValid
 ]]
 
-extension:RegisterMethod("e", "isValid", "", "b", 1, function(e)
-	return IsValid(e);
+extension:RegisterOperator("is",  "e", "b", 1, function(e) 
+	return (e ~= nil) and (e.IsValid and e:IsValid());
 end, true);
+
+extension:RegisterOperator("not", "e", "b", 1, function(e)
+	return !((e ~= nil) and (e.IsValid and e:IsValid()));
+end, true);
+
+extension:RegisterMethod("e", "isValid", "", "b", 1, IsValid, true);
 
 --[[
 	General Methods
@@ -483,10 +488,12 @@ end, true);
 
 extension:RegisterMethod("e", "getDriver", "", "p", 1, function(e)
 	if IsValid(e) and e:IsVehicle() then return e:GetDriver(); end;
+	return Entity(0);
 end, true);
 
 extension:RegisterMethod("e", "setPassenger", "", "p", 1, function(e)
 	if IsValid(e) and e:IsVehicle() then return e:GetPassenger(); end;
+	return Entity(0);
 end, true);
 
 --[[

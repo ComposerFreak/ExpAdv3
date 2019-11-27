@@ -33,55 +33,65 @@ end
 	Validate / Set Code
 ]]
 
-function ENT:SetCode(script, files, run)
+function ENT:ExecuteInstance(instance, run)
 	self:ShutDown();
 
+	self:BuildContext(instance);
+
+	if (SERVER) then
+		local name = "generic";
+
+		if (instance.directives and instance.directives.name) then
+			name = instance.directives.name;
+		end
+
+		self:SetScriptName(name);
+		self:BuildWiredPorts(instance.directives.inport, instance.directives.outport);
+	end
+
+	if (run) then
+		timer.Simple(0.2, function()
+			if (IsValid(self)) then self:InitScript(); end
+		end);
+	end
+end
+
+
+--[[
+	Validate / Set Code
+]]
+function ENT:SetCode(script, files, run, cb2)
 	self.script = script;
 	self.files = files;
-
-	-- local ok, res = self:Validate(script, files);
 
 	if (self.validator and not self.validator.finished) then
 		self.validator.stop();
 	end
 
 	local cb = function(ok, res)
+
+		if cb2 then
+			cb2(ok, res);
+		end
+
 		if (not ok) then
 			self:HandelThrown(res);
-
 			return false;
 		end
 
 		self.validator = nil;
 		self.nativeScript = res.compiled;
+		
+		self:ExecuteInstance(res, run);
 
-		self:BuildContext(res);
-
-		if (SERVER) then
-			local name = "generic";
-
-			if (res.directives and res.directives.name) then
-				name = res.directives.name;
-			end
-
-			self:SetScriptName(name);
-			self:BuildWiredPorts(res.directives.inport, res.directives.outport);
-		end
-
-		if (run) then
-			timer.Simple(0.2, function()
-				if (IsValid(self)) then
-					self:InitScript();
-				end
-			end);
-		end
+		return true;
 	end
 
 	self.validator = EXPR_LIB.Validate(cb, script, files);
 
 	self.validator.start();
 
-	return true;
+	return true, self.validator;
 end
 
 --[[
@@ -264,8 +274,8 @@ function ENT:IsRunning()
 	return (self.context and self.context.status);
 end
 
-function ENT:ShutDown()
-	if (self:IsRunning()) then
+function ENT:ShutDown(force)
+	if self.context and (self.context.status or force) then
 		self.context.status = false;
 		hook.Run("Expression3.Entity.Stop", self, self.context);
 		EXPR_LIB.UnregisterContext(self.context);
@@ -314,20 +324,20 @@ if (stackTrace and #stackTrace > 0) then
 end
 
 function ENT:HandelThrown(thrown, stackTrace)
+	print("HandelThrown", self, thrown);
+
 	self:SendToOwner(false, Color(255,0,0), "One of your Expression3 gate's has errored (see golem console).");
 
 	if (not thrown) then
 		self:WriteToLogger(Color(255,0,0), "Suffered an unkown error (no reason given).");
 		self:PrintStackTrace(stackTrace)
 		self:FlushLogger();
-		self:ShutDown();
 
 	elseif (isstring(thrown)) then
 		self:WriteToLogger(Color(255,0,0), "Suffered a lua error:\n");
 		self:WriteToLogger("    ", Color(0,255, 255), "Error: ", Color(255, 255, 255), thrown);
 		self:PrintStackTrace(stackTrace);
 		self:FlushLogger();
-		self:ShutDown();
 
 	elseif (istable(thrown)) then
 		if (thrown.ctx and thrown.ctx ~= self.context) then
@@ -337,7 +347,6 @@ function ENT:HandelThrown(thrown, stackTrace)
 			self:WriteToLogger(Color(0,255, 255), "External Trace: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char, " ", thrown.instruction);
 			self:PrintStackTrace(stackTrace);
 			self:FlushLogger();
-			self:ShutDown();
 
 			if (IsValid(thrown.ctx.entity)) then
 				thrown.ctx.entity:SendToOwner(false, Color(255,0,0), "One of your Expression3 gate's has errored (see golem console).");
@@ -347,16 +356,16 @@ function ENT:HandelThrown(thrown, stackTrace)
 				thrown.ctx.entity:WriteToLogger(Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char, " ", thrown.instruction);
 				thrown.ctx.entity:PrintStackTrace(stackTrace);
 				thrown.ctx.entity:FlushLogger();
-				thrown.ctx.entity:ShutDown();
 			end
 		else
 			self:WriteToLogger(Color(255,0,0), "Suffered a ", thrown.state, " error:\n")
 			self:WriteToLogger("    ", Color(0,255, 255), "Message: ", Color(255, 255, 255), thrown.msg, "\n")
 			self:WriteToLogger("    ", Color(0,255, 255), "At: ", Color(255, 255, 255), "Line ", thrown.line, " Char ", thrown.char, " ", thrown.instruction);
-			self:FlushLogger()
-			self:ShutDown();
+			self:FlushLogger();
 		end
 	end
+
+	self:ShutDown(true);
 end
 
 --[[

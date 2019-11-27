@@ -2140,7 +2140,7 @@ function COMPILER.Compile_NOT(this, inst, token, data)
 	local op = this:GetOperator("not", r1);
 
 	if (not op) then
-		this:Throw(token, "Not operator (!A) does not support '!%s'", name(r1), name(r2));
+		this:Throw(token, "Not operator (!A) does not support '!%s'", name(r1));
 	elseif (not op.operator) then
 		this:writeToBuffer(inst, "not");
 

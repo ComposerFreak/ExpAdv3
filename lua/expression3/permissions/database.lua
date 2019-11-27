@@ -176,10 +176,23 @@ local PPCheck = function(entity, object, perm)
 	if r == EXPR_DENY then return false; end
 	if r == EXPR_ALLOW then return true; end
 
-	return FriendCheck(Owner(enity), owner);
+	return FriendCheck(Owner(entity), owner);
 end
 
 EXPR_PERMS.PPCheck = PPCheck;
+
+local PPCheckPlayer = function(entity, target, perm)
+	if not IsValid(target) then return false; end
+
+	local r = Get(entity, target, perm or "Prop-Control");
+
+	if r == EXPR_DENY then return false; end
+	if r == EXPR_ALLOW then return true; end
+
+	return FriendCheck(Owner(entity), target);
+end
+
+EXPR_PERMS.PPCheckPlayer = PPCheckPlayer;
 
 /****************************************************************************************************************************
 	Inject methods ont entities and contex.
@@ -191,12 +204,14 @@ hook.Add("Expression3.Entity.BuildSandbox", "Expression3.Permissions", function(
 	entity.setPerm = Set;
 	entity.getOwner = Owner;
 	entity.ppCheck = PPCheck;
+	entity.ppPlayer = PPCheckPlayer;
 
 	context.permissions = entity.permissions;
 	context.getPerm = function(context, target, perm, nglb) return Get(context.entity, target, perm, nglb); end;
 	context.setPerm = function(context, target, perm, value) return Set(context.entity, target, perm, value); end;
 	context.getOwner = function(context, target) return Owner(context.entity, target); end;
 	context.ppCheck = function(context, target, perm) return PPCheck(context.entity, target, perm); end;
+	context.ppPlayer = function(context, target, perm) return PPCheckPlayer(context.entity, target, perm); end;
 end);
 
 /****************************************************************************************************************************

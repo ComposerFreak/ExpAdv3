@@ -56,7 +56,7 @@ if (SERVER) then
 	end);
 
 	hook.Add("Expression3.Entity.Stop", "Expression3.Holograms",function(entity, ctx)
-		for _, holo in pairs( ctx.data.holograms ) do
+		for _, holo in pairs( ctx.data.holograms or {}) do
 			if IsValid(holo) then
 				holo:Remove();
 			end

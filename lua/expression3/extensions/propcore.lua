@@ -104,11 +104,15 @@ if SERVER then
 
 		undo.Finish();
 
+		e.player = p;
+
 		local ph = e:GetPhysicsObject();
 
 		if freeze and ph then
 			ph:EnableMotion(false);
 		end
+
+		if ph then ph:Wake(); end
 
 		if CPPI then
 			e:CPPISetOwner(p);
@@ -162,11 +166,15 @@ if SERVER then
 
 		undo.Finish();
 
+		e.player = p;
+
 		local ph = e:GetPhysicsObject();
 
 		if freeze and ph then
 			ph:EnableMotion(false);
 		end
+
+		if ph then ph:Wake(); end
 
 		if CPPI then
 			e:CPPISetOwner(p);
@@ -255,7 +263,7 @@ extension:RegisterMethod("e", "setFrozen", "b", "", 0, function(context, e, b)
 	if context:CanUseEntity( e ) then
 		local ph = e:GetPhysicsObject();
 
-		if IsValid(ph) and ph:GetUnFreezable() ~= true then
+		if IsValid(ph) and ph.GetUnFreezable and ph:GetUnFreezable() ~= true then
 			ph:EnableMotion(b);
 			ph:Wake();
 		end

@@ -1701,7 +1701,7 @@ function PARSER.Expression_21(this)
 
 		this:ExcludeWhiteSpace("Length operator (#) must not be succeeded by whitespace");
 
-		local expr = this:Expression_1();
+		local expr = this:Expression_24();
 
 		return this:EndInstruction(inst, {expr = expr});
 	end
