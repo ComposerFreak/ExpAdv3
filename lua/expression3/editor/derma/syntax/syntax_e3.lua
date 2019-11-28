@@ -333,7 +333,7 @@ function Syntax:BuildTokensTable( )
 	self.tTokens = { }
 
 	for k, v in pairs( EXPR_TOKENS.EXPADV ) do
-		self.tTokens[#self.tTokens + 1] = string_gsub( v[1], "[%-%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1" )
+		self.tTokens[#self.tTokens + 1] = string_gsub( k, "[%-%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1" )
 	end
 end
 

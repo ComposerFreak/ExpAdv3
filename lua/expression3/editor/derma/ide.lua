@@ -209,8 +209,6 @@ function PANEL:Init( )
 
 	-- self.tbRight:SetupButton( "Visit the wiki", 	"fugue/home.png", 		BOTTOM, function( ) end )
 
-
-
 	self.pnlSideTabHolder = vgui.Create( "GOLEM_PropertySheet", self );
 	self.pnlSideTabHolder:Dock( LEFT )
 	self.pnlSideTabHolder:DockMargin( 5, 5, 0, 5 )

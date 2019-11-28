@@ -78,12 +78,14 @@ if SERVER then
 			return;
 		end
 
+		if not (gamemode.Call( "PlayerSpawnProp", context.player, model ) ~= false) then
+			return;
+		end
+
 		local p = context.player;
 		local e = ents.Create("prop_physics");
 
-		if not e then
-			return;
-		end
+		if not e then return; end
 
 		e:SetOwner(p);
 
@@ -94,7 +96,6 @@ if SERVER then
 		e:SetAngles(ang or Angle(0, 0, 0));
 
 		e:Spawn();
-
 
 		undo.Create("E3 spawned prop");
 
@@ -118,6 +119,8 @@ if SERVER then
 			e:CPPISetOwner(p);
 		end
 
+		context.data.props[e] = e;
+
 		return e;
 	end
 
@@ -134,13 +137,15 @@ if SERVER then
 		if not model or model == "" then
 			model = "models/nova/airboat_seat.mdl";
 		end
+		
+		if not (gamemode.Call( "PlayerSpawnVehicle", context.player, model, "Seat_Airboat", list.Get( "Vehicles" ).Seat_Airboat ) ~= false) then
+			return;
+		end
 
 		local p = context.player;
 		local e = ents.Create("prop_vehicle_prisoner_pod");
 
-		if not e then
-			return;
-		end
+		if not e then return; end
 
 		e:SetOwner(p);
 
@@ -180,6 +185,8 @@ if SERVER then
 			e:CPPISetOwner(p);
 		end
 
+		context.data.props[e] = e;
+
 		return e;
 	end
 	
@@ -216,11 +223,11 @@ extension:RegisterFunction("prop", "spawnSeat", "s,v,a", "e", 1, spawnSeat, fals
 extension:RegisterFunction("prop", "spawnSeat", "s,v,a,b", "e", 1, spawnSeat, false);
 
 extension:RegisterFunction("prop", "spawnSeat", "s,b", "e", 1, function(context, s, b)
-	spawnSeat(context, s, nil, nil, b);
+	return spawnSeat(context, s, nil, nil, b);
 end, false);
 
 extension:RegisterFunction("prop", "spawnSeat", "s,v,b", "e", 1, function(context, s, v, b)
-	spawnSeat(context, s, v, nil, b);
+	return spawnSeat(context, s, v, nil, b);
 end, false);
 
 --[[
@@ -264,7 +271,7 @@ extension:RegisterMethod("e", "setFrozen", "b", "", 0, function(context, e, b)
 		local ph = e:GetPhysicsObject();
 
 		if IsValid(ph) and ph.GetUnFreezable and ph:GetUnFreezable() ~= true then
-			ph:EnableMotion(b);
+			ph:EnableMotion(not b);
 			ph:Wake();
 		end
 	end
@@ -325,7 +332,7 @@ end, false);
 extension:RegisterMethod("ph", "setFrozen", "b", "", 0, function(context, ph, b)
 	if IsValid(ph) then
 		if context:CanUseEntity( ph:GetEntity() ) then
-			ph:EnableMotion(b);
+			ph:EnableMotion(not b);
 		end
 	end
 end, false);
