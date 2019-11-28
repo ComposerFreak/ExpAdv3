@@ -47,59 +47,73 @@ local KEYWORDS = {
 	}
 }
 
+--[[
+
+]]
+
 local TOKENS = {
 	EXPADV = {
-		{ "+", "add", "addition" },
-		{ "-", "sub", "subtract" },
-		{ "*", "mul", "multiplier" },
-		{ "/", "div", "division" },
-		{ "%", "mod", "modulus" },
-		{ "^", "exp", "power" },
-		{ "=", "ass", "assign" },
-		{ "+=", "aadd", "increase" },
-		{ "-=", "asub", "decrease" },
-		{ "*=", "amul", "multiplier" },
-		{ "/=", "adiv", "division" },
-		{ "++", "inc", "increment" },
-		{ "--", "dec", "decrement" },
-		{ "==", "eq", "equal" },
-		{ "!=", "neq", "unequal" },
-		{ "<", "lth", "less" },
-		{ "<=", "leq", "less or equal" },
-		{ ">", "gth", "greater" },
-		{ ">=", "geq", "greater or equal" },
-		{ "&", "band", "and" },
-		{ "|", "bor", "or" },
-		{ "^^", "bxor", "or" },
-		{ ">>", "bshr", ">>" },
-		{ "<<", "bshl", "<<" },
-		{ "!", "not", "not" },
-		{ "&&", "and", "and" },
-		{ "||", "or", "or" },
-		{ "?", "qsm", "?" },
-		{ ":", "col", "colon" },
-		{ ";", "sep", "semicolon" },
-		{ ",", "com", "comma" },
-		{ "$", "dlt", "delta" },
-		{ "#", "len", "length" },
-		{ "~", "cng", "changed" },
-		--{ "->", "wc", "connect" },
-		{ ".", "prd", "period" },
-		{ "(", "lpa", "left parenthesis" },
-		{ ")", "rpa", "right parenthesis" },
-		{ "{", "lcb", "left curly bracket" },
-		{ "}", "rcb", "right curly bracket" },
-		{ "[", "lsb", "left square bracket" },
-		{ "]", "rsb", "right square bracket" },
-		{ '@', "dir", "directive operator" },
-		{ "...", "varg", "varargs" },
+		["+"] = { "add", "addition" },
+		["-"] = { "sub", "subtract" },
+		["*"] = { "mul", "multiplier" },
+		["/"] = { "div", "division" },
+		["%"] = { "mod", "modulus" },
+		["^"] = { "exp", "power" },
+		["="] = { "ass", "assign" },
+		["+="] = { "aadd", "increase" },
+		["-="] = { "asub", "decrease" },
+		["*="] = { "amul", "multiplier" },
+		["/="] = { "adiv", "division" },
+		["++"] = { "inc", "increment" },
+		["--"] = { "dec", "decrement" },
+		["=="] = { "eq", "equal" },
+		["!="] = { "neq", "unequal" },
+		["<"] = { "lth", "less" },
+		["<="] ={ "leq", "less or equal" },
+		[">"] ={ "gth", "greater" },
+		[">="] ={ "geq", "greater or equal" },
+		["&"] ={ "band", "and" },
+		["|"] ={ "bor", "or" },
+		["^^"] ={ "bxor", "or" },
+		[">>"] ={ "bshr", ">>" },
+		["<<"] ={ "bshl", "<<" },
+		["!"] ={ "not", "not" },
+		["&&"] ={ "and", "and" },
+		["||"] ={ "or", "or" },
+		["?"] ={ "qsm", "?" },
+		[":"] ={ "col", "colon" },
+		[";"] ={ "sep", "semicolon" },
+		[","] ={ "com", "comma" },
+		["$"] ={ "dlt", "delta" },
+		["#"] ={ "len", "length" },
+		["~"] ={ "cng", "changed" },
+		["->"] ={ "wc", "connect" },
+		["."] ={ "prd", "period" },
+		["("] ={ "lpa", "left parenthesis" },
+		[")"] ={ "rpa", "right parenthesis" },
+		["{"] ={ "lcb", "left curly bracket" },
+		["}"] ={ "rcb", "right curly bracket" },
+		["["] ={ "lsb", "left square bracket" },
+		["]"] ={ "rsb", "right square bracket" },
+		['@'] ={ "dir", "directive operator" },
+		["..."] ={ "varg", "varargs" },
 	}
 }
 
+--[[
 
-table.sort( TOKENS.EXPADV, function( token, token2 )
-	return #token[1] > #token2[1];
-end )
+]]
+
+local clstbl = {};
+
+for k, v in pairs(EXPR_CLASSES) do
+	if k != "class" then
+		clstbl[k] = {v.id, k};
+		clstbl[string.format("(%s)",k)] = {v.id, k};
+	end
+end
+
+local CLASSES = { EXPADV = clstbl; };
 
 --[[
 	Notes: 	I plan on possibly making this compiler multi language capable.
@@ -140,6 +154,7 @@ function TOKENIZER.Initialize(this, lang, script, ish)
 		this.language = lang;
 		this.tokens = TOKENS[lang];
 		this.keywords = KEYWORDS[lang];
+		this.classes = CLASSES[lang];
 
 		this:NextChar();
 	else
@@ -602,12 +617,29 @@ function TOKENIZER.Loop(this)
 
 		this:Throw(0, "Unterminated string (\"%s)", str);
 	end
+
+	-- Ops
+
+	local chars = string.sub(this.__buffer, this.__pos, this.__pos + 1);
+	local tkn = this.tokens[chars];
 	
+	if not tkn then
+		chars = this.__char;
+		tkn = this.tokens[chars];
+	end
+
+	if tkn then
+		this.__pos = this.__pos + #chars;
+		this:CreateToken(tkn[1], tkn[2]);
+		return true;
+	end
 
 	-- Classes
-	for k, v in pairs(EXPR_CLASSES) do
-		if (this:NextPattern("%( *" .. k .. " *%)")) then
-			this:CreateToken("cst", "cast", v.id, k);
+	if (this:NextPattern("%(^[a-zA-Z][a-zA-Z0-9_%.]*%)")) then
+		local cls = this.classes[this.__data];
+
+		if cls then
+			this:CreateToken("cst", "cast", cls[1], cls[2]);
 			return true;
 		end
 	end
@@ -615,11 +647,11 @@ function TOKENIZER.Loop(this)
 	local state = this:GetState();
 
 	if (this:NextPattern("^[a-zA-Z][a-zA-Z0-9_%.]*")) then
-		for k, v in pairs(EXPR_CLASSES) do
-			if (this.__data == k && k != "class") then
-				this:CreateToken("typ", "type", v.id, k);
-				return true;
-			end
+		local cls = this.classes[this.__data];
+
+		if cls then
+			this:CreateToken("typ", "type", cls[1], cls[2]);
+			return true;
 		end
 	end
 
@@ -637,27 +669,6 @@ function TOKENIZER.Loop(this)
 		end
 		
 		return true;
-	end
-
-	-- Ops
-
-	for k = 1, #this.tokens, 1 do
-		local v = this.tokens[k];
-		local op = v[1];
-
-		if (this:NextPattern(op, true)) then
-			if (op == "}") then
-				this.__depth = this.__depth - 1;
-			end
-
-			this:CreateToken(v[2], v[3]);
-
-			if (op == "{") then
-				this.__depth = this.__depth + 1;
-			end
-
-			return true;
-		end
 	end
 
 	if (not this.__char or this.__char == "") then

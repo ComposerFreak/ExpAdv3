@@ -1348,38 +1348,6 @@ end
 
 local SysTime, bench = SysTime;
 
-local token_run = function(this)
-	local i = 0;
-	local vldr = this.vldr;
-
-	while (this.__char ~= nil) do
-		i = i + 1;
-
-		this:Loop();
-
-		if (i > 10) then
-
-			local b = SysTime() - bench;
-
-			vldr.tokenizerTime = vldr.tokenizerTime + b;
-
-			vldr.tokenizerCount = vldr.tokenizerCount + 1;
-
-			coroutine.yield();
-
-			i = 0;
-
-			bench = SysTime();
-		end
-	end
-
-	local result = {};
-	result.tokens = this.__tokens;
-	result.script = this.__buffer;
-
-	return result;
-end
-
 function EXPR_LIB.Validate(cb, script, files)
 	local vldr = {};
 	local ok, res;
@@ -1397,13 +1365,13 @@ function EXPR_LIB.Validate(cb, script, files)
 
 			vldr.tokenizer.vldr = vldr;
 
-			vldr.tokenizer._Run = token_run;
-
 			vldr.tokenizer:Initialize("EXPADV", script);
 
 			ok, res = vldr.tokenizer:Run();
 
 			vldr.tokenizerTime = vldr.tokenizerTime + (SysTime() - bench);
+
+			--print("Token Time -> ", SysTime() - bench);
 
 			if ok then
 				coroutine.yield();
@@ -1418,6 +1386,8 @@ function EXPR_LIB.Validate(cb, script, files)
 
 				vldr.parserTime = SysTime() - bench;
 
+				--print("Parser Time -> ", SysTime() - bench);
+
 				if ok then
 					coroutine.yield();
 
@@ -1431,6 +1401,8 @@ function EXPR_LIB.Validate(cb, script, files)
 
 					vldr.compilerTime = SysTime() - bench;
 
+					--print("Compiler Time -> ", SysTime() - bench);
+
 					if ok then
 						coroutine.yield();
 
@@ -1439,6 +1411,8 @@ function EXPR_LIB.Validate(cb, script, files)
 						res.build();
 
 						vldr.buildTime = SysTime() - bench;
+
+						--print("Build Time -> ", SysTime() - bench);
 					end
 				end
 			end
