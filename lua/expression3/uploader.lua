@@ -14,7 +14,7 @@
 
 local UPLOADER = {};
 
-EXPR_UPLOAD = UPLOADER;
+EXPR_UPLOADER = UPLOADER;
 
 --[[
 	States
@@ -59,7 +59,7 @@ if SERVER then
 	UPLOADER.SetState = function(client, state, per, sync)
 		per = per or 0;
 		state = state or ST_IDLE;
-		sync = ((cl_percent[client] ~= per) or cl_states[client] ~= state)) and sync;
+		sync = ((cl_percent[client] ~= per) or (cl_states[client] ~= state)) and sync;
 
 		cl_states[client] = state;
 
@@ -112,7 +112,7 @@ if SERVER then
 	local targets = {};
 
 	UPLOADER.RequestFromClient = function(client, entity)
-		UPLOADER.SetClientState(client, ST_REQUESTING, 0, false);
+		UPLOADER.SetState(client, ST_REQUESTING, 0, false);
 
 		net.Start("Expression3.RequestFromClient");
 			net.WriteEntity(entity);
@@ -139,11 +139,7 @@ if CLIENT then
 			return chat.AddText("Failed: Another E3 is uploading.");
 		end
 
-		UPLOADER.SetState(CL_VALIDATING, 0);
-
 		local cb = function(ok, res)
-			UPLOADER.SetState(CL_VALIDATING, 100);
-
 			if not ok then
 				UPLOADER.SetState(ST_ERROR, 0);
 				return;
@@ -157,10 +153,12 @@ if CLIENT then
 		validator = EXPR_LIB.Validate(cb, script);
 
 		validator.start();
+
+		UPLOADER.SetState(CL_VALIDATING, 0);
 	end;
 
 	timer.Create("Expression3.UploadValidator", 0.5, 0, function()
-		if UPLOADER.GetState() ~= CL_VALIDATING return; end
+		if UPLOADER.GetState() ~= CL_VALIDATING then return; end
 		if not validator or validator.finished then return; end
 		local v = math.ceil(((validator.tokenizer.__pos or 1) / (validator.tokenizer.__lengh or 1)) * 100);
 		UPLOADER.SetState(CL_VALIDATING, v);
@@ -257,7 +255,7 @@ if CLIENT then
 				return;
 			end
 
-			if expire and expire > Curtime() then
+			if expire and expire < CurTime() then
 				UPLOADER.SetState(ST_ERROR, 0);
 				return;
 			end
@@ -282,7 +280,7 @@ if SERVER then
 	
 	local cl_packets = {};
 
-	net.Receive("Expression3.SendPacketToServer", function(client, len)
+	net.Receive("Expression3.SendPacketToServer", function(len, client)
 		local packets = cl_packets[client];
 
 		if not packets then
@@ -303,23 +301,24 @@ if SERVER then
 
 		packets[total] = packet;
 
-		if total <= packet.count then
-			local per = math.ceil((total / packet.) * 100);
+		if total < packet.count then
+			local per = math.ceil((total / packet.count) * 100);
 			
 			UPLOADER.SetState(SL_RECEIVING, per, false);
 			
 			return;
 		end
 
-		local ok, files = UPLOADER.CompilePackets(entity, packets, count);
+		local ok, files = UPLOADER.CompilePackets(packet.entity, packets, packet.count);
+
+		cl_packets[client] = {};
 
 		if not ok then
-			cl_packets[client] = {};
 			UPLOADER.SetState(ST_ERROR, 0, true);
 			return;
 		end
 
-		UPLOADER.ApplyToEntity(client, entity, files);
+		UPLOADER.ApplyToEntity(packet.entity, client, files);
 	end);
 			
 end
@@ -364,10 +363,10 @@ if SERVER then
 	local en_validators = {};
 	local cl_validators = {};
 
-	UPLOADER.ApplyToEntity = function(client, entity, files)
+	UPLOADER.ApplyToEntity = function(entity, client, files)
 
 		--TODO: Perm Check!
-
+		
 		if IsValid(entity) and entity.SetCode and entity.ExecuteInstance then
 
 			local ok, validator;
@@ -394,14 +393,16 @@ if SERVER then
 
 			cl_validators[client] = validator;
 
-			UPLOADER.SetState(client, SL_VALIDATING, 0);
+			UPLOADER.SetState(client, SL_VALIDATING, 0, true);
+
+			return;
 		end
 
 		UPLOADER.SetState(client, ST_ERROR, 0, true);
 
 	end;
 
-	timer.Create("Expression3.ApplyToEntity", 0, 1, function()
+	timer.Create("Expression3.ApplyToEntity", 0, 0.5, function()
 
 		for client, validator in pairs(cl_validators) do
 			
@@ -443,14 +444,13 @@ if SERVER then
 		local count = #packets;
 		local cur = 0;
 
-		timer.Create("Expression3.SendToServer." .. entity:EntIndex(), 0, 1, function()
-			if UPLOADER.GetState(client) ~= SL_UPLOADING then return; end
-
+		timer.Create("Expression3.SendToClient." .. entity:EntIndex(), count + 2, 1, function()
+			
 			if not packets or not count or count == 0 or not cur then 
 				return;
 			end
 
-			if expire and expire > Curtime() then
+			if expire and expire < CurTime() then
 				return;
 			end
 
@@ -475,7 +475,7 @@ if CLIENT then
 
 	net.Receive("Expression3.SendPacketToClient", function(len)
 		local entity = net.ReadEntity();
-		local owner = net.ReadEntity(),
+		local owner = net.ReadEntity();
 		local packets = en_packets[entity];
 
 		if not packets then
@@ -497,12 +497,12 @@ if CLIENT then
 
 		packets[total] = packet;
 
-		if total <= packet.count then
+		if total < packet.count then
 			--local per = math.ceil((total / packet.) * 100);
 			return;
 		end
 
-		local ok, files = UPLOADER.CompilePackets(entity, packets, count, owner);
+		local ok, files = UPLOADER.CompilePackets(entity, packets, packet.count, owner);
 
 		if ok then
 			UPLOADER.ApplyToEntity(entity, owner, files);
@@ -565,7 +565,88 @@ end
 	CLIENT HAS TOOL GUN
 ]]
 
-		
+if CLIENT then
+	local font = "DermaLarge";
+	local background = surface.GetTextureID("omicron/bulb");
+
+	local drawBG = function(w, h)
+		--Background color:
+		surface.SetDrawColor(Color( 20, 20, 20 ));
+		surface.DrawRect(0, 0, w, h);
+
+		--Background image:
+		surface.SetTexture(background);
+		surface.SetDrawColor(Color(255, 255, 255, 255));
+		surface.DrawTexturedRect(10, 10, w - 20, h - 20);
+	end
+
+	local drawState = function(w, h, text, icon, per)
+		local rw, rh = 150, 30;
+		local x, y = w * 0.5, h * 0.5;
+
+		if icon then
+			local size = 64;
+			surface.SetMaterial(icon);
+			surface.SetDrawColor(Color(255, 255, 255, 255));
+			surface.DrawTexturedRect(x - (size * 0.5), y - (h * 0.25), size, size);
+		end
+
+		if per and per > 0 then
+			local b = 3;
+			surface.SetDrawColor(Color(0, 0, 0, 255));
+			surface.DrawRect(x - (rw * 0.5) - b, h - rh - 90 - b, rw + (b * 2), rh + (b * 2));
+
+			surface.SetDrawColor(Color(255, 0, 0, 255));
+			surface.DrawRect(x - (rw * 0.5), h - rh - 90, rw, rh);
+
+			surface.SetDrawColor(Color(0, 255, 0, 255));
+			surface.DrawRect(x - (rw * 0.5), h - rh - 90, rw * (per * 0.01), rh);
+		end
+
+		if text and text ~= "" then
+			draw.SimpleText(text, font, x, h - rh - 75, Color( 0, 0, 0, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER);
+		end
+	end
+
+	local icon_error = Material("fugue/exclamation-red.png");
+	local icon_request = Material("fugue/monitor-network.png");
+	local icon_validate = Material("fugue/eye--arrow.png");
+	local icon_upload = Material("fugue/drive-upload.png");
+	local icon_receive = Material("fugue/question.png");
+
+	UPLOADER.DrawUploadScreen = function(w, h, tool)
+		local state, per = UPLOADER.GetState();
+
+		drawBG(w, h);
+
+		if state == ST_ERROR then 
+			return drawState(w, h, "Error", icon_error, nil);
+		end
+
+		if state == ST_REQUESTING then
+			return drawState(w, h, "Requesting", icon_request, nil);
+		end
+
+		if state == CL_VALIDATING or state == SL_VALIDATING then
+			return drawState(w, h, "Validating", icon_validate, per);
+		end
+
+		if state == CL_UPLOADING or state == SL_UPLOADING then
+			return drawState(w, h, "Uploading", icon_upload, per);
+		end
+
+		if state == CL_RECEIVING or state == SL_RECEIVING then
+			return drawState(w, h, "Recieving", icon_receive, per);
+		end
+
+		local x, y = w * 0.5, h * 0.5;
+		local color = Color(10, 10, 10, 255);
+		draw.SimpleText("Expression 3", font, x, y, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER );
+		draw.SimpleText(tool, font, x, y + 20, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER );
+
+	end;
+
+end	
 
 		
 		

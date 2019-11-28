@@ -16,31 +16,6 @@ include("shared.lua");
 --[[
 ]]
 
-hook.Add("PlayerInitialSpawn", "Expression3.Entity.InitializeAll", function(ply)
-	timer.Simple(0.2, function()
-		for _, context in pairs(EXPR_LIB.GetAll()) do
-			if (IsValid(context.entity)) then
-				net.Start("Expression3.SendToClient")
-					net.WriteEntity(context.entity);
-					net.WriteEntity(context.entity.player);
-					net.WriteString(context.entity.script);
-					net.WriteTable(context.entity.files);
-				net.Send(ply);
-			end
-		end
-	end)
-end);
-
-net.Receive("Expression3.SubmitToServer", function(len, ply)
-	local ent = net.ReadEntity();
-	local script = net.ReadString();
-	local files = net.ReadTable();
-
-	if (IsValid(ent) and ent.ReceiveFromClient) then
-		ent:ReceiveFromClient(ply, script, files);
-	end
-end)
-
 function ENT:ReceiveFromClient(ply, script, files)
 	if (self:CanSetCode(ply)) then
 		timer.Simple(1, function()
@@ -49,15 +24,6 @@ function ENT:ReceiveFromClient(ply, script, files)
 			end
 		end);
 	end
-end
-
-function ENT:PostInitScript()
-	net.Start("Expression3.SendToClient")
-		net.WriteEntity(self);
-		net.WriteEntity(self.player);
-		net.WriteString(self.script);
-		net.WriteTable(self.files);
-	net.Broadcast();
 end
 
 net.Receive("Expression3.InitializedClient", function(len, ply)
@@ -81,6 +47,13 @@ function ENT:Initialize( )
 	self:PhysicsInit(SOLID_VPHYSICS);
 	self:SetMoveType(MOVETYPE_VPHYSICS);
 	self:SetSolid(SOLID_VPHYSICS);
+end
+
+
+--[[
+]]
+
+function ENT:PostInitScript()
 end
 
 --[[

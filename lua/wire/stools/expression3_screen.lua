@@ -51,9 +51,7 @@ function TOOL:PostMake(ent)
 	ent:SetPlayer(ply);
 
 	timer.Simple(0.2, function()
-		net.Start("Expression3.RequestUpload");
-			net.WriteEntity(ent);
-		net.Send(ply);
+		EXPR_UPLOADER.RequestFromClient(self:GetOwner(), ent);
 	end);
 end
 
@@ -62,9 +60,7 @@ function TOOL:CheckHitOwnClass( trace )
 end
 
 function TOOL:LeftClick_Update( trace )
-	net.Start("Expression3.RequestUpload");
-		net.WriteEntity(trace.Entity);
-	net.Send(self:GetOwner());
+	EXPR_UPLOADER.RequestFromClient(self:GetOwner(), trace.Entity);
 end
 
 function TOOL:GetModel()

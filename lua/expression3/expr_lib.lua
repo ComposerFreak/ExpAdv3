@@ -220,12 +220,6 @@ EXPR_LIB = {};
 print("E3 Lib Loading.");
 
 if (not CLIENT) then
-	util.AddNetworkString("Expression3.SubmitToServer");
-
-	util.AddNetworkString("Expression3.RequestUpload");
-
-	util.AddNetworkString("Expression3.SendToClient");
-
 	util.AddNetworkString("Expression3.InitializedClient");
 
 	util.AddNetworkString("Expression3.OpenGolem");
@@ -1498,6 +1492,7 @@ end
 	'''''''''''''''''''''''
 ]]
 
+include("expression3/uploader.lua");
 include("expression3/core/init.lua");
 
 timer.Simple(5, EXPR_LIB.Initialize);
