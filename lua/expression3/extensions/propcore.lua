@@ -267,10 +267,10 @@ extension:RegisterMethod("e", "setAng", "a", "", 0, function(context, e, v)
 end, false);
 
 extension:RegisterMethod("e", "setFrozen", "b", "", 0, function(context, e, b)
-	if context:CanUseEntity( e ) then
+	if context:CanUseEntity( e ) and ((not e.GetUnFreezable) or e:GetUnFreezable() ~= true) then
 		local ph = e:GetPhysicsObject();
 
-		if IsValid(ph) and ph.GetUnFreezable and ph:GetUnFreezable() ~= true then
+		if IsValid(ph) then 
 			ph:EnableMotion(not b);
 			ph:Wake();
 		end
@@ -289,7 +289,7 @@ extension:RegisterMethod("e", "setNotSolid", "b", "", 0, function(context, e, b)
 	if context:CanUseEntity( e ) then
 		local ph = e:GetPhysicsObject();
 
-		if IsValid(ph) and ph:GetUnFreezable() ~= true then
+		if IsValid(ph) then
 			ph:SetSolid( b and SOLID_NONE or SOLID_VPHYSICS );
 			ph:Wake();
 		end
