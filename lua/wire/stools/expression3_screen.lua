@@ -102,15 +102,7 @@ if CLIENT then
 	local background = surface.GetTextureID("omicron/bulb");
 
 	function TOOL:DrawToolScreen(width, height)
-		surface.SetDrawColor( Color( 20, 20, 20 ) )
-		surface.DrawRect( 0, 0, width, height )
-
-		surface.SetTexture(background);
-		surface.SetDrawColor(Color(255, 255, 255, 255));
-		surface.DrawTexturedRect(10, 10, width - 20, height - 20);
-
-		draw.SimpleText( "Expression 3", "DermaLarge", width / 2, height / 2, Color( 10, 10, 10, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER );
-		draw.SimpleText( "Screen", "DermaLarge", width / 2, (height / 2) + 20, Color( 10, 10, 10, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER );
+		EXPR_UPLOADER.DrawUploadScreen(width, height, "Screen");
 	end
 
 end
