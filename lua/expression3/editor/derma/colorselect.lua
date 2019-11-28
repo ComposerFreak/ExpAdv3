@@ -3,7 +3,6 @@
 	Author: Oskar
 ============================================================================================================================================]]
 local PANEL = { }
-local Syntax = Golem.Syntax
 
 function PANEL:Init( )
 	self.pLanguageSelector = self:Add( "DComboBox" )
@@ -30,7 +29,7 @@ function PANEL:Init( )
 		-- print( data )
 	end
 	
-	for k, v in pairs( Syntax.Colors.e3.Defaults ) do
+	for k, v in pairs( Golem.Syntax.Colors.e3.Defaults ) do
 		self.pColorSelector:AddChoice( k, v, false )
 	end
 	
