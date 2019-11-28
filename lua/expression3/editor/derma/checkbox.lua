@@ -45,7 +45,7 @@ function STATE:SetState(sName, noOnChnaged)
 
 			if state.c then self:SetColor(state.c); end
 			--if state.t then self:SetText(state.t); end
-			if state.t then self:SetToolTip(state.t); end
+			if state.t then self:SetTooltip(state.t); end
 			
 			if self.m_oValue ~= state.v then
 

@@ -1431,7 +1431,7 @@ function EXPR_LIB.Validate(cb, script, files)
 
 		timer.Create(vldr.timer .. 2, 60, 1, function()
 			if (not vldr.finished) then
-				timer.Destroy(vldr.timer);
+				timer.Remove(vldr.timer);
 				cb(false, "Validation took to long.");
 			end
 		end);
@@ -1440,7 +1440,7 @@ function EXPR_LIB.Validate(cb, script, files)
 	end;
 
 	vldr.stop = function()
-		timer.Destroy(vldr.timer);
+		timer.Remove(vldr.timer);
 	end;
 
 	vldr.resume = function()

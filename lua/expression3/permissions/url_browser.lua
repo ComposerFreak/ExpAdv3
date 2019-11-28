@@ -140,7 +140,7 @@ function PANEL:LoadHistory()
 
 	local rfsh = self:EmbedButton(self.node_history, "GOLEM_ImageButton", 25, 0);
 	rfsh:SetIcon("fugue/arrow-circle.png");
-	rfsh:SetToolTip("Refresh history.");
+	rfsh:SetTooltip("Refresh history.");
 
 	rfsh.DoClick = function()
 		for url, ents in pairs(EXPR_PERMS.GetHistory()) do
@@ -150,11 +150,11 @@ function PANEL:LoadHistory()
 
 			local wlst = self:EmbedButton(node, "GOLEM_ImageButton", 25, 0);
 			wlst:SetIcon("fugue/quill.png");
-			wlst:SetToolTip("Add to white list.");
+			wlst:SetTooltip("Add to white list.");
 
 			local blst = self:EmbedButton(node, "GOLEM_ImageButton", 50, 0);
 			blst:SetIcon("fugue/exclamation-circle.png");
-			blst:SetToolTip("Add to black list.");
+			blst:SetTooltip("Add to black list.");
 
 			wlst.DoClick = function()
 				self:ListedNode("White List", "White list", url, EXPR_PERMS.WhiteListURL, EXPR_PERMS.UnwhiteListURL);

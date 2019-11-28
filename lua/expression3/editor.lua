@@ -27,7 +27,7 @@ function Golem.Reload( )
 	include( "expression3/editor/vector2.lua" )
 	
 	if Golem.Instance then
-		if ValidPanel( Golem.Instance ) then
+		if IsValid( Golem.Instance ) and ispanel( Golem.Instance ) then
 			Golem.Instance:Close( )
 			Golem.Instance:Remove( )
 		end
