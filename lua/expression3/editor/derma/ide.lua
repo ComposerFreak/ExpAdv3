@@ -199,13 +199,18 @@ function PANEL:Init( )
 	self.tbRight:SetupButton( "Options", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options" ) end )
 	self.tbRight:SetupButton( "Options2", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options2" ) end )
 	self.tbRight:SetupButton( "Open find & replace", "fugue/magnifier.png", TOP, function( ) self.pnlSearch:Toggle() end )
-
-
-	self.searchOptRegex = self.tbRight:SetupCheckBox( "Allow regex.", "Disalow regex.", "fugue\\regular-expression.png", "fugue\\regular-expression-search-match.png", TOP, function( )  end );
-	self.searchOpCase = self.tbRight:SetupCheckBox( "Match case.", "Do not match case.", "fugue\\edit-lowercase.png", "fugue\\edit-superscript.png", TOP, function( ) end );
-	self.searchOptWhole = self.tbRight:SetupCheckBox( "Match whole word.", "No match whole world.", "fugue\\selection-select.png", "fugue\\selection-select-input.png", TOP, function( ) end );
-	self.searchOptSelection = self.tbRight:SetupCheckBox( "Find in selection.", "Find in script.", "fugue\\selection.png", "fugue\\selection-input.png",  TOP, function( ) end );
-	self.searchOptWrap = self.tbRight:SetupCheckBox( "Wrap around", "No wrap around", "fugue\\arrow-circle.png", "fugue\\arrow-return-000-left.png", TOP, function( ) end );
+	
+	-- self.debugButton = self.tbRight:SetupStateButton( { 
+	-- 	{ sTooltip = "A", sIcon = "fugue/ui-check-box.png" },
+	-- 	{ sTooltip = "C", sIcon = "fugue/ui-check-box-mix.png", bNoCycle = false },
+	-- 	{ sTooltip = "B", sIcon = "fugue/ui-check-box-uncheck.png" },
+	-- }, TOP, function( ) end )
+	
+	self.searchOptRegex = self.tbRight:SetupCheckBox( "Allow regex.", "Disalow regex.", "fugue/regular-expression.png", "fugue/regular-expression-search-match.png", TOP, function( )  end );
+	self.searchOpCase = self.tbRight:SetupCheckBox( "Match case.", "Do not match case.", "fugue/edit-lowercase.png", "fugue/edit-superscript.png", TOP, function( ) end );
+	self.searchOptWhole = self.tbRight:SetupCheckBox( "Match whole word.", "No match whole world.", "fugue/selection-select.png", "fugue/selection-select-input.png", TOP, function( ) end );
+	self.searchOptSelection = self.tbRight:SetupCheckBox( "Find in selection.", "Find in script.", "fugue/selection.png", "fugue/selection-input.png",  TOP, function( ) end );
+	self.searchOptWrap = self.tbRight:SetupCheckBox( "Wrap around", "No wrap around", "fugue/arrow-circle.png", "fugue/arrow-return-000-left.png", TOP, function( ) end );
 	self.searchOptions = { self.searchOptRegex, self.searchOpCase, self.searchOptWhole, self.searchOptSelection, self.searchOptWrap };
 
 	-- self.tbRight:SetupButton( "Visit the wiki", 	"fugue/home.png", 		BOTTOM, function( ) end )

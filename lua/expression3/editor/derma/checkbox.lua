@@ -83,8 +83,12 @@ function STATE:UpdateState(sName, sValue, sIcon, sText, cCol)
 			state.n = sName or state.n;
 			state.v = sValue or state.v;
 			state.i = sIcon or state.i;
-			state.c = cCol or state.c;
+			state.c = (IsColor( cCol ) and cCol or nil) or state.c;
 			state.t = sText or state.t;
+			
+			if self.m_nState == sName then 
+				self:SetState(sName,true)
+			end 
 		end
 	end
 end
@@ -175,11 +179,11 @@ function CHECK:Init()
 end
 
 function CHECK:SetTick(icon, col, val, text)
-	self:UpdateState("tick", val, icon, text, col);
+	self:UpdateState("tick", val, icon, text, IsColor(col) and col or nil );
 end
 
-function CHECK:SetCross(cross, col, val, text)
-	self:UpdateState("cross", val, icon, text, col);
+function CHECK:SetCross(icon, col, val, text)
+	self:UpdateState("cross", val, icon, text, IsColor(col) and col or nil );
 end
 
 function CHECK:SetStatic(image)

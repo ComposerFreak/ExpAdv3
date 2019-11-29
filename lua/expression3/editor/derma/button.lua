@@ -35,6 +35,14 @@ function PANEL:Init( )
 	self:SetFlat( false )
 end
 
+function PANEL:SetColor( cColor )
+	if not IsColor( cColor ) then
+		return
+	end 
+	
+	self.m_tColor = cColor 
+end
+
 function PANEL:SizeToContents(  )
 	surface.SetFont( self:GetFont( ) )
 	local Text = self:GetText( )
