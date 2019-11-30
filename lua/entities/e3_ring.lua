@@ -227,20 +227,20 @@ if CLIENT then
       end
   end
 
-  function ENT:Draw()
+    function ENT:Draw()
+      if not EXPR_LIB.RING_RT or not EXPR_LIB.RING_MAT then return; end
+      if LocalPlayer() ~= self:GetParent() then
+        render.MaterialOverride(EXPR_LIB.RING_MAT);
 
-    if not EXPR_LIB.RING_RT or not EXPR_LIB.RING_MAT then return; end
+        self:DrawInsideMaterial();
+        self:SetModelScale(-1);
+        self:DrawModel();
 
-    render.MaterialOverride(EXPR_LIB.RING_MAT);
+        self:DrawOutsideMaterial();
+        self:SetModelScale(1);
+        self:DrawModel();
 
-    self:DrawInsideMaterial();
-    self:SetModelScale(-1);
-    self:DrawModel();
-
-    self:DrawOutsideMaterial();
-    self:SetModelScale(1);
-    self:DrawModel();
-
-    render.MaterialOverride();
-  end
+        render.MaterialOverride();
+      end
+    end
 end

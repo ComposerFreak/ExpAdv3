@@ -110,9 +110,16 @@ end, false);
 
 extension:RegisterFunction("ranger", "filter", "t", "", 0, function(ctx, tbl)
 	if not tbl or not tbl.tbl then return; end
+	
 	local filter = ctx.data.ranger.filter;
+	
 	for _, vr in pairs(tbl.tbl) do
-		if vr and vr[1] == "e" and vr[2] then filter[#filter + 1] = vr[2]; end
+		if vr then
+			local t = vr[1];
+			if t == "e" or t == "p" or t == "h" then
+				if vr[2] then filter[#filter + 1] = vr[2]; end
+			end
+		end
 	end
 end, false);
 
@@ -121,7 +128,7 @@ extension:RegisterFunction("ranger", "filter", "", "t", 1, function(ctx)
 	local filter = ctx.data.ranger.filter;
 
 	for _, e in pairs(filter) do
-		t[#t + 1] = e;
+		t[#t + 1] = {"e", e};
 	end
 
 	return {tbl = t, children = {}, parents = {}, size = #t};
@@ -134,8 +141,6 @@ end, false);
 --[[
 	Ranger Trace Function
 ]]
-
-local vector_zero = Vector(0, 0 , 0)
 
 local DoTrace = function(ctx, start, stop, min, max)
 
@@ -184,10 +189,9 @@ local DoTrace = function(ctx, start, stop, min, max)
 	result.HitWorld = result.HitWorld or false;
 	result.HitNonWorld = result.HitNonWorld or false;
 	result.StartSolid = result.StartSolid or false;
-	result.HitPos = result.HitPos or vector_zero;
-	result.HitNormal = result.HitNormal or vector_zero;
-	result.Normal = result.Normal or vector_zero;
-	result.Normal = result.Normal or vector_zero;
+	result.HitPos = result.HitPos or Vector(0, 0 , 0);
+	result.HitNormal = result.HitNormal or Vector(0, 0 , 0);
+	result.Normal = result.Normal or Vector(0, 0 , 0);
 	result.Fraction = result.Fraction or 0;
 	result.FractionLeftSolid = result.FractionLeftSolid or 0;
 	result.HitGroup = result.HitGroup or 0;
@@ -197,7 +201,7 @@ local DoTrace = function(ctx, start, stop, min, max)
 	result.MatType = result.MatType or 0;
 	result.HitTexture = result.HitTexture or "";
 	result.Entity = result.Entity or Entity(0);
-	result.Distance = start:Distance(result.HitPos or start);
+	result.Distance = start:Distance(result.HitPos or start) or 0;
 
 	if not persist then
 		setDefaults(ctx);

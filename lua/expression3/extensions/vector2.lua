@@ -29,9 +29,9 @@ extension:RegisterClass("v2", {"vector2", "vector.2d"}, isVector2, notNil)
 extension:RegisterWiredInport("v2", "VECTOR2");
 extension:RegisterWiredOutport("v2", "VECTOR2");
 
-extension:RegisterConstructor("v2", "n,n", function(x, y) return {x = x, y = y} end, true)
-extension:RegisterConstructor("v2", "n", function(v) return {x = v, y = v} end, true)
-extension:RegisterConstructor("v2", "", function() return {x = 0, y = 0} end, true)
+extension:RegisterConstructor("v2", "n,n", function(x, y) return {x = x or 0, y = y or 0}; end, true)
+extension:RegisterConstructor("v2", "n", function(v) return {x = v or 0, y = v or 0}; end, true)
+extension:RegisterConstructor("v2", "", function() return {x = 0, y = 0}; end, true)
 
 --[[
 	Operators
@@ -110,7 +110,7 @@ extension:RegisterOperator("not", "v2", "b", 1, function(a)
 	return (a.x == 0) and (a.y == 0);
 end, true);
 
-extension:RegisterOperator("neg", "v", "v", 1, function(a)
+extension:RegisterOperator("neg", "v2", "v", 1, function(a)
 	return {x = -a.x, y = -a.y};
 end, true);
 

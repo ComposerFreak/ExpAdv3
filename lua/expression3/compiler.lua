@@ -2317,7 +2317,7 @@ function COMPILER.CastUserType(this, left, right)
 	local to = this:GetClassOrInterface(left);
 	local from = this:GetClassOrInterface(right);
 
-	if (not (to or from)) then return end;
+	if (not to) or (not from) then return end;
 
 	if (not this.__hashtable[to.hash][from.hash]) then
 		if (this.__hashtable[from.hash][to.hash]) then

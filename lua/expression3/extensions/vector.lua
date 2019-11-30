@@ -25,9 +25,9 @@ extension:RegisterClass("v", {"vector", "vector.3d"}, isvector, notNil)
 extension:RegisterWiredInport("v", "VECTOR");
 extension:RegisterWiredOutport("v", "VECTOR");
 
-extension:RegisterConstructor("v", "n,n,n", Vector, true) -- E3 new vector(n,n,n) == Vector(N, N, N) Lua
-extension:RegisterConstructor("v", "n", function(n) return Vector(n, n, n) end, true)
-extension:RegisterConstructor("v", "", function() return Vector(0, 0, 0) end, true)
+extension:RegisterConstructor("v", "n,n,n", function(x,y,z) return Vector(x or 0, y or 0, z or 0); end, true)
+extension:RegisterConstructor("v", "n", function(n) return Vector(n or 0, n or 0, n or 0); end, true)
+extension:RegisterConstructor("v", "", function() return Vector(0, 0, 0); end, true)
 
 --[[
 	Operators

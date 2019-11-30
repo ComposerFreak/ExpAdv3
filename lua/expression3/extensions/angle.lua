@@ -21,9 +21,9 @@ extension:RegisterClass("a", {"angle"}, isangle, IsValid)
 extension:RegisterWiredInport("a", "ANGLE");
 extension:RegisterWiredOutport("a", "ANGLE");
 
-extension:RegisterConstructor("a", "n,n,n", Angle, true)
-extension:RegisterConstructor("a", "n", function(n) return Angle(n, n, n) end, true)
-extension:RegisterConstructor("a", "", function() return Angle(0, 0, 0) end, true)
+extension:RegisterConstructor("a", "n,n,n", function(p,y,r) return Angle(p or 0, y or 0, r or 0); end, true)
+extension:RegisterConstructor("a", "n", function(n) return Angle(n or 0, n or 0, n or 0); end, true)
+extension:RegisterConstructor("a", "", function() return Angle(0, 0, 0); end, true)
 
 --[[
 	Operators
