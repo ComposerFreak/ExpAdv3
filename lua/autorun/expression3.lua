@@ -23,46 +23,50 @@ print("E3 Root directory:", EXPR_ROOT);
 
 if (SERVER) then
 	AddCSLuaFile();
-
+	
 	AddCSLuaFile("expression3/expr_lib.lua");
-
+	
 	AddCSLuaFile("expression3/tokenizer.lua");
 	AddCSLuaFile("expression3/parser.lua");
 	AddCSLuaFile("expression3/compiler.lua");
 	AddCSLuaFile("expression3/debuger.lua");
-
-	AddCSLuaFile("expression3/editor.lua");
-	AddCSLuaFile( "expression3/editor.lua");
-	AddCSLuaFile( "expression3/editor/font.lua" );
-	AddCSLuaFile( "expression3/editor/vector2.lua" );
-	AddCSLuaFile( "expression3/editor/derma/button.lua" );
-	AddCSLuaFile( "expression3/editor/derma/closebutton.lua" );
-	AddCSLuaFile( "expression3/editor/derma/editor.lua" );
-	AddCSLuaFile( "expression3/editor/derma/console.lua" );
-	AddCSLuaFile( "expression3/editor/derma/dhtml.lua" );
-	AddCSLuaFile( "expression3/editor/derma/filebrowser.lua" );
-	AddCSLuaFile( "expression3/editor/derma/frame.lua" );
-	AddCSLuaFile( "expression3/editor/derma/hscrollbar.lua" );
-	AddCSLuaFile( "expression3/editor/derma/ide.lua" );
-	AddCSLuaFile( "expression3/editor/derma/imagebutton.lua" );
-	AddCSLuaFile( "expression3/editor/derma/options.lua" );
-	AddCSLuaFile( "expression3/editor/derma/propertysheet.lua" );
-	AddCSLuaFile( "expression3/editor/derma/toolbar.lua" );
-	AddCSLuaFile( "expression3/editor/derma/filemenu.lua" );
-	AddCSLuaFile( "expression3/editor/derma/syntaxer.lua" );
-	AddCSLuaFile( "expression3/editor/derma/textentry.lua" );
-	AddCSLuaFile("expression3/editor/derma/checkbox.lua");
-	AddCSLuaFile("expression3/editor/derma/findreplace.lua");
-	AddCSLuaFile("expression3/editor/derma/tree.lua");
-	AddCSLuaFile("expression3/editor/derma/console2.lua");
-	AddCSLuaFile( "expression3/editor/derma/simpletabs.lua" );
-	AddCSLuaFile("expression3/editor/expr_editor_lib.lua");
-
-	AddCSLuaFile("expression3/editor/derma/syntax.lua");
-	AddCSLuaFile("expression3/editor/derma/syntax/syntax_e3.lua");
-	AddCSLuaFile("expression3/editor/derma/syntax/syntax_lua.lua");
-	AddCSLuaFile("expression3/editor/derma/syntax/syntax_console.lua");
-
+	
+	AddCSLuaFile( "expression3/editor.lua" )
+	
+	AddCSLuaFile( "expression3/editor/vector2.lua" )
+	AddCSLuaFile( "expression3/editor/font.lua" )
+	AddCSLuaFile( "expression3/editor/expr_editor_lib.lua" )
+	
+	AddCSLuaFile( "expression3/editor/derma/tree.lua" )
+	AddCSLuaFile( "expression3/editor/derma/toolbar.lua" )
+	AddCSLuaFile( "expression3/editor/derma/textentry.lua" )
+	AddCSLuaFile( "expression3/editor/derma/syntaxer.lua" ) 
+	AddCSLuaFile( "expression3/editor/derma/syntax/syntax_lua.lua" )
+	AddCSLuaFile( "expression3/editor/derma/syntax/syntax_e3.lua" )
+	AddCSLuaFile( "expression3/editor/derma/syntax/syntax_console.lua" )
+	AddCSLuaFile( "expression3/editor/derma/syntax.lua" ) 
+	AddCSLuaFile( "expression3/editor/derma/statebutton.lua" )
+	AddCSLuaFile( "expression3/editor/derma/simpletabs.lua" )
+	AddCSLuaFile( "expression3/editor/derma/propertysheet.lua" )
+	AddCSLuaFile( "expression3/editor/derma/options2.lua" )
+	AddCSLuaFile( "expression3/editor/derma/options.lua" )
+	AddCSLuaFile( "expression3/editor/derma/imagebutton.lua" )
+	AddCSLuaFile( "expression3/editor/derma/ide.lua" )
+	AddCSLuaFile( "expression3/editor/derma/hscrollbar.lua" )
+	AddCSLuaFile( "expression3/editor/derma/frame.lua" )
+	AddCSLuaFile( "expression3/editor/derma/findreplace.lua" )
+	AddCSLuaFile( "expression3/editor/derma/filemenu.lua" )
+	AddCSLuaFile( "expression3/editor/derma/filebrowser.lua" )
+	AddCSLuaFile( "expression3/editor/derma/editor.lua" )
+	AddCSLuaFile( "expression3/editor/derma/dhtml.lua" )
+	AddCSLuaFile( "expression3/editor/derma/console2.lua" )
+	AddCSLuaFile( "expression3/editor/derma/console.lua" )
+	AddCSLuaFile( "expression3/editor/derma/colorselect.lua" )
+	AddCSLuaFile( "expression3/editor/derma/closebutton.lua" )
+	AddCSLuaFile( "expression3/editor/derma/checkbox.lua" )
+	AddCSLuaFile( "expression3/editor/derma/button.lua" )
+	AddCSLuaFile( "expression3/editor/derma/autocomplete.lua" )
+	
 	resource.AddFile("models/lemongate/gibsmodel_chipmesh001.mdl");
 	resource.AddFile("models/lemongate/gibsmodel_fanmesh001.mdl");
 	resource.AddFile("models/lemongate/lemongate.mdl");
@@ -70,31 +74,31 @@ if (SERVER) then
 	resource.AddFile("models/nezzkryptic/e3_chip.mdl");
 	resource.AddFile("models/shadowscion/lemongate/gate.mdl");
 	resource.AddFile("models/tanknut/cylinder.mdl");
-
+	
 	local addAll;
-
+	
 	addAll = function(path, gamepath)
-
+		
 		local files, folders = file.Find(path, gamepath);
-
+		
 		for _, file in pairs(files) do
 			resource.AddFile( string.format("%s/%s", path, file) );
 		end
-
+		
 		for _, folder in pairs(folders) do
 			addAll( string.format("%s/%s", path, folder), gamepath );
 		end
 	end;
-
+	
 	addAll(string.format("%s/materials", EXPR_ROOT), "GAME");
 	addAll(string.format("%s/models", EXPR_ROOT), "GAME");
-
+	
 	addAll(string.format("%s/lua/expression3/helper/csv", EXPR_ROOT), "GAME");
 	addAll(string.format("%s/lua/expression3/helper/custom", EXPR_ROOT), "GAME");
 	addAll(string.format("%s/lua/expression3/helper/examples", EXPR_ROOT), "GAME");
-
+	
 	include("expression3/expr_lib.lua");
-
+	
 elseif (CLIENT) then
 	include("expression3/expr_lib.lua");
 end

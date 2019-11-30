@@ -39,6 +39,26 @@ function PANEL:SetupButton( sName, sMaterial, nDock, fDoClick )
 	return btn
 end
 
+function PANEL:SetupStateButton( tStates, nDock, fStateChanged )
+	local btn = self:Add( "GOLEM_StateButton" ) 
+	btn:Dock( nDock )
+	btn:SetPadding( 5 )
+	btn:SetColor( Color( 70, 70, 70 ) )
+	btn:SetFlat( true )
+	btn:SetIconFading( false )
+	btn:DrawButton( true )
+	
+	for k, v in pairs( tStates ) do 
+		btn:AddState( v.sIcon, v.cColor, v.sText, v.sTooltip or v.sText, v.tValue, v.bNoCycle )
+	end 
+	
+	btn:SetState( 1 )
+	
+	if fStateChanged then 
+		btn.StateChanged = fStateChanged
+	end 
+end
+
 function PANEL:SetupCheckBox( sOn, sOff, sMaterialT, sMaterialC, nDock, fChangedValue )
 	local btn = self:Add( "GOLEM_CheckBox" )
 	btn:Dock( nDock )
@@ -48,11 +68,13 @@ function PANEL:SetupCheckBox( sOn, sOff, sMaterialT, sMaterialC, nDock, fChanged
 	btn:SetTextCentered( false )
 	btn:DrawButton( true )
 	btn:SetTooltip( sOff )
-	btn:SetTick( Material( sMaterialT ) )
-	btn:SetCross( Material( sMaterialC ) )
+	btn:SetTick( Material( sMaterialT ), Color( 70, 70, 70 ) )
+	btn:SetCross( Material( sMaterialC ), Color( 70, 70, 70 ) )
 	btn:SetFlat( true )
 	btn:SetColor( Color( 70, 70, 70 ) )
 	-- btn:SetColor( Color( 40, 80, 160 ) )
+	btn:SetValue( true, true )
+	btn:SetValue( false, true )
 
 	function btn:ChangedValue(v)
 		btn:SetTooltip( v and sOn or sOff );
