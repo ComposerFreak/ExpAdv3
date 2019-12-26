@@ -309,7 +309,7 @@ extension:RegisterFunction("hololib", "create", "s,v", "h", 1, Create);
 extension:RegisterFunction("hololib", "create", "s,v,a", "h", 1, Create);
 
 extension:RegisterFunction("hololib", "canCreate", "", "b", 1, function(ctx)
-	local ply = xtx.player;
+	local ply = ctx.player;
 	return not ((RateCounter[ply] or 0) >= rate or (PlayerCounter[ply] or 0) >= max);
 end, false);
 
