@@ -3773,8 +3773,11 @@ function COMPILER.Compile_CLASS(this, inst, token, data)
 	this:PopScope();
 
 	if (extends) then
-		this:writeToBuffer(inst, "\nsetmetatable(%s, %s);\n", class.name, extends.name);
-		this:writeToBuffer(inst, "\nsetmetatable(%s.vars, %s.vars);\n", class.name, extends.name);
+		--this:writeToBuffer(inst, "\nsetmetatable(%s, %s);\n", class.name, extends.name);
+		--this:writeToBuffer(inst, "\nsetmetatable(%s.vars, %s.vars);\n", class.name, extends.name);
+
+		this:writeToBuffer(inst, "\nsetmetatable(%s, {__index = %s});\n", class.name, extends.name);
+		this:writeToBuffer(inst, "\nsetmetatable(%s.vars, {__index = %s.vars});\n", class.name, extends.name);
 	end
 
 	this:writeToBuffer(inst, "\n%s.vars.__index = %s.vars;\n", class.name, class.name);
