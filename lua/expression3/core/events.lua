@@ -109,9 +109,8 @@
 	extension:RegisterEvent("Trigger", "s");
 	extension:RegisterEvent("UseScreen", "n,n,p,e");
 	extension:RegisterEvent("RenderScreen", "n,n,e");
-	extension:RegisterEvent("think", "");
-	extension:RegisterEvent("PlayerSay","p,t,b");
-	extension:RegisterEvent("OnPlayerchat","p,t,b,b");
+	extension:RegisterEvent("Think", "");
+	extension:RegisterEvent("OnPlayerChat","p,s,n");
 	extension:RegisterEvent("OnPlayerSpawn", "p");
 	extension:RegisterEvent("OnPlayerJoin", "p");
 	extension:RegisterEvent("OnPlayerDisconnect", "p");
