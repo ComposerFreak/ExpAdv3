@@ -44,5 +44,5 @@ hook.Add( "Expression3.AddGolemTabTypes", "PermssionsTab", function(editor)
 		self.Permissions = nil
 	end );
 
-	editor.tbRight:SetupButton( "Helper", "fugue/controller-d-pad.png", TOP, function( ) editor:NewMenuTab( "permissions" ); end )
+	editor.tbRight:SetupButton( "Permssions", "fugue/controller-d-pad.png", TOP, function( ) editor:NewMenuTab( "permissions" ); end )
 end);

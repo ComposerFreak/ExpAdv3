@@ -589,6 +589,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.Links", function(pnl)
 	end
 
 	addLink("Git Hub", "https://github.com/Rusketh/ExpAdv3", "e3_github.png");
+	addLink("Video Tutorials", "https://www.youtube.com/playlist?list=PLOxsj9mdwMARIj7m9MkFkV1mno6nc1TpN", "e3_youtube.png");
 
 	hook.Run("Expression3.LoadHelperLinks", addLink);
 
