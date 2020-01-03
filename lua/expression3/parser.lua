@@ -515,6 +515,7 @@ function PARSER.SetEndResults(this, inst, type, count)
 end
 
 function PARSER.EndInstruction(this, inst, data)
+
 	inst.data = data or {};
 	inst.final = this.__token;
 	this.cur_instruction = inst.parent;

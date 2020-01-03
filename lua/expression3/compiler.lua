@@ -3695,7 +3695,7 @@ function COMPILER.Compile_CLASS(this, inst, token, data)
 
 	local classname = data.classname;
 	local class = this:StartClass(classname);
-	class.hash = this:CRC(token, inst.start, inst.final);
+	class.hash = this:CRC(inst.start, inst.final);
 	this.__hashtable[class.hash] = {[class.hash] = true};
 
 	this:writeToBuffer(inst, "\n--START CLASS (%s, %q)\n", classname, class.hash);
@@ -3970,7 +3970,7 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, data)
 	userclass.valid = true;
 	userclass.constructors[signature] = signature;
 
-	this:writeToBuffer(inst, "\nlocal this = setmetatable({vars = setmetatable({}, %s.vars), hash = %q}, %s)\n", userclass.name, userclass.hash, userclass.name);
+	this:writeToBuffer(inst, "\nlocal this = setmetatable({vars = setmetatable({}, {__index = %s.vars}), hash = %q}, %s)\n", userclass.name, userclass.hash, userclass.name);
 
 	if data.block then
 		this:Compile(data.block);
@@ -3994,7 +3994,12 @@ function COMPILER.Compile_SUPCONST(this, inst, token, data)
 	data.class = class.extends.name;
 
 	this:writeToBuffer(inst, "this = ");
-	return COMPILER.Compile_NEW(this, inst, token, data);
+
+	local new = COMPILER.Compile_NEW(this, inst, token, data);
+
+	this:writeToBuffer(inst, "\nthis.hash = %q;", class.hash);
+
+	return new;
 end
 
 function COMPILER.Compile_DEF_METHOD(this, inst, token, data)
@@ -4138,7 +4143,7 @@ function COMPILER.Compile_INTERFACE(this, inst, token, data)
 	local extends;
 	local interface = this:StartInterface(data.interface);
 
-	interface.hash = this:CRC(token, inst.start, inst.final);
+	interface.hash = this:CRC(inst.start, inst.final);
 
 	this.__hashtable[interface.hash] = {[interface.hash] = true};
 

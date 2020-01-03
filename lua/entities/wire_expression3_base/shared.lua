@@ -181,7 +181,16 @@ function ENT:BuildEnv(context, instance)
 
 		function env.CheckHash(hash, class)
 			local valid = hashTable[hash];
-			if (valid) then return valid[class.hash]; end
+
+			if (not class or not class.hash) then
+				return false;
+			end
+
+			if (valid) then
+				return valid[class.hash] or false;
+			end
+
+			return class.hash == hash;
 		end
 
 		-- hashtable[extends][class] = is isinstance of;
