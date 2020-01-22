@@ -153,38 +153,41 @@
 
 	--[[ Set Quaternion ]]--
 
-	extension:RegisterMethod("q", "quat", "", "q", 1, function()
+	extension:RegisterFunction("quaternion", "quat", "", "q", 1, function()
 		return Quaternion(1,0,0,0)
 	end, true)
 
-	extension:RegisterMethod("q", "quat", "n", "q", 1, function(n)
+	extension:RegisterFunction("quaternion", "quat", "n", "q", 1, function(n)
 		return Quaternion(n,0,0,0)
 	end, true)
 
-	extension:RegisterMethod("q", "quat", "n,n,n,n", "q", 1, function(r,i,j,k)
-		local r, i, j, k = r.r, i.i, j.j, k.k
+	extension:RegisterFunction("quaternion", "quat", "n,n,n,n", "q", 1, function(r,i,j,k)
+		local r, i, j, k = r, i, j, k
 		return Quaternion(r, i, j, k)
 	end, true)
 
-	extension:RegisterMethod("q", "quat", "v", "q", 1, function(v) 
+	extension:RegisterFunction("quaternion", "quat", "v", "q", 1, function(v) 
 
 		return Quaternion(0, v.x, v.y, v.z);
 
 	end, true)
 
-	extension:RegisterMethod("q", "quat", "a", "q", 1, function(a)
+	extension:RegisterFunction("quaternion", "quat", "a", "q", 1, function(a)
 
-		return angToQuat(a)
-
-	end, true)
-
-	extension:RegisterMethod("q", "quat", "e", "q", 1, function(e)
-
-		return IsValid(e) and angToQuat(e:GetAngles() or Quaternion(0,0,0,0));
+		return angToQuat( Angle(a.p, a.y, a.r) );
 
 	end, true)
 
-	extension:RegisterMethod("q", "quat", "v,v", "q", 1, function(a,b)
+	extension:RegisterFunction("quaternion", "quat", "e", "q", 1, function(e)
+		
+		local ph = e:GetPhysicsObject();
+		
+		if IsValid(ph) then
+			return angToQuat( ph:GetAngles() );
+		end
+	end, true)
+
+	extension:RegisterFunction("quaternion", "quat", "v,v", "q", 1, function(a,b)
 
 		local x, z = a, b
 		local y = z:Cross(x):GetNormalized()
@@ -199,9 +202,19 @@
 		local roll = acos(clamp(y:Dot(yaw), -1, 1)) * rad2deg
 		if y.z < 0 then roll = -roll end
 
-		return self:angToQuat( Angle(ang.p, ang.y, roll) );
+		return angToQuat( Angle(ang.p, ang.y, roll) );
 
 	end, true)
+
+	//
+
+	extension:RegisterMethod("q", "toString", "", "", 1, function(q)
+
+		local quatString = table.ToString( q, "Quaternion", true )
+		return quatString;
+
+	end, true)
+
 
 	//
 
@@ -224,7 +237,7 @@
 	//
 
 	extension:RegisterMethod("q", "clone", "", "q", 1, function(q)
-		return Quaternion(self.r, self.i, self.j, self.k);
+		return Quaternion(q.r, q.i, q.j, q.k);
 	end, true)
 
 	//
