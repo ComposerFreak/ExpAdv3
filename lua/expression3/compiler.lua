@@ -2175,8 +2175,8 @@ function COMPILER.Compile_LEN(this, inst, token, data)
 	return op.result, op.rCount, (p1 + op.price);
 end
 
-function COMPILER.Compile_DELTA(this, inst, token, expressions)
-	local var = data.var.data;
+function COMPILER.Compile_DELTA(this, inst, token, data)
+	local var = data.var;
 
 	if (this.__defined[var]) then
 		this:Throw(token, "Variable %s is defined here and can not be used as part of an expression.", var);
@@ -2197,15 +2197,13 @@ function COMPILER.Compile_DELTA(this, inst, token, expressions)
 	if (not op) then
 		this:Throw(token, "Delta operator ($) does not support '$%s'", name(c));
 	elseif (not op.operator) then
-		this:writeToBuffer(inst, "(DELTA.%s - %s",var);
+		this:writeToBuffer(inst, "(DELTA.%s -", var);
 
 		if (info and info.prefix) then
 			var = info.prefix .. "." .. var;
 		end
 
 		this:writeToBuffer(inst, "%s)",var);
-
-		this:writeToBuffer(inst, ")");
 	else
 		if (info and info.prefix) then
 			this:writeOperationCall(inst, op, "DELTA." .. var, info.prefix .. var);
@@ -2220,7 +2218,7 @@ function COMPILER.Compile_DELTA(this, inst, token, expressions)
 end
 
 function COMPILER.Compile_CHANGED(this, inst, token, data)
-	local var = inst.var.data;
+	local var = data.var;
 
 	if (this.__defined[var]) then
 		this:Throw(token, "Variable %s is defined here and can not be used as part of an expression.", var);
@@ -2241,8 +2239,8 @@ function COMPILER.Compile_CHANGED(this, inst, token, data)
 	if (not op) then
 		this:Throw(token, "Changed operator (~) does not support '~%s'", name(c));
 	elseif (not op.operator) then
-		this:QueueRemove(inst, inst.__operator);
-		this:QueueInjectionBefore(inst, inst.__var, "DELTA", ".", var, "~=");
+		--this:QueueRemove(inst, inst.__operator);
+		--this:QueueInjectionBefore(inst, inst.__var, "DELTA", ".", var, "~=");
 
 		if (info and info.prefix) then
 			this:writeToBuffer(inst, "(DELTA.%s ~= %s.%s)", var, info.prefix, var);
@@ -2252,7 +2250,7 @@ function COMPILER.Compile_CHANGED(this, inst, token, data)
 
 	else
 		if (info and info.prefix) then
-			this:writeOperationCall(inst, op, string_format("DELTA.%s", var), string_format("%s.%s",info.prefix, var));
+			this:writeOperationCall(inst, op, string_format("DELTA.%s", var), string_format("%s.%s", info.prefix, var));
 		else
 			this:writeOperationCall(inst, op, string_format("DELTA.%s", var), var);
 		end
@@ -3203,7 +3201,7 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 
 	this:CheckState(op.state, token, "call operation %s(%s).", name(res), names(prms));
 
-	this:QueueRemove(inst, token); -- Removes (
+	--this:QueueRemove(inst, token); -- Removes (
 
 	this:writeOperationCall(inst, op, unpack(args));
 
