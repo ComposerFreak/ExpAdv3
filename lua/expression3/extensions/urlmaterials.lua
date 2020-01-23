@@ -80,7 +80,7 @@ local function Download(context, Name, url, Width, Height)
 
 		if !mat then return end
 
-		local vertex_mat = CreateMaterial("ea2urlmat_" .. Name, "UnlitGeneric", { ["$vertexcolor"] = 1, ["$vertexalpha"] = 1, ["$ignorez"] = 1, ["$nolod"] = 1 } )
+		local vertex_mat = CreateMaterial("e3urlmat_" .. Name, "UnlitGeneric", { ["$vertexcolor"] = 1, ["$vertexalpha"] = 1, ["$ignorez"] = 1, ["$nolod"] = 1 } )
 		local tex = mat:GetTexture("$basetexture")
 		tex:Download()
 		vertex_mat:SetTexture("$basetexture", tex)

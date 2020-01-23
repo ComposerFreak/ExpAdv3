@@ -135,7 +135,34 @@ extension:RegisterMethod("e", "applyTorque", "v", "", 0, function(context, e, v)
 			applyTorque(ph, v);
 		end
 	end
-end, false)
+end, false);
+
+
+
+
+--[[
+	Set Velocity
+]]
+
+extension:SetServerState();
+
+extension:RegisterMethod("e", "setVel", "v", "", 0, function(context, e, v)
+	if context:CanUseEntity(e) then
+		local ph = e:GetPhysicsObject();
+		if IsValid(ph) then
+			ph:SetVelocity(v);
+		end
+	end
+end, false);
+
+extension:RegisterMethod("ph", "setVel", "v", "", 0, function(context, ph, v)
+	if IsValid(ph) then
+		local e = ph:GetEntity();
+		if IsValid(e) and context:CanUseEntity(e) then
+			ph:SetVelocity(v);
+		end
+	end
+end, false);
 
 
 --[[

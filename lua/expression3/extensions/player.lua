@@ -145,8 +145,10 @@ extension:RegisterMethod("p", "getAllWeapons", "", "t", 1, function(p)
 	local s = 0;
 	local t = {};
 
-	for k, v in pairs(p:GetWeapons()) do
-		t[v:GetClass()] = v:GetPrintName()
+	if IsValid(p) then
+		for k, v in pairs(p:GetWeapons()) do
+			t[v:GetClass()] = v:GetPrintName();
+		end
 	end
 
 	return {tbl = t, children = {}, parents = {}, size = s};

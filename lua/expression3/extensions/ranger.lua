@@ -47,7 +47,7 @@ extension:RegisterAttribute("rd", "hitbox_bone", "n", "HitBoxBone");
 extension:RegisterAttribute("rd", "material_type", "n", "MatType");
 extension:RegisterAttribute("rd", "distance", "n", "Distance");
 extension:RegisterAttribute("rd", "hit_texture", "s", "HitTexture");
-extension:RegisterAttribute("rd", "entity", "e", "Entity");
+extension:RegisterAttribute("rd", "hit_entity", "e", "Entity");
 
 --[[
 	Ranger Settings
@@ -104,6 +104,11 @@ end, false);
 ]]
 
 extension:RegisterFunction("ranger", "filter", "e", "", 0, function(ctx, ent)
+	local filter = ctx.data.ranger.filter;
+	filter[#filter + 1] = ent;
+end, false);
+
+extension:RegisterFunction("ranger", "filter", "p", "", 0, function(ctx, ent)
 	local filter = ctx.data.ranger.filter;
 	filter[#filter + 1] = ent;
 end, false);

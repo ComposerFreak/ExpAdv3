@@ -1,10 +1,4 @@
-@name "E3 Clock";
-
-/*
-    Author - Rusketh
-    Requires Addon - Sprops
-    Description - A simple holographic clock that tells the time.
-*/
+@name "Ruskeths E3 Clock";
 
 server {
     entity gate = system.getEntity();
@@ -94,11 +88,11 @@ server {
         hs.parent(gate);
         
         hologram hm = hololib.create("cube");
-        hm.setScale(new vector(3.5, 0.1, 0.1));
+        hm.setScale(new vector(5, 0.1, 0.1));
         hm.parent(gate);
         
         hologram hh = hololib.create("cube");
-        hh.setScale(new vector(5, 0.1, 0.1));
+        hh.setScale(new vector(3.5, 0.1, 0.1));
         hh.parent(gate);
         
         function void updateSeconds(int seconds) {
@@ -125,7 +119,7 @@ server {
             vector center = gate.getPos();
             vector aimpos = gate.toWorld( new vector(x, y, 0) * 60);
             angle ang = (center - aimpos).toAngle();
-            hm.setPos((center + ((aimpos - center) * 0.5)) + (ang.forward() * 13) + of);
+            hm.setPos((center + ((aimpos - center) * 0.5)) + (ang.forward() * 5) + of);
             hm.setAng(ang);
         };
         
@@ -139,7 +133,7 @@ server {
             vector center = gate.getPos();
             vector aimpos = gate.toWorld( new vector(x, y, 0) * 60);
             angle ang = (center - aimpos).toAngle();
-            hh.setPos((center + ((aimpos - center) * 0.5)) + (ang.forward() * 5) + of);
+            hh.setPos((center + ((aimpos - center) * 0.5)) + (ang.forward() * 13) + of);
             hh.setAng(ang);
         };
             

@@ -122,29 +122,6 @@ extension:RegisterMethod("ph", "inertia", "", "v", 1, "GetInertia");
 extension:RegisterMethod("ph", "invInertia", "", "n", 1, "GetInvInertia");
 
 
-
---[[
-	Set Velocity
-]]
-
-extension:SetServerState();
-
-extension:RegisterMethod("e", "setVel", "v", "", 0, function(context, e, v)
-	if context:CanUseEntity(e) then
-		e:SetVelocity(v);
-	end
-end, false);
-
-extension:RegisterMethod("ph", "setVel", "v", "", 0, function(context, ph, v)
-	if IsValid(ph) then
-		local e = ph:GetEntity();
-
-		if context:CanUseEntity(e) then
-			ph:SetVelocity(v);
-		end
-	end
-end, false);
-
 --[[
 	Bearing / Elevation
 ]]
