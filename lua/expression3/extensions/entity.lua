@@ -146,6 +146,16 @@ extension:RegisterMethod("e", "angVel", "", "a", 1, function(e)
 	return Angle(0, 0, 0);
 end, true);
 
+extension:RegisterMethod("e", "angVelVector", "", "v", 1, function(e)
+	local ph = e:GetPhysicsObject();
+
+	if IsValid(ph) then
+		return ph:GetAngleVelocity();
+	end
+
+	return Vector(0,0,0);
+end, true);
+
 --[[
 	Energy and Inertia
 ]]

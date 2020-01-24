@@ -129,10 +129,10 @@
 
 		return Quaternion( 
 
-			(a.r * b.r) - (a.i * b.i) - (a.j * b.j) - (a.k * b.k) / divisor,
-			(a.r * b.i) + (a.i * b.r) + (a.j * b.k) - (a.k * b.j) / divisor, 
-			(a.r * b.j) - (a.i * b.k) + (a.j * b.r) + (a.k * b.i) / divisor,
-			(a.r * b.k) + (a.i * b.j) - (a.j * b.i) + (a.k * b.r) / divisor
+			(a.r * b.r) + (a.i * b.i) + (a.j * b.j) + (a.k * b.k) / divisor,
+			(-a.r * b.i) + (a.i * b.r) - (a.j * b.k) + (a.k * b.j) / divisor, 
+			(-a.r * b.j) + (a.j * b.r) - (a.k * b.i) + (a.i * b.k) / divisor,
+			(-a.r * b.k) + (a.k * b.r) - (a.i * b.j) + (a.j * b.i) / divisor
 
 			)
 	end, true)
@@ -474,7 +474,7 @@
 	extension:RegisterFunction("quaternion", "rotationVector", "q", "v", 1, function(q)
 
 		local sq = (q.r * q.r) + (q.i * q.i) + (q.j * q.j) + (q.k * q.k)
-		local max = ((q.i * q.i) + (q.j * q.j) + (q.k * q.k))
+		local max = math.max((q.i * q.i) + (q.j * q.j) + (q.k * q.k))
 
 		if sq == 0 or max == 0 then return Vector(0,0,0) end
 		
