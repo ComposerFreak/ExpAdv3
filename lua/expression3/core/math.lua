@@ -72,7 +72,9 @@
 	extension:RegisterOperator("ten", "b,n,n", "n", 1);
 	extension:RegisterOperator( "is", "n", "b", 1, tobool, true);
 	extension:RegisterOperator("neg", "n", "n", 1);
-	extension:RegisterOperator("not", "n", "b", 1, function (context, number) return number == 0 end, true);
+	extension:RegisterOperator("not", "n", "b", 1, function(context, number) return number == 0 end, true);
+
+	extension:RegisterOperator("dlt", "n", "n", 1, function(pre, new) return (pre or 0) - new; end, true);
 
 --[[
 	*****************************************************************************************************************************************************

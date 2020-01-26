@@ -249,6 +249,14 @@ extension:RegisterMethod("v", "toAngle", "", "a", 1, "Angle")
 extension:RegisterMethod("v", "toColor", "", "c", 1, "ToColor")
 
 --[[
+
+]]
+
+extension:RegisterOperator("dlt", "v", "v", 1, function(pre, new)
+	return (pre or Vector(0, 0, 0)) - new;
+end, true);
+
+--[[
 ]]
 
 extension:EnableExtension()

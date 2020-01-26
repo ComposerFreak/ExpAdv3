@@ -2192,29 +2192,22 @@ function COMPILER.Compile_DELTA(this, inst, token, data)
 		this:Throw(token, "Delta operator ($) can not be used on none global variable %s.", var);
 	end
 
-	local op = this:GetOperator("sub", c, c);
+	local op = this:GetOperator("dlt", c);
 
 	if (not op) then
 		this:Throw(token, "Delta operator ($) does not support '$%s'", name(c));
-	elseif (not op.operator) then
-		this:writeToBuffer(inst, "(DELTA.%s -", var);
+	end
 
-		if (info and info.prefix) then
-			var = info.prefix .. "." .. var;
-		end
-
-		this:writeToBuffer(inst, "%s)",var);
+	if (info and info.prefix) then
+		this:writeOperationCall(inst, op, "DELTA." .. var, info.prefix .. "." .. var);
 	else
-		if (info and info.prefix) then
-			this:writeOperationCall(inst, op, "DELTA." .. var, info.prefix .. var);
-		else
-			this:writeOperationCall(inst, op, "DELTA." .. var, var);
-		end
+		this:writeOperationCall(inst, op, "DELTA." .. var, var);
 	end
 
 	this:CheckState(op.state, token, "Delta operator ($) '$%s'", name(c));
 
 	return op.result, op.rCount, op.price;
+	
 end
 
 function COMPILER.Compile_CHANGED(this, inst, token, data)
@@ -2239,9 +2232,7 @@ function COMPILER.Compile_CHANGED(this, inst, token, data)
 	if (not op) then
 		this:Throw(token, "Changed operator (~) does not support '~%s'", name(c));
 	elseif (not op.operator) then
-		--this:QueueRemove(inst, inst.__operator);
-		--this:QueueInjectionBefore(inst, inst.__var, "DELTA", ".", var, "~=");
-
+		
 		if (info and info.prefix) then
 			this:writeToBuffer(inst, "(DELTA.%s ~= %s.%s)", var, info.prefix, var);
 		else

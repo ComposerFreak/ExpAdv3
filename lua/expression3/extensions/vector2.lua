@@ -201,6 +201,14 @@ extension:RegisterMethod("v2", "round", "", "", 0, function(v)
 end, true);
 
 --[[
+
+]]
+
+extension:RegisterOperator("dlt", "v2", "v2", 1, function(pre, new)
+	return {x = (pre.x or 0) - new.x, y = (pre.y or 0) - new.y};
+end, true);
+
+--[[
 ]]
 
 extension:EnableExtension();

@@ -183,6 +183,14 @@ extension:RegisterMethod("a", "round", "", "", 0, function(a)
 end, true)
 
 --[[
+
+]]
+
+extension:RegisterOperator("dlt", "a", "a", 1, function(pre, new)
+	return (pre or Angle(0, 0, 0)) - new;
+end, true);
+
+--[[
 ]]
 
 extension:EnableExtension()
