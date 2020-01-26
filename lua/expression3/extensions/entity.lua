@@ -54,7 +54,7 @@ extension:RegisterMethod("e", "isValid", "", "b", 1, IsValid, true);
 	General Methods
 ]]
 
-extension:RegisterMethod("e", "class", "", "s", 1, "GetClass");
+extension:RegisterMethod("e", "getClass", "", "s", 1, "GetClass");
 
 extension:RegisterMethod("e", "getModel", "", "s", 1, "GetModel");
 
@@ -259,9 +259,12 @@ extension:RegisterMethod("e", "getGravity", "", "n", 1, "GetGravity");
 
 extension:SetServerState();
 
-extension:RegisterMethod("e", "setGravity", "n", "", 0, function(context, e, n)
+extension:RegisterMethod("e", "setGravity", "b", "", 0, function(context, e, b)
 	if context:CanUseEntity(e) then
-		e:SetGravity(n);
+		local ph = e:GetPhysicsObject();
+		if IsValid(ph) then
+			ph:EnableGravity(b);
+		end
 	end
 end, false);
 
