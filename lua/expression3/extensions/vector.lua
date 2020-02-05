@@ -213,6 +213,8 @@ extension:RegisterMethod("v", "cross", "v", "v", 1, "Cross", true)
 
 extension:RegisterMethod("v", "length", "", "n", 1, "Length", true)
 
+extension:RegisterMethod("v", "lengthSqr", "", "n", 1, "LengthSqr", true)
+
 extension:RegisterMethod("v", "distance", "v", "n", 1, "Distance", true)
 
 extension:RegisterMethod("v", "normalized", "", "v", 1, "GetNormalized", true)

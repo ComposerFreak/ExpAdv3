@@ -171,6 +171,10 @@ extension:RegisterMethod("v2", "length", "", "n", 1, function(a)
 	return Vector(a.x, a.y, 0):Length2D()
 end, true);
 
+extension:RegisterMethod("v2", "lengthSqr", "v2", "n", 1, function(a)
+	return Vector(a.x, a.y, 0):Length2DSqr()
+end, true);
+
 extension:RegisterMethod("v2", "distance", "v2", "n", 1, function(a,b)
 	return math.Distance(a.x, a.y, b.x, b.y)
 end, true);
