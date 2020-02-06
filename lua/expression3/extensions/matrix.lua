@@ -53,6 +53,11 @@
 	extension:RegisterClass("mx2", "matrix2", isMatrix2, EXPR_LIB.NOTNIL)
 
 	extension:RegisterConstructor("mx2", "", Matrix2, true)
+	extension:RegisterConstructor("mx2", "n,n,n,n", Matrix2, true)
+	extension:RegisterConstructor("mx2", "n,n,n,n", Matrix2, true)
+	extension:RegisterConstructor("mx2", "v2,v2", function(a,b) return Matrix2(a.x, b.x, a.y, b.y) end, true)
+	extension:RegisterConstructor("mx2", "v2,v2", function(a,b) return Matrix2(a.x, a.y, b.x, b.y) end, true)
+
 
 --[[
 	*****************************************************************************************************************************************************
@@ -82,13 +87,54 @@
 		return Matrix2( (m2.y2 / det), (-m2.y / det), (-m2.x2 / det), (m2.x /det) )
 	end
 
+	local function identitym2(m2)
+		return Matrix2( 1, 0, 0, 1)
+	end
+
 --[[
 	*****************************************************************************************************************************************************
 		Matrix2 Operations
 	*****************************************************************************************************************************************************
 ]]--
 
+	extention:RegisterOperator("add", "mx2,mx2", "mx2", 1, function(a, b)
+		return Matrix2( (a.x + b.x), (a.y + b.y), (a.x2 + b.x2), (a.y2 + b.y2) )
+	end, true)
 
+	extention:RegisterOperator("sub", "mx2,mx2", "mx2", 1, function(a, b)
+		return Matrix2( (a.x - b.x), (a.y - b.y), (a.x2 - b.x2), (a.y2 - b.y2) )
+	end, true)
+
+	extention:RegisterOperator("mul", "n,mx2", "mx2", 1, function(n, a)
+		return Matrix2( (n * a.x), (n * a.y), (n * a.x2), (n * a.y2) )
+	end, true)
+
+	extention:RegisterOperator("mul", "mx2,n", "mx2", 1, function(a, n)
+		return Matrix2( (a.x * n), (a.y * n), (a.x2 * n), (a.y2 * n) )
+	end, true)
+
+	extention:RegisterOperator("mul", "mx2,v2", "mx2", 1, function(m2, v2)
+		return Vector2( ((m2.x * v2.x) + (m2.y * v2.y)), ((m2.x2 * v2.x) + (m2.y2 * v2.y)) )
+	end, true)
+
+	extention:RegisterOperator("mul", "mx2,mx2", "mx2", 1, function(a, b)
+		return Matrix2( ((a.x * b.x) + (a.y * b.x2)), ((a.x * b.y) + (a.y * b.y2)), ((a.x2 * b.x) + (a.y2 * b.x2)), ((a.x2 * b.y) + (a.y2 * b.y2)) )
+	end, true)
+
+	extention:RegisterOperator("div", "mx2,n", "mx2", 1, function(a, n)
+		return Matrix2( (a.x / n), (a.y / n), (a.x2 / n), (a.y2 / n) )
+	end, true)
+
+	extention:RegisterOperator("exp", "mx2,n", "mx2", 1, function(a, n)
+		
+		if n == -1 then return inversem2(a)
+		elseif n == 0 then return identitym2(a)
+		elseif n == 1 then return a
+		elseif n == 2 then return Matrix2( ((a.x * a.x) + (a.y * a.x2)), ((a.x * a.y) + (a.y * a.y2)), ((a.x2 * a.x) + (a.y2 * a.x2)), ((a.x2 * a.y) + (a.y2 * a.y2)) )
+		else return Matrix2( 0,0,0,0 )
+		
+		end
+	end, true)
 
 --[[
 	*****************************************************************************************************************************************************
