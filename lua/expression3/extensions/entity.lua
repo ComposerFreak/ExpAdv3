@@ -296,6 +296,14 @@ end, false);
 
 extension:SetSharedState();
 
+extension:RegisterMethod("e", "setMass", "n", "", 1, function(e, n)
+	local ph = e:GetPhysicsObject();
+
+	if IsValid(ph) then
+		ph:SetMass(n);
+	end
+end, true);
+
 extension:RegisterMethod("e", "getMass", "", "n", 1, function(e)
 	local ph = e:GetPhysicsObject();
 
@@ -314,6 +322,12 @@ extension:RegisterMethod("e", "getMassCenter", "", "v", 1, function(e)
 	end
 
 	return Vector(0, 0, 0);
+end, true);
+
+extension:RegisterMethod("ph", "setMass", "n", "", 1, function(ph, n)
+	if IsValid(ph) then
+		ph:SetMass(n);
+	end
 end, true);
 
 extension:RegisterMethod("ph", "getMass", "", "n", 1, function(ph)
