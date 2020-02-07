@@ -297,10 +297,12 @@ end, false);
 extension:SetServerState();
 
 extension:RegisterMethod("e", "use", "", "", 0, function(context, e)
-	if e.Use then
-		e:Use(context.player,context.player,1,0)
-	else
-		e:Fire("use","1",0)
+	if context:CanUseEntity(e) then
+		if e.Use then
+			e:Use(context.player,context.player,1,0)
+		else
+			e:Fire("use","1",0)
+		end
 	end
 end, false);
 
@@ -348,19 +350,23 @@ end, true);
 
 extension:SetServerState();
 
-extension:RegisterMethod("e", "setMass", "n", "", 1, function(e, n)
-	local ph = e:GetPhysicsObject();
+extension:RegisterMethod("e", "setMass", "n", "", 1, function(context, e, n)
+	if context:CanUseEntity(e) then
+		local ph = e:GetPhysicsObject();
 
-	if IsValid(ph) then
-		ph:SetMass(n);
+		if IsValid(ph) then
+			ph:SetMass(n);
+		end
 	end
-end, true);
+end, false);
 
-extension:RegisterMethod("ph", "setMass", "n", "", 1, function(ph, n)
-	if IsValid(ph) then
-		ph:SetMass(n);
+extension:RegisterMethod("ph", "setMass", "n", "", 1, function(context, ph, n)
+	if context:CanUseEntity(e) then
+		if IsValid(ph) then
+			ph:SetMass(n);
+		end
 	end
-end, true);
+end, false);
 
 --[[
 	General properties
