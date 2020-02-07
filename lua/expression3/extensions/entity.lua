@@ -291,18 +291,24 @@ extension:RegisterMethod("e", "extinguish", "", "", 0, function(context, e)
 end, false);
 
 --[[
+	Use Entity
+]]
+
+extension:SetServerState();
+
+extension:RegisterMethod("e", "use", "", "", 0, function(context, e)
+	if e.Use then
+		e:Use(context.player,context.player,1,0)
+	else
+		e:Fire("use","1",0)
+	end
+end, false);
+
+--[[
 	Mass
 ]]
 
 extension:SetSharedState();
-
-extension:RegisterMethod("e", "setMass", "n", "", 1, function(e, n)
-	local ph = e:GetPhysicsObject();
-
-	if IsValid(ph) then
-		ph:SetMass(n);
-	end
-end, true);
 
 extension:RegisterMethod("e", "getMass", "", "n", 1, function(e)
 	local ph = e:GetPhysicsObject();
@@ -324,12 +330,6 @@ extension:RegisterMethod("e", "getMassCenter", "", "v", 1, function(e)
 	return Vector(0, 0, 0);
 end, true);
 
-extension:RegisterMethod("ph", "setMass", "n", "", 1, function(ph, n)
-	if IsValid(ph) then
-		ph:SetMass(n);
-	end
-end, true);
-
 extension:RegisterMethod("ph", "getMass", "", "n", 1, function(ph)
 	if IsValid(ph) then
 		return ph:GetMass();
@@ -344,6 +344,22 @@ extension:RegisterMethod("ph", "getMassCenter", "", "v", 1, function(ph)
 	end
 
 	return Vector(0, 0, 0);
+end, true);
+
+extension:SetServerState();
+
+extension:RegisterMethod("e", "setMass", "n", "", 1, function(e, n)
+	local ph = e:GetPhysicsObject();
+
+	if IsValid(ph) then
+		ph:SetMass(n);
+	end
+end, true);
+
+extension:RegisterMethod("ph", "setMass", "n", "", 1, function(ph, n)
+	if IsValid(ph) then
+		ph:SetMass(n);
+	end
 end, true);
 
 --[[
