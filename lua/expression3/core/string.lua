@@ -65,7 +65,7 @@
 	extension:RegisterMethod("s", "right", "n", "s", 1, "string.Right", true);
 	extension:RegisterMethod("s", "setChar", "n,s", "s", 1, "string.SetChar", true);
 	extension:RegisterMethod("s", "split", "s", "s", 1, "string.Split", true);
-	extension:RegisterMethod("s", "startWith", "s", "s", 1, "string.StartWith", true);
+	extension:RegisterMethod("s", "startWith", "s", "b", 1, "string.StartWith", true);
 	extension:RegisterMethod("s", "sub", "n,n", "s", 1, "string.sub", true);
 	extension:RegisterMethod("s", "trim", "s", "s", 1, "string.Trim", true);
 	extension:RegisterMethod("s", "trimLeft", "s", "s", 1, "string.TrimLeft", true);
