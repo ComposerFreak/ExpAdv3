@@ -56,7 +56,9 @@
 ]]--
 	
 	extension:RegisterMethod("s", "char", "", "n", 1, "string.char", true);
-	extension:RegisterMethod("s", "endsWith", "s", "b", 1, "string.EndsWith", true);
+	extension:RegisterMethod("s", "endsWith", "s", "b", 1, function(s, str) 
+		return string.EndsWith(s, str);
+	end, true);
 	extension:RegisterMethod("s", "replace", "ptr,s,n", "s", 1, "string.gsub", true);
 	extension:RegisterMethod("s", "lower", "", "s", 1, "string.lower", true);
 	extension:RegisterMethod("s", "patternSafe", "", "s", 1, "string.PatternSafe", true);
@@ -65,7 +67,9 @@
 	extension:RegisterMethod("s", "right", "n", "s", 1, "string.Right", true);
 	extension:RegisterMethod("s", "setChar", "n,s", "s", 1, "string.SetChar", true);
 	extension:RegisterMethod("s", "split", "s", "s", 1, "string.Split", true);
-	extension:RegisterMethod("s", "startWith", "s", "s", 1, "string.StartWith", true);
+	extension:RegisterMethod("s", "startWith", "s", "b", 1, function(s, str) 
+		return string.StartWith(s, str);
+	end, true);
 	extension:RegisterMethod("s", "sub", "n,n", "s", 1, "string.sub", true);
 	extension:RegisterMethod("s", "trim", "s", "s", 1, "string.Trim", true);
 	extension:RegisterMethod("s", "trimLeft", "s", "s", 1, "string.TrimLeft", true);
