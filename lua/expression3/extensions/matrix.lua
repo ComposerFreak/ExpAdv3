@@ -54,7 +54,6 @@
 
 	extension:RegisterConstructor("mx2", "", Matrix2, true)
 	extension:RegisterConstructor("mx2", "n,n,n,n", Matrix2, true)
-	extension:RegisterConstructor("mx2", "n,n,n,n", Matrix2, true)
 	extension:RegisterConstructor("mx2", "v2,v2", function(a,b) return Matrix2(a.x, b.x, a.y, b.y) end, true)
 	extension:RegisterConstructor("mx2", "v2,v2", function(a,b) return Matrix2(a.x, a.y, b.x, b.y) end, true)
 
@@ -97,35 +96,35 @@
 	*****************************************************************************************************************************************************
 ]]--
 
-	extention:RegisterOperator("add", "mx2,mx2", "mx2", 1, function(a, b)
+	extension:RegisterOperator("add", "mx2,mx2", "mx2", 1, function(a, b)
 		return Matrix2( (a.x + b.x), (a.y + b.y), (a.x2 + b.x2), (a.y2 + b.y2) )
 	end, true)
 
-	extention:RegisterOperator("sub", "mx2,mx2", "mx2", 1, function(a, b)
+	extension:RegisterOperator("sub", "mx2,mx2", "mx2", 1, function(a, b)
 		return Matrix2( (a.x - b.x), (a.y - b.y), (a.x2 - b.x2), (a.y2 - b.y2) )
 	end, true)
 
-	extention:RegisterOperator("mul", "n,mx2", "mx2", 1, function(n, a)
+	extension:RegisterOperator("mul", "n,mx2", "mx2", 1, function(n, a)
 		return Matrix2( (n * a.x), (n * a.y), (n * a.x2), (n * a.y2) )
 	end, true)
 
-	extention:RegisterOperator("mul", "mx2,n", "mx2", 1, function(a, n)
+	extension:RegisterOperator("mul", "mx2,n", "mx2", 1, function(a, n)
 		return Matrix2( (a.x * n), (a.y * n), (a.x2 * n), (a.y2 * n) )
 	end, true)
 
-	extention:RegisterOperator("mul", "mx2,v2", "mx2", 1, function(m2, v2)
+	extension:RegisterOperator("mul", "mx2,v2", "v2", 1, function(m2, v2)
 		return Vector2( ((m2.x * v2.x) + (m2.y * v2.y)), ((m2.x2 * v2.x) + (m2.y2 * v2.y)) )
 	end, true)
 
-	extention:RegisterOperator("mul", "mx2,mx2", "mx2", 1, function(a, b)
+	extension:RegisterOperator("mul", "mx2,mx2", "mx2", 1, function(a, b)
 		return Matrix2( ((a.x * b.x) + (a.y * b.x2)), ((a.x * b.y) + (a.y * b.y2)), ((a.x2 * b.x) + (a.y2 * b.x2)), ((a.x2 * b.y) + (a.y2 * b.y2)) )
 	end, true)
 
-	extention:RegisterOperator("div", "mx2,n", "mx2", 1, function(a, n)
+	extension:RegisterOperator("div", "mx2,n", "mx2", 1, function(a, n)
 		return Matrix2( (a.x / n), (a.y / n), (a.x2 / n), (a.y2 / n) )
 	end, true)
 
-	extention:RegisterOperator("exp", "mx2,n", "mx2", 1, function(a, n)
+	extension:RegisterOperator("exp", "mx2,n", "mx2", 1, function(a, n)
 		
 		if n == -1 then return inversem2(a)
 		elseif n == 0 then return identitym2(a)
@@ -136,12 +135,249 @@
 		end
 	end, true)
 
+	extension:RegisterOperator("eq", "mx2,mx2", "n", 1, function(a, b)
+
+		if  a.x - b.x <= 0 and b.x - a.x <= 0 and
+			a.y - b.y <= 0 and b.y - a.y <= 0 and
+			a.x2 - b.x2 <= 0 and b.x2 - a.x2 <= 0 and
+			a.y2 - b.y2 <= 0 and b.y2 - a.y2 <= 0
+			then return 1 else return 0 end
+
+	end, true)
+
+	extension:RegisterOperator("neq", "mx2,mx2", "n", 1, function(a, b)
+
+		if  a.x - b.x > 0 and b.x - a.x > 0 and
+		a.y - b.y > 0 and b.y - a.y > 0 and
+		a.x2 - b.x2 > 0 and b.x2 - a.x2 > 0 and
+		a.y2 - b.y2 > 0 and b.y2 - a.y2 > 0
+		then return 1 else return 0 end
+
+	end, true)
+
+	extension:RegisterOperator("neg", "mx2", "mx2", 1, function(a)
+		return Matrix2( -a.x, -a.y, -a.x2, -a.y2)
+	end, true)
+
+	extension:RegisterOperator("is", "mx2", "n", 1, function(a)
+
+		if  a.x > 0 or -a.x > 0 or
+		a.y > 0 or -a.y > 0 or
+		a.x2 > 0 or -a.x2 > 0 or 
+		a.y2 > 0 or -a.y2 > 0
+		then return 1 else return 0 end
+ 
+	end, true)
+
 --[[
 	*****************************************************************************************************************************************************
-		Matrix2 Functions
+		Matrix2 Functions | Methods
 	*****************************************************************************************************************************************************
 ]]--
+	extension:RegisterAttribute("mx2", "x", "n")
+	extension:RegisterAttribute("mx2", "y", "n")
+	extension:RegisterAttribute("mx2", "x2", "n")
+	extension:RegisterAttribute("mx2", "y2", "n")
 
+	extension:RegisterLibray("matrix")
+	
+	extension:RegisterFunction("mx2", "diagonal2", "mx2", "v2", 1, function(m2)
+		return Matrix2( m2.x, m2.y2 )
+	end, true)
+
+	extension:RegisterFunction("mx2", "trace2", "mx2", "n", 1, function(m2)
+		return m2.x + m2.y2 
+	end, true)
+
+	extension:RegisterFunction("mx2", "det2", "mx2", "n", 1, function(m2)
+		return detm2( m2 )
+	end, true)
+
+	extension:RegisterFunction("mx2", "transpose2", "mx2", "n", 1, function(m2)
+		return Matrix2( m2.x, m2.x2, m2.y, m2.y2 )
+	end, true)
+
+	extension:RegisterFunction("mx2", "adj2", "mx2", "n", 1, function(m2)
+		return Matrix2( m2.y2, -m2.y, -m2.x2, m2.x )
+	end, true)
+
+	extension:RegisterMethod("mx2", "toString", "", "s", 1, function(m2)
+		return table.ToString(m2, "Matrix2", true)
+	end, true)
+	
+	extension:RegisterMethod("mx2", "row", "n", "v2", 1, function(m2, n)
+
+		local i
+		local t = { m2.x, m2.y, m2.x2, m2.y2 }
+		if n < 1 then i = 1
+		elseif n > 2 then i = 2
+		else i = n - (n % 1) end
+		
+		local x = t[i * 2 - 1]
+		local y = t[i * 2]
+
+		return Vector2( x, y )
+
+	end, true)
+
+	extension:RegisterMethod("mx2", "column", "n", "v2", 1, function(m2, n)
+
+		local i
+		local t = { m2.x, m2.y, m2.x2, m2.y2 }
+		if n < 1 then i = 1
+		elseif n > 2 then i = 2
+		else i = (n - (n % 1)) end
+		
+		local x = t[i]
+		local y = t[i + 2]
+
+		return Vector2( x, y )
+
+	end, true)
+
+	extension:RegisterMethod("mx2", "setRow", "n,n,n", "mx2", 1, function(m2, x, y, z)
+
+		local i
+		local t = { m2.x, m2.y, m2.x2, m2.y2 }
+		if x < 1 then i = 2
+		elseif x > 2 then i = 4
+		else i = (x - (x % 1)) * 2 end
+		
+		t[i - 1] = y
+		t[i] = z
+
+		return Matrix2( t[1], t[2], t[3], t[4] )
+
+	end, true)
+
+	extension:RegisterMethod("mx2", "setRow", "n,v2", "mx2", 1, function(m2, x, v2)
+
+		local i
+		local t = { m2.x, m2.y, m2.x2, m2.y2 }
+		if x < 1 then i = 2
+		elseif x > 2 then i = 4
+		else i = (x - (x % 1)) * 2 end
+		
+		t[i - 1] = v2.x
+		t[i] = v2.y
+
+		return Matrix2( t[1], t[2], t[3], t[4] )
+
+	end, true)
+
+	extension:RegisterMethod("mx2", "setColumn", "n,n,n", "mx2", 1, function(m2, x, y, z)
+
+		local i
+		local t = { m2.x, m2.y, m2.x2, m2.y2 }
+		if x < 1 then i = 1
+		elseif x > 2 then i = 2
+		else i = (x - (x % 1)) end
+		
+		t[i] = y
+		t[i + 2] = z
+
+		return Matrix2( t[1], t[2], t[3], t[4] )
+
+	end, true)
+
+	extension:RegisterMethod("mx2", "setColumn", "n,v2", "mx2", 1, function(m2, x, v2)
+
+		local i
+		local t = { m2.x, m2.y, m2.x2, m2.y2 }
+		if x < 1 then i = 1
+		elseif x > 2 then i = 2
+		else i = (x - (x % 1)) end
+		
+		t[i] = v2.x
+		t[i + 2] = v2.y
+
+		return Matrix2( t[1], t[2], t[3], t[4] )
+
+	end, true)
+
+	extension:RegisterMethod("mx2", "swapRows", "", "mx2", 1, function(m2)
+
+		local t = { m2.x, m2.y, m2.x2, m2.y2 }	
+
+		return Matrix2(t[3], t[4], t[1], t[2])
+
+	end, true)
+
+	extension:RegisterMethod("mx2", "swapColumns", "", "mx2", 1, function(m2)
+
+		local t = { m2.x, m2.y, m2.x2, m2.y2 }	
+
+		return Matrix2(t[2], t[1], t[4], t[3])
+
+	end, true)
+
+	extension:RegisterMethod("mx2", "element", "n,n", "n", 1, function(m2, x, y)
+		
+		local a, b
+
+		if x < 1 then a = 1
+		elseif x > 2 then a = 2
+		else a = (x - (x % 1)) end
+		
+		if y < 1 then b = 1
+		elseif y > 2 then b = 2
+		else b = (y - (y % 1)) end
+		
+		local i = a + (b - 1) * 2
+		local t = { m2.x, m2.y, m2.x2, m2.y2 }
+
+		return t[i]
+
+	end, true)
+
+	extension:RegisterMethod("mx2", "setElement", "n,n,n", "mx2", 1, function(m2, x, y, z)
+
+		local a, b
+
+		if x < 1 then a = 1
+		elseif x > 2 then a = 2
+		else a = (x - (x % 1)) end
+		
+		if y < 1 then b = 1
+		elseif y > 2 then b = 2
+		else b = (y - (y % 1)) end
+
+		local t = { m2.x, m2.y, m2.x2, m2.y2 }
+		t[a + (b - 1) * 2] = z
+
+		return Matrix2( t[1], t[2], t[3], t[4] )
+
+	end, true)
+
+	extension:RegisterMethod("mx2", "swapElement", "n,n,n,n", "mx2", 1, function(m2, w, x, y, z)
+
+		local a, b, c, d
+
+		if w < 1 then a = 1
+		elseif w > 3 then a = 3
+		else a = (w - (w % 1)) end
+		
+		if x < 1 then b = 1
+		elseif x > 3 then b = 3
+		else b = (x - (x % 1)) end
+
+		if y < 1 then c = 1
+		elseif y > 3 then c = 3
+		else c = (y - (y % 1)) end
+
+		if z < 1 then d = 1
+		elseif z > 3 then d = 3
+		else d = (z - (z % 1)) end
+
+		local e = a + (b - 1) * 2
+		local f = c + (d - 1) * 2
+
+		local t = { m2.x, m2.y, m2.x2, m2.y2 }
+		t[e], t[f] = t[f], t[e]
+
+		return Matrix2( t[1], t[2], t[3], t[4] )
+
+	end, true)
 
 
 --[[-------------------------------------------------------------------------------------------------------------------------------------------------]]--
@@ -161,6 +397,22 @@
 	--| x2 , y2 , z2 |--
 	--|              |--
 	--| x3 , y3 , z3 |--
+
+	matrix = {}
+	matrix.__index = matrix
+
+	local function Matrix(x,y,z, x2,y2,z2, x3,y3,z3)
+		return setmetatable({x = x,  y = y, z = z,	x2 = x2, y2 = y2, z2 = z2,	x3 = x3, y3 = y3, z3 = z3}, matrix)
+																			
+	end
+
+	local function isMatrix(m)
+
+		return istable(m) and #m == 9 and 	m.x and m.y and m.z 	and 	m.x2 and m.y2 and m.z2 		and 	m.x3 and m.y3 and m.z3
+
+	end
+
+	extension:RegisterClass("mx", "matrix", isMatrix, EXPR_LIB.NOTNIL)
 
 
 --[[
