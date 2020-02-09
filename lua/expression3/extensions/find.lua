@@ -312,25 +312,11 @@ end, false);
 
 extension:RegisterMethod("ed", "sortByDistance", "v", "", 0, function(a, v)
 
-	local d = { };
-
-	table.sort(a.a, function(a, b)
-		local d1 = d[a];
-
-		if not d1 then
-			d1 = IsValid(a) and (v - a:GetPos()):LengthSqr() or math.huge;
-			d[a] = d1;
-		end
-
-		if not d2 then
-			d2 = IsValid(b) and (v - b:GetPos()):LengthSqr() or math.huge;
-			d[b] = d2;
-		end
-
-		return d1 < d2;
+	table.sort(a.a, function(a, b)		
+		local aDis = IsValid(a) and (v - a:GetPos()):LengthSqr() or math.huge;
+		local bDis = IsValid(b) and (v - b:GetPos()):LengthSqr() or math.huge;
+		return aDis < bDis;
 	end)
-
-	d = nil;
 
 end, true);
 
