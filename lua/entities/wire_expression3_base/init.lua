@@ -155,8 +155,7 @@ function ENT:BuildWiredPorts(sort_in, sort_out)
 		local port = self.wire_outport_tbl[name];
 
 		if (port and port.wire == wireport.Type) then
-			local value = wireport.Value;
-			context.wire_out[name] = port.func_in and port.func_in(value) or value;
+			self:TriggerOutput(name, wireport.Value, true);
 		end
 	end
 
