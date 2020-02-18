@@ -92,7 +92,7 @@
 
 --[[
 	*****************************************************************************************************************************************************
-		Matrix2 Operations
+		Matrix2 Mathmatical Operations
 	*****************************************************************************************************************************************************
 ]]--
 
@@ -135,7 +135,13 @@
 		end
 	end, true)
 
-	extension:RegisterOperator("eq", "mx2,mx2", "n", 1, function(a, b)
+--[[
+	*****************************************************************************************************************************************************
+		Matrix2 Logical Operations
+	*****************************************************************************************************************************************************
+]]--
+
+	extension:RegisterOperator("eq", "mx2,mx2", "b", 1, function(a, b)
 
 		if  a.x - b.x <= 0 and b.x - a.x <= 0 and
 			a.y - b.y <= 0 and b.y - a.y <= 0 and
@@ -145,33 +151,21 @@
 
 	end, true)
 
-	extension:RegisterOperator("neq", "mx2,mx2", "n", 1, function(a, b)
-
-		if  a.x - b.x > 0 and b.x - a.x > 0 and
-		a.y - b.y > 0 and b.y - a.y > 0 and
-		a.x2 - b.x2 > 0 and b.x2 - a.x2 > 0 and
-		a.y2 - b.y2 > 0 and b.y2 - a.y2 > 0
-		then return 1 else return 0 end
-
+	extension:RegisterOperator("neq", "mx2,mx2", "b", 1, function(a, b)
+		return (a.x - b.x > 0 and b.x - a.x > 0 and a.y - b.y > 0 and b.y - a.y > 0 and a.x2 - b.x2 > 0 and b.x2 - a.x2 > 0 and a.y2 - b.y2 > 0 and b.y2 - a.y2 > 0)
 	end, true)
 
 	extension:RegisterOperator("neg", "mx2", "mx2", 1, function(a)
 		return Matrix2( -a.x, -a.y, -a.x2, -a.y2)
 	end, true)
 
-	extension:RegisterOperator("is", "mx2", "n", 1, function(a)
-
-		if  a.x > 0 or -a.x > 0 or
-		a.y > 0 or -a.y > 0 or
-		a.x2 > 0 or -a.x2 > 0 or 
-		a.y2 > 0 or -a.y2 > 0
-		then return 1 else return 0 end
- 
+	extension:RegisterOperator("is", "mx2", "b", 1, function(a)
+		return (a.x > 0 or -a.x > 0 or a.y > 0 or -a.y > 0 or a.x2 > 0 or -a.x2 > 0 or a.y2 > 0 or -a.y2 > 0);
 	end, true)
 
 --[[
 	*****************************************************************************************************************************************************
-		Matrix2 Functions | Methods
+		Matrix2 Atributes
 	*****************************************************************************************************************************************************
 ]]--
 	extension:RegisterAttribute("mx2", "x", "n")
@@ -179,25 +173,29 @@
 	extension:RegisterAttribute("mx2", "x2", "n")
 	extension:RegisterAttribute("mx2", "y2", "n")
 
-	extension:RegisterLibray("matrix")
-	
-	extension:RegisterFunction("mx2", "diagonal2", "mx2", "v2", 1, function(m2)
+--[[
+	*****************************************************************************************************************************************************
+		Matrix2 Methods
+	*****************************************************************************************************************************************************
+]]--
+
+	extension:RegisterMethod("mx2", "diagonal2", "mx2", "v2", 1, function(m2)
 		return Matrix2( m2.x, m2.y2 )
 	end, true)
 
-	extension:RegisterFunction("mx2", "trace2", "mx2", "n", 1, function(m2)
+	extension:RegisterMethod("mx2", "trace2", "mx2", "n", 1, function(m2)
 		return m2.x + m2.y2 
 	end, true)
 
-	extension:RegisterFunction("mx2", "det2", "mx2", "n", 1, function(m2)
+	extension:RegisterMethod("mx2", "det2", "mx2", "n", 1, function(m2)
 		return detm2( m2 )
 	end, true)
 
-	extension:RegisterFunction("mx2", "transpose2", "mx2", "n", 1, function(m2)
+	extension:RegisterMethod("mx2", "transpose2", "mx2", "n", 1, function(m2)
 		return Matrix2( m2.x, m2.x2, m2.y, m2.y2 )
 	end, true)
 
-	extension:RegisterFunction("mx2", "adj2", "mx2", "n", 1, function(m2)
+	extension:RegisterMethod("mx2", "adj2", "mx2", "n", 1, function(m2)
 		return Matrix2( m2.y2, -m2.y, -m2.x2, m2.x )
 	end, true)
 
