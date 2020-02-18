@@ -5,11 +5,12 @@
 	"description":	"The Expression Three Beta.",
 	"ignore"	:
 	[
+		"*.jpg",
 		"*.bat",
 		"*.txt",
 		"*.md",
 		".git*",
-		"*.pdf"
+		"*.pdf",
 		"pre-commit",
 		"LICENSE"
 	]

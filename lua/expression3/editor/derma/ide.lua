@@ -21,7 +21,9 @@ local sDefaultGateTab = [[
 
 /*
 	Generic Gate Code.
-	Wiki: https://github.com/Rusketh/ExpAdv3/wiki or [?].
+	
+	Wiki:     https://github.com/Rusketh/ExpAdv3/wiki or [?].
+	Workshop: https://steamcommunity.com/sharedfiles/filedetails/?id=2001386268
 */
 
 function void Main() {
@@ -44,7 +46,8 @@ local sDefaultScreenTab = [[
     This code uses another E3-Gates Screen events,
     providing an additonal parameter for the screens entity.
 
-    Wiki: https://github.com/Rusketh/ExpAdv3/wiki or [?].
+    Wiki:     https://github.com/Rusketh/ExpAdv3/wiki or [?].
+    Workshop: https://steamcommunity.com/sharedfiles/filedetails/?id=2001386268
 */
 
 entity gate = new entity(0);

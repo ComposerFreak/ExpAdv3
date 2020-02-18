@@ -67,6 +67,8 @@ if (SERVER) then
 	AddCSLuaFile( "expression3/editor/derma/button.lua" )
 	AddCSLuaFile( "expression3/editor/derma/autocomplete.lua" )
 	
+	resource.AddWorkshop("2001386268");
+
 	resource.AddFile("models/lemongate/gibsmodel_chipmesh001.mdl");
 	resource.AddFile("models/lemongate/gibsmodel_fanmesh001.mdl");
 	resource.AddFile("models/lemongate/lemongate.mdl");
