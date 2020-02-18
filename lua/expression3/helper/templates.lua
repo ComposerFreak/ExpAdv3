@@ -557,7 +557,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.Examples", function(pnl)
 
 	local editor = Golem.GetInstance( );
 
-	local files = file.Find(path .. "*.txt", "GAME");
+	local files = file.Find(path .. "*.lua", "GAME");
 
 	for i, filename in pairs( files ) do
 		local node = pnl:AddNode("Examples", filename);
