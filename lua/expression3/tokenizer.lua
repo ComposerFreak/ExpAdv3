@@ -556,15 +556,15 @@ function TOKENIZER.Loop(this)
 				this:NextChar();
 			elseif (c == "n") then
 				escp = false;
-				this.__char = "\n";
+				this.__char = "\\n";
 				this:NextChar();
 			elseif (c == "t") then
 				escp = false;
-				this.__char = "\t";
+				this.__char = "\\t";
 				this:NextChar();
 			elseif (c == "r") then
 				escp = false;
-				this.__char = "\r";
+				this.__char = "\\r";
 				this:NextChar();
 			elseif (this:NextPattern("^([0-9]+)")) then
 				local n = tonumber(this.__match);
