@@ -1,8 +1,14 @@
+/***********************************************************************************
+    Ruskeths - E3 Clock
+***********************************************************************************/
 @name "Ruskeths E3 Clock";
 
 server {
     entity gate = system.getEntity();
     
+/***********************************************************************************
+    CLOCK BODY
+***********************************************************************************/
     hologram bg = hololib.create("models/sprops/geometry/t_fdisc_12.mdl");
     bg.setPos(gate.toWorld(new vector(0, 0, -2)));
     bg.setAng(gate.toWorld(new angle(0, 0, -90)));
@@ -26,7 +32,11 @@ server {
     cog.setMaterial("models/debug/debugwhite");
     cog.setColor(new color(0, 0, 0));
     cog.parent(gate);
-    
+
+/***********************************************************************************
+    CLOCK FACE
+***********************************************************************************/
+
     function void buildHours(int x, int y, int hour) {
         string h = math.toString(hour);
         angle ang = gate.toWorld( new angle(0, -90, 90) );
@@ -75,10 +85,15 @@ server {
     }
     
     int i = 0;
+    
     timer.create("buildDisplay", 0.1, 60, function() {
         buildDisplay(i);
         i += 1;
     });
+
+/***********************************************************************************
+    CLOCK HANDS
+***********************************************************************************/
     
     timer.create("buildHands", 7, 1, function() {
         
@@ -144,4 +159,46 @@ server {
             updateHours(now.hour, now.minute);
         });
     });
+    
+/***********************************************************************************
+    CLOCK TEXT
+***********************************************************************************/ 
+   
+    function void holoString(string text, hologram parent, vector pos, angle ang) {
+        while(#text > 0) {
+            string char = text[1];
+            
+            if (char != " ") {
+                string prefix = "models/sprops/misc/alphanum/alphanum_";
+                if (char.upper() != char) prefix += "l_";
+                
+                hologram letter = hololib.create(prefix + char + ".mdl");
+                letter.setColor(new color(0, 255, 255));
+                letter.setScale(new vector(0.5));
+                letter.parent(parent);
+                letter.setPos(pos);
+                letter.setAng(ang);
+                parent = letter;
+            }
+            
+            text = text.sub(2);
+            pos -= (parent.forward() * 5);
+        }
+    }
+    
+    timer.create("buildText", 5, 1, function() {
+        angle ang = gate.toWorld( new angle(0, -90, 90) );
+        
+        vector pos = gate.toWorld( new vector(-10, -25, 0.5));
+        holoString("Expression 3", bg, pos, ang);
+        
+        pos = gate.toWorld( new vector(10, -10, 0.5));
+        holoString("Clock", bg, pos, ang);
+    });
+    
+    
 }
+    
+/***********************************************************************************
+    SCRIPT END
+***********************************************************************************/

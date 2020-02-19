@@ -55,26 +55,27 @@
 	*****************************************************************************************************************************************************
 ]]--
 	
-	extension:RegisterMethod("s", "char", "", "n", 1, "string.char", true);
+	extension:RegisterMethod("s", "char", "", "n", 1, "char", true);
 	extension:RegisterMethod("s", "endsWith", "s", "b", 1, function(s, str) 
 		return string.EndsWith(s, str);
 	end, true);
-	extension:RegisterMethod("s", "replace", "ptr,s,n", "s", 1, "string.gsub", true);
-	extension:RegisterMethod("s", "lower", "", "s", 1, "string.lower", true);
-	extension:RegisterMethod("s", "patternSafe", "", "s", 1, "string.PatternSafe", true);
-	extension:RegisterMethod("s", "replace", "", "s", 1, "string.", true);
-	extension:RegisterMethod("s", "reverse", "", "s", 1, "string.reverse", true);
-	extension:RegisterMethod("s", "right", "n", "s", 1, "string.Right", true);
-	extension:RegisterMethod("s", "setChar", "n,s", "s", 1, "string.SetChar", true);
-	extension:RegisterMethod("s", "split", "s", "s", 1, "string.Split", true);
+	extension:RegisterMethod("s", "replace", "ptr,s,n", "s", 1, "gsub", true);
+	extension:RegisterMethod("s", "lower", "", "s", 1, "lower", true);
+	extension:RegisterMethod("s", "patternSafe", "", "s", 1, "PatternSafe", true);
+	extension:RegisterMethod("s", "replace", "", "s", 1, "replace", true);
+	extension:RegisterMethod("s", "reverse", "", "s", 1, "reverse", true);
+	extension:RegisterMethod("s", "right", "n", "s", 1, "Right", true);
+	extension:RegisterMethod("s", "setChar", "n,s", "s", 1, "SetChar", true);
+	extension:RegisterMethod("s", "split", "s", "s", 1, "Split", true);
 	extension:RegisterMethod("s", "startWith", "s", "b", 1, function(s, str) 
 		return string.StartWith(s, str);
 	end, true);
-	extension:RegisterMethod("s", "sub", "n,n", "s", 1, "string.sub", true);
-	extension:RegisterMethod("s", "trim", "s", "s", 1, "string.Trim", true);
-	extension:RegisterMethod("s", "trimLeft", "s", "s", 1, "string.TrimLeft", true);
-	extension:RegisterMethod("s", "trimRight", "s", "s", 1, "string.TrimRight", true);
-	extension:RegisterMethod("s", "upper", "", "s", 1, "string.upper", true);
+	extension:RegisterMethod("s", "sub", "n", "s", 1, "sub", true);
+	extension:RegisterMethod("s", "sub", "n,n", "s", 1, "sub", true);
+	extension:RegisterMethod("s", "trim", "s", "s", 1, "Trim", true);
+	extension:RegisterMethod("s", "trimLeft", "s", "s", 1, "TrimLeft", true);
+	extension:RegisterMethod("s", "trimRight", "s", "s", 1, "TrimRight", true);
+	extension:RegisterMethod("s", "upper", "", "s", 1, "upper", true);
 
 --[[
 	*****************************************************************************************************************************************************

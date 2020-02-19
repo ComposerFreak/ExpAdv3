@@ -537,7 +537,7 @@ function PARSER.Root(this)
 	return this:EndInstruction(seq, {stmts = stmts});
 end
 
-function PARSER.Block_1(this, _end, lcb)
+function PARSER.Block_1(this, _end, lcb, returnable)
 	this:ExcludeWhiteSpace( "Further input required at end of code, incomplete statement" )
 
 	if (this:Accept("lcb")) then
