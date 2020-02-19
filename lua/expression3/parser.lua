@@ -259,13 +259,12 @@ end
 
 --[[
 ]]
+
 function PARSER.Next(this)
 	this.__pos = this.__pos + 1;
 
 	this.__token = this.__tokens[this.__pos];
 	this.__next = this.__tokens[this.__pos + 1];
-
-	--print("NEXT ->", this.__pos, this.__total, #this.__tokens)
 
 	if (this.__pos > this.__total) then
 		return false;
@@ -345,13 +344,6 @@ function PARSER.StepBackward(this, steps)
 
 	local pos = this.__pos - (steps + 1);
 
-	--[[if (pos == 0) then
-		this.__pos = 0;
-		this.__token = this.__tokens[0];
-		this.__next = this.__tokens[1];
-		return;
-	end]]--
-
 	if (pos > this.__total) then
 		pos = this.__total;
 	end
@@ -383,6 +375,33 @@ function PARSER.GotoToken(this, token, offset)
 	this.__pos = pos;
 
 	this:Next();
+end
+
+function PARSER.CheckForSequence(this, type, ...)
+	local tkn = this.__token;
+
+	if (not tkn) then
+		return false;
+	end
+
+	if (not this:Accept(type)) then
+		return false;
+	end
+
+	local res = true;
+	local types = {...};
+
+	for i = 1, #types do
+		res = this:Accept(types[i]);
+
+		if (not res) then
+			break;
+		end
+	end
+
+	this:GotoToken(tkn);
+
+	return res;
 end
 
 function PARSER.GetFirstTokenOnLine(this)
@@ -853,7 +872,7 @@ function PARSER.Statment_0(this)
 	return stmt;
 end;
 
---
+
 function PARSER.Statment_1(this)
 	if (this:Accept("try")) then
 		local inst = this:StartInstruction("try", this.__token);
@@ -1080,7 +1099,7 @@ function PARSER.Statment_7(this)
 
 		local var_type = this.__token.data;
 
-		if (var_type == "f" and this:CheckToken("typ")) then
+		if ((var_type == "f" and this:CheckToken("typ")) or this:CheckToken("lpa")) then
 			this:StepBackward(1);
 			return this:Statment_8()
 		end
@@ -1850,7 +1869,14 @@ end
 
 function PARSER.Expression_27(this)
 
-	if (this:Accept("new")) then
+	local new = this:Accept("new");
+
+	if (this:CheckForSequence("typ", "lpa") && this.__next.data ~= "f") then
+		new = true;
+	end
+
+	if ( new ) then
+
 		local inst = this:StartInstruction("new", this.__token);
 
 		local class = this:Require("typ", "Type expected after new for constructor.");
@@ -2048,6 +2074,7 @@ function PARSER.Expression_Trailing(this, expr)
 
 			expr = this:EndInstruction(inst, {expressions = expressions, class = class});
 		elseif (this:Accept("lpa")) then
+
 			local inst = this:StartInstruction("call", expr.token);
 
 			local expressions = {};

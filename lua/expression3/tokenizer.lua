@@ -554,7 +554,7 @@ function TOKENIZER.Loop(this)
 			elseif (c == "\\") then
 				escp = false;
 				this:NextChar();
-			elseif (c == strChar) then
+			elseif (c == "n") then
 				escp = false;
 				this.__char = "\n";
 				this:NextChar();

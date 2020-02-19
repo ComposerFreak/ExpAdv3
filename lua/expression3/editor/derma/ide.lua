@@ -334,8 +334,9 @@ function PANEL:Init( )
 	self.pnlSearch:InvalidateLayout( );
 	self.pnlSearch:Close(true);
 	
-	self:NewMenuTab( "options" )
-	self:NewMenuTab( "options2" )
+	--This was annoying.
+	--self:NewMenuTab( "options" )
+	--self:NewMenuTab( "options2" )
 	
 	Golem.Font.OnFontChange = function( Font, sFontID )
 		for i = 1, #self.pnlTabHolder.Items do

@@ -36,6 +36,14 @@ end, true);
 
 extension:SetSharedState();
 
+extension:RegisterMethod("ph", "getPos", "", "v", 1, "GetPos");
+
+extension:RegisterMethod("ph", "pos", "", "v", 1, "GetPos");
+
+extension:RegisterMethod("ph", "getAng", "", "v", 1, "GetAng");
+
+extension:RegisterMethod("ph", "ang", "", "v", 1, "GetAng");
+
 
 extension:RegisterMethod( "ph", "forward", "", "v", 1, function(e)
 	if IsValid(e) then

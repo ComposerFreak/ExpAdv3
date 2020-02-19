@@ -68,11 +68,11 @@ extension:RegisterMethod("e", "parent", "", "e", 1, "GetParent");
 
 extension:RegisterMethod("e", "getPos", "", "v", 1, "GetPos");
 
+extension:RegisterMethod("e", "pos", "", "v", 1, "GetPos");
+
 extension:RegisterMethod("e", "getAng", "", "a", 1, "GetAngles");
 
-extension:RegisterMethod("ph", "pos", "", "v", 1, "GetPos");
-
-extension:RegisterMethod("ph", "ang", "", "v", 1, "GetAng");
+extension:RegisterMethod("e", "ang", "", "a", 1, "GetAngles");
 
 --[[
 	OBB Mins / Maxs
