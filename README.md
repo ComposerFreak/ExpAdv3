@@ -1,6 +1,12 @@
 # ExpAdv3
 Expression Advanced 3
 
+Workshop: 
+https://steamcommunity.com/sharedfiles/filedetails/?id=2001386268
+
+Video Tutorials:
+https://steamcommunity.com/sharedfiles/filedetails/?id=2001386268
+
 #Trello:
 https://trello.com/b/SwiMrYBH/expression-advanced-3
 
