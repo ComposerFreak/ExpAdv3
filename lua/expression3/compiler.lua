@@ -23,6 +23,12 @@ local function name(id)
 end
 
 local function names(ids)
+
+	if (ids == null) then
+		debug.Trace();
+		print("Names got nil!")
+	end
+
 	if (isstring(ids)) then
 		ids = string_Explode(",", ids);
 	end
@@ -3094,6 +3100,7 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 
 	local expr = args[1];
 	local res, count, price = this:Compile(expr);
+	--variables, class
 
 	if (res == "_cls") then
 		if (token.type == "typ") then
@@ -3124,16 +3131,38 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 
 	local signature = table_concat(prms, ",");
 
-	if (res == "f" and expr.type == "var") then
-		local c, s, info = this:GetVariable(expr.data.variable);
-		-- The var instruction will have already validated this variable.
+	local parent = inst.parent;
+	local resultClass, resultCount;
 
-		if (info and info.signature) then
+	if (parent and parent.data) then
+		if (parent.data.variables and parent.data.class) then
+			resultClass = parent.data.class;
+			resultCount = #parent.data.variables;
+		end
+	end	
 
-			this:writeToBuffer(inst, "invoke(CONTEXT, %q, %i,", info.resultClass, info.resultCount);
+	if (res == "f") then
 
-			if (info.signature ~= signature) then
-				this:Throw(token, "Invalid arguments to user function got %s(%s), %s(%s) expected.", expr.data.variable, names(signature), expr.data.variable, names(info.signature));
+		local c, s, info;
+
+		if (expr.type == "var") then
+			c, s, info = this:GetVariable(expr.data.variable);
+			-- The var instruction will have already validated this variable.
+
+			if (info and info.signature) then
+				resultClass = info.resultClass;
+				resultCount = info.resultCount;
+			end
+		end
+
+		if (resultClass and resultCount) then
+
+			this:writeToBuffer(inst, "invoke(CONTEXT, %q, %i,", resultClass, resultCount);
+
+			if (info) then
+				if (info.signature and info.signature ~= signature) then
+					this:Throw(token, "Invalid arguments to user function got %s(%s), %s(%s) expected.", expr.data.variable, names(signature), expr.data.variable, names(info.signature));
+				end
 			end
 
 			this:addInstructionToBuffer(inst, expr);
@@ -3164,7 +3193,7 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 
 			this:writeToBuffer(inst, ")");
 
-			return info.resultClass, info.resultCount, (price + EXPR_MIN);
+			return resultClass, resultCount, (price + EXPR_MIN);
 		end
 	end
 

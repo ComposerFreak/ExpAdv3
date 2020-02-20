@@ -131,14 +131,13 @@ end
 	Basic functions
 ]]
 
-extension:RegisterMethod("e", "totalConstraints", "", "b", 1, function(e)
+extension:RegisterMethod("e", "totalConstraints", "", "n", 1, function(e)
 	local arr = getContraints(e);
 	return #arr;
 end, true);
 
 extension:RegisterMethod("e", "isConstrained", "", "n", 1, function(e)
 	return getContraints(e, nil, true) and true or false;
-	
 end, true);
 
 --[[
