@@ -277,6 +277,27 @@ function PARSER.HasTokens(this)
 	return this.__next ~= nil;
 end
 
+function PARSER.CheckCurrentToken(this, type, ...)
+	local tkn = this.__next;
+	
+	if (tkn) then
+		for _, t in pairs({type, ...}) do
+			local tokenType = tkn.type;
+
+			if (tokenType == "var" and this:GetUserObject(tkn.data)) then
+				tokenType = "typ";
+			end
+
+			if (tokenType == t) then
+				return true;
+			end
+		end
+	end
+
+	return false;
+end
+
+
 function PARSER.CheckToken(this, type, ...)
 	if (this.__pos < this.__total) then
 		local tkn = this.__next;
@@ -1871,7 +1892,7 @@ function PARSER.Expression_27(this)
 
 	local new = this:Accept("new");
 
-	if (this:CheckForSequence("typ", "lpa") && this.__next.data ~= "f") then
+	if (not new && (this:CheckForSequence("typ", "lpa") && this.__next.data ~= "f")) then
 		new = true;
 	end
 

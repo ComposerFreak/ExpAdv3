@@ -3095,6 +3095,14 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 	local expr = args[1];
 	local res, count, price = this:Compile(expr);
 
+	if (res == "_cls") then
+		if (token.type == "typ") then
+			this:Throw(token, "Invalid use of constructor, must be part of statment.");
+		else
+			this:Throw(token, "Invalid use of constructor, class name must be defined.");
+		end
+	end
+
 	local prms = {};
 
 	if (tArgs > 1) then
