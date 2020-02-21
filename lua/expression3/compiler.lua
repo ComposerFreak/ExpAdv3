@@ -3307,10 +3307,6 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 	local parent = inst.parent;
 	local resultClass, resultCount;
 
-	print("-> type:", parent.type);
-	print("-> vars:", parent.data.variables);
-	print("-> class:", parent.data.class);
-
 	if (parent and parent.data) then
 		if (parent.data.variables) then 
 			
