@@ -43,13 +43,27 @@ local function names(ids)
 	return table_concat(names,", ")
 end
 
+local function strrep(word, count, sep) 
+	local a = {};
+
+	for i = 1, count do 
+		a[i] = word;
+	end
+
+	return table.concat(a, sep);
+end
+
 --[[
 
 ]]
 
 local function fakeInstruction(inst, lua, r, c)
 	local new = table.Copy(inst);
+
 	new.buffer = { lua };
+	new.result = r or new.result;
+	new.rCount = c or new.rCount;
+
 	return new;
 end
 
@@ -377,6 +391,7 @@ local bannedVars = {
 	["_METH"] = true,
 	["_FUN"] = true,
 	["invoke"] = true,
+	["assert"] = true,
 	["in"] = true,
 	["if"] = true,
 	["then"] = true,
@@ -2855,7 +2870,7 @@ function COMPILER.Compile_METH(this, inst, token, data)
 	this:CheckState(op.state, token, "Method %s.%s(%s)", name(mClass), method, names(ids));
 
 	if (type(op.operator) == "function") then
-		this:writeMethodCall(inst, op, unpack(expressions));
+		this:writeMethodCall(inst, op, expr, unpack(expressions, 2));
 	elseif (type(op.operator) == "string") then
 		this:addInstructionToBuffer(inst, expr);
 

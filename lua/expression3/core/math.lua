@@ -109,7 +109,18 @@
 	extension:RegisterFunction("math", "atan2", "n,n", "n", 1, math.atan2, true);
 	extension:RegisterFunction("math", "lerp", "n,n,n", "n", 1, Lerp, true);
 
-	extension:RegisterFunction("math", "toString", "n", "s", 1, function(n) return "" .. n; end, true);
+	extension:RegisterFunction("math", "round", "n", "n", 1, function(n)
+		return math.floor(n + 0.5);
+	end, true);
+	
+	extension:RegisterFunction("math", "round", "n,n", "n", 1, function(n, d)
+		local shf = 10 ^ floor(d + 0.5);
+		return math.floor(n * shf + 0.5) / shf;
+	end, true);
+
+	extension:RegisterFunction("math", "toString", "n", "s", 1, function(n)
+		return "" .. n;
+	end, true);
 
 --[[
 	*****************************************************************************************************************************************************

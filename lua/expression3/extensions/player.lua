@@ -30,6 +30,8 @@ extension:RegisterWiredInport("p", "ENTITY");
 
 extension:RegisterWiredOutport("p", "ENTITY");
 
+extension:RegisterNativeDefault("p", "Entity(0)");
+
 --[[
 	Operators
 ]]
@@ -69,75 +71,139 @@ end, true);
 	SteamID
 ]]
 
-extension:RegisterMethod("p", "steamID", "", "s", 1, "SteamID");
+extension:RegisterMethod("p", "steamID", "", "s", 1, function(p)
+	if IsValid(p) then return p:SteamID() or ""; end
+	return "";
+end, true);
 
-extension:RegisterMethod("p", "steamID64", "", "s", 1, "SteamID64");
+extension:RegisterMethod("p", "steamID64", "", "s", 1, function(p)
+	if IsValid(p) then return p:SteamID64() or ""; end
+	return "";
+end, true);
 
 --[[
 	Admins
 ]]
 
-extension:RegisterMethod("p", "isBot", "", "b", 1, "IsBot");
+extension:RegisterMethod("p", "isBot", "", "b", 1, function(p)
+	if IsValid(p) then return p:IsBot(); end
+	return false;
+end, false);
 
-extension:RegisterMethod("p", "isAdmin", "", "b", 1, "IsAdmin");
+extension:RegisterMethod("p", "isAdmin", "", "b", 1, function(p)
+	if IsValid(p) then return p:IsAdmin(); end
+	return false;
+end, false);
 
-extension:RegisterMethod("p", "isSuperAdmin", "", "b", 1, "IsSuperAdmin");
+extension:RegisterMethod("p", "isSuperAdmin", "", "b", 1, function(p)
+	if IsValid(p) then return p:IsSuperAdmin(); end
+	return false;
+end, false);
 
 --[[
 	Is Player doing somthing?
 ]]
 
-extension:RegisterMethod("p", "isTyping", "", "b", 1, "IsTyping");
+extension:RegisterMethod("p", "isTyping", "", "b", 1, function(p)
+	if IsValid(p) then return p:IsTyping(); end
+	return false;
+end, true);
 
-extension:RegisterMethod("p", "isCrouching", "", "b", 1, "Crouching");
+extension:RegisterMethod("p", "isCrouching", "", "b", 1, function(p)
+	if IsValid(p) then return p:Crouching(); end
+	return false;
+end, true);
 
-extension:RegisterMethod("p", "isInVehicle", "", "b", 1, "InVehicle");
+extension:RegisterMethod("p", "isInVehicle", "", "b", 1, function(p)
+	if IsValid(p) then return p:InVehicle(); end
+	return false;
+end, true);
 
-extension:RegisterMethod("p", "isFlashlightOn", "", "b", 1, "FlashlightIsOn");
+extension:RegisterMethod("p", "isFlashlightOn", "", "b", 1, function(p)
+	if IsValid(p) then return p:FlashlightIsOn(); end
+	return false;
+end, true);
 
 --[[
 	Player usage
 ]]
 
-extension:RegisterMethod("p", "getVehicle", "", "e", 1, "GetVehicle");
+extension:RegisterMethod("p", "getVehicle", "", "e", 1, function(p)
+	if IsValid(p) then return p:GetVehicle() or Entity(0); end
+	return Entity(0);
+end, true);
 
-extension:RegisterMethod("p", "getTool", "", "s", 1, function(p) return p:GetTool().Mode end);
+extension:RegisterMethod("p", "getTool", "", "s", 1, function(p)
+	if IsValid(p) then return p:GetTool().Mode or ""; end
+	return "";
+end, true);
 
-extension:RegisterMethod("p", "getToolName", "", "s", 1, function(p) return p:GetTool().Name end);
+extension:RegisterMethod("p", "getToolName", "", "s", 1, function(p)
+	if IsValid(p) then return p:GetTool().Name or ""; end
+	return "";
+end, true);
 
 --[[
 	Player information
 ]]
 
-extension:RegisterMethod("p", "name", "", "s", 1, "Name");
+extension:RegisterMethod("p", "name", "", "s", 1, function(p)
+	if IsValid(p) then return p:Name() or ""; end
+	return "";
+end, true);
 
-extension:RegisterMethod("p", "ping", "", "n", 1, "Ping");
+extension:RegisterMethod("p", "ping", "", "n", 1, function(p)
+	if IsValid(p) then return p:Ping(); end
+	return 0;
+end);
 
-extension:RegisterMethod("p", "kills", "", "n", 1, "Frags");
+extension:RegisterMethod("p", "kills", "", "n", 1, function(p)
+	if IsValid(p) then return p:Frags(); end
+	return 0;
+end);
 
-extension:RegisterMethod("p", "deaths", "", "n", 1, "Deaths");
+extension:RegisterMethod("p", "deaths", "", "n", 1, function(p)
+	if IsValid(p) then return p:Deaths(); end
+	return 0;
+end);
 
 --[[
 	Weapons
 ]]
 
 extension:RegisterMethod("p", "getAmmoPrimary", "", "s", 1, function(p)
-	if p:GetActiveWeapon():IsValid() then return p:GetActiveWeapon():Ammo1() end
+	if IsValid(p) then
+		if p:GetActiveWeapon():IsValid() then
+			return p:GetActiveWeapon():Ammo1();
+		end
+	end
 	return -1
 end)
 
 extension:RegisterMethod("p", "getAmmoSecondary", "", "s", 1, function(p)
-	if p:GetActiveWeapon():IsValid() then return p:GetActiveWeapon():Ammo2() end
+	if IsValid(p) then
+		if p:GetActiveWeapon():IsValid() then
+			return p:GetActiveWeapon():Ammo2();
+		end
+	end
 	return -1
 end)
 
 extension:RegisterMethod("p", "getClipPrimary", "", "s", 1, function(p)
-	if p:GetActiveWeapon():IsValid() then return p:GetActiveWeapon():Clip1() end
+	if IsValid(p) then
+		if p:GetActiveWeapon():IsValid() then
+			return p:GetActiveWeapon():Clip1();
+		end
+	end
 	return -1
 end)
 
 extension:RegisterMethod("p", "getClipSecondary", "", "s", 1, function(p)
-	if p:GetActiveWeapon():IsValid() then return p:GetActiveWeapon():Clip2() end
+	if IsValid(p) then
+		if p:GetActiveWeapon():IsValid() then
+			return p:GetActiveWeapon():Clip2();
+		end
+	end
 	return -1
 end)
 
@@ -160,7 +226,10 @@ end)
 
 extension:SetClientState();
 
-extension:RegisterMethod("p", "steamFriendStatus", "", "s", 1, "GetFriendStatus");
+extension:RegisterMethod("p", "steamFriendStatus", "", "s", 1, function(p)
+	if IsValid(p) then return p:GetFriendStatus() or ""; end
+	return "";
+end, true);
 
 --[[
 	Aiming
@@ -168,21 +237,40 @@ extension:RegisterMethod("p", "steamFriendStatus", "", "s", 1, "GetFriendStatus"
 
 extension:SetSharedState();
 
-extension:RegisterMethod("p", "aimPos", "", "v", 1, function(p) return p:GetEyeTrace().HitPos end, true);
+extension:RegisterMethod("p", "aimPos", "", "v", 1, function(p)
+	if IsValid(p) then return p:GetEyeTrace().HitPos or Vector(0, 0, 0); end
+	return Vector(0, 0, 0);
+end, true);
 
-extension:RegisterMethod("p", "aimEntity", "", "e", 1, function(p) return p:GetEyeTrace().Entity end, true);
+extension:RegisterMethod("p", "aimEntity", "", "e", 1, function(p)
+	if IsValid(p) then return p:GetEyeTrace().Entity or Entity(0); end
+	return Entity(0);
+end, true);
 
-extension:RegisterMethod("p", "eyeTrace", "", "t", 1, function(p) return p:GetEyeTrace() end, true);
+extension:RegisterMethod("p", "eyePos", "", "v", 1, function(p)
+	if IsValid(p) then return p:EyePos(); end
+	return Vector(0, 0, 0);
+end, false);
 
-extension:RegisterMethod("p", "eyePos", "", "v", 1, "EyePos");
+extension:RegisterMethod("p", "eyeAngles", "", "a", 1, function(p)
+	if IsValid(p) then return p:EyeAngles(); end
+	return Angle(0, 0, 0);
+end, false);
 
-extension:RegisterMethod("p", "eyeAngles", "", "a", 1, "EyeAngles");
+extension:RegisterMethod("p", "getPos", "", "v", 1, function(p)
+	if IsValid(p) then return p:GetPos(); end
+	return Vector(0, 0, 0);
+end, false);
 
-extension:RegisterMethod("p", "getPos", "", "v", 1, "GetPos");
+extension:RegisterMethod("p", "getAngles", "", "v", 1, function(p)
+	if IsValid(p) then return p:GetAngles(); end
+	return Vector(0, 0, 0);
+end, false);
 
-extension:RegisterMethod("p", "getAngles", "", "v", 1, "GetAngles");
-
-extension:RegisterMethod("p", "teamID", "", "n", 1, "Team");
+extension:RegisterMethod("p", "teamID", "", "n", 1, function(p)
+	if IsValid(p) then return p:Team(); end
+	return 0;
+end, false);
 
 --[[
 	Teams
@@ -222,9 +310,13 @@ extension:RegisterFunction("team", "valid", "n", "b", 1, team.Valid, true);
 
 extension:RegisterLibrary("players");
 
-extension:RegisterFunction("players", "getBySteamID", "s", "p", 1, player.GetBySteamID, true);
+extension:RegisterFunction("players", "getBySteamID", "s", "p", 1, function(s)
+	return player.GetBySteamID(s) or Entity(0);
+end, true);
 
-extension:RegisterFunction("players", "getBySteamID64", "s", "p", 1, player.GetBySteamID64, true);
+extension:RegisterFunction("players", "getBySteamID64", "s", "p", 1, function(s)
+	return player.GetBySteamID64(s) or Entity(0);
+end, true);
 
 extension:SetClientState();
 

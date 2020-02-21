@@ -27,6 +27,7 @@
 	local class_str = extension:RegisterClass("s", {"string"}, isstring, EXPR_LIB.NOTNIL);
 	extension:RegisterWiredInport("s", "STRING");
 	extension:RegisterWiredOutport("s", "STRING");
+	extension:RegisterNativeDefault("s", "\"\"");
 
 --[[
 	*****************************************************************************************************************************************************

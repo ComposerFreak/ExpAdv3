@@ -40,6 +40,8 @@ extension:RegisterConstructor("c", "n,n,n,n", function(r, g, b, a)
 	return Color(r or 0, g or 0, b or 0, a or 255);
 end, true);
 
+extension:RegisterNativeDefault("c", "Color(0, 0, 0, 0)");
+
 --[[
 	Operators
 ]]

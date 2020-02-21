@@ -25,8 +25,8 @@ local zero = {
 	isWire = false,
 	valid = false,
 	type = "invalid",
-	entity1 = Entity(-1),
-	entity2 = Entity(-1),
+	entity1 = Entity(0),
+	entity2 = Entity(0),
 }
 --[[
 	
@@ -163,13 +163,13 @@ end, true);
 
 extension:RegisterMethod("e", "isWeldedTo", "", "e", 1, function(e)
 	local con = getContraints(e, "Weld", true);
-	if (not con) then return Entity(-1); end
+	if (not con) then return Entity(0); end
 	return con.entity1;
 end, true);
 
 extension:RegisterMethod("e", "isWeldedTo", "n", "e", 1, function(e, i)
 	local arr = getContraints(e, "Weld");
-	if (#arr < i) then return Entity(-1); end
+	if (#arr < i) then return Entity(0); end
 	return arr[i][2].entity1;
 end, true);
 
@@ -179,7 +179,7 @@ end, true);
 
 extension:RegisterMethod("e", "isConstrainedTo", "", "e", 1, function(e)
 	local con = getContraints(e, nil, true);
-	if (not con) then return Entity(-1); end
+	if (not con) then return Entity(0); end
 	return con.entity1;
 end, true);
 

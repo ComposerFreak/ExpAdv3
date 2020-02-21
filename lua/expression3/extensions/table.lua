@@ -138,6 +138,7 @@ end
 
 extension:RegisterWiredInport("t", "SMART_TABLE");
 extension:RegisterWiredOutport("t", "SMART_TABLE");
+extension:RegisterNativeDefault("t", "{tbl = {}, children = {}, parents = {}, size = 0}");
 
 --[[
 ]]

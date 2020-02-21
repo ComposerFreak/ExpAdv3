@@ -26,9 +26,14 @@ extension:RegisterClass("e", {"entity"}, isEnt, IsValid);
 
 extension:RegisterConstructor("e", "n", Entity, true);
 
-extension:RegisterWiredInport("e", "ENTITY");
+extension:RegisterWiredInport("e", "ENTITY", function(e)
+	if not IsValid(e) then return Entity(0); end
+	return e;
+end);
 
 extension:RegisterWiredOutport("e", "ENTITY");
+
+extension:RegisterNativeDefault("e", "Entity(0)");
 
 --[[
 	Operators
@@ -54,45 +59,86 @@ extension:RegisterMethod("e", "isValid", "", "b", 1, IsValid, true);
 	General Methods
 ]]
 
-extension:RegisterMethod("e", "getClass", "", "s", 1, "GetClass");
+extension:RegisterMethod("e", "getClass", "", "s", 1, function(e)
+	if IsValid(e) then return e:GetClass() or ""; end
+	return "";
+end, true);
 
-extension:RegisterMethod("e", "getModel", "", "s", 1, "GetModel");
+extension:RegisterMethod("e", "getModel", "", "s", 1, function(e)
+	if IsValid(e) then return e:GetModel() or ""; end
+	return "";
+end, true);
 
-extension:RegisterMethod("e", "id", "", "n", 1, "EntIndex");
+extension:RegisterMethod("e", "id", "", "n", 1, function(e)
+	if IsValid(e) then return e:EntIndex() or -1; end
+	return -1;
+end, true);
 
-extension:RegisterMethod("e", "parent", "", "e", 1, "GetParent");
+extension:RegisterMethod("e", "parent", "", "e", 1, function(e)
+	if IsValid(e) then return e:GetParent() or Entity(0); end
+	return Entity(0);
+end, true);
 
 --[[
 	Position & Angle
 ]]
 
-extension:RegisterMethod("e", "getPos", "", "v", 1, "GetPos");
+local getPos = function(e)
+	if IsValid(e) then return e:GetPos() or Vector(0, 0, 0); end
+	return Vector(0, 0, 0);
+end
 
-extension:RegisterMethod("e", "pos", "", "v", 1, "GetPos");
+local getAngles = function(e)
+	if IsValid(e) then return e:GetAngles() or Angle(0, 0, 0); end
+	return Angle(0, 0, 0);
+end
 
-extension:RegisterMethod("e", "getAng", "", "a", 1, "GetAngles");
+extension:RegisterMethod("e", "getPos", "", "v", 1, getPos, true);
 
-extension:RegisterMethod("e", "ang", "", "a", 1, "GetAngles");
+extension:RegisterMethod("e", "pos", "", "v", 1, getPos, true);
+
+extension:RegisterMethod("e", "getAng", "", "a", 1, getAngles, true);
+
+extension:RegisterMethod("e", "ang", "", "a", 1, getAngles, true);
 
 --[[
 	OBB Mins / Maxs
 ]]
 
-extension:RegisterMethod("e", "boxCenter", "", "v", 1, "OBBCenter");
-
-extension:RegisterMethod("e", "boxMins", "", "v", 1, "OBBMins");
-
-extension:RegisterMethod("e", "boxMaxs", "", "v", 1, "OBBMaxs");
-
-extension:RegisterMethod("e", "boxSize", "", "v", 1, function(e)
-	return e:OBBMaxs() - e:OBBMins();
+extension:RegisterMethod("e", "boxCenter", "", "v", 1, function(e)
+	if IsValid(e) then return e:OBBCenter(); end
+	return Vector(0, 0, 0);
 end, true);
 
-extension:RegisterMethod("e", "worldSpaceAABB", "", "v", 2, "WorldSpaceAABB");
+extension:RegisterMethod("e", "boxMins", "", "v", 1, function(e)
+	if IsValid(e) then return e:OBBMins(); end
+	return Vector(0, 0, 0);
+end, true);
 
-extension:RegisterMethod("e", "worldSpaceCenter", "", "v", 2, "WorldSpaceCenter");
+extension:RegisterMethod("e", "boxMaxs", "", "v", 1, function(e)
+	if IsValid(e) then return e:OBBMaxs(); end
+	return Vector(0, 0, 0);
+end, true);
 
-extension:RegisterMethod("e", "radius", "", "n", 2, "BoundingRadius");
+extension:RegisterMethod("e", "boxSize", "", "v", 1, function(e)
+	if IsValid(e) then return e:OBBMaxs() - e:OBBMins(); end
+	return Vector(0, 0, 0);
+end, true);
+
+extension:RegisterMethod("e", "worldSpaceAABB", "", "v", 2, function(e)
+	if IsValid(e) then return e:WorldSpaceAABB(); end
+	return Vector(0, 0, 0);
+end, true);
+
+extension:RegisterMethod("e", "worldSpaceCenter", "", "v", 2, function(e)
+	if IsValid(e) then return e:WorldSpaceCenter(); end
+	return Vector(0, 0, 0);
+end, true);
+
+extension:RegisterMethod("e", "radius", "", "n", 2, function(e)
+	if IsValid(e) then return e:BoundingRadius(); end
+	return 0;
+end, true);
 
 --[[
 	Get Direction
@@ -100,57 +146,87 @@ extension:RegisterMethod("e", "radius", "", "n", 2, "BoundingRadius");
 
 extension:SetSharedState();
 
-extension:RegisterMethod("e", "forward", "", "v", 1, "GetForward");
+extension:RegisterMethod("e", "forward", "", "v", 1, function(e)
+	if IsValid(e) then return e:GetForward(); end
+	return Vector(0, 0, 0);
+end, true);
 
-extension:RegisterMethod("e", "up", "", "v", 1, "GetUp");
+extension:RegisterMethod("e", "up", "", "v", 1, function(e)
+	if IsValid(e) then return e:GetUp(); end
+	return Vector(0, 0, 0);
+end, true);
 
-extension:RegisterMethod("e", "right", "", "v", 1, "GetRight");
+extension:RegisterMethod("e", "right", "", "v", 1, function(e)
+	if IsValid(e) then return e:GetRight(); end
+	return Vector(0, 0, 0);
+end, true);
 
 --[[
 	World and Local Vector and Angles
 ]]
 
-extension:RegisterMethod("e", "toWorld", "v", "v", 1, "LocalToWorld");
+extension:RegisterMethod("e", "toWorld", "v", "v", 1, function(e, v)
+	if IsValid(e) then return e:LocalToWorld(v); end
+	return Vector(0, 0, 0);
+end, true);
 
-extension:RegisterMethod("e", "toWorld", "a", "a", 1, "LocalToWorldAngles");
+extension:RegisterMethod("e", "toWorld", "a", "a", 1, function(e, a)
+	if IsValid(e) then return e:LocalToWorldAngles(a); end
+	return Angle(0, 0, 0);
+end, true);
 
-extension:RegisterMethod("e", "toLocal", "v", "v", 1, "WorldToLocal");
+extension:RegisterMethod("e", "toLocal", "v", "v", 1, function(e, v)
+	if IsValid(e) then return e:WorldToLocal(v); end
+	return Vector(0, 0, 0);
+end, true);
 
-extension:RegisterMethod("e", "toLocal", "a", "a", 1, "WorldToLocalAngles");
+extension:RegisterMethod("e", "toLocal", "a", "a", 1, function(e, a)
+	if IsValid(e) then return e:WorldToLocalAngles(a); end
+	return Angle(0, 0, 0);
+end, true);
 
 
 --[[
 	Velecotity
 ]]
 
-extension:RegisterMethod("e", "Vel", "", "v", 1, "GetVelocity");
+extension:RegisterMethod("e", "Vel", "", "v", 1, function(e)
+	if IsValid(e) then return e:GetVelocity(); end
+	return Vector(0, 0, 0);
+end, true);
 
 extension:RegisterMethod("e", "VelL", "", "v", 1, function(e)
-	local ph = e:GetPhysicsObject();
+	if IsValid(e) then
+		local ph = e:GetPhysicsObject();
 
-	if IsValid(ph) then
-		return ph:WorldToLocal(ph:GetVelocity() + ph:GetPos());
+		if IsValid(ph) then
+			return ph:WorldToLocal(ph:GetVelocity() + ph:GetPos());
+		end
 	end
 
 	return Vector(0,0,0);
 end, true);
 
 extension:RegisterMethod("e", "angVel", "", "a", 1, function(e)
-	local ph = e:GetPhysicsObject();
+	if IsValid(e) then
+		local ph = e:GetPhysicsObject();
 
-	if IsValid(ph) then
-		local a = ph:GetAngleVelocity();
-		return Angle(a.x, a.y, a.z);
+		if IsValid(ph) then
+			local a = ph:GetAngleVelocity();
+			return Angle(a.x, a.y, a.z);
+		end
 	end
 
 	return Angle(0, 0, 0);
 end, true);
 
 extension:RegisterMethod("e", "angVelVector", "", "v", 1, function(e)
-	local ph = e:GetPhysicsObject();
+	if IsValid(e) then
+		local ph = e:GetPhysicsObject();
 
-	if IsValid(ph) then
-		return ph:GetAngleVelocity();
+		if IsValid(ph) then
+			return ph:GetAngleVelocity();
+		end
 	end
 
 	return Vector(0,0,0);
@@ -161,30 +237,36 @@ end, true);
 ]]
 
 extension:RegisterMethod("e", "energy", "", "n", 1, function(e)
-	local ph = e:GetPhysicsObject();
+	if IsValid(e) then
+		local ph = e:GetPhysicsObject();
 
-	if IsValid(ph) then
-		return ph:GetEnergy();
+		if IsValid(ph) then
+			return ph:GetEnergy();
+		end
 	end
 
 	return 0;
 end, true);
 
 extension:RegisterMethod("e", "inertia", "", "v", 1, function(e)
-	local ph = e:GetPhysicsObject();
+	if IsValid(e) then
+		local ph = e:GetPhysicsObject();
 
-	if IsValid(ph) then
-		return ph:GetInertia();
+		if IsValid(ph) then
+			return ph:GetInertia();
+		end
 	end
 
 	return Vector(0, 0, 0);
 end, true);
 
 extension:RegisterMethod("e", "invInertia", "", "n", 1, function(e)
-	local ph = e:GetPhysicsObject();
+	if IsValid(e) then
+		local ph = e:GetPhysicsObject();
 
-	if IsValid(ph) then
-		return ph:GetInvInertia();
+		if IsValid(ph) then
+			return ph:GetInvInertia();
+		end
 	end
 
 	return 0;
@@ -208,9 +290,15 @@ EXPR_LIB.BannedMats = BannedMats;
 
 extension:SetSharedState();
 
-extension:RegisterMethod("e", "getMaterial", "", "s", 1, "GetMaterial");
+extension:RegisterMethod("e", "getMaterial", "", "s", 1, function(e)
+	if IsValid(e) then return e:GetMaterial() or ""; end
+	return "";
+end, true);
 
-extension:RegisterMethod("e", "getSubMaterial", "n", "s", 1, "GetSubMaterial")
+extension:RegisterMethod("e", "getSubMaterial", "n", "s", 1, function(e, n)
+	if IsValid(e) then return e:GetSubMaterial(n) or ""; end
+	return "";
+end, true);
 
 extension:SetServerState();
 
@@ -238,7 +326,10 @@ end, false);
 
 extension:SetSharedState();
 
-extension:RegisterMethod("e", "getColor", "", "c", 1, "GetColor");
+extension:RegisterMethod("e", "getColor", "", "c", 1, function(e)
+	if IsValid(e) then return e:GetColor(); end
+	return Color(0, 0, 0, 0);
+end, true);
 
 extension:SetServerState();
 
@@ -255,7 +346,10 @@ end, false);
 extension:SetSharedState();
 
 
-extension:RegisterMethod("e", "getGravity", "", "n", 1, "GetGravity");
+extension:RegisterMethod("e", "getGravity", "", "n", 1, function(e)
+	if IsValid(e) then return e:GetGravity(); end
+	return 0;
+end, true);
 
 extension:SetServerState();
 
@@ -374,58 +468,109 @@ end, false);
 
 extension:SetSharedState();
 
-extension:RegisterMethod("e", "onGround", "", "b", 1, "OnGround");
+extension:RegisterMethod("e", "onGround", "", "b", 1, function(e)
+	if IsValid(e) then return e:OnGround(); end
+	return false;
+end, true);
 
-extension:RegisterMethod("e", "groundEntity", "", "e", 1, "GetGroundEntity");
+extension:RegisterMethod("e", "groundEntity", "", "e", 1, function(e)
+	if IsValid(e) then return e:GetGroundEntity(); end
+	return Entity(0);
+end, true);
 
-extension:RegisterMethod("e", "waterLevel", "", "n", 1, "WaterLevel");
+extension:RegisterMethod("e", "waterLevel", "", "n", 1, function(e)
+	if IsValid(e) then return e:WaterLevel(); end
+	return 0;
+end, true);
 
-extension:RegisterMethod("e", "isHeldByPlayer", "", "b", 1, "IsPlayerHolding");
+extension:RegisterMethod("e", "isHeldByPlayer", "", "b", 1, function(e)
+	if IsValid(e) then return e:IsPlayerHolding(); end
+	return false;
+end, true);
 
 --[[
 	Entity Types
 ]]
 
-extension:RegisterMethod("e", "isWeapon", "", "b", 1, "IsWeapon");
+extension:RegisterMethod("e", "isWeapon", "", "b", 1, function(e)
+	if IsValid(e) then return e:IsWeapon(); end
+	return false;
+end, true);
 
-extension:RegisterMethod("e", "isVehicle", "", "b", 1, "IsVehicle");
+extension:RegisterMethod("e", "isVehicle", "", "b", 1, function(e)
+	if IsValid(e) then return e:IsVehicle(); end
+	return false;
+end, true);
 
-extension:RegisterMethod("e", "isNPC", "", "b", 1, "IsNPC");
+extension:RegisterMethod("e", "isNPC", "", "b", 1, function(e)
+	if IsValid(e) then return e:IsNPC(); end
+	return false;
+end, true);
 
-extension:RegisterMethod("e", "isPlayer", "", "b", 1, "IsPlayer");
+extension:RegisterMethod("e", "isPlayer", "", "b", 1, function(e)
+	if IsValid(e) then return e:IsPlayer(); end
+	return false;
+end, true);
 
-extension:RegisterMethod("e", "isRagdoll", "", "b", 1, "IsRagdoll");
+extension:RegisterMethod("e", "isRagdoll", "", "b", 1, function(e)
+	if IsValid(e) then return e:IsRagdoll(); end
+	return false;
+end, true);
 
 
 --[[
 	Health and Armor
 ]]
 
-extension:RegisterMethod("e", "health", "", "n", 1, "Health");
+extension:RegisterMethod("e", "health", "", "n", 1, function(e)
+	if IsValid(e) then return e:Health(); end
+	return 0;
+end, true);
 
-extension:RegisterMethod("e", "maxHealth", "", "n", 1, "GetMaxHealth");
+extension:RegisterMethod("e", "maxHealth", "", "n", 1, function(e)
+	if IsValid(e) then return e:GetMaxHealth(); end
+	return 0;
+end, true);
 
-extension:RegisterMethod("e", "armor", "", "n", 1, "Armor");
+extension:RegisterMethod("e", "armor", "", "n", 1, function(e)
+	if IsValid(e) then return e:Armor(); end
+	return 0;
+end, true);
 
-extension:RegisterMethod("e", "maxArmor", "", "n", 1, "MaxArmor");
+extension:RegisterMethod("e", "maxArmor", "", "n", 1, function(e)
+	if IsValid(e) then return e:MaxArmor(); end
+	return 0;
+end, true);
 
 --[[
 	Ownership
 ]]
 
 if CPPI then
-	extension:RegisterMethod("e", "owner", "", "p", 1, "CPPIGetOwner");
+	extension:RegisterMethod("e", "owner", "", "p", 1, function(e)
+		if IsValid(e) then return e:CPPIGetOwner(); end
+		return Entity(0);
+	end, true);
 else
-	extension:RegisterMethod("e", "owner", "", "p", 1, "GetPlayer");
+	extension:RegisterMethod("e", "owner", "", "p", 1, function(e)
+		if IsValid(e) then return e:GetPlayer(); end
+		return Entity(0);
+	end, true);
 end
 
 --[[
 	Eye Pos / Vector
 ]]
 
-extension:RegisterMethod("e", "eyePos", "", "v", 1, "EyePos");
+extension:RegisterMethod("e", "eyePos", "", "v", 1, function(e)
+	if IsValid(e) then return e:EyePos(); end
+	return Vector(0, 0, 0);
+end, true);
 
-extension:RegisterMethod("e", "eyeAngles", "", "a", 1, "EyeAngles");
+extension:RegisterMethod("e", "eyeAngles", "", "a", 1, function(e)
+	if IsValid(e) then return e:EyeAngles(); end
+	return Angle(0, 0, 0);
+end, true);
 
 --[[
 	Bearing / Elevation
@@ -450,7 +595,7 @@ extension:RegisterMethod( "e", "elevation", "v", "n", 1, function(e, v)
 	return 0;
 end, true);
 
-extension:RegisterMethod( "e", "heading", "v", "n", 1, function(e, v)
+extension:RegisterMethod( "e", "heading", "v", "a", 1, function(e, v)
 	if IsValid(e) then
 		local p = e:WorldToLocal( v );
 		local b = (180 / math.pi) * -math.atan2(p.y, p.x);
@@ -465,7 +610,10 @@ end, true);
 	Attachments
 ]]
 
-extension:RegisterMethod( "e", "lookupAttachment", "s", "n", 1, "LookupAttachment" );
+extension:RegisterMethod( "e", "lookupAttachment", "s", "n", 1, function(e, s)
+	if IsValid(e) then return e:LookupAttachment(s) or -1; end
+	return -1;
+end);
 
 extension:RegisterMethod( "e", "attachmentPos", "n", "v", 1, function(e, n)
 	if IsValid(e) then

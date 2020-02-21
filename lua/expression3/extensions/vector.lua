@@ -24,6 +24,7 @@ extension:RegisterClass("v", {"vector", "vector.3d"}, isvector, notNil)
 
 extension:RegisterWiredInport("v", "VECTOR");
 extension:RegisterWiredOutport("v", "VECTOR");
+extension:RegisterNativeDefault("v", "Vector(0, 0, 0)");
 
 extension:RegisterConstructor("v", "n,n,n", function(x,y,z) return Vector(x or 0, y or 0, z or 0); end, true)
 extension:RegisterConstructor("v", "n", function(n) return Vector(n or 0, n or 0, n or 0); end, true)
@@ -209,6 +210,8 @@ end, true);
 
 extension:RegisterMethod("v", "dot", "v", "n", 1, "Dot", true)
 
+extension:RegisterMethod("v", "rotate", "a", "", 1, "Rotate", true)
+
 extension:RegisterMethod("v", "cross", "v", "v", 1, "Cross", true)
 
 extension:RegisterMethod("v", "length", "", "n", 1, "Length", true)
@@ -218,6 +221,16 @@ extension:RegisterMethod("v", "lengthSqr", "", "n", 1, "LengthSqr", true)
 extension:RegisterMethod("v", "distance", "v", "n", 1, "Distance", true)
 
 extension:RegisterMethod("v", "normalized", "", "v", 1, "GetNormalized", true)
+
+extension:RegisterMethod("v", "rotated", "a", "v", 1, function(v, a) 
+	local vec = Vector(v.x, v.y, v.z);
+	vec:Rotate(a);
+	return vec;
+end, true)
+
+--[[
+
+]]
 
 extension:RegisterMethod("v", "ceil", "", "", 0, function(v)
 	v.x = math.ceil(v.x)
@@ -244,11 +257,50 @@ extension:RegisterMethod("v", "round", "", "", 0, function(v)
 end, true)
 
 --[[
+
 ]]
 
 extension:RegisterMethod("v", "toAngle", "", "a", 1, "Angle")
 
 extension:RegisterMethod("v", "toColor", "", "c", 1, "ToColor")
+
+--[[
+	
+	Stuff stolen directly from e2
+]]
+
+local pi = math.pi;
+local rad2deg = 180 / pi;
+local deg2rad = pi / 180;
+
+extension:RegisterMethod("v", "rotateAroundAxis", "v,n", "v", 1, function(vec, axis, deg)
+	local ca, sa = math.cos(deg * deg2rad), math.sin(deg * deg2rad);
+	local length = (axis.x * axis.x + axis.y * axis.y + axis.z * axis.z) ^ 0.5;
+	local x, y, z = axis.x / length, axis.y / length, axis.z / length;
+
+	return Vector(
+		(ca + (x^2)*(1-ca)) * vec.x + (x*y*(1-ca) - z*sa) * vec.y + (x*z*(1-ca) + y*sa) * vec.z,
+		(y*x*(1-ca) + z*sa) * vec.x + (ca + (y^2)*(1-ca)) * vec.y + (y*z*(1-ca) - x*sa) * vec.z,
+		(z*x*(1-ca) - y*sa) * vec.x + (z*y*(1-ca) + x*sa) * vec.y + (ca + (z^2)*(1-ca)) * vec.z
+	);
+end, true);
+
+extension:RegisterMethod("v", "rotate", "n,n,n", "v", 1, function(v, p, y, r)
+	return Vector(v.x, v.y, v.z):Rotate(Angle(p, y, r));
+end, true);
+
+extension:RegisterMethod("v", "dehomogenized", "", "v2", 1, function(v)
+	if (v.z == 0) then return { x = v.x, y = v.y}; end
+	return { x = v.x / v.z, y = v.y / v.z };
+end, true);
+
+extension:RegisterMethod("v", "toRad", "", "v", 1, function(v)
+	return Vector(v.x * deg2rad, v.y * deg2rad, v.z * deg2rad)
+end, true);
+
+extension:RegisterMethod("v", "toDeg", "", "v", 1, function(v)
+	return Vector(v.x * rad2deg, v.y * rad2deg, v.z * rad2deg)
+end, true);
 
 --[[
 
@@ -259,6 +311,7 @@ extension:RegisterOperator("dlt", "v", "v", 1, function(pre, new)
 end, true);
 
 --[[
+
 ]]
 
 extension:EnableExtension()

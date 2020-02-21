@@ -434,6 +434,16 @@ function EXPR_LIB.RegisterWiredOutport(class, wiretype, func)
 	cls.wire_in_class = wiretype;
 end
 
+function EXPR_LIB.RegisterNativeDefault(class, native)
+	local cls = EXPR_LIB.GetClass(class);
+
+	if (not cls) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register native default for none existing class %s", class);
+	end
+
+	cls.native_default = native;
+end
+
 local loadConstructors = false;
 
 function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeContext)
@@ -898,6 +908,14 @@ function Extension.RegisterWiredOutport(this, class, wiretype, func)
 	hook.Add("Expression3.LoadConstructors", "Expression3.WireOutput." .. class, function()
 		if (this.enabled) then
 			EXPR_LIB.RegisterWiredOutport(class, wiretype, func);
+		end
+	end);
+end
+
+function Extension.RegisterNativeDefault(this, class, native)
+	hook.Add("Expression3.LoadConstructors", "Expression3.Native." .. class, function()
+		if (this.enabled) then
+			EXPR_LIB.RegisterNativeDefault(class, native);
 		end
 	end);
 end

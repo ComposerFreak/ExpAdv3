@@ -146,8 +146,8 @@ function ENT:BuildEnv(context, instance)
 	-- Fucntions we need
 		env.invoke  = EXPR_LIB.Invoke;
 		env.setmetatable = setmetatable;
-		env.error   = error;
-		env.pcall   = pcall;
+		env.error = error;
+		env.pcall = pcall;
 
 	-- Store previous value for delta and changed.
 		local glob = {};
