@@ -32,8 +32,9 @@
 		if (result == nil or result == "" or count == -1) then
 			result, count = "_nil", 0;
 		end
-
-		if (result ~= r or count ~= c) then
+		
+		if (result ~= r or count > c) then
+			print("THROW!")
 			if (func.scr) then context = func.scr end
 			context:Throw("Invoked function with incorrect return type %q:%i expected, got %q:%i.", name(result), count, name(r), c);
 		end

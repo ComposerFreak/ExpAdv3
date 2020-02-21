@@ -44,6 +44,16 @@ local function names(ids)
 end
 
 --[[
+
+]]
+
+local function fakeInstruction(inst, lua, r, c)
+	local new = table.Copy(inst);
+	new.buffer = { lua };
+	return new;
+end
+
+--[[
 ]]
 
 local COMPILER = {};
@@ -925,6 +935,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 end
 
 function COMPILER.Compile_LOCAL(this, inst, token, data)
+	local tVars = #data.variables;
 	local tArgs = #data.expressions;
 
 	local price = 1;
@@ -934,6 +945,7 @@ function COMPILER.Compile_LOCAL(this, inst, token, data)
 
 	for i = 1, tArgs do
 		local arg = data.expressions[i];
+		arg.data.call_pred = (i == tArgs) and (tVars - i) + 1 or 1;
 		local r, c, p = this:Compile(arg);
 
 		price = price + p;
@@ -949,7 +961,7 @@ function COMPILER.Compile_LOCAL(this, inst, token, data)
 		end
 	end
 
-	for i = 1, #data.variables do
+	for i = 1, tVars do
 		local result = results[i];
 		local token = data.variables[i];
 		local var = token.data;
@@ -1042,6 +1054,7 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 			this:Throw(arg.token, "Invalid assignment, value #%i is not being assigned to a variable.", i);
 		end
 
+		arg.data.call_pred = (i == tArgs) and (tVars - i) + 1 or 1;
 		local r, c, p = this:Compile(arg);
 
 		price = price + p;
@@ -1053,15 +1066,15 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 		if i < tVars then this:writeToBuffer(inst, ","); end
 
 		if i == tArgs and c > 1 then
-			for i = (i + 1), i + c do
-				local var = vars[i];
-				local arg = args[i];
+			for j = (i + 1), tVars do
 
-				if not arg then
-					this:Throw(var, "Invalid assignment,  variable %s is not initalized.", var.data);
+				local var = vars[j];
+
+				if (i + c >= j) then
+					this:AssignVariable(var, false, var.data, r);
+				else
+					this:Throw(var, "Invalid assignment, variable %s is not initalized.", var.data);
 				end
-
-				local class, scope, info = this:AssignVariable(var, false, var.data, r);
 			end
 		end
 	end
@@ -1097,18 +1110,57 @@ end
 ]]
 
 function COMPILER.Compile_AADD(this, inst, token, data)
+	local r, c, p;
 	local price = 1;
+	local vt = #data.variables;
+	local et = #data.expressions;
 
 	for k = 1, #data.variables do
 		local token = data.variables[k];
 		local var = token.data;
 
+		local valid = false;
 		local expr = data.expressions[k];
-		local r, c, p = this:Compile(expr);
+		
+		if expr then
+			valid = true;
+			expr.data.call_pred = (k == et) and (vt - k) + 1 or 1;
+			r, c, p = this:Compile(expr);
+			price = price + p;
+		end
 
-		price = price + p;
+		if k == et then
+			c = c - 1;
+			this:writeToBuffer(inst, "\nlocal ");
+
+			for i = k, vt do
+				this:writeToBuffer(inst, "__" .. data.variables[i].data);
+				if (i < vt) then this:writeToBuffer(inst, ","); end
+			end
+
+			this:writeToBuffer(inst, "=");
+
+			this:addInstructionToBuffer(inst, expr);
+
+			this:writeToBuffer(inst, ";\n");
+
+			expr = fakeInstruction(inst, "__" .. var, r, 1);
+		end
+
+		if not valid then
+			if c <= 1 then
+				this:Throw(token, "Value expected, for Variable %s.", var);
+			else
+				expr = fakeInstruction(inst, "__" .. var, r, 1);
+				c = c - 1;
+			end
+		end
 
 		local class, scope, info = this:GetVariable(var, nil, false);
+
+		if (not class) then
+			this:Throw(token, "Variable %s does not exist.", var);
+		end
 
 		if (info and info.prefix) then
 			var = info.prefix .. "." .. token.data;
@@ -1157,18 +1209,59 @@ function COMPILER.Compile_AADD(this, inst, token, data)
 end
 
 function COMPILER.Compile_ASUB(this, inst, token, data)
+	local r, c, p;
 	local price = 1;
+	local vt = #data.variables;
+	local et = #data.expressions;
 
 	for k = 1, #data.variables do
 		local token = data.variables[k];
 		local var = token.data;
 
+		local valid = false;
 		local expr = data.expressions[k];
-		local r, c, p = this:Compile(expr);
+		
+		if expr then
+			valid = true;
+			expr.data.call_pred = (k == et) and (vt - k) + 1 or 1;
+			r, c, p = this:Compile(expr);
+			price = price + p;
+		end
 
-		price = price + p;
+		if k == et then
+			c = c - 1;
+			this:writeToBuffer(inst, "\nlocal ");
+
+			for i = k, vt do
+				this:writeToBuffer(inst, "__" .. data.variables[i].data);
+				if (i < vt) then this:writeToBuffer(inst, ","); end
+			end
+
+			this:writeToBuffer(inst, "=");
+
+			expr.data.call_pred = call_pred;
+
+			this:addInstructionToBuffer(inst, expr);
+
+			this:writeToBuffer(inst, ";\n");
+
+			expr = fakeInstruction(inst, "__" .. var, r, 1);
+		end
+
+		if not valid then
+			if c <= 1 then
+				this:Throw(token, "Value expected, for Variable %s.", var);
+			else
+				expr = fakeInstruction(inst, "__" .. var, r, 1);
+				c = c - 1;
+			end
+		end
 
 		local class, scope, info = this:GetVariable(var, nil, false);
+
+		if (not class) then
+			this:Throw(token, "Variable %s does not exist.", var);
+		end
 
 		if (info and info.prefix) then
 			var = info.prefix .. "." .. token.data;
@@ -1213,18 +1306,57 @@ end
 
 
 function COMPILER.Compile_ADIV(this, inst, token, data)
+	local r, c, p;
 	local price = 1;
+	local vt = #data.variables;
+	local et = #data.expressions;
 
 	for k = 1, #data.variables do
 		local token = data.variables[k];
 		local var = token.data;
 
+		local valid = false;
 		local expr = data.expressions[k];
-		local r, c, p = this:Compile(expr);
+		
+		if expr then
+			valid = true;
+			expr.data.call_pred = (k == et) and (vt - k) + 1 or 1;
+			r, c, p = this:Compile(expr);
+			price = price + p;
+		end
 
-		price = price + p;
+		if k == et then
+			c = c - 1;
+			this:writeToBuffer(inst, "\nlocal ");
+
+			for i = k, vt do
+				this:writeToBuffer(inst, "__" .. data.variables[i].data);
+				if (i < vt) then this:writeToBuffer(inst, ","); end
+			end
+
+			this:writeToBuffer(inst, "=");
+
+			this:addInstructionToBuffer(inst, expr);
+
+			this:writeToBuffer(inst, ";\n");
+
+			expr = fakeInstruction(inst, "__" .. var, r, 1);
+		end
+
+		if not valid then
+			if c <= 1 then
+				this:Throw(token, "Value expected, for Variable %s.", var);
+			else
+				expr = fakeInstruction(inst, "__" .. var, r, 1);
+				c = c - 1;
+			end
+		end
 
 		local class, scope, info = this:GetVariable(var, nil, false);
+
+		if (not class) then
+			this:Throw(token, "Variable %s does not exist.", var);
+		end
 
 		if (info and info.prefix) then
 			var = info.prefix .. "." .. token.data;
@@ -1267,18 +1399,57 @@ function COMPILER.Compile_ADIV(this, inst, token, data)
 end
 
 function COMPILER.Compile_AMUL(this, inst, token, data)
+	local r, c, p;
 	local price = 1;
+	local vt = #data.variables;
+	local et = #data.expressions;
 
 	for k = 1, #data.variables do
 		local token = data.variables[k];
 		local var = token.data;
 
+		local valid = false;
 		local expr = data.expressions[k];
-		local r, c, p = this:Compile(expr);
+		
+		if expr then
+			valid = true;
+			expr.data.call_pred = (k == et) and (vt - k) + 1 or 1;
+			r, c, p = this:Compile(expr);
+			price = price + p;
+		end
 
-		price = price + p;
+		if k == et then
+			c = c - 1;
+			this:writeToBuffer(inst, "\nlocal ");
+
+			for i = k, vt do
+				this:writeToBuffer(inst, "__" .. data.variables[i].data);
+				if (i < vt) then this:writeToBuffer(inst, ","); end
+			end
+
+			this:writeToBuffer(inst, "=");
+
+			this:addInstructionToBuffer(inst, expr);
+
+			this:writeToBuffer(inst, ";\n");
+
+			expr = fakeInstruction(inst, "__" .. var, r, 1);
+		end
+
+		if not valid then
+			if c <= 1 then
+				this:Throw(token, "Value expected, for Variable %s.", var);
+			else
+				expr = fakeInstruction(inst, "__" .. var, r, 1);
+				c = c - 1;
+			end
+		end
 
 		local class, scope, info = this:GetVariable(var, nil, false);
+
+		if (not class) then
+			this:Throw(token, "Variable %s does not exist.", var);
+		end
 
 		if (info and info.prefix) then
 			var = info.prefix .. "." .. token.data;
@@ -3135,9 +3306,23 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 	local resultClass, resultCount;
 
 	if (parent and parent.data) then
-		if (parent.data.variables and parent.data.class) then
-			resultClass = parent.data.class;
-			resultCount = #parent.data.variables;
+		if (parent.data.variables) then 
+			
+			if (parent.data.class) then
+				resultClass = parent.data.class;
+				resultCount = data.call_pred or #parent.data.variables;
+			else
+				local var = parent.data.variables[1];
+
+				if (var) then
+					local c, s, info = this:GetVariable(var.data);
+					
+					if (c) then 
+						resultClass = c;
+						resultCount = data.call_pred or #parent.data.variables;
+					end
+				end
+			end
 		end
 	end	
 
