@@ -861,6 +861,7 @@ end
 ]]
 
 function COMPILER.Compile_GLOBAL(this, inst, token, data)
+	local tVars = #data.variables;
 	local tArgs = #data.expressions;
 
 	local price = 1;
@@ -868,6 +869,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 
 	for i = 1, tArgs do
 		local arg = data.expressions[i];
+		arg.data.call_pred = (i == tArgs) and (tVars - i) + 1 or 1;
 		local r, c, p = this:Compile(arg);
 
 		prive = price + p;
@@ -892,7 +894,7 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 			this:Throw(token, "Invalid assignment, variable %s is not initalized.", var);
 		end
 
-		local class, scope, info = this:AssignVariable(token, true, var, inst.class, 0, "GLOBAL", true);
+		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0, "GLOBAL", true);
 
 		this:writeToBuffer(inst, "GLOBAL.");
 		this:writeToBuffer(inst, var);
@@ -3304,6 +3306,10 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 
 	local parent = inst.parent;
 	local resultClass, resultCount;
+
+	print("-> type:", parent.type);
+	print("-> vars:", parent.data.variables);
+	print("-> class:", parent.data.class);
 
 	if (parent and parent.data) then
 		if (parent.data.variables) then 

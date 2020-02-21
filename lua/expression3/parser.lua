@@ -1112,7 +1112,7 @@ function PARSER.Statment_7(this)
 			end
 		end
 
-		return this:EndInstruction(inst, {var_type = var_type; variables = variables; expressions = expressions});
+		return this:EndInstruction(inst, {class = var_type; variables = variables; expressions = expressions});
 	end
 
 	if (this:Accept("typ")) then
