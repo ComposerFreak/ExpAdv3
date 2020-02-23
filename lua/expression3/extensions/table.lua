@@ -89,6 +89,8 @@ function eTable.set(ctx, tbl, key, type, value)
 end
 
 function eTable.updateChildren(tbl, oldweight, newweight, updated)
+	updated = updated or {};
+	newweight = newweight or 0;
 	for _, child in pairs(tbl.children) do
 		if (not updated[child]) then
 			local weight = child.size;
@@ -125,7 +127,7 @@ EXPR_LIB.TABLE = eTable;
 
 local extension = EXPR_LIB.RegisterExtension("table");
 
-local class_table = extension:RegisterClass("t", {"table", "array"}, istable, notnil);
+local class_table = extension:RegisterClass("t", {"table", "array"}, istable, EXPR_LIB.NOTNIL);
 
 --[[
 ]]

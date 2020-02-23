@@ -33,7 +33,7 @@ if CLIENT then TextureSize = max_size:GetInt(); end
 ]]
 
 local function Download(context, Name, url, Width, Height)
-	if not context:canGetURL(url, "URL-Materials") then return; end
+	if not context:canGetURL(url, "URLMaterials") then return; end
 
 	if IsValid(HTML) then HTML:Remove() end
 
@@ -124,7 +124,7 @@ local extension = EXPR_LIB.RegisterExtension("url-materials");
 
 extension:SetClientState();
 
-extension:RegisterPermission("URL-Materials", "fugue/drive-upload.png", "This gate is allowed to download images\nthe filter setting will still be applied.");
+extension:RegisterPermission("URLMaterials", "fugue/drive-upload.png", "This gate is allowed to download images the filter setting will still be applied.");
 
 extension:RegisterFunction("render", "downloadURLMaterial", "s,s,n,n", "", 0, download_material, false);
 

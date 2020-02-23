@@ -4,7 +4,9 @@
 
 local extension = EXPR_LIB.RegisterExtension("permissions");
 
-extension:RegisterPermission("Prop-Control", "fugue/controller-d-pad.png", "This gate is allowed to alter your props.");
+extension:RegisterPermission("PropControl", "fugue/controller-d-pad.png", "This gate is allowed to alter your props.");
+
+extension:RegisterEvent("PermissionChanged", "p,s,b");
 
 extension:RegisterLibrary("permissions");
 
@@ -12,7 +14,7 @@ extension:RegisterFunction("permissions", "getAll", "", "t", 1, function()
 	local t = {};
 
 	for k, _ in pairs( EXPR_LIB.PERMS ) do
-		t[k] = {"s", k};
+		t[#t + 1] = {"s", k};
 	end
 
 	return {tbl = t, children = {}, parents = {}, size = #t};

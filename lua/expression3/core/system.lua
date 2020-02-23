@@ -34,7 +34,6 @@
 		end
 		
 		if (result ~= r or count > c) then
-			print("THROW!")
 			if (func.scr) then context = func.scr end
 			context:Throw("Invoked function with incorrect return type %q:%i expected, got %q:%i.", name(result), count, name(r), c);
 		end
@@ -69,6 +68,22 @@
 	extension:RegisterFunction("system", "getEntity", "", "e", 1, function(context) return context.entity end);
 	extension:RegisterFunction("system", "getOwner", "", "p", 1, function(context) return context.player end);
 	
+--[[
+	*****************************************************************************************************************************************************
+		Performance
+	*****************************************************************************************************************************************************
+]]--
+
+	extension:RegisterFunction("system", "quotaMax", "", "n", 1, function(context) return context:softTimeLimit(); end);
+	extension:RegisterFunction("system", "netQuotaMax", "", "n", 1, function(context) return context:GetNetQuota(); end);
+
+	extension:RegisterFunction("system", "quota", "", "n", 1, function(context) return context.net_total or 0; end);
+	extension:RegisterFunction("system", "netQuota", "", "n", 1, function(context) return context.cpu_total or 0; end);
+
+	extension:RegisterFunction("system", "quotaUsage", "", "n", 1, function(context) return context.cpu_softusage or 0; end);
+	extension:RegisterFunction("system", "quotaAverage", "", "n", 1, function(context) return context.cpu_average or 0; end);
+	extension:RegisterFunction("system", "movingQuotaAverage", "", "n", 1, function(context) return context:movingCPUAverage(); end);
+
 --[[
 	*****************************************************************************************************************************************************
 		Print to chat and console

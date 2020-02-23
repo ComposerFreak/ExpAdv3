@@ -34,8 +34,8 @@ function PANEL:AddGlobalNode()
 		local pNode = self:AddNode(oNode, perm);
 		local btn = self:EmbedButton(pNode, "GOLEM_StateBox", 24, 0);
 		
-		pNode:SetIcon(data[2]);
-		pNode:SetTooltip(data[3]);
+		pNode:SetIcon(data[2]); -- icon
+		pNode:SetTooltip(data[3]); --desc
 
 		btn:AddState("allow", EXPR_ALLOW, "fugue/tick.png", "Allowed");
 		btn:AddState("deny", EXPR_DENY, "fugue/cross-button.png", "Denied");

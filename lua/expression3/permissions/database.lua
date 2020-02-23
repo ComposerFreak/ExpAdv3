@@ -9,6 +9,22 @@ EXPR_FRIEND = 1;
 EXPR_GLOBAL = 1; --Yes this is deliberate.
 EXPR_ALLOW = 2;
 
+/****************************************************************************************************************************
+	
+****************************************************************************************************************************/
+local FriendCheck;
+local PPCheckPlayer;
+local PPCheck;
+local SetGlobal;
+local GetGlobal;
+local Owner;
+local Set;
+local Get;
+
+/****************************************************************************************************************************
+	
+****************************************************************************************************************************/
+
 function EXPR_PERMS.getAll()
 	return EXPR_LIB.PERMS;
 end
@@ -17,7 +33,7 @@ end
 	Get Owner
 ****************************************************************************************************************************/
 
-local Owner = function(entity)
+Owner = function(entity)
 	local owner;
 
 	if not IsValid(entity) then
@@ -48,7 +64,7 @@ local ply_perms = {};
 
 EXPR_PERMS.__PlayerPerms =  ply_perms;
 
-local SetGlobal = function(player, perm, value)
+SetGlobal = function(player, perm, value)
 	local id = player:UserID();
 
 	local perms = ply_perms[id];
@@ -67,7 +83,7 @@ EXPR_PERMS.SetGlobal = SetGlobal;
 	Get Global Setting
 ****************************************************************************************************************************/
 
-local GetGlobal = function(player, perm)
+GetGlobal = function(player, perm)
 	local id = player:UserID();
 
 	local perms = ply_perms[id];
@@ -83,10 +99,11 @@ EXPR_PERMS.GetGlobal = GetGlobal;
 	Set Perm Setting
 ****************************************************************************************************************************/
 
-local Set = function(entity, target, perm, value)
+Set = function(entity, target, perm, value)
 	
 	if not IsValid(entity) then return false; end
 	if not IsValid(target) then return false; end
+	if not entity.Expression3 then return false; end
 
 	local tid = target:UserID();
 	local perms = entity.permissions[tid];
@@ -96,7 +113,15 @@ local Set = function(entity, target, perm, value)
 		entity.permissions[tid] = perms;
 	end
 
-	perms[perm] = value;
+	local old = perms[perm];
+
+	if old ~= value then
+		perms[perm] = value;
+
+		if entity.CallEvent then
+			ent:CallEvent("", 0, "PermissionChanged", {"p", target}, {"s", perm}, {"b", PPCheckPlayer(entity, target, perm)});
+		end
+	end
 
 	return true;
 end
@@ -107,7 +132,7 @@ EXPR_PERMS.Set = Set;
 	Get Perm Setting
 ****************************************************************************************************************************/
 
-local Get = function(entity, target, perm, notGlobal)
+Get = function(entity, target, perm, notGlobal)
 	
 	if IsValid(entity) and IsValid(target) then
 
@@ -142,7 +167,7 @@ EXPR_PERMS.Get = Get;
 	Friend Check
 	Stolen from e2lib
 ****************************************************************************************************************************/
-local FriendCheck = function(player, target)
+FriendCheck = function(player, target)
 
 	if not IsValid(player) then return false; end
 	if not playerCPPIGetFriends then return false; end
@@ -166,12 +191,12 @@ EXPR_PERMS.FriendCheck = FriendCheck;
 	Permission check
 ****************************************************************************************************************************/
 
-local PPCheck = function(entity, object, perm)
+PPCheck = function(entity, object, perm)
 	local owner = Owner(object);
 
 	if not IsValid(owner) then return false; end
 
-	local r = Get(entity, owner, perm or "Prop-Control");
+	local r = Get(entity, owner, perm or "PropControl");
 
 	if r == EXPR_DENY then return false; end
 	if r == EXPR_ALLOW then return true; end
@@ -181,10 +206,10 @@ end
 
 EXPR_PERMS.PPCheck = PPCheck;
 
-local PPCheckPlayer = function(entity, target, perm)
+PPCheckPlayer = function(entity, target, perm)
 	if not IsValid(target) then return false; end
 
-	local r = Get(entity, target, perm or "Prop-Control");
+	local r = Get(entity, target, perm or "PropControl");
 
 	if r == EXPR_DENY then return false; end
 	if r == EXPR_ALLOW then return true; end

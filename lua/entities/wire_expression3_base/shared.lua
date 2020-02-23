@@ -15,6 +15,10 @@ AddCSLuaFile();
 include("sh_cppi.lua");
 include("sh_context.lua");
 
+/****************************************************************************************************************************
+	Entity Properties
+****************************************************************************************************************************/
+
 ENT.Type 			= "anim";
 ENT.Base 			= "base_wire_entity";
 
@@ -24,14 +28,18 @@ ENT.Contact         = "";
 
 ENT.Expression3 	= true;
 
+/****************************************************************************************************************************
+	Util
+****************************************************************************************************************************/
+
 local function name(id)
 	local obj = E3Class(id);
 	return obj and obj.name or id;
 end
 
---[[
-	Validate / Set Code
-]]
+/****************************************************************************************************************************
+	Execute Code
+****************************************************************************************************************************/
 
 function ENT:ExecuteInstance(instance, run)
 	self:ShutDown();
@@ -51,15 +59,17 @@ function ENT:ExecuteInstance(instance, run)
 
 	if (run) then
 		timer.Simple(0.2, function()
-			if (IsValid(self)) then self:InitScript(); end
+			if (IsValid(self)) then
+				self:InitScript();
+			end
 		end);
 	end
 end
 
+/****************************************************************************************************************************
+	Setting Code
+****************************************************************************************************************************/
 
---[[
-	Validate / Set Code
-]]
 function ENT:SetCode(script, files, run, cb2)
 	self.script = script;
 	self.files = files;
@@ -94,9 +104,9 @@ function ENT:SetCode(script, files, run, cb2)
 	return true, self.validator;
 end
 
---[[
-	Building a new context
-]]
+/****************************************************************************************************************************
+	Build Context
+****************************************************************************************************************************/
 
 function ENT:BuildContext(instance)
 	self.context = EXPR_CONTEXT.New();
@@ -236,9 +246,9 @@ function ENT:InitScript()
 	self:PostInitScript();
 end
 
---[[
-	Executing
-]]
+/****************************************************************************************************************************
+	Executing Code
+****************************************************************************************************************************/
 
 function ENT:Execute(func, ...) -- This is the new one.
 	local tb, es = {};
@@ -275,9 +285,9 @@ function ENT:Execute(func, ...) -- This is the new one.
 	return unpack(results);
 end
 
---[[
-	Gate is running and exceptions
-]]
+/****************************************************************************************************************************
+	Running and Shut Down
+****************************************************************************************************************************/
 
 function ENT:IsRunning()
 	return (self.context and self.context.status);
@@ -295,8 +305,9 @@ function ENT:OnRemove()
 	self:ShutDown();
 end
 
---[[
-]]
+/****************************************************************************************************************************
+	Logging
+****************************************************************************************************************************/
 
 function ENT:WriteToLogger(...)
 	local log, logger = {...}, self.Logger;
@@ -331,6 +342,10 @@ if (stackTrace and #stackTrace > 0) then
 		self:WriteToLogger("}\n");
 	end
 end
+
+/****************************************************************************************************************************
+	Error Handaling
+****************************************************************************************************************************/
 
 function ENT:HandelThrown(thrown, stackTrace)
 	print("HandelThrown", self, thrown);
@@ -377,9 +392,9 @@ function ENT:HandelThrown(thrown, stackTrace)
 	self:ShutDown(true);
 end
 
---[[
+/****************************************************************************************************************************
 	Invoke: postfix your result type with * if you do not need a result, or the result type is irrelivant.
-]]
+****************************************************************************************************************************/
 
 function ENT:Invoke(where, result, count, udf, ...)
 	if (self:IsRunning()) then
@@ -407,22 +422,16 @@ function ENT:Invoke(where, result, count, udf, ...)
 				result, count = "_nil", 0;
 			end
 
-			if ( (result ~= r or count ~= c) and not optional ) then
-				local context = self.context;
-
-				if (udf.scr) then
-					context = udf.scr;
-				end
-
+			if ( (result ~= r or count > c) and not optional ) then
 				local msg = string.format("Invoked function with incorrect return type %q:%i expected, got %q:%i (%s).", name(result), count, name(r), c, where);
 
-				if context then
+				if udf.scr and udf.scr.entity ~= self then
 					context:Throw(msg);
 				else
 					self:HandelThrown(msg);
-					return false, msg;
 				end
-
+				
+				return false, msg;
 			end
 
 			self.context:PreExecute();
@@ -467,43 +476,57 @@ function ENT:CallEvent(result, count, event, ...)
 	end
 end
 
---[[
-	Performance Related Stuff
-]]
+/****************************************************************************************************************************
+	Performance Fucntions
+****************************************************************************************************************************/
+
 
 function ENT:SetupDataTables()
 	self:NetworkVar("String", 0, "ScriptName");
 	self:NetworkVar("Float", 0, "ServerSoftCPU");
-	self:NetworkVar("Float", 0, "ServerAverageCPU");
+	self:NetworkVar("Float", 1, "ServerAverageCPU");
 	self:NetworkVar("Bool", 1, "ServerWarning");
+	self:NetworkVar("Bool", 2, "ServerOnline");
 end
 
 if (CLIENT) then
 	AccessorFunc(ENT, "cl_soft_cpu", "ClientSoftCPU", FORCE_NUMBER);
 	AccessorFunc(ENT, "cl_average_cpu", "ClientAverageCPU", FORCE_NUMBER);
 	AccessorFunc(ENT, "cl_cpu_warning", "ClientWarning", FORCE_BOOL);
+	AccessorFunc(ENT, "cl_online", "ClientOnline", FORCE_BOOL);
 end
 
 function ENT:UpdateQuotaValues()
 	local context = self.context;
 
-	if (context) then
-
-		if (SERVER) then
+	if (SERVER) then
+		if (context) then
 			self:SetServerSoftCPU(context.cpu_softusage);
 			self:SetServerAverageCPU(context.cpu_average);
 			self:SetServerWarning(context.cpu_warning);
 		end
 
-		if (CLIENT) then
+		self:SetServerOnline(context and context.status);
+	end
+
+	if (CLIENT) then
+		if (context) then
 			self:SetClientSoftCPU(context.cpu_softusage);
 			self:SetClientAverageCPU(context.cpu_average);
 			self:SetClientWarning(context.cpu_warning);
 		end
 
+		self:SetClientOnline(context and context.status);
+	end
+
+	if (context) then
 		context:UpdateQuotaValues();
 	end
 end
+
+/****************************************************************************************************************************
+	Thinking
+****************************************************************************************************************************/
 
 function ENT:Think()
 	self:UpdateQuotaValues();
@@ -515,9 +538,9 @@ function ENT:Think()
 	hook.Run("Expression3.Entity.Think", self, self.context);
 end
 
---[[
-	Network Messages
-]]
+/****************************************************************************************************************************
+	Netowking
+****************************************************************************************************************************/
 
 if SERVER then
 	util.AddNetworkString("Expression3.EntMessage");
@@ -598,9 +621,9 @@ net.Receive("Expression3.EntMessage", function()
 	end
 end);
 
---[[
-	Chat Messages
-]]
+/****************************************************************************************************************************
+	Net Messages
+****************************************************************************************************************************/
 
 if SERVER then
 	util.AddNetworkString("SendToChat");

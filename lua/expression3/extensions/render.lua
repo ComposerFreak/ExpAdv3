@@ -11,10 +11,13 @@
 	``````````````````````
 ]]
 
-local FONT, FSIZE;
-local TEXTURE, MATERIAL;
-local DRED, DGREEN, DBLUE, DALPHA;
-local TRED, TGREEN, TBLUE, TALPHA;
+local blankfunc = function() end;
+
+--[[
+	*****************************************************************************************************************************************************
+		FONTS
+	*****************************************************************************************************************************************************
+]]--
 
 E3Fonts = {};
 
@@ -35,54 +38,50 @@ local function setFont(basefont, size)
 		E3Fonts[font] = font;
 	end
 
-	FONT = font;
-	FSIZE = size;
-end
-
-local function resetRenderer()
-	DRED, DGREEN, DBLUE, DALPHA = 255, 255, 255, 255;
-	TRED, TGREEN, TBLUE, TALPHA = 0, 0, 0, 255;
-	TEXTURE, MATERIAL = 0, Material("");
-	setFont("Arial", 12);
-end
-
-if (CLIENT) then
-	resetRenderer();
-	hook.Add("Expression3.Entity.PostDrawScreen", "Expression3.Render.Reset", resetRenderer);
-end
-
-local function preDraw(ctx, textured)
-	if (not EXPR3_DRAWSCREEN) then
-		ctx:Throw("Attempted to render outside of a rendering event.");
-	end
-
-	surface.SetDrawColor(DRED, DGREEN, DBLUE, DALPHA);
-
-	if (textured and TEXTURE > 0) then
-		surface.SetTexture(TEXTURE);
-		return true;
-	else
-		draw.NoTexture();
-		return false;
-	end
-end
-
-local function preText(ctx)
-	if (not EXPR3_DRAWSCREEN) then
-		ctx:Throw("Attempted to render outside of a rendering event.");
-	end
-
-	surface.SetFont(FONT);
-	surface.SetTextColor(TRED, TGREEN, TBLUE, TALPHA);
+	surface.SetFont(font);
 end
 
 --[[
-	Extension
-]]
+	*****************************************************************************************************************************************************
+		RENDER UTIL
+	*****************************************************************************************************************************************************
+]]--
+
+if (CLIENT) then
+
+	local function resetRenderer()
+		surface.SetTextColor(255, 255, 255, 255);
+		surface.SetDrawColor(0, 0, 0, 255);
+		setFont("Arial", 12);
+		draw.NoTexture();
+	end
+
+	hook.Add("Expression3.Entity.PreDrawScreen", "Expression3.Render", resetRenderer);
+end
+
+local function preDraw(ctx)
+	if (not EXPR3_DRAWSCREEN) then
+		ctx:Throw("Attempted to render outside of a rendering event.");
+	end
+end
+
+--[[
+	*****************************************************************************************************************************************************
+		RENDER EXTENTION
+	*****************************************************************************************************************************************************
+]]--
 
 local extension = EXPR_LIB.RegisterExtension("render");
 
 extension:SetClientState();
+
+--[[
+	*****************************************************************************************************************************************************
+		Screen options
+	*****************************************************************************************************************************************************
+]]--
+
+extension:RegisterPermission("RenderScreen", "fugue/monitor-screensaver.png", "This gate is allowed to render to\nits inbuilt screen.");
 
 extension:RegisterLibrary("render");
 
@@ -95,58 +94,65 @@ extension:RegisterFunction("render", "getScreenRefresh", "", "b", 1, function(ct
 end, false);
 
 --[[
-	Getter and Setter for color and font
-]]
+	*****************************************************************************************************************************************************
+		RENDER OPTIONS
+	*****************************************************************************************************************************************************
+]]--
 
-extension:RegisterFunction("render", "setFontColor", "n,n,n", "", 0, function(r, g, b)
-	TRED, TGREEN, TBLUE, TALPHA = r, g, b, 255;
-end, true);
+extension:RegisterFunction("render", "setFontColor", "n,n,n", "", 0, CLIENT and surface.SetTextColor or blankfunc, true);
 
-extension:RegisterFunction("render", "setFontColor", "n,n,n,n", "", 0, function(r, g, b, a)
-	TRED, TGREEN, TBLUE, TALPHA= r, g, b, a;
-end, true);
+extension:RegisterFunction("render", "setFontColor", "n,n,n,n", "", 0, CLIENT and surface.SetTextColor or blankfunc, true);
 
 extension:RegisterFunction("render", "setFontColor", "c", "", 0, function(c)
-	TRED, TGREEN, TBLUE, TALPHA = c.r, c.g, c.b, c.a;
-end, true);
-
-extension:RegisterFunction("render", "getFontColor", "", "c", 1, function()
-	return Color(TRED, TGREEN, TBLUE, TALPHA);
-end, true);
-
-extension:RegisterFunction("render", "setColor", "n,n,n", "", 0, function(r, g, b)
-	DRED, DGREEN, DBLUE, DALPHA = r, g, b, 255;
-end, true);
-
-extension:RegisterFunction("render", "setColor", "n,n,n,n", "", 0, function(r, g, b, a)
-	DRED, DGREEN, DBLUE, DALPHA = r, g, b, a;
-end, true);
-
-extension:RegisterFunction("render", "setColor", "c", "", 0, function(c)
-	DRED, DGREEN, DBLUE, DALPHA = c.r, c.g, c.b, c.a;
-end, true);
-
-extension:RegisterFunction("render", "getColor", "", "c", 1, function()
-	return Color(DRED, DGREEN, DBLUE, DALPHA);
+	surface.SetTextColor(c.r, c.g, c.b, c.a);
 end, true);
 
 extension:RegisterFunction("render", "setFont", "s,n", "", 0, setFont, true);
 
---[[
-	Materials and Textures
-]]
-
-extension:RegisterFunction("render", "setTexture", "", "", 0, function(texture)
-	TEXTURE = 0;
+extension:RegisterFunction("render", "getFontColor", "", "c", 1, function()
+	local c = surface.GetTextColor();
+	return Color(c.r, c.g, c.b, c.a);
 end, true);
+
+
+
+extension:RegisterFunction("render", "setColor", "n,n,n", "", 0, CLIENT and surface.SetDrawColor or blankfunc, true);
+
+extension:RegisterFunction("render", "setColor", "n,n,n,n", "", 0, CLIENT and surface.SetDrawColor or blankfunc, true);
+
+extension:RegisterFunction("render", "setColor", "c", "", 0, function(c)
+	surface.SetDrawColor(c.r, c.g, c.b, c.a);
+end, true);
+
+extension:RegisterFunction("render", "getColor", "", "c", 1, function()
+	local c = surface.GetDrawColor();
+	return Color(c.r, c.g, c.b, c.a);
+end, true);
+
+--[[
+	*****************************************************************************************************************************************************
+		RENDER MATERIAL AND TEXTURES
+	*****************************************************************************************************************************************************
+]]--
+
+extension:RegisterFunction("render", "setTexture", "", "", 0, CLIENT and draw.NoTexture or blankfunc, true);
 
 extension:RegisterFunction("render", "setTexture", "s", "", 0, function(texture)
-	TEXTURE = surface.GetTextureID(texture) or 0;
+	local id = surface.GetTextureID(texture);
+
+	if id > 0 then
+		surface.SetTexture(id);
+	else
+		draw.NoTexture();
+	end
+
 end, true);
 
 --[[
-	Polys
-]]
+	*****************************************************************************************************************************************************
+		POLYGONS
+	*****************************************************************************************************************************************************
+]]--
 
 local function cc(a, b, c)
 	local area = (a.x - c.x) * (b.y - c.y) - (b.x - c.x) * (a.y - c.y)
@@ -170,26 +176,28 @@ local function drawPolyOutline(points)
 end
 
 --[[
-	Basic Shapes
-]]
+	*****************************************************************************************************************************************************
+		IBASIC SHAPES
+	*****************************************************************************************************************************************************
+]]--
 
 extension:RegisterFunction("render", "drawLine", "v2,v2", "", 0, function(ctx, s, e)
-	preDraw(ctx, false);
+	preDraw(ctx);
 	surface.DrawLine(s.x, s.y, e.x, e.y);
 end, false);
 
 extension:RegisterFunction("render", "drawBox", "v2,v2", "", 0, function(ctx, p, w)
-	preDraw(ctx, true);
+	preDraw(ctx);
 	surface.DrawTexturedRect(p.x, p.y, w.x, w.y);
 end, false)
 
 extension:RegisterFunction("render", "drawBox", "v2,v2,n", "", 0, function(ctx, p, w, a)
-	preDraw(ctx, true);
+	preDraw(ctx);
 	surface.DrawTexturedRectRotated(p.x, p.y, w.x, w.y, a);
 end, false);
 
 extension:RegisterFunction("render", "drawBoxOutline", "v2,v2", "", 0, function(ctx, p, w)
-	preDraw(ctx, false);
+	preDraw(ctx);
 
 	local x, y = p.x, p.y;
 	local w, h = w.x, w.y;
@@ -198,17 +206,17 @@ extension:RegisterFunction("render", "drawBoxOutline", "v2,v2", "", 0, function(
 end, false);
 
 extension:RegisterFunction("render", "drawTriangle", "v2,v2,v2", "", 0, function(ctx, a, b, c)
-	preDraw(ctx, true);
+	preDraw(ctx);
 	drawPoly({a, b, c});
 end, false);
 
 extension:RegisterFunction("render", "drawTriangleOutline", "v2,v2,v2", "", 0, function(ctx, a, b, c)
-	preDraw(ctx, false);
+	preDraw(ctx);
 	drawPolyOutline({a, b, c});
 end, false);
 
 extension:RegisterFunction("render", "drawCircle", "v2,n", "", 0, function(ctx, p, r)
-	preDraw(ctx, true);
+	preDraw(ctx);
 
 	local vertices = { }
 
@@ -220,7 +228,7 @@ extension:RegisterFunction("render", "drawCircle", "v2,n", "", 0, function(ctx, 
 end, false);
 
 extension:RegisterFunction("render", "drawCircleOutline", "v2,n", "", 0, function(ctx, p, r)
-	preDraw(ctx, false);
+	preDraw(ctx);
 
 	local vertices = { };
 
@@ -232,7 +240,7 @@ extension:RegisterFunction("render", "drawCircleOutline", "v2,n", "", 0, functio
 end, false);
 
 extension:RegisterFunction("render", "drawPoly", "t", "", 0, function(ctx, tbl)
-	preDraw(ctx, true);
+	preDraw(ctx);
 
 	local vertices = { };
 
@@ -246,7 +254,7 @@ extension:RegisterFunction("render", "drawPoly", "t", "", 0, function(ctx, tbl)
 end, false);
 
 extension:RegisterFunction("render", "drawPolyOutline", "t", "", 0, function(ctx, tbl)
-	preDraw(ctx, false);
+	preDraw(ctx);
 
 	local vertices = { };
 
@@ -260,8 +268,10 @@ extension:RegisterFunction("render", "drawPolyOutline", "t", "", 0, function(ctx
 end, false);
 
 --[[
-	Text
-]]
+	*****************************************************************************************************************************************************
+		TEXT
+	*****************************************************************************************************************************************************
+]]--
 
 extension:RegisterFunction("render", "getTextSize", "s", "n", 2, function(str)
 	surface.setFont(FONT);

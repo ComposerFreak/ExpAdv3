@@ -12,6 +12,10 @@
 
 AddCSLuaFile();
 
+/****************************************************************************************************************************
+	Screen Entity Properties
+****************************************************************************************************************************/
+
 ENT.Type 			= "anim";
 ENT.Base 			= "wire_expression3_base";
 
@@ -24,6 +28,10 @@ ENT.Expression3_Screen 	= true;
 
 EXPR3_DRAWSCREEN = false;
 
+/****************************************************************************************************************************
+	Initalization
+****************************************************************************************************************************/
+
 if (SERVER) then
 	function ENT:Initialize()
 		self.BaseClass.BaseClass.Initialize(self);
@@ -34,10 +42,15 @@ if (SERVER) then
 end
 
 if (CLIENT) then
+
 	function ENT:Initialize()
 		self.bDrawSplash = true;
 		self.GPU = GPULib.WireGPU(self)--, WIRE_GPU_HD);
 	end
+
+/****************************************************************************************************************************
+	Rendering
+****************************************************************************************************************************/
 
 	function ENT:DrawEntityOutline() end
 
@@ -48,47 +61,97 @@ if (CLIENT) then
 
 		Wire_Render(self)
 
-		self.GPU:RenderToGPU( self:RenderFromEvent() );
+		self.GPU:RenderToGPU( function()
+			self:RenderFromEvent();
+		end);
 
 		self.GPU:Render()
 	end
 
+/****************************************************************************************************************************
+	Screen Rendering Event
+****************************************************************************************************************************/
+
 	function ENT:RenderFromEvent()
-		return function()
-			if not self.NoScreenRefresh then render.Clear( 0, 0, 0, 255 ); end
-			
-			EXPR3_DRAWSCREEN = true;
 
-			local res = self.GPU.Resolution or 512;
+		if not self.NoScreenRefresh then
+			render.Clear( 0, 0, 0, 255 );
+		end
 
-			local status = self:CallEvent("", 0, "RenderScreen", {"n", res}, {"n", res}, {"e", self});
-			
-			EXPR3_DRAWSCREEN = false;
+		local status = false;
+		local context = self.context;
+		local res = self.GPU.Resolution or 512;
 
-			if status == nil then self:RenderSplashScreen(res); end
+		if context then
 
-			hook.Call("Expression3.Entity.PostDrawScreen", self.context, self);
-		end;
-	end
+			if not context.status then
+				self:RenderErrorScreen(res);
+				return;
+			end
 
-	local background = surface.GetTextureID("omicron/bulb");
+			if context.events.RenderScreen then
 
-	function ENT:RenderSplashScreen(res, force)
-		force = force or not self:IsRunning();
-		if self.bDrawSplash or force then
-			surface.SetTexture(background);
-			surface.SetDrawColor(Color(255, 255, 255, 255));
-			surface.DrawTexturedRect(0, 0, res, res);
-			self.bDrawSplash = false;
+				if self:ppPlayer(LocalPlayer(), "RenderScreen") then
+					hook.Run("Expression3.Entity.PreDrawScreen", context, self);
+
+					EXPR3_DRAWSCREEN = true;
+
+					self:CallEvent("", 0, "RenderScreen", {"n", res}, {"n", res}, {"e", self});
+				
+					EXPR3_DRAWSCREEN = false;
+
+					hook.Run("Expression3.Entity.PostDrawScreen", context, self);
+
+					status = true;
+				end
+
+			end
+
+		end
+
+		if not status then
+			self:RenderSplashScreen(res);
 		end
 	end
 
+/****************************************************************************************************************************
+	Spash Screen
+****************************************************************************************************************************/
+
+	local bulb = surface.GetTextureID("omicron/bulb");
+
+	function ENT:RenderSplashScreen(res, force)
+		surface.SetTexture(bulb);
+		surface.SetDrawColor(Color(255, 255, 255, 255));
+		surface.DrawTexturedRect(0, 0, res, res);
+	end
+
+/****************************************************************************************************************************
+	Dead Jim Screen
+****************************************************************************************************************************/
+	
+	local bosd = surface.GetTextureID("tanknut/bosd");
+
+	function ENT:RenderErrorScreen(res)
+		surface.SetTexture(bosd);
+		surface.SetDrawColor(Color(255, 255, 255, 255));
+		surface.DrawTexturedRect(0, 0, res, res);
+	end
+
 end
+
+/****************************************************************************************************************************
+	Shut Down
+****************************************************************************************************************************/
 
 function ENT:OnRemove()
 	if (CLIENT) then self.GPU:Finalize() end
 	self:ShutDown();
 end
+
+/****************************************************************************************************************************
+	Cursor
+****************************************************************************************************************************/
 
 function ENT:GetCursor(ply)
 	-- LITTERALY RIPPED OUT OF EGP!
@@ -138,6 +201,10 @@ function ENT:GetCursor(ply)
 	return -1,-1
 end
 
+/****************************************************************************************************************************
+	Cursor Caculations
+****************************************************************************************************************************/
+
 function ENT:ScreenToLocalVector( x, y )
 	local Monitor = WireGPU_Monitors[ self:GetModel() ];
 
@@ -159,6 +226,10 @@ end
 function ENT:ScreenToWorld( x, y )
 	return self:LocalToWorld( self:ScreenToLocalVector( x, y ) )
 end
+
+/****************************************************************************************************************************
+	Use Button and event
+****************************************************************************************************************************/
 
 if (SERVER) then
 	util.AddNetworkString("Expression3.Screen.Use");

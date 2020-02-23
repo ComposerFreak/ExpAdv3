@@ -165,7 +165,7 @@ end
 ]]
 
 function CONTEXT:CanUseEntity(entity)
-	return self:ppCheck(entity, "Prop-Control");
+	return self:ppCheck(entity, "PropControl");
 end
 
 --[[

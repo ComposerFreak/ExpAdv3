@@ -3,7 +3,7 @@
 ]]
 
 local request = function(ctx, url, suc, fail)
-	if not ctx:canGetURL(url, "HTTP-Requests") then return false; end
+	if not ctx:canGetURL(url, "HTTPRequests") then return false; end
 
 	local entity = ctx.entity;
 
@@ -29,7 +29,7 @@ extension:SetClientState();
 
 extension:RegisterLibrary("http");
 
-extension:RegisterPermission("HTTP-Requests", "fugue/drive-upload.png", "This gate is allowed to make http requests\nthe filter setting will still be applied..");
+extension:RegisterPermission("HTTPRequests", "fugue/drive-upload.png", "This gate is allowed to make http requests the filter setting will still be applied.");
 
 
 extension:RegisterFunction("http", "request", "s,f", "b", 1, request, false);

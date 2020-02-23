@@ -482,20 +482,23 @@ if SERVER then
 	end
 
 	hook.Add( "PlayerInitialSpawn", "Expression3.Hologram", function( Player )
-		net.Start( "Expression3.Hologram" )
+		
+		timer.Simple(1, function()
+			net.Start( "Expression3.Hologram" )
 
-			net.WriteUInt( 0, 16 )
+				net.WriteUInt( 0, 16 )
 
-			for _, ENT in pairs( ents.FindByClass( "wire_expression3_hologram" ) ) do
-				ENT:SyncClient( true )
-			end
+				for _, ENT in pairs( ents.FindByClass( "wire_expression3_hologram" ) ) do
+					ENT:SyncClient( true )
+				end
 
-			net.WriteUInt( 0, 16 )
+				net.WriteUInt( 0, 16 )
 
-		net.Send( Player )
+			net.Send( Player )
 
-		SyncBlockedHolograms( Player )
-	end )
+			SyncBlockedHolograms( Player )
+		end );
+	end);
 
 	hook.Add( "Tick", "Expression3.Hologram", function( )
 		local Queue = { }

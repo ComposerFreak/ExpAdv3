@@ -13,8 +13,9 @@
 AddCSLuaFile("cl_init.lua");
 include("shared.lua");
 
---[[
-]]
+/****************************************************************************************************************************
+	Client Script Upload
+****************************************************************************************************************************/
 
 function ENT:ReceiveFromClient(ply, script, files)
 	if (self:CanSetCode(ply)) then
@@ -33,20 +34,27 @@ net.Receive("Expression3.InitializedClient", function(len, ply)
 	end
 end)
 
---[[
-]]
+/****************************************************************************************************************************
+	Permission Check for Code Upload
+****************************************************************************************************************************/
 
 function ENT:CanSetCode(ply)
 	return true; -- TODO: Make this do somthing more secure.
 end
 
---[[
-]]
+/****************************************************************************************************************************
+	Entity Initialize
+****************************************************************************************************************************/
 
 function ENT:Initialize( )
+	self.BaseClass.Initialize(self);
+
 	self:PhysicsInit(SOLID_VPHYSICS);
 	self:SetMoveType(MOVETYPE_VPHYSICS);
 	self:SetSolid(SOLID_VPHYSICS);
+
+	self.Inputs = WireLib.CreateInputs( self, { } );
+	self.Outputs = WireLib.CreateOutputs( self, { } );
 end
 
 
@@ -56,8 +64,9 @@ end
 function ENT:PostInitScript()
 end
 
---[[
-]]
+/****************************************************************************************************************************
+	Wire Ports
+****************************************************************************************************************************/
 
 local function SortPorts( PortA, PortB )
 	local TypeA = PortA.wire or "NORMAL"
@@ -166,19 +175,9 @@ function ENT:BuildWiredPorts(sort_in, sort_out)
 	end
 end
 
---[[
-
-]]
-
-function ENT:Initialize()
-	self.BaseClass.Initialize(self);
-	self.Inputs = WireLib.CreateInputs( self, { } )
-	self.Outputs = WireLib.CreateOutputs( self, { } )
-end
-
---[[
-	DUPE
-]]
+/****************************************************************************************************************************
+	DUPLICATOR HACKS
+****************************************************************************************************************************/
 
 function ENT:BuildDupeInfo()
 	local info = self.BaseClass.BuildDupeInfo(self) or {};
@@ -202,10 +201,9 @@ function ENT:ApplyDupeInfo(ply, ent, info, GetEntByID)
 	self.BaseClass.ApplyDupeInfo(self, ply, ent, info, GetEntByID);
 end
 
---[[
-	Fix advanced dupe attempting to seralize the context witch breaks EVERYTHING.
-	#Fuck you Garry, why you do this?
-]]
+/****************************************************************************************************************************
+	The Hacks
+****************************************************************************************************************************/
 
 local context;
 

@@ -9,10 +9,12 @@
 
 	::Expression 3 Base::
 ]]
+
 include("shared.lua");
 
---[[
-]]
+/****************************************************************************************************************************
+	Client Side Validation
+****************************************************************************************************************************/
 
 local ValidateError;
 
@@ -38,8 +40,9 @@ function ValidateError(Thrown )
 	Golem.Print(Error);
 end
 
---[[
-]]
+/****************************************************************************************************************************
+	Server To Client Transfer
+****************************************************************************************************************************/
 
 function ENT:ReceiveFromServer(ply, script, files)
 	timer.Simple(1, function()
@@ -56,7 +59,10 @@ function ENT:PostInitScript()
 	net.SendToServer();
 end
 
--- function ENT:GetOverlayText()
+/****************************************************************************************************************************
+	Client Side Overlay
+****************************************************************************************************************************/
+
 function ENT:GetOverlayData()
 	return {txt = table.concat({
 		"::Expression 3::",
@@ -80,18 +86,168 @@ local function percent(part, whole)
 	return p;
 end
 
-function ENT:GetDisplayLine(soft, average, warning)
-	if not self.context or not self.context.status then
-		return "Offline";
-	end
-
+function ENT:GetDisplayLine(online, soft, average, warning)
+	if not online then return "Offline"; end
 	return math.ceil(average * 100) .. "% (" .. math.ceil(soft * 1000000) .. "us" .. (warning and "!" or "") .. ")";
 end
 
 function ENT:GetClientDisplayData()
-	return self:GetDisplayLine(self:GetClientSoftCPU(), self:GetClientAverageCPU(), self:GetClientWarning());
+	return self:GetDisplayLine(self:GetClientOnline(), self:GetClientSoftCPU(), self:GetClientAverageCPU(), self:GetClientWarning());
 end
 
 function ENT:GetServerDisplayData()
-	return self:GetDisplayLine(self:GetServerSoftCPU(), self:GetServerAverageCPU(), self:GetServerWarning());
+	return self:GetDisplayLine(self:GetServerOnline(), self:GetServerSoftCPU(), self:GetServerAverageCPU(), self:GetServerWarning());
+end
+
+/****************************************************************************************************************************
+	Permissions Menu
+****************************************************************************************************************************/
+
+function ENT:OpenPermissionsMenu()
+
+	if IsValid(self.FeaturesPanel) then
+		self.FeaturesPanel:Remove();
+	end
+
+	local status, results = self:CallEvent("t", 0, "GatherPermissions");
+
+	if status and results then
+		local result = results[1];
+
+		if result and result.size > 0 then
+
+			local perms = {};
+
+			for _, v in pairs(result.tbl) do
+				if v[1] == "s" then
+					local perm = v[2];
+					
+					if EXPR_LIB.PERMS[perm] then
+						perms[#perms + 1] = perm;
+					end
+				end
+			end
+
+			if #perms > 0 then
+
+				local pnl = vgui.Create("E3_TekMenu");
+				pnl:SetUp(self, perms);
+				pnl:Center();
+				pnl:MakePopup( );
+
+				self.FeaturesPanel = pnl
+
+				return true;
+			end
+		end
+	end
+
+	return false;
+end
+
+/****************************************************************************************************************************
+	Context Menu
+****************************************************************************************************************************/
+
+local function Filter( self, Entity, Player )
+	if not (IsValid( Entity) and Entity.Expression3) then
+		return false;
+	end
+
+	return true
+end
+
+local function MenuOpen( ContextMenu, Option, Entity, Trace )
+	local SubMenu = Option:AddSubMenu( )
+
+	SubMenu:AddOption("Show Permissions", function()
+		Entity:OpenPermissionsMenu();
+	end);
+end
+
+properties.Add( "expadv", {
+	MenuLabel = "Expression Advanced",
+	MenuIcon  = "fugue/gear.png",
+	Order = 999,
+	Filter = Filter,
+	MenuOpen = MenuOpen,
+	Action = function( ) end,
+} ); -- We wont use recieve here, Send it yourself :D
+
+/****************************************************************************************************************************
+	Add a pulsing effect over the entity.
+****************************************************************************************************************************/
+
+function ENT:DrawPulse(red, green, blue)
+	if self == halo.RenderedEntity() then return; end
+
+    local radius, width = (self.radius or 1) + 0.1, Lerp(self.radius or 0, 5, 15)
+    
+    if radius > 150 then radius = 0 end
+    
+    self.radius = radius
+
+    local pos = self:LocalToWorld(self:OBBCenter());
+
+    if self:GetModel( ) == "models/lemongate/lemongate.mdl" then
+        pos = self:GetAttachment(self:LookupAttachment("fan_attch")).Pos;
+    end
+
+    local p, a, r = pos, self:GetAngles(), 0.1;
+
+    render.SetStencilEnable( true );
+    render.SetStencilWriteMask( 3 );
+    render.SetStencilTestMask( 3 );
+    render.ClearStencil( );
+
+    render.SetStencilReferenceValue(1);
+    render.SetStencilPassOperation( STENCIL_REPLACE );
+    render.SetStencilFailOperation( STENCIL_REPLACE );
+    render.SetStencilZFailOperation( STENCIL_REPLACE );
+
+    render.SetStencilCompareFunction(STENCIL_NEVER);
+
+    cam.Start3D2D(p, a, r);
+        for i = 0, 4 do
+            surface.SetDrawColor(Color(0, 0, 255, 255));
+            surface.DrawTexturedRectRotated(0, 0, (radius) * 2, (radius) * 2, i * 45);
+        end
+    cam.End3D2D();
+
+    render.SetStencilReferenceValue(1);
+    render.SetStencilPassOperation( STENCIL_ZERO );
+    render.SetStencilFailOperation( STENCIL_ZERO );
+    render.SetStencilZFailOperation( STENCIL_ZERO );
+
+    render.SetStencilCompareFunction(STENCIL_NEVER);
+
+    cam.Start3D2D(p, a, r);
+        for i = 0, 4 do
+            surface.SetDrawColor(Color(0, 0, 255, 255));
+            surface.DrawTexturedRectRotated(0, 0, (radius - width) * 2, (radius - width) * 2, i * 45);
+        end
+    cam.End3D2D();
+
+    render.SetStencilCompareFunction(STENCIL_EQUAL);
+
+    render.SetColorModulation(red, green, blue);
+
+    self:DrawModel();
+
+    render.SetColorModulation(1,1,1);
+    render.SetStencilEnable( false );
+end
+
+/****************************************************************************************************************************
+	Custom Draw Function
+****************************************************************************************************************************/
+
+function ENT:Draw()
+	self:DoNormalDraw(true);
+	
+	if not self:GetServerOnline() then
+		self:DrawPulse(1, 0, 0);
+	end
+	
+	Wire_Render(self);
 end

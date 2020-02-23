@@ -300,13 +300,33 @@ extension:RegisterCastingOperator("h", "e", function(ctx, obj)
 end, false);
 
 --[[
-	Create the holograms
-]]
+	*****************************************************************************************************************************************************
+		Hologram Constructors
+	*****************************************************************************************************************************************************
+]]--
+
+extension:RegisterConstructor("h", "", Create);
+extension:RegisterConstructor("h", "s", Create);
+extension:RegisterConstructor("h", "s,v", Create);
+extension:RegisterConstructor("h", "s,v,a", Create);
+
+--[[
+	*****************************************************************************************************************************************************
+		hololib constructors for reverse compatability
+	*****************************************************************************************************************************************************
+]]--
 
 extension:RegisterFunction("hololib", "create", "", "h", 1, Create);
 extension:RegisterFunction("hololib", "create", "s", "h", 1, Create);
 extension:RegisterFunction("hololib", "create", "s,v", "h", 1, Create);
 extension:RegisterFunction("hololib", "create", "s,v,a", "h", 1, Create);
+
+--[[
+	*****************************************************************************************************************************************************
+		
+	*****************************************************************************************************************************************************
+]]--
+
 
 extension:RegisterFunction("hololib", "canCreate", "", "b", 1, function(ctx)
 	local ply = ctx.player;
@@ -539,7 +559,9 @@ end, false);
 
 extension:RegisterMethod("h", "setMaterial", "s", "", 0, function(ctx, holo, s)
 	if IsValid( holo ) and holo.player == ctx.player then
-		holo:SetMaterial(s);
+		if not EXPR_LIB.BannedMats[s] then
+			holo:SetMaterial(s);
+		end
 	end
 end, false);
 

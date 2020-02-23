@@ -70,7 +70,7 @@ client {
     });
     
     function void renderDefault(int w, int h) {
-        render.setTexture("omicron/bulb");
+        render.setTexture("omicron/bulb.png");
         render.setColor(new color(255, 255, 255, 255));
         render.drawBox(new vector2(0, 0), new vector2(w, h));
     }
