@@ -3282,6 +3282,36 @@ end
 --[[
 ]]
 
+
+function COMPILER.getAssigmentPrediction(this, inst, data)
+	local parent = inst.parent;
+	local resultClass, resultCount;
+
+	if (parent and parent.data) then
+		if (parent.data.variables) then 
+			
+			if (parent.data.class) then
+				resultClass = parent.data.class;
+				resultCount = data.call_pred or #parent.data.variables;
+			else
+				local var = parent.data.variables[1];
+
+				if (var) then
+					local c, s, info = this:GetVariable(var.data);
+					
+					if (c) then 
+						resultClass = c;
+						resultCount = data.call_pred or #parent.data.variables;
+					end
+				end
+			end
+		end
+	end
+
+	return resultClass, resultCount;
+end
+
+
 function COMPILER.Compile_CALL(this, inst, token, data)
 	local args = data.expressions;
 	local tArgs = #args;
@@ -3318,30 +3348,7 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 	end
 
 	local signature = table_concat(prms, ",");
-
-	local parent = inst.parent;
-	local resultClass, resultCount;
-
-	if (parent and parent.data) then
-		if (parent.data.variables) then 
-			
-			if (parent.data.class) then
-				resultClass = parent.data.class;
-				resultCount = data.call_pred or #parent.data.variables;
-			else
-				local var = parent.data.variables[1];
-
-				if (var) then
-					local c, s, info = this:GetVariable(var.data);
-					
-					if (c) then 
-						resultClass = c;
-						resultCount = data.call_pred or #parent.data.variables;
-					end
-				end
-			end
-		end
-	end	
+	local resultClass, resultCount = this:getAssigmentPrediction(inst, data);
 
 	if (res == "f") then
 
@@ -3448,24 +3455,18 @@ function COMPILER.Compile_GET(this, inst, token, data)
 	local index = expressions[2];
 	local iType, iCount, iPrice = this:Compile(index);
 
-	local op;
 	local keepid = false;
 	local class = data.class;
 
+	local op;
 	local op_result = "";
 	local op_count = 0;
 
-	if (not class) then
-		op = this:GetOperator("get", vType, iType);
+	if not class then
+		class = this:getAssigmentPrediction(inst, data);
+	end
 
-		if (not op) then
-			this:Throw(token, "No such get operation %s[%s]", name(vType), name(iType));
-		end
-
-		op_result = op.result;
-		op_count = op.rCount;
-
-	else
+	if class then
 		op = this:GetOperator("get", vType, iType, class);
 
 		if (op) then
@@ -3485,14 +3486,26 @@ function COMPILER.Compile_GET(this, inst, token, data)
 					op_count = 1;
 				end
 			end
+
 		end
+	end
+
+	if (not op) and not data.class then
+		op = this:GetOperator("get", vType, iType);
 
 		if (not op) then
-			if cls then
-				this:Throw(token, "No such get operation %s[%s,%s]", name(vType), name(iType), name(class));
-			else
-				this:Throw(token, "No such get operation %s[%s]", name(vType), name(iType));
-			end
+			this:Throw(token, "No such get operation %s[%s]", name(vType), name(iType));
+		end
+
+		op_result = op.result;
+		op_count = op.rCount;
+	end
+
+	if (not op) then
+		if cls then
+			this:Throw(token, "No such get operation %s[%s,%s]", name(vType), name(iType), name(class));
+		else
+			this:Throw(token, "No such get operation %s[%s]", name(vType), name(iType));
 		end
 	end
 
@@ -3535,7 +3548,6 @@ function COMPILER.Compile_SET(this, inst, token, data)
 	local expr = expressions[3];
 	local vExpr, c, p3 = this:Compile(expr);
 
-	local op;
 	local keepclass = false;
 	local cls = data.class;
 
@@ -3544,14 +3556,14 @@ function COMPILER.Compile_SET(this, inst, token, data)
 	end
 
 	if (not cls) then
-		op = this:GetOperator("set", vType, iType, vExpr);
-	else
-		op = this:GetOperator("set", vType, iType, cls);
+		cls = vExpr;
+	end
 
-		if (not op) then
-			keepclass = true;
-			op = this:GetOperator("set", vType, iType, "_cls", vExpr)
-		end
+	local op = this:GetOperator("set", vType, iType, cls);
+
+	if (not op) then
+		keepclass = true;
+		op = this:GetOperator("set", vType, iType, "_cls", vExpr)
 	end
 
 	if (not op) then

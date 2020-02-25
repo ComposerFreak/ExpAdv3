@@ -8,6 +8,8 @@ extension:RegisterPermission("PropControl", "fugue/controller-d-pad.png", "This 
 
 extension:RegisterEvent("PermissionChanged", "p,s,b");
 
+extension:RegisterEvent("GatherPermissions", "", "t", 1);
+
 extension:RegisterLibrary("permissions");
 
 extension:RegisterFunction("permissions", "getAll", "", "t", 1, function()
@@ -32,7 +34,7 @@ end, false);
 
 extension:RegisterFunction("permissions", "owner", "e", "p", 1, function(ctx, ent)
 	if not IsValid(ent) then return nil; end
-	return Owner(ent);
+	return ctx.getOwner(ent) or Entity(0);
 end, false);
 
 extension:EnableExtension();

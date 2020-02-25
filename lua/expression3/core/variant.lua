@@ -22,10 +22,14 @@
 
 	function extension.PostLoadClasses(this, classes)
 
+		print("PostLoadClasses");
+		
 		for _, c in pairs(classes) do
 			local id = c.id;
 
 			if (id ~= "_vr" and id ~= "") then
+				print("------>", id);
+
 				extension:RegisterCastingOperator("vr", id, function(ctx, obj)
 					return {id, obj};
 				end);
