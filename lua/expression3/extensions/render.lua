@@ -51,7 +51,7 @@ if (CLIENT) then
 
 	local function resetRenderer()
 		surface.SetTextColor(255, 255, 255, 255);
-		surface.SetDrawColor(0, 0, 0, 255);
+		surface.SetDrawColor(255, 255, 255, 255);
 		setFont("Arial", 12);
 		draw.NoTexture();
 	end
@@ -188,7 +188,7 @@ end, false);
 
 extension:RegisterFunction("render", "drawBox", "v2,v2", "", 0, function(ctx, p, w)
 	preDraw(ctx);
-	surface.DrawTexturedRect(p.x, p.y, w.x, w.y);
+	surface.DrawTexturedRect(p.x, p.y, w.x, w.y, 0);
 end, false)
 
 extension:RegisterFunction("render", "drawBox", "v2,v2,n", "", 0, function(ctx, p, w, a)

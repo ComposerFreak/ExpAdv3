@@ -2679,6 +2679,7 @@ function COMPILER.Compile_NEW(this, inst, token, data)
 
 	local price = 0;
 
+	local vargs;
 	local classname = data.class
 	local cls = E3Class(classname);
 	local userclass = this:GetUserClass(classname);
@@ -2760,6 +2761,7 @@ function COMPILER.Compile_NEW(this, inst, token, data)
 
 	if (type(op.operator) == "function") then
 		this.__constructors[op.signature] = op.operator;
+		print("---->", "_CONST", vargs)
 		this:writeOperationCall2("_CONST", inst, op, vargs, unpack(data.expressions));
 	elseif (type(op.operator) == "string") then
 		this:writeToBuffer(inst, op.operator);

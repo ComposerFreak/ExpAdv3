@@ -119,7 +119,7 @@ Set = function(entity, target, perm, value)
 		perms[perm] = value;
 
 		if entity.CallEvent then
-			ent:CallEvent("", 0, "PermissionChanged", {"p", target}, {"s", perm}, {"b", PPCheckPlayer(entity, target, perm)});
+			entity:CallEvent("", 0, "PermissionChanged", {"p", target}, {"s", perm}, {"b", PPCheckPlayer(entity, target, perm)});
 		end
 	end
 
