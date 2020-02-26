@@ -279,6 +279,8 @@ end, true);
 local BannedMats = {};
 
 BannedMats["pp/copy"] = true;
+BannedMats["engine/writez"] = true;
+BannedMats["effects/ar2_altfire1"] = true;
 
 hook.Call("Expression3.Banned.Materials", BannedMats);
 
