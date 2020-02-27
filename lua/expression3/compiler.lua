@@ -1030,6 +1030,7 @@ end
 
 function COMPILER.Compile_ASS(this, inst, token, data)
 	local price = 1;
+	local classes = {};
 
 	this:writeToBuffer(inst, "\n");
 
@@ -1039,9 +1040,10 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 	for i = 1, tVars do
 		local var = vars[i].data;
 		local class, scope, info = this:GetVariable(var);
+		classes[var] = class;
 
 		if info then
-				if (info.attribute) then
+			if (info.attribute) then
 				this:writeToBuffer(inst, "this.");
 			end
 
@@ -1049,8 +1051,8 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 				this:writeToBuffer(inst, info.prefix);
 				this:writeToBuffer(inst, ".");
 			end
-
 		end
+
 		this:writeToBuffer(inst, var);
 
 		if i < tVars then
@@ -1076,7 +1078,17 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 
 		price = price + p;
 
-		local class, scope, info = this:AssignVariable(var, false, var.data, r);
+		local class = classes[var.data];
+
+		if (class ~= r and class ~= "") then
+			local casted = this:CastExpression(class, arg);
+
+			if (not casted) then
+				this:AssignVariable(var, false, var.data, r);
+			end
+
+			this:AssignVariable(var, false, var.data, class);
+		end
 
 		this:addInstructionToBuffer(inst, arg);
 
