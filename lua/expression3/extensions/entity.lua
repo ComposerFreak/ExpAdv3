@@ -696,6 +696,18 @@ extension:RegisterMethod("e", "setPassenger", "", "p", 1, function(e)
 end, true);
 
 --[[
+	Apply Damage
+]]
+
+extension:RegisterMethod("e", "applyDamage", "n", "", 1, function(context, e, n)
+	if context:CanUseEntity(e) then
+		if IsValid(e) then
+			e:TakeDamage(n, context.entity, context.entity:GetOwner());
+		end
+	end
+end, false);
+
+--[[
 	End of extention.
 ]]
 
