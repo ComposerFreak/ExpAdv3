@@ -446,7 +446,7 @@ end, true);
 
 extension:SetServerState();
 
-extension:RegisterMethod("e", "setMass", "n", "", 1, function(context, e, n)
+extension:RegisterMethod("e", "setMass", "n", "", 0, function(context, e, n)
 	if context:CanUseEntity(e) then
 		local ph = e:GetPhysicsObject();
 
@@ -456,7 +456,7 @@ extension:RegisterMethod("e", "setMass", "n", "", 1, function(context, e, n)
 	end
 end, false);
 
-extension:RegisterMethod("ph", "setMass", "n", "", 1, function(context, ph, n)
+extension:RegisterMethod("ph", "setMass", "n", "", 0, function(context, ph, n)
 	if context:CanUseEntity(e) then
 		if IsValid(ph) then
 			ph:SetMass(n);
@@ -694,6 +694,18 @@ extension:RegisterMethod("e", "setPassenger", "", "p", 1, function(e)
 	if IsValid(e) and e:IsVehicle() then return e:GetPassenger(); end;
 	return Entity(0);
 end, true);
+
+--[[
+	Apply Damage
+]]
+
+extension:RegisterMethod("e", "applyDamage", "n", "", 0, function(context, e, n)
+	if context:CanUseEntity(e) then
+		if IsValid(e) then
+			e:TakeDamage(n, context.entity, context.player);
+		end
+	end
+end, false);
 
 --[[
 	End of extention.
