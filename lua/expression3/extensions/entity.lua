@@ -446,7 +446,7 @@ end, true);
 
 extension:SetServerState();
 
-extension:RegisterMethod("e", "setMass", "n", "", 1, function(context, e, n)
+extension:RegisterMethod("e", "setMass", "n", "", 0, function(context, e, n)
 	if context:CanUseEntity(e) then
 		local ph = e:GetPhysicsObject();
 
@@ -456,7 +456,7 @@ extension:RegisterMethod("e", "setMass", "n", "", 1, function(context, e, n)
 	end
 end, false);
 
-extension:RegisterMethod("ph", "setMass", "n", "", 1, function(context, ph, n)
+extension:RegisterMethod("ph", "setMass", "n", "", 0, function(context, ph, n)
 	if context:CanUseEntity(e) then
 		if IsValid(ph) then
 			ph:SetMass(n);
@@ -699,10 +699,10 @@ end, true);
 	Apply Damage
 ]]
 
-extension:RegisterMethod("e", "applyDamage", "n", "", 1, function(context, e, n)
+extension:RegisterMethod("e", "applyDamage", "n", "", 0, function(context, e, n)
 	if context:CanUseEntity(e) then
 		if IsValid(e) then
-			e:TakeDamage(n, context.entity, context.entity:GetOwner());
+			e:TakeDamage(n, context.entity, context.player);
 		end
 	end
 end, false);
