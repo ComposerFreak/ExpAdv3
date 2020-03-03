@@ -64,16 +64,6 @@
 	*****************************************************************************************************************************************************
 ]]--
 
-	local function clone(m2)
-		local temp = {}
-
-		for k, v in ipairs(m2) do
-			temp[k] = v
-		end
-
-		return temp
-	end
-
 	local function detm2(m2)
 		return ( m2.x * m2.y2 - m2.x2 * m2.y )
 	end
@@ -412,11 +402,46 @@
 
 	extension:RegisterClass("mx3", "matrix3", isMatrix3, EXPR_LIB.NOTNIL)
 
-	extension:RegisterConstructor("mx3", "", Matrix3, true)
+	extension:RegisterConstructor("mx3", "", Matrix3(0,0,0,0,0,0,0,0,0), true)
 	extension:RegisterConstructor("mx3", "n,n,n,n,n,n,n,n,n", Matrix3, true)
 	extension:RegisterConstructor("mx3", "v,v,v", function(a,b,c) return Matrix3(a.x, b.x, c.x, a.y, b.y, c.y, a.z, b.z, c.z) end)
-	extension:RegisterConstructor("mx3", "v,v,v", function(a,b,c) return Matrix3(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z) end)
+	//extension:RegisterConstructor("mx3", "v,v,v", function(a,b,c) return Matrix3(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z) end)
 	extension:RegisterConstructor("mx3", "mx2", function(m2) return Matrix3(m2.x, m2.y, 0, m2.x2, m2.y2, 0, 0, 0, 0) end)
+	extension:RegisterConstructor("mx3", "a", function(a)
+
+		ang = Angle(a.p, a.y, a.r)
+		local x = ang:Forward()
+		local y = ang:Right() * -1
+		local z = ang:Up()
+
+		return Matrix3( x.x, y.x, z.x,
+			            x.y, y.y, z.y,
+			            x.z, y.z, z.z )
+	end)
+	extension:RegisterConstructor("mx3", "e", function(e)
+
+		if IsValid(e) then
+			local ph = e:GetPhysicsObject()
+
+			local div = 10000
+			local pos = ph:GetPos()
+			
+			local x = ph:LocalToWorld(Vector(div, 0, 0)) - pos
+			local y = ph:LocalToWorld(Vector(0, div, 0)) - pos
+			local z = ph:LocalToWorld(Vector(0, 0, div)) - pos
+
+			return Matrix3( x.x / div , y.x / div , z.x / div , 
+				            x.y / div , y.y / div , z.y / div , 
+				            x.z / div , y.z / div , z.z / div )
+		
+		else return Matrix3( 0, 0, 0,
+			                 0, 0, 0,
+			                 0, 0, 0 )
+
+		
+		end
+	end)
+
 
 --[[
 	*****************************************************************************************************************************************************
@@ -443,12 +468,25 @@
 
 	end
 
-	local function identitym3(m3)
+	local function identitym3()
 		return Matrix3( 1, 0, 0, 
 						0, 1, 0, 
 						0, 0, 1)
 	end
 
+	local function m3ToTable(m3)
+		
+		return { m3.x  , m3.y  , m3.z  , 
+		         m3.x2 , m3.y2 , m3.z2 , 
+		         m3.x3 , m3.y3 , m3.z3 }
+
+	end
+
+	local function tableToMatrix3(t)
+
+		return Matrix3( t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8], t[9] )
+
+	end
 
 --[[
 	*****************************************************************************************************************************************************
@@ -456,13 +494,163 @@
 	*****************************************************************************************************************************************************
 ]]--
 
-	
+	extension:RegisterOperator("add", "mx3,mx3", "mx3", 1, function(a, b)
+
+		return Matrix3( (a.x + b.x)   , (a.y + b.y)   , (a.z + b.z)   , 
+			            (a.x2 + b.x2) , (a.y2 + b.y2) , (a.z2 + b.z2) , 
+			            (a.x3 + b.x3) , (a.y3 + b.z3) , (a.z3 + b.z3) )
+
+	end, true)
+
+	extension:RegisterOperator("sub", "mx3,mx3", "mx3", 1, function(a, b)
+
+		return Matrix3( (a.x - b.x)   , (a.y - b.y)   , (a.z - b.z)   , 
+			            (a.x2 - b.x2) , (a.y2 - b.y2) , (a.z2 - b.z2) , 
+			            (a.x3 - b.x3) , (a.y3 - b.z3) , (a.z3 - b.z3) )
+
+	end, true)
+
+	extension:RegisterOperator("mul", "n,mx3", "mx3", 1, function(n, m3)
+
+		return Matrix3( (n * m3.x)  , (n * m3.y)  , (n * m3.z)  , 
+		                (n * m3.x2) , (n * m3.y2) , (n * m3.z2) , 
+		                (n * m3.x3) , (n * m3.y3) , (n * m3.z3) )
+
+	end, true)
+
+	extension:RegisterOperator("mul", "mx3,n", "mx3", 1, function(m3, n)
+
+		return Matrix3( (m3.x * n)  , (m3.y * n)  , (m3.z * n)  , 
+		                (m3.x2 * n) , (m3.y2 * n) , (m3.z2 * n) , 
+		                (m3.x3 * n) , (m3.y3 * n) , (m3.z3 * n) )
+
+	end, true)
+
+	extension:RegisterOperator("mul", "mx3,v", "v", 1, function(m3, v)
+
+		return Vector( (m3.x * v.x)  + (m3.y * v.y)  + (m3.z * v.z)  , 
+		               (m3.x2 * v.x) + (m3.y2 * v.y) + (m3.z2 * v.z) , 
+		               (m3.x3 * v.x) + (m3.y3 * v.y) + (m3.z3 * v.z) )
+
+	end, true)
+
+	extension:RegisterOperator("mul", "mx3,mx3", "mx3", 1, function(a, b)
+
+		return Matrix3( (a.x * b.x)  + (a.y * b.x2)  + (a.z * b.x3)  ,
+		                (a.x * b.y)  + (a.y * b.y2)  + (a.z * b.y3)  , 
+		                (a.x * b.z)  + (a.y * b.z2)  + (a.z * b.z3)  , 
+		                
+		                (a.x2 * b.x) + (a.y2 * b.x2) + (a.z2 * b.x3) , 
+		                (a.x2 * b.y) + (a.y2 * b.y2) + (a.z2 * b.y3) , 
+		                (a.x2 * b.z) + (a.y2 * b.z2) + (a.z2 * b.z3) , 
+		                
+		                (a.x3 * b.x) + (a.y3 * b.x2) + (a.z3 * b.x3) , 
+		                (a.x3 * b.y) + (a.y3 * b.y2) + (a.z3 * b.y3) , 
+		                (a.x3 * b.z) + (a.y3 * b.z2) + (a.z3 * b.z3) )
+
+	end, true)
+
+	extension:RegisterOperator("div", "mx3,n", "mx3", 1, function(m3, n)
+
+		return Matrix3( (m3.x / n)  , (m3.y / n)  , (m3.z / n)  ,
+		                (m3.x2 / n) , (m3.y2 / n) , (m3.z2 / n) , 
+		                (m3.x3 / n) , (m3.y3 / n) , (m3.z3 / n) )
+	end, true)
+
+	extension:RegisterOperator("exp", "mx3,n", "mx3", 1, function(m3, n)
+
+		if n == -1 then return inversem3(m3)
+		elseif n == 0 then return identitym3()
+		elseif n == 1 then return m3
+		elseif n == 2 then
+			
+			return Matrix3( (a.x * b.x)  + (a.y * b.x2)  + (a.z * b.x3)  ,
+		                    (a.x * b.y)  + (a.y * b.y2)  + (a.z * b.y3)  , 
+		                    (a.x * b.z)  + (a.y * b.z2)  + (a.z * b.z3)  , 
+		                
+		                    (a.x2 * b.x) + (a.y2 * b.x2) + (a.z2 * b.x3) , 
+		                    (a.x2 * b.y) + (a.y2 * b.y2) + (a.z2 * b.y3) , 
+		                    (a.x2 * b.z) + (a.y2 * b.z2) + (a.z2 * b.z3) , 
+		                
+		                    (a.x3 * b.x) + (a.y3 * b.x2) + (a.z3 * b.x3) , 
+		                    (a.x3 * b.y) + (a.y3 * b.y2) + (a.z3 * b.y3) , 
+		                    (a.x3 * b.z) + (a.y3 * b.z2) + (a.z3 * b.z3) )
+		
+		else return Matrix3( 0, 0, 0,
+			                 0, 0, 0,
+			                 0, 0, 0 )
+		end
+		
+	end, true)
+
+
 
 --[[
 	*****************************************************************************************************************************************************
 		Matrix Logical Operations
 	*****************************************************************************************************************************************************
 ]]--
+
+	extension:RegisterOperator("eq", "mx3,mx3", "b", 1, function(a, b)
+
+		if (a.x - b.x) <= 0 and (b.x - a.x) <= 0 and
+		   (a.y - b.y) <= 0 and (b.y - a.y) <= 0 and
+		   (a.z - b.z) <= 0 and (b.z - a.z) <= 0 and
+
+		   (a.x2 - b.x2) <= 0 and (b.x2 - a.x2) <= 0 and
+		   (a.y2 - b.y2) <= 0 and (b.y2 - a.y2) <= 0 and
+		   (a.z2 - b.z2) <= 0 and (b.z2 - a.z2) <= 0 and
+
+		   (a.x3 - b.x3) <= 0 and (b.x3 - a.x3) <= 0 and
+		   (a.y3 - b.y3) <= 0 and (b.y3 - a.y3) <= 0 and
+		   (a.z3 - b.z3) <= 0 and (b.z3 - a.z3) <= 0
+		   
+		   then return 1 else return 0 end
+
+	end, true)
+
+	extension:RegisterOperator("neq", "mx3,mx3", "b", 1, function(a, b)
+
+		if (a.x - b.x) > 0 and (b.x - a.x) > 0 and
+		   (a.y - b.y) > 0 and (b.y - a.y) > 0 and
+		   (a.z - b.z) > 0 and (b.z - a.z) > 0 and
+
+		   (a.x2 - b.x2) > 0 and (b.x2 - a.x2) > 0 and
+		   (a.y2 - b.y2) > 0 and (b.y2 - a.y2) > 0 and
+		   (a.z2 - b.z2) > 0 and (b.z2 - a.z2) > 0 and
+
+		   (a.x3 - b.x3) > 0 and (b.x3 - a.x3) > 0 and
+		   (a.y3 - b.y3) > 0 and (b.y3 - a.y3) > 0 and
+		   (a.z3 - b.z3) > 0 and (b.z3 - a.z3) > 0
+		   
+		   then return 1 else return 0 end
+
+	end, true)
+
+	extension:RegisterOperator("neg", "mx3", "mx3", 1, function(m3)
+
+		return Matrix3( -m3.x  , -m3.y  , -m3.z  ,
+		                -m3.x2 , -m3.y2 , -m3.z2 ,
+		                -m3.x3 , -m3.y2 , -m3.z3 )
+	end, true)
+
+	extension:RegisterOperator("is", "mx3", "b", 1, function(m3)
+
+		if (m3.x > 0) or (-m3.x > 0) or
+		   (m3.y > 0) or (-m3.y > 0) or
+		   (m3.z > 0) or (-m3.z > 0) or
+
+		   (m3.x2 > 0) or (-m3.x2 > 0) or
+		   (m3.y2 > 0) or (-m3.y2 > 0) or
+		   (m3.z2 > 0) or (-m3.z2 > 0) or
+
+		   (m3.x3 > 0) or (-m3.x3 > 0) or
+		   (m3.y3 > 0) or (-m3.y3 > 0) or
+		   (m3.z3 > 0) or (-m3.z3 > 0)
+		   
+		   then return 1 else return 0 end
+
+	end, true)
 
 
 
@@ -471,14 +659,369 @@
 		Matrix Attributes
 	*****************************************************************************************************************************************************
 ]]--
-
-
+	
+	extension:RegisterAttribute("mx3", "x", "n")
+	extension:RegisterAttribute("mx3", "y", "n")
+	extension:RegisterAttribute("mx3", "z", "n")
+	extension:RegisterAttribute("mx3", "x2", "n")
+	extension:RegisterAttribute("mx3", "y2", "n")
+	extension:RegisterAttribute("mx3", "z2", "n")
+	extension:RegisterAttribute("mx3", "x3", "n")
+	extension:RegisterAttribute("mx3", "y3", "n")
+	extension:RegisterAttribute("mx3", "z3", "n")
 
 --[[
 	*****************************************************************************************************************************************************
 		Matrix Methods
 	*****************************************************************************************************************************************************
 ]]--
+	
+	extension:RegisterMethod("mx3", "toString", "", "s", 1, function(m3)
+		
+		return table.ToString(m3, "Matrix3", true)
+
+	end, true)
+	
+	extension:RegisterMethod("mx3", "row", "n", "v", 1, function(m3, n)
+
+		local i
+		local t = m3ToTable(m3)
+		if n < 1 then i = 3
+		elseif n > 3 then i = 9
+		else i = (n - (n % 1)) * 3 end
+
+		local x = t[i - 2]
+		local y = t[i - 1]
+		local z = t[i]
+
+		return Vector( x, y, z )
+
+	end, true)
+
+
+	extension:RegisterMethod("mx3", "column", "n", "v", 1, function(m3, n)
+
+		local i
+		local t = m3ToTable(m3)
+		if n < 1 then i = 1
+		elseif n > 3 then i = 3
+		else i = (n - (n % 1)) end
+
+		local x = t[i]
+		local y = t[i + 3]
+		local z = t[i + 6]
+
+		return Vector( x, y, z )
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "setRow", "n,n,n,n", "mx3", 1, function(m3, n, x, y, z)
+
+		local i
+		local t = m3ToTable(m3)
+		if n < 1 then i = 1
+		elseif n > 3 then i = 3
+		else i = (n - (n % 1)) end
+
+		t[(i * 3) - 2] = x
+		t[(i * 3) - 1] = y
+		t[i * 3] = z
+
+		return tableToMatrix3(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "setRow", "n,v", "mx3", 1, function(m3, n, v)
+
+		local i
+		local t = m3ToTable(m3)
+		if n < 1 then i = 1
+		elseif n > 3 then i = 3
+		else i = (n - (n % 1)) end
+
+		t[(i * 3) - 2] = v.x
+		t[(i * 3) - 1] = v.y
+		t[i * 3] = v.z
+
+		return tableToMatrix3(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "setColumn", "n,n,n,n", "mx3", 1, function(m3, n, x, y, z)
+
+		local i
+		local t = m3ToTable(m3)
+		if n < 1 then i = 1
+		elseif n > 3 then i = 3
+		else i = (n - (n % 1)) end
+
+		t[i] = x
+		t[i + 3] = y
+		t[i + 6] = z
+
+		return tableToMatrix3(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "setColumn", "n,v", "mx3", 1, function(m3, n, v)
+
+		local i
+		local t = m3ToTable(m3)
+		if n < 1 then i = 1
+		elseif n > 3 then i = 3
+		else i = (n - (n % 1)) end
+
+		t[i] = v.x
+		t[i + 3] = v.y
+		t[i * 6] = v.z
+
+		return tableToMatrix3(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "swapRows", "n,n", "mx3", 1, function(m3, x, y)
+
+		local i, j
+		local t = {}
+		
+		if x < 1 then i = 1
+		elseif x > 3 then i = 3
+		else i = (x - (x % 1)) end
+		
+		if y < 1 then j = 1
+		elseif y > 3 then j = 3
+		else j = y - (y % 1) end
+
+		if i == j then return m3
+
+		elseif (i == 1 and j == 2) or (i == 2 and j == 1) then 
+			t = { m3.x2 , m3.y2 , m3.z2 ,
+			      m3.x  , m3.y  , m3.z  ,
+			      m3.x3 , m3.y3 , m3.z3 }
+		
+		elseif (i == 2 and j == 3) or (i == 3 and j == 2) then
+			t = { m3.x  , m3.y  , m3.z  ,
+			      m3.x3 , m3.y3 , m3.z3 ,
+			      m3.x2 , m3.y2 , m3.z2 }
+		
+		elseif (i == 1 and j == 3) or (i == 3 and j ==1) then
+			t = { m3.x3 , m3.y3 , m3.z3 ,
+			      m3.x2 , m3.y2 , m3.z2 ,
+			      m3.x  , m3.y  , m3.z  }
+		end
+
+		return tableToMatrix3(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "swapColumns", "n,n", "mx3", 1, function(m3, x, y)
+
+		local i, j
+		local t = {}
+		
+		if x < 1 then i = 1
+		elseif x > 3 then i = 3
+		else i = (x - (x % 1)) end
+		
+		if y < 1 then j = 1
+		elseif y > 3 then j = 3
+		else j = y - (y % 1) end
+
+		if i == j then return m3
+
+		elseif (i == 1 and j == 2) or (i == 2 and j == 1) then 
+			t = { m3.y  , m3.x  , m3.z  ,
+			      m3.y2 , m3.x2 , m3.z2 ,
+			      m3.y3 , m3.x3 , m3.z3 }
+		
+		elseif (i == 2 and j == 3) or (i == 3 and j == 2) then
+			t = { m3.x  , m3.z  , m3.y  ,
+			      m3.x2 , m3.z2 , m3.y2 ,
+			      m3.x3 , m3.z3 , m3.y3 }
+		
+		elseif (i == 1 and j == 3) or (i == 3 and j ==1) then
+			t = { m3.z  , m3.y  , m3.x  ,
+			      m3.z2 , m3.y2 , m3.x2 ,
+			      m3.z3 , m3.y3 , m3.x3 }
+		end
+
+		return tableToMatrix3(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "element", "n,n", "n", 1, function(m3, x, y)
+
+		local i, j
+		local t = m3ToTable(m3)
+		
+		if x < 1 then i = 1
+		elseif x > 3 then i = 3
+		else i = (x - (x % 1)) end
+		
+		if y < 1 then j = 1
+		elseif y > 3 then j = 3
+		else j = y - (y % 1) end
+
+		local n = i + (j - 1) * 3
+
+		return t[n]
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "setElement", "n,n,n", "mx3", 1, function(m3, x, y, z)
+
+		local i, j
+		local t = m3ToTable(m3)
+		
+		if x < 1 then i = 1
+		elseif x > 3 then i = 3
+		else i = (x - (x % 1)) end
+		
+		if y < 1 then j = 1
+		elseif y > 3 then j = 3
+		else j = y - (y % 1) end
+
+		t[i + (j - 1) * 3] = z
+
+		return tableToMatrix3(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "swapElement", "n,n,n,n", "mx3", 1, function(m3, w, x, y, z)
+
+		local a, b, c, d
+		local t = m3ToTable(m3)
+		
+		if w < 1 then a = 1
+		elseif w > 3 then a = 3
+		else a = (w - (w % 1)) end
+		
+		if x < 1 then b = 1
+		elseif x > 3 then b = 3
+		else b = x - (x % 1) end
+
+		if y < 1 then c = 1
+		elseif y > 3 then c = 3
+		else c = (y - (y % 1)) end
+		
+		if z < 1 then d = 1
+		elseif z > 3 then d = 3
+		else d = z - (z % 1) end
+
+		local i = a + (b - 1) * 3
+		local j = c + (d - 1) * 3
+
+		t[i], t[j] = t[j], t[i]
+
+		return tableToMatrix3(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "setDiagonal", "n,n,n", "mx3", 1, function(m3, x, y, z)
+
+		return Matrix3( x    , m3.x2 , m3.x3 ,
+			            m3.y , y     , m3.y3 , 
+			            m3.z , m3.z2 , z     )
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "setDiagonal", "v", "mx3", 1, function(m3, v)
+
+		return Matrix3( v.x  , m3.x2 , m3.x3 ,
+		                m3.y , v.y   , m3.y3 ,
+		                m3.z , m3.z2 , v.z   )
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "diagonal3", "mx3", "v", 1, function(m3)
+
+		return Vector( m3.x, m3.y2, m3.z3 )
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "trace3", "mx3", "n", 1, function(m3)
+
+		return ( m3.x + m3.y2 + m3.z3 )
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "det3", "mx3", "n", 1, function(m3)
+
+		return detm3(m3)
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "transpose3", "mx3", "mx3", 1, function(m3)
+
+		return Matrix3( m3.x , m3.x2 , m3.x3 ,
+			            m3.y , m3.y2 , m3.y3 ,
+			            m3.z , m3.z2 , m3.z3 )
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "adj3", "mx3", "mx3", 1, function(m3)
+
+		return Matrix3( (m3.y2 * m3.z3) - (m3.y3 * m3.z2) , (m3.y3 * m3.z) - (m3.y * m3.z3) , (m3.y * m3.z2) - (m3.y2 * m3.z) , 
+			            (m3.x3 * m3.z2) - (m3.x2 * m3.z3) , (m3.x * m3.z3) - (m3.x3 * m3.z) , (m3.x2 * m3.z) - (m3.x * m3.z2) , 
+			            (m3.x2 * m3.y2) - (m3.x3 * m3.y2) , (m3.x3 * m3.y) - (m3.x * m3.y3) , (m3.x * m3.y2) - (m3.x2 * m3.y) )
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "getX", "", "v", 1, function(m3)
+
+		return Vector( m3.x, m3.x2, m3.x3 )
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "getY", "", "v", 1, function(m3)
+
+		return Vector( m3.y, m3.y2, m3.y3 )
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "getZ", "", "v", 1, function(m3)
+
+		return Vector( m3.z, m3.z2, m3.z3 )
+
+	end, true)
+
+	extension:RegisterMethod("mx3", "toAngle", "", "a", 1, function(m3)
+
+		local p = asin(-m3.x3) * rad2deg
+		local y = atan2( m3.x2, m3.x ) * rad2deg
+		local r = atan2( m3.y3, m3.z3) * rad2deg 
+
+		return Angle( p, y, r )
+
+	end, true)
+
+	extension:RegisterFunction("mx3", "mRotation", "v,n", "mx3", 1, function(m3, v, n)
+
+		local a
+		local sq = (v.x * v.x + v.y * v.y + v.z * v.z) ^ 0.5
+		if sq == 1 then a = v
+		elseif sq > 0 then a = Vector(v.x / sq, v.y / sq, v.z / sq)
+		else return Matrix3( 0, 0, 0,
+			                 0, 0, 0,
+			                 0, 0, 0 )
+		end
+
+		local b = Vector(a.x * a.x, a.y * a.y, a.z * a.z)
+		local ang = n * deg2rad
+		local cos = cos(ang)
+		local sin = sin(ang)
+		local cosmin = 1 - cos
+
+		return Matrix3( b.x + (1 - b.x) * cos,
+			            a.x * a.y * cosmin - a.z * sin,
+			            a.x * a.z * cosmin + a.y * sin,
+			            a.x * a.y * cosmin + a.z * sin,
+			            b.y + (1 - b.y) * cos,
+			            a.y * a.z * cosmin - a.x * sin,
+			            a.x * a.z * cosmin - a.y * sin,
+			            a.y * a.z * cosmin + a.x * sin,
+			            b.z + (1 - b.z) * cos )
+	end, true)
 
 
 
