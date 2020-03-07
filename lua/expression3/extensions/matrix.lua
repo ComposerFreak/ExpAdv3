@@ -1054,13 +1054,141 @@
 	--|                   |--
 	--| w4 , x4 , y4 , z4 |--
 
+	matrix4 = {}
+	matrix4.__index = matrix4
+
+	local function Matrix4(w,x,y,z, w2,x2,y2,z2, w3,x3,y3,z3, w4,x4,y4,z4)
+		return setmetatable({ w = w  ,  x = x  ,  y = y  ,  z = z  , 
+			                 w2 = w2 , x2 = x2 , y2 = y2 , z2 = z2 , 
+			                 w3 = w3 , x3 = x3 , y3 = y3 , z3 = z3 ,
+			                 w4 = w4 , x4 = x4 , y4 = y4 , z4 = z4 }, matrix4)
+																			
+	end
+
+	local function isMatrix4(m)
+
+		return istable(m) and #m == 16 and m.w  and m.x  and m.y  and m.z
+		                               and m.w2 and m.x2 and m.y2 and m.z2
+		                               and m.w3 and m.x3 and m.y3 and m.z3
+		                               and m.w4 and m.x4 and m.y4 and m.z4
+
+	end
+
+	extension:RegisterClass("mx4", "matrix4", isMatrix4, EXPR_LIB.NOTNIL)
+
+	extension:RegisterConstructor("mx4", "", Matrix4(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0), true)
+	extension:RegisterConstructor("mx4", "n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n", Matrix4, true)
+	extension:RegisterConstructor("mx4", "mx2", function(m2)
+		
+		return Matrix4( m2.x  , m2.y  , 0 , 0 , 
+			            m2.x2 , m2.y2 , 0 , 0 ,
+			            0     , 0     , 0 , 0 , 
+			            0     , 0     , 0 , 0 )
+	
+	end, true)
+	
+	extension:RegisterConstructor("mx4", "mx3", function(m3)
+		
+		return Matrix4( m3.x  , m3.y  , m3.z  , 0 , 
+			            m3.x2 , m3.y2 , m3.z2 , 0 ,
+			            m3.x3 , m2.y3 , m3.z3 , 0 , 
+			            0     , 0     , 0     , 0 )
+	
+	end, true)
+	
+	extension:RegisterConstructor("mx4", "mx2,mx2,mx2,mx2", function(a,b,c,d)
+
+		return Matrix4( a.x  , a.y  , b.x  , b.y  ,
+			            a.x2 , a.y2 , b.x2 , b.y2 ,
+			            c.x  , c.y  , d.x  , d.y  , 
+			            c.x2 , c.y2 , d.x2 , d.y2 )
+
+	end, true)
+	
+	extension:RegisterConstructor("mx4", "a", function(a)
+
+		ang = Angle(a.p, a.y, a.r)
+		local x = ang:Forward()
+		local y = ang:Right() * -1
+		local z = ang:Up()
+
+		return Matrix4( x.x , y.x , z.x , 0 ,
+			            x.y , y.y , z.y , 0 ,
+			            x.z , y.z , z.z , 0 ,
+			            0   , 0   , 0   , 1 )
+	end, true)
+
+	extension:RegisterConstructor("mx4", "a,v", function(a,v)
+
+		ang = Angle(a.p, a.y, a.r)
+		local x = ang:Forward()
+		local y = ang:Right() * -1
+		local z = ang:Up()
+
+		return Matrix4( x.x , y.x , z.x , v.x ,
+			            x.y , y.y , z.y , v.y ,
+			            x.z , y.z , z.z , v.z ,
+			            0   , 0   , 0   , 1   )
+	end, true)
+
+	extension:RegisterConstructor("mx4", "e", function(e)
+
+		if IsValid(e) then
+			local ph = e:GetPhysicsObject()
+
+			local div = 10000
+			local pos = ph:GetPos()
+			
+			local x = ph:LocalToWorld(Vector(div, 0, 0)) - pos
+			local y = ph:LocalToWorld(Vector(0, div, 0)) - pos
+			local z = ph:LocalToWorld(Vector(0, 0, div)) - pos
+
+			return Matrix4( x.x / div , y.x / div , z.x / div , pos.x ,
+				            x.y / div , y.y / div , z.y / div , pos.y ,
+				            x.z / div , y.z / div , z.z / div , pos.z ,
+				            0         , 0         , 0         , 1     )
+		
+		else return Matrix4( 0, 0, 0, 0 ,
+			                 0, 0, 0, 0 ,
+			                 0, 0, 0, 0 )
+
+		
+		end
+	end, true)
+
+
 
 --[[
 	*****************************************************************************************************************************************************
 	 	Matrix4 Global Funcs
 	*****************************************************************************************************************************************************
 ]]--
+	
+	local function identitym4()
 
+		return Matrix4( 1 , 0 , 0 , 0 ,
+			            0 , 1 , 0 , 0 ,
+			            0 , 0 , 1 , 0 ,
+			            0 , 0 , 0 , 1 )
+	end
+	
+	local function m4ToTable(m4)
+
+		return { m4.w  , m4.x  , m4.y  , m4.z  ,
+	             m4.w2 , m4.x2 , m4.y2 , m4.z2 ,
+	             m4.w3 , m4.x3 , m4.y3 , m4.z3 ,
+	             m4.w4 , m4.x4 , m4.y4 , m4.z4 }
+	
+	end
+
+	local function tableToMatrix4(t)
+
+		return Matrix4( t[1]  , t[2]  , t[3]  , t[4]  ,
+			            t[5]  , t[6]  , t[7]  , t[8]  ,
+			            t[9]  , t[10] , t[11] , t[12] ,
+			            t[13] , t[14] , t[15] , t[16] )
+
+	end
 
 
 --[[
@@ -1068,7 +1196,107 @@
 		Matrix4 Mathematical Operations
 	*****************************************************************************************************************************************************
 ]]--
+	
+	extension:RegisterOperator("add", "mx4,mx4", "mx4", 1, function(a, b)
+		
+		return Matrix4( (a.w + b.w)   , (a.x + b.x)   , (a.y + b.y)   , (a.z + b.z)   ,
+			            (a.w2 + b.w3) , (a.x2 + b.x2) , (a.y2 + b.y2) , (a.z2 + b.z2) ,
+			            (a.w3 + b.w3) , (a.x3 + b.x3) , (a.y3 + b.y3) , (a.z3 + b.z3) ,
+			            (a.w4 + b.w4) , (a.x4 + b.x4) , (a.y4 + b.y4) , (a.z4 + b.z4) )
+	end, true)
 
+	extension:RegisterOperator("sub", "mx4,mx4", "mx4", 1, function(a, b)
+		
+		return Matrix4( (a.w - b.w)   , (a.x - b.x)   , (a.y - b.y)   , (a.z - b.z)   ,
+			            (a.w2 - b.w2) , (a.x2 - b.x2) , (a.y2 - b.y2) , (a.z2 - b.z2) ,
+			            (a.w3 - b.w3) , (a.x3 - b.x3) , (a.y3 - b.y3) , (a.z3 - b.z3) ,
+			            (a.w4 - b.w4) , (a.x4 - b.x4) , (a.y4 - b.y4) , (a.z4 - b.z4) )
+	end, true)
+
+	extension:RegisterOperator("mul", "n,mx4", "mx4", 1, function(n, m4)
+		
+		return Matrix4( (n * m4.w)  , (n * m4.x)  , (n * m4.y)  , (n * m4.z)  ,
+			            (n * m4.w2) , (n * m4.x2) , (n * m4.y2) , (n * m4.z2) ,
+			            (n * m4.w3) , (n * m4.x3) , (n * m4.y3) , (n * m4.z3) ,
+			            (n * m4.w4) , (n * m4.x4) , (n * m4.y4) , (n * m4.z4) )
+	end, true)
+
+	extension:RegisterOperator("mul", "mx4,n", "mx4", 1, function(m4, n)
+		
+		return Matrix4( (m4.w * n)  , (m4.x * n)  , (m4.y * n)  , (m4.z * n)  ,
+			            (m4.w2 * n) , (m4.x2 * n) , (m4.y2 * n) , (m4.z2 * n) ,
+			            (m4.w3 * n) , (m4.x3 * n) , (m4.y3 * n) , (m4.z3 * n) ,
+			            (m4.w4 * n) , (m4.x4 * n) , (m4.y4 * n) , (m4.z4 * n) )
+	end, true)
+
+	extension:RegisterOperator("mul", "mx4,mx4", "mx4", 1, function(a, b)
+		
+		return Matrix4( (m4.w * n)  , (m4.x * n)  , (m4.y * n)  , (m4.z * n)  ,
+			            (m4.w2 * n) , (m4.x2 * n) , (m4.y2 * n) , (m4.z2 * n) ,
+			            (m4.w3 * n) , (m4.x3 * n) , (m4.y3 * n) , (m4.z3 * n) ,
+			            (m4.w4 * n) , (m4.x4 * n) , (m4.y4 * n) , (m4.z4 * n) )
+	end, true)
+
+	extension:RegisterOperator("mul", "mx4,mx4", "mx4", 1, function(a, b)
+		
+		return Matrix4( (a.w * b.w) + (a.x * b.w2) + (a.y * b.w3) + (a.z * b.w4) ,
+			            (a.w * b.x) + (a.x * b.x2) + (a.y * b.x3) + (a.z * b.x4) ,
+			            (a.w * b.y) + (a.x * b.y2) + (a.y * b.y3) + (a.z * b.y4) ,
+			            (a.w * b.z) + (a.x * b.z2) + (a.y * b.z3) + (a.z * b.z4) ,
+
+			            (a.w2 * b.w) + (a.x2 * b.w2) + (a.y2 * b.w3) + (a.z2 * b.w4) ,
+			            (a.w2 * b.x) + (a.x2 * b.x2) + (a.y2 * b.x3) + (a.z2 * b.x4) ,
+			            (a.w2 * b.y) + (a.x2 * b.y2) + (a.y2 * b.y3) + (a.z2 * b.y4) ,
+			            (a.w2 * b.z) + (a.x2 * b.z2) + (a.y2 * b.z3) + (a.z2 * b.z4) ,
+
+			            (a.w3 * b.w) + (a.x3 * b.w2) + (a.y3 * b.w3) + (a.z3 * b.w4) ,
+			            (a.w3 * b.x) + (a.x3 * b.x2) + (a.y3 * b.x3) + (a.z3 * b.x4) ,
+			            (a.w3 * b.y) + (a.x3 * b.y2) + (a.y3 * b.y3) + (a.z3 * b.y4) ,
+			            (a.w3 * b.z) + (a.x3 * b.z2) + (a.y3 * b.z3) + (a.z3 * b.z4) ,
+
+			            (a.w4 * b.w) + (a.x4 * b.w2) + (a.y4 * b.w3) + (a.z4 * b.w4) ,
+			            (a.w4 * b.x) + (a.x4 * b.x2) + (a.y4 * b.x3) + (a.z4 * b.x4) ,
+			            (a.w4 * b.y) + (a.x4 * b.y2) + (a.y4 * b.y3) + (a.z4 * b.y4) ,
+			            (a.w4 * b.z) + (a.x4 * b.z2) + (a.y4 * b.z3) + (a.z4 * b.z4) )
+	end, true)
+
+	extension:RegisterOperator("div", "mx4,n", "mx4", 1, function(m4, n)
+		
+		return Matrix4( (m4.w / n)  , (m4.x / n)  , (m4.y / n)  , (m4.z / n)  ,
+			            (m4.w2 / n) , (m4.x2 / n) , (m4.y2 / n) , (m4.z2 / n) ,
+			            (m4.w3 / n) , (m4.x3 / n) , (m4.y3 / n) , (m4.z3 / n) ,
+			            (m4.w4 / n) , (m4.x4 / n) , (m4.y4 / n) , (m4.z4 / n) )
+	end, true)
+
+	extension:RegisterOperator("exp", "mx4,n", "mx4", 1, function(m4, n)
+		
+		if n == 0 then return identitym4()
+		elseif n == 1 then return m4
+		elseif n == 2 then return Matrix4( (a.w * b.w) + (a.x * b.w2) + (a.y * b.w3) + (a.z * b.w4) ,
+			                               (a.w * b.x) + (a.x * b.x2) + (a.y * b.x3) + (a.z * b.x4) ,
+			                               (a.w * b.y) + (a.x * b.y2) + (a.y * b.y3) + (a.z * b.y4) ,
+			                               (a.w * b.z) + (a.x * b.z2) + (a.y * b.z3) + (a.z * b.z4) ,
+
+			                               (a.w2 * b.w) + (a.x2 * b.w2) + (a.y2 * b.w3) + (a.z2 * b.w4) ,
+			                               (a.w2 * b.x) + (a.x2 * b.x2) + (a.y2 * b.x3) + (a.z2 * b.x4) ,
+			                               (a.w2 * b.y) + (a.x2 * b.y2) + (a.y2 * b.y3) + (a.z2 * b.y4) ,
+			                               (a.w2 * b.z) + (a.x2 * b.z2) + (a.y2 * b.z3) + (a.z2 * b.z4) ,
+
+			                               (a.w3 * b.w) + (a.x3 * b.w2) + (a.y3 * b.w3) + (a.z3 * b.w4) ,
+			                               (a.w3 * b.x) + (a.x3 * b.x2) + (a.y3 * b.x3) + (a.z3 * b.x4) ,
+			                               (a.w3 * b.y) + (a.x3 * b.y2) + (a.y3 * b.y3) + (a.z3 * b.y4) ,
+			                               (a.w3 * b.z) + (a.x3 * b.z2) + (a.y3 * b.z3) + (a.z3 * b.z4) ,
+
+			                               (a.w4 * b.w) + (a.x4 * b.w2) + (a.y4 * b.w3) + (a.z4 * b.w4) ,
+			                               (a.w4 * b.x) + (a.x4 * b.x2) + (a.y4 * b.x3) + (a.z4 * b.x4) ,
+			                               (a.w4 * b.y) + (a.x4 * b.y2) + (a.y4 * b.y3) + (a.z4 * b.y4) ,
+			                               (a.w4 * b.z) + (a.x4 * b.z2) + (a.y4 * b.z3) + (a.z4 * b.z4) )
+	    else return Matrix4( 0, 0, 0, 0,
+	    	                 0, 0, 0, 0,
+	    	                 0, 0, 0, 0,
+	    	                 0, 0, 0, 0 ) 
+	    end
+	end, true)
 
 
 --[[
@@ -1076,7 +1304,92 @@
 		Matrix4 Logical Operations
 	*****************************************************************************************************************************************************
 ]]--
+	
+	extension:RegisterOperator("eq", "mx4,mx4", "b", 1, function(a, b)
 
+		if (a.w - b.w) <= 0 and (b.w - a.w) <= 0 and
+		   (a.x - b.x) <= 0 and (b.x - a.x) <= 0 and
+		   (a.y - b.y) <= 0 and (b.y - a.y) <= 0 and
+		   (a.z - b.z) <= 0 and (b.z - a.z) <= 0 and
+
+		   (a.w2 - b.w2) <= 0 and (b.w2 - a.w2) <= 0 and
+		   (a.x2 - b.x2) <= 0 and (b.x2 - a.x2) <= 0 and
+		   (a.y2 - b.y2) <= 0 and (b.y2 - a.y2) <= 0 and
+		   (a.z2 - b.z2) <= 0 and (b.z2 - a.z2) <= 0 and
+
+		   (a.w3 - b.w3) <= 0 and (b.w3 - a.w3) <= 0 and
+		   (a.x3 - b.x3) <= 0 and (b.x3 - a.x3) <= 0 and
+		   (a.y3 - b.y3) <= 0 and (b.y3 - a.y3) <= 0 and
+		   (a.z3 - b.z3) <= 0 and (b.z3 - a.z3) <= 0 and
+
+		   (a.w4 - b.w4) <= 0 and (b.w4 - a.w4) <= 0 and
+		   (a.x4 - b.x4) <= 0 and (b.x4 - a.x4) <= 0 and
+		   (a.y4 - b.y4) <= 0 and (b.y4 - a.y4) <= 0 and
+		   (a.z4 - b.z4) <= 0 and (b.z4 - a.z4) <= 0
+		   
+		   then return 1 else return 0 end
+
+	end, true)
+
+	extension:RegisterOperator("eq", "mx4,mx4", "b", 1, function(a, b)
+
+		if (a.w - b.w) > 0 and (b.w - a.w) > 0 and
+		   (a.x - b.x) > 0 and (b.x - a.x) > 0 and
+		   (a.y - b.y) > 0 and (b.y - a.y) > 0 and
+		   (a.z - b.z) > 0 and (b.z - a.z) > 0 and
+
+		   (a.w2 - b.w2) > 0 and (b.w2 - a.w2) > 0 and
+		   (a.x2 - b.x2) > 0 and (b.x2 - a.x2) > 0 and
+		   (a.y2 - b.y2) > 0 and (b.y2 - a.y2) > 0 and
+		   (a.z2 - b.z2) > 0 and (b.z2 - a.z2) > 0 and
+
+		   (a.w3 - b.w3) > 0 and (b.w3 - a.w3) > 0 and
+		   (a.x3 - b.x3) > 0 and (b.x3 - a.x3) > 0 and
+		   (a.y3 - b.y3) > 0 and (b.y3 - a.y3) > 0 and
+		   (a.z3 - b.z3) > 0 and (b.z3 - a.z3) > 0 and
+
+		   (a.w4 - b.w4) > 0 and (b.w4 - a.w4) > 0 and
+		   (a.x4 - b.x4) > 0 and (b.x4 - a.x4) > 0 and
+		   (a.y4 - b.y4) > 0 and (b.y4 - a.y4) > 0 and
+		   (a.z4 - b.z4) > 0 and (b.z4 - a.z4) > 0
+		   
+		   then return 1 else return 0 end
+
+	end, true)
+
+	extension:RegisterOperator("neg", "mx4", "mx4", 1, function(m4)
+
+		return Matrix4( -m4.w  , -m4.x  , -m4.y  , -m4.z  ,
+	                    -m4.w2 , -m4.x2 , -m4.y2 , -m4.z2 ,
+	                    -m4.w3 , -m4.x3 , -m4.y3 , -m4.z3 ,
+	                    -m4.w4 , -m4.x4 , -m4.y4 , -m4.z4 )
+	end, true)
+
+	extension:RegisterOperator("is", "mx4", "b", 1, function(m4)
+
+		if a.w > 0 and -a.w  > 0 and
+		   a.x > 0 and -a.x  > 0 and
+		   a.y > 0 and -a.y > 0 and
+		   a.z > 0 and -a.z > 0 and
+
+		   a.w2 > 0 and -a.w2 > 0 and
+		   a.x2 > 0 and -a.x2 > 0 and
+		   a.y2 > 0 and -a.y2 > 0 and
+		   a.z2 > 0 and -a.z2 > 0 and
+
+		   a.w3 > 0 and -a.w3 > 0 and
+		   a.x3 > 0 and -a.x3 > 0 and
+		   a.y3 > 0 and -a.y3 > 0 and
+		   a.z3 > 0 and -a.z3 > 0 and
+
+		   a.w4 > 0 and -a.w4 > 0 and
+		   a.x4 > 0 and -a.x4 > 0 and
+		   a.y4 > 0 and -a.y4 > 0 and
+		   a.z4 > 0 and -a.z4 > 0
+		   
+		   then return 1 else return 0 end
+
+	end, true)
 
 
 --[[
@@ -1084,16 +1397,310 @@
 		Matrix4 Attributes
 	*****************************************************************************************************************************************************
 ]]--
+	extension:RegisterAttribute("mx4", "w", "n")
+	extension:RegisterAttribute("mx4", "x", "n")
+	extension:RegisterAttribute("mx4", "y", "n")
+	extension:RegisterAttribute("mx4", "z", "n")
 
+	extension:RegisterAttribute("mx4", "w2", "n")
+	extension:RegisterAttribute("mx4", "x2", "n")
+	extension:RegisterAttribute("mx4", "y2", "n")
+	extension:RegisterAttribute("mx4", "z2", "n")
 
+	extension:RegisterAttribute("mx4", "w3", "n")
+	extension:RegisterAttribute("mx4", "x3", "n")
+	extension:RegisterAttribute("mx4", "y3", "n")
+	extension:RegisterAttribute("mx4", "z3", "n")
+
+	extension:RegisterAttribute("mx4", "w4", "n")
+	extension:RegisterAttribute("mx4", "x4", "n")
+	extension:RegisterAttribute("mx4", "y4", "n")
+	extension:RegisterAttribute("mx4", "z4", "n")
+	
 
 --[[
 	*****************************************************************************************************************************************************
 		Matrix4 Methods
 	*****************************************************************************************************************************************************
 ]]--
+	
+	extension:RegisterMethod("mx4", "toString", "", "s", 1, function(m4)
+		
+		return table.ToString(m4, "Matrix4", true)
 
+	end, true)
 
+	extension:RegisterMethod("mx4", "setRow", "n,n,n,n,n", "mx4", 1, function(m4,n,a,b,c,d)
+
+		local i
+		local t = m4ToTable(m4)
+		if n < 1 then i = 1
+		elseif n > 4 then i = 4
+		else i = n - (n % 1) end
+		
+		t[(i * 4) - 3] = a
+		t[(i * 4) - 2] = b
+		t[(i * 4) - 1] = c
+		t[i * 4] = d
+
+		return tableToMatrix4(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx4", "setColumn", "n,n,n,n,n", "mx4", 1, function(m4,n,a,b,c,d)
+
+		local i
+		local t = m4ToTable(m4)
+		if n < 1 then i = 1
+		elseif n > 4 then i = 4
+		else i = n - (n % 1) end
+		
+		t[i] = a
+		t[i + 4] = b
+		t[i + 8] = c
+		t[i + 12] = d
+
+		return tableToMatrix4(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx4", "swapRows", "n,n", "mx4", 1, function(m4,a,b)
+
+		local i, j
+		local t = m4ToTable(m4)
+		if a < 1 then i = 1
+		elseif a > 4 then i = 4
+		else i = a - (a % 1) end
+
+		if b < 1 then j = 1
+		elseif b > 4 then j = 4
+		else j = b - (b % 1) end
+		
+		if i == j then return m4
+		elseif (i == 1 and j == 2) or (i == 2 and j == 1) then
+			t = { m4.w2 , m4.x2 , m4.y2 , m4.z2 ,
+			      m4.w  , m4.x  , m4.y  , m4.z  ,
+			      m4.w3 , m4.x3 , m4.y3 , m4.z3 ,
+			      m4.w4 , m4.x4 , m4.y4 , m4.z4  }
+
+		elseif (i == 2 and j == 3) or (i == 3 and j == 2) then
+			t = { m4.w  , m4.x  , m4.y  , m4.z  ,
+			      m4.w3 , m4.x3 , m4.y3 , m4.z3 ,
+			      m4.w2 , m4.x2 , m4.y2 , m4.z2 ,
+			      m4.w4 , m4.x4 , m4.y4 , m4.z4  }
+
+	    elseif (i == 3 and j == 4) or (i == 4 and j == 3) then
+			t = { m4.w  , m4.x  , m4.y  , m4.z  ,
+			      m4.w2 , m4.x2 , m4.y2 , m4.z2 ,
+			      m4.w4 , m4.x4 , m4.y4 , m4.z4 ,
+			      m4.w3 , m4.x3 , m4.y3 , m4.z3  }
+
+		elseif (i == 1 and j == 3) or (i == 3 and j == 1) then
+			t = { m4.w3 , m4.x3 , m4.y3 , m4.z3 ,
+			      m4.w2 , m4.x2 , m4.y2 , m4.z2 ,
+			      m4.w  , m4.x  , m4.y  , m4.z  ,
+			      m4.w4 , m4.x4 , m4.y4 , m4.z4  }
+
+		elseif (i == 2 and j == 4) or (i == 4 and j == 2) then
+			t = { m4.w  , m4.x  , m4.y  , m4.z  ,
+			      m4.w4 , m4.x4 , m4.y4 , m4.z4 ,
+			      m4.w3 , m4.x3 , m4.y3 , m4.z3 ,
+			      m4.w2 , m4.x2 , m4.y2 , m4.z2  }
+
+		elseif (i == 1 and j == 4) or (i == 4 and j == 1) then
+			t = { m4.w4 , m4.x4 , m4.y4 , m4.z4 ,
+			      m4.w2 , m4.x2 , m4.y2 , m4.z2 ,
+			      m4.w3 , m4.x3 , m4.y3 , m4.z3 ,
+			      m4.w  , m4.x  , m4.y  , m4.z   }
+
+		end
+
+		return tableToMatrix4(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx4", "swapColumns", "n,n", "mx4", 1, function(m4,a,b)
+
+		local i, j
+		local t = m4ToTable(m4)
+		if a < 1 then i = 1
+		elseif a > 4 then i = 4
+		else i = a - (a % 1) end
+
+		if b < 1 then j = 1
+		elseif b > 4 then j = 4
+		else j = b - (b % 1) end
+		
+		if i == j then return m4
+		elseif (i == 1 and j == 2) or (i == 2 and j == 1) then
+			t = { m4.x  , m4.w  , m4.y  , m4.z  ,
+			      m4.x2 , m4.w2 , m4.y2 , m4.z2 ,
+			      m4.x3 , m4.w3 , m4.y3 , m4.z3 ,
+			      m4.x4 , m4.w4 , m4.y4 , m4.z4  }
+
+		elseif (i == 2 and j == 3) or (i == 3 and j == 2) then
+			t = { m4.w  , m4.y , m4.x  , m4.z  ,
+			      m4.w2 , m4.y2 , m4.x2 , m4.z2 ,
+			      m4.w3 , m4.y3 , m4.y3 , m4.z3 ,
+			      m4.w4 , m4.y4 , m4.x4 , m4.z4  }
+
+	    elseif (i == 3 and j == 4) or (i == 4 and j == 3) then
+			t = { m4.w  , m4.x  , m4.z  , m4.y  ,
+			      m4.w2 , m4.x2 , m4.z2 , m4.y2 ,
+			      m4.w3 , m4.x3 , m4.z3 , m4.y3 ,
+			      m4.w4 , m4.x4 , m4.z4 , m4.y4  }
+
+		elseif (i == 1 and j == 3) or (i == 3 and j == 1) then
+			t = { m4.y  , m4.x  , m4.w  , m4.z  ,
+			      m4.y2 , m4.x2 , m4.w2 , m4.z2 ,
+			      m4.y3 , m4.x3 , m4.w3 , m4.z3 ,
+			      m4.y4 , m4.x4 , m4.w4 , m4.z4  }
+
+		elseif (i == 2 and j == 4) or (i == 4 and j == 2) then
+			t = { m4.w  , m4.z  , m4.y  , m4.x  ,
+			      m4.w2 , m4.z2 , m4.y2 , m4.x2 ,
+			      m4.w3 , m4.z3 , m4.y3 , m4.x3 ,
+			      m4.w4 , m4.z4 , m4.y4 , m4.x4  }
+
+		elseif (i == 1 and j == 4) or (i == 4 and j == 1) then
+			t = { m4.z , m4.y , m4.x , m4.w ,
+			      m4.z2 , m4.y2 , m4.x2 , m4.w2 ,
+			      m4.z3 , m4.y3 , m4.x3 , m4.w3 ,
+			      m4.z4  , m4.y4  , m4.x4  , m4.w4   }
+
+		end
+
+		return tableToMatrix4(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx4", "element", "n,n", "n", 1, function(m4,a,b)
+
+		local i, j
+		local t = m4ToTable(m4)
+		if a < 1 then i = 1
+		elseif a > 4 then i = 4
+		else i = a - (a % 1) end
+
+		if b < 1 then j = 1
+		elseif b > 4 then j = 4
+		else j = b - (b % 1) end
+		
+		local n = i + (j - 1) * 4
+
+		return t[n]
+
+	end, true)
+
+	extension:RegisterMethod("mx4", "setElement", "n,n", "mx4", 1, function(m4,a,b,c)
+
+		local i, j
+		local t = m4ToTable(m4)
+		if a < 1 then i = 1
+		elseif a > 4 then i = 4
+		else i = a - (a % 1) end
+
+		if b < 1 then j = 1
+		elseif b > 4 then j = 4
+		else j = b - (b % 1) end
+		
+		t[i + (j - 1) * 4] = c
+
+		return tableToMatrix4(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx4", "swapElements", "n,n,n,n", "mx4", 1, function(m4,a,b,c,d)
+
+		local i, j, k, l
+		local t = m4ToTable(m4)
+		if a < 1 then i = 1
+		elseif a > 4 then i = 4
+		else i = a - (a % 1) end
+
+		if b < 1 then j = 1
+		elseif b > 4 then j = 4
+		else j = b - (b % 1) end
+
+		if c < 1 then k = 1
+		elseif c > 4 then k = 4
+		else k = c - (c % 1) end
+
+		if d < 1 then l = 1
+		elseif d > 4 then l = 4
+		else l = d - (d % 1) end
+		
+		local n = i + (j - 1) * 4
+		local n2 = k + (l - 1) * 4
+
+		t[n], t[n2] = t[n2], t[n]
+
+		return tableToMatrix4(t)
+
+	end, true)
+
+	extension:RegisterMethod("mx4", "setDiagonal", "n,n,n,n", "mx4", 1, function(m4,a,b,c,d)
+
+		return Matrix4( a     , m4.x  , m4.y  , m4.z   ,
+		                m4.w2 , b     , m4.y2 , m4.z2  ,
+		                m4.w3 , m4.x3 , c     , m4. z3 ,
+		                m4.w4 , m4.x4 , m4.y4 , d      )
+
+	end, true)
+
+	extension:RegisterMethod("mx4", "getX", "", "v", 1, function(m4)
+
+		return Vector( m4.w , m4.w2 , m4.w3 )
+
+	end, true)
+
+	extension:RegisterMethod("mx4", "getY", "", "v", 1, function(m4)
+
+		return Vector( m4.x , m4.x2 , m4.x3 )
+
+	end, true)
+
+	extension:RegisterMethod("mx4", "getZ", "", "v", 1, function(m4)
+
+		return Vector( m4.y , m4.y2 , m4.y3 )
+
+	end, true)
+
+	extension:RegisterMethod("mx4", "getPos", "", "v", 1, function(m4)
+
+		return Vector( m4.z , m4.z2 , m4.z3 )
+
+	end, true)
+
+	--[---------------------------- Functions -------------------------------------]--
+
+	extension:RegisterFunction("matrix", "trace4", "mx4", "n", 1, function(m4)
+
+		return ( m4.w + m4.x2 + m4.y3 + m4.z4 )
+
+	end, true)
+
+	extension:RegisterFunction("matrix", "transpose4", "mx4", "mx4", 1, function(m4)
+
+		return Matrix4( m4.w , m4.w2 , m4.w3 , m4.w4 ,
+			            m4.x , m4.x2 , m4.x3 , m4.x4 ,
+			            m4.y , m4.y2 , m4.y3 , m4.y4 ,
+			            m4.z , m4.z2 , m4.z3 , m4.z4 )
+
+	end, true)
+
+	extension:RegisterFunction("matrix", "inverseA", "mx4", "mx4", 1, function(m4)
+
+		local z = (m4.w * m4.z) + (m4.w2 * m4.z2) + (m4.w3 + m4.z3)
+		local z2 = (m4.x * m4.z) + (m4.x2 * m4.z2) + (m4.x3 + m4.z3)
+		local z3 = (m4.y * m4.z) + (m4.y2 * m4.z2) + (m4.y3 + m4.z3)
+
+		return Matrix4( m4.w , m4.w2 , m4.w3 , -z  ,
+			            m4.x , m4.x2 , m4.x3 , -z2 ,
+			            m4.y , m4.y2 , m4.y3 , -z3 ,
+			            0    , 0     , 0     , 1   )
+
+	end, true)
 
 --[[-------------------------------------------------------------------------------------------------------------------------------------------------]]--
 --[[||||||||||||||||||||||||||||||||||||||||||	E  N  D     O  F    E  X  T  E  N  S  I  O  N  ||||||||||||||||||||||||||||||||||||||||||||||||||||||]]--
