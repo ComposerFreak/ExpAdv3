@@ -349,25 +349,25 @@
 
 	--[---------------------------- Functions -------------------------------------]--
 
-	extension:RegisterLibrary("matrix")
+	extension:RegisterLibrary("matrix2")
 
-	extension:RegisterFunction("matrix", "diagonal2", "mx2", "v2", 1, function(m2)
+	extension:RegisterFunction("matrix2", "diagonal2", "mx2", "v2", 1, function(m2)
 		return Vector2( m2.x, m2.y2 )
 	end, true)
 
-	extension:RegisterFunction("matrix", "trace2", "mx2", "n", 1, function(m2)
+	extension:RegisterFunction("matrix2", "trace2", "mx2", "n", 1, function(m2)
 		return m2.x + m2.y2 
 	end, true)
 
-	extension:RegisterFunction("matrix", "det2", "mx2", "n", 1, function(m2)
+	extension:RegisterFunction("matrix2", "det2", "mx2", "n", 1, function(m2)
 		return detm2( m2 )
 	end, true)
 
-	extension:RegisterFunction("matrix", "transpose2", "mx2", "n", 1, function(m2)
+	extension:RegisterFunction("matrix2", "transpose2", "mx2", "n", 1, function(m2)
 		return Matrix2( m2.x, m2.x2, m2.y, m2.y2 )
 	end, true)
 
-	extension:RegisterFunction("matrix", "adj2", "mx2", "n", 1, function(m2)
+	extension:RegisterFunction("matrix2", "adj2", "mx2", "n", 1, function(m2)
 		return Matrix2( m2.y2, -m2.y, -m2.x2, m2.x )
 	end, true)
 
@@ -379,7 +379,7 @@
 
 --[[
 	*****************************************************************************************************************************************************
-		Register Matrix class
+		Register Matrix3 class
 	*****************************************************************************************************************************************************
 ]]--
 
@@ -410,6 +410,12 @@
 	extension:RegisterConstructor("mx3", "v,v,v", function(a,b,c) return Matrix3(a.x, b.x, c.x, a.y, b.y, c.y, a.z, b.z, c.z) end, true)
 	//extension:RegisterConstructor("mx3", "v,v,v", function(a,b,c) return Matrix3(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z) end)
 	extension:RegisterConstructor("mx3", "mx2", function(m2) return Matrix3(m2.x, m2.y, 0, m2.x2, m2.y2, 0, 0, 0, 0) end, true)
+	extension:RegisterConstructor("mx3", "q", function(q) 
+
+		return Matrix3( (1 - 2 * (q.j * q.j)) - (2 * (q.k * q.k))	, (2 * q.i * q.j) - (2 * q.k * q.r)			, (2 * q.i * q.k) + (2 * q.j * q.r)				, 
+			            (2 * q.i * q.j) + (2 * q.k * q.r)			, (1 - 2 * (q.i * q.i)) - (2 * (q.k * q.k))	, (2 * q.j * q.k) - (2 * q.i * q.r)				, 
+			            (2 * q.i * q.k) - (2 * q.j * q.r)			, (2 * q.j * q.k) + (2 * q.i * q.r)			, (1 - 2 * (q.i * q.i)) - (2 * (q.j * q.j)) 	) 
+	end, true)
 	extension:RegisterConstructor("mx3", "a", function(a)
 
 		ang = Angle(a.p, a.y, a.r)
@@ -969,26 +975,27 @@
 	
 	--[---------------------------- Functions -------------------------------------]--
 
+	extension:RegisterLibrary("matrix3")
 
-	extension:RegisterFunction("matrix", "diagonal3", "mx3", "v", 1, function(m3)
+	extension:RegisterFunction("matrix3", "diagonal3", "mx3", "v", 1, function(m3)
 
 		return Vector( m3.x, m3.y2, m3.z3 )
 
 	end, true)
 
-	extension:RegisterFunction("matrix", "trace3", "mx3", "n", 1, function(m3)
+	extension:RegisterFunction("matrix3", "trace3", "mx3", "n", 1, function(m3)
 
 		return ( m3.x + m3.y2 + m3.z3 )
 
 	end, true)
 
-	extension:RegisterFunction("matrix", "det3", "mx3", "n", 1, function(m3)
+	extension:RegisterFunction("matrix3", "det3", "mx3", "n", 1, function(m3)
 
 		return detm3(m3)
 
 	end, true)
 
-	extension:RegisterFunction("matrix", "transpose3", "mx3", "mx3", 1, function(m3)
+	extension:RegisterFunction("matrix3", "transpose3", "mx3", "mx3", 1, function(m3)
 
 		return Matrix3( m3.x , m3.x2 , m3.x3 ,
 			            m3.y , m3.y2 , m3.y3 ,
@@ -996,7 +1003,7 @@
 
 	end, true)
 
-	extension:RegisterFunction("matrix", "adj3", "mx3", "mx3", 1, function(m3)
+	extension:RegisterFunction("matrix3", "adj3", "mx3", "mx3", 1, function(m3)
 
 		return Matrix3( (m3.y2 * m3.z3) - (m3.y3 * m3.z2) , (m3.y3 * m3.z) - (m3.y * m3.z3) , (m3.y * m3.z2) - (m3.y2 * m3.z) , 
 			            (m3.x3 * m3.z2) - (m3.x2 * m3.z3) , (m3.x * m3.z3) - (m3.x3 * m3.z) , (m3.x2 * m3.z) - (m3.x * m3.z2) , 
@@ -1004,7 +1011,7 @@
 
 	end, true)
 
-	extension:RegisterFunction("matrix", "mRotation", "v,n", "mx3", 1, function(m3, v, n)
+	extension:RegisterFunction("matrix3", "mRotation", "v,n", "mx3", 1, function(m3, v, n)
 
 		local a
 		local sq = (v.x * v.x + v.y * v.y + v.z * v.z) ^ 0.5
@@ -1231,14 +1238,6 @@
 
 	extension:RegisterOperator("mul", "mx4,mx4", "mx4", 1, function(a, b)
 		
-		return Matrix4( (m4.w * n)  , (m4.x * n)  , (m4.y * n)  , (m4.z * n)  ,
-			            (m4.w2 * n) , (m4.x2 * n) , (m4.y2 * n) , (m4.z2 * n) ,
-			            (m4.w3 * n) , (m4.x3 * n) , (m4.y3 * n) , (m4.z3 * n) ,
-			            (m4.w4 * n) , (m4.x4 * n) , (m4.y4 * n) , (m4.z4 * n) )
-	end, true)
-
-	extension:RegisterOperator("mul", "mx4,mx4", "mx4", 1, function(a, b)
-		
 		return Matrix4( (a.w * b.w) + (a.x * b.w2) + (a.y * b.w3) + (a.z * b.w4) ,
 			            (a.w * b.x) + (a.x * b.x2) + (a.y * b.x3) + (a.z * b.x4) ,
 			            (a.w * b.y) + (a.x * b.y2) + (a.y * b.y3) + (a.z * b.y4) ,
@@ -1331,7 +1330,7 @@
 
 	end, true)
 
-	extension:RegisterOperator("eq", "mx4,mx4", "b", 1, function(a, b)
+	extension:RegisterOperator("neq", "mx4,mx4", "b", 1, function(a, b)
 
 		if (a.w - b.w) > 0 and (b.w - a.w) > 0 and
 		   (a.x - b.x) > 0 and (b.x - a.x) > 0 and
@@ -1367,25 +1366,25 @@
 
 	extension:RegisterOperator("is", "mx4", "b", 1, function(m4)
 
-		if a.w > 0 and -a.w  > 0 and
-		   a.x > 0 and -a.x  > 0 and
-		   a.y > 0 and -a.y > 0 and
-		   a.z > 0 and -a.z > 0 and
+		if a.w > 0 || -a.w > 0 ||
+		   a.x > 0 || -a.x > 0 ||
+		   a.y > 0 || -a.y > 0 ||
+		   a.z > 0 || -a.z > 0 ||
 
-		   a.w2 > 0 and -a.w2 > 0 and
-		   a.x2 > 0 and -a.x2 > 0 and
-		   a.y2 > 0 and -a.y2 > 0 and
-		   a.z2 > 0 and -a.z2 > 0 and
+		   a.w2 > 0 || -a.w2 > 0 ||
+		   a.x2 > 0 || -a.x2 > 0 ||
+		   a.y2 > 0 || -a.y2 > 0 ||
+		   a.z2 > 0 || -a.z2 > 0 ||
 
-		   a.w3 > 0 and -a.w3 > 0 and
-		   a.x3 > 0 and -a.x3 > 0 and
-		   a.y3 > 0 and -a.y3 > 0 and
-		   a.z3 > 0 and -a.z3 > 0 and
+		   a.w3 > 0 || -a.w3 > 0 ||
+		   a.x3 > 0 || -a.x3 > 0 ||
+		   a.y3 > 0 || -a.y3 > 0 ||
+		   a.z3 > 0 || -a.z3 > 0 ||
 
-		   a.w4 > 0 and -a.w4 > 0 and
-		   a.x4 > 0 and -a.x4 > 0 and
-		   a.y4 > 0 and -a.y4 > 0 and
-		   a.z4 > 0 and -a.z4 > 0
+		   a.w4 > 0 || -a.w4 > 0 ||
+		   a.x4 > 0 || -a.x4 > 0 ||
+		   a.y4 > 0 || -a.y4 > 0 ||
+		   a.z4 > 0 || -a.z4 > 0
 		   
 		   then return 1 else return 0 end
 
@@ -1674,13 +1673,15 @@
 
 	--[---------------------------- Functions -------------------------------------]--
 
-	extension:RegisterFunction("matrix", "trace4", "mx4", "n", 1, function(m4)
+	extension:RegisterLibrary("matrix4")
+
+	extension:RegisterFunction("matrix4", "trace4", "mx4", "n", 1, function(m4)
 
 		return ( m4.w + m4.x2 + m4.y3 + m4.z4 )
 
 	end, true)
 
-	extension:RegisterFunction("matrix", "transpose4", "mx4", "mx4", 1, function(m4)
+	extension:RegisterFunction("matrix4", "transpose4", "mx4", "mx4", 1, function(m4)
 
 		return Matrix4( m4.w , m4.w2 , m4.w3 , m4.w4 ,
 			            m4.x , m4.x2 , m4.x3 , m4.x4 ,
@@ -1689,7 +1690,7 @@
 
 	end, true)
 
-	extension:RegisterFunction("matrix", "inverseA", "mx4", "mx4", 1, function(m4)
+	extension:RegisterFunction("matrix4", "inverseA", "mx4", "mx4", 1, function(m4)
 
 		local z = (m4.w * m4.z) + (m4.w2 * m4.z2) + (m4.w3 + m4.z3)
 		local z2 = (m4.x * m4.z) + (m4.x2 * m4.z2) + (m4.x3 + m4.z3)

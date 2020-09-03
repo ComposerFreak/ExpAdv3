@@ -18,6 +18,10 @@
 		return math.pi	
 	end
 
+	local function huge()
+		return math.huge
+	end
+
 	local function cot( radians )
 		return 1 / tan( radians );
 	end
@@ -108,6 +112,32 @@
 	extension:RegisterFunction("math", "acot", "n", "n", 1, acot, true);
 	extension:RegisterFunction("math", "atan2", "n,n", "n", 1, math.atan2, true);
 	extension:RegisterFunction("math", "lerp", "n,n,n", "n", 1, Lerp, true);
+	extension:RegisterFunction("math", "angleDifference", "n,n", "n", 1, math.AngleDifference, true);
+	extension:RegisterFunction("math", "approach", "n,n,n", "n", 1, math.Approach, true);
+	extension:RegisterFunction("math", "approachAngle", "n,n,n", "n", 1, math.ApproachAngle, true);
+	extension:RegisterFunction("math", "binToInt", "s", "n", 1, math.BinToInt, true);
+	extension:RegisterFunction("math", "bSplinePoint", "n,t,n", "v", 1, math.BSplinePoint, true);
+	extension:RegisterFunction("math", "clamp", "n,n,n", "n", 1, math.Clamp, true);
+	extension:RegisterFunction("math", "cosh", "n", "n", 1, math.cosh, true);
+	extension:RegisterFunction("math", "distance", "n,n,n,n", "n", 1, math.Distance, true);
+	extension:RegisterFunction("math", "easeInOut", "n,n,n", "n", 1, math.EaseInOut, true);
+	extension:RegisterFunction("math", "frexp", "n", "n", 1, math.frexp, true);
+	extension:RegisterFunction("math", "intToBin", "n", "s", 1, math.IntToBin, true);
+	extension:RegisterFunction("math", "ldexp", "n,n", "n", 1, math.ldexp, true);
+	extension:RegisterFunction("math", "log10", "n", "n", 1, math.log10, true);
+	extension:RegisterFunction("math", "max", "...", "n", 1, math.max, true);
+	extension:RegisterFunction("math", "min", "...", "n", 1, math.min, true);
+	extension:RegisterFunction("math", "modf", "n", "n", 1, math.modf, true);
+	extension:RegisterFunction("math", "normalizeAngle", "n", "n", 1, math.NormalizeAngle, true);
+	extension:RegisterFunction("math", "pow", "n,n", "n", 1, math.pow, true);
+	extension:RegisterFunction("math", "remap", "n,n,n,n,n", "n", 1, math.Remap, true);
+	extension:RegisterFunction("math", "sinh", "n", "n", 1, math.sinh, true);
+	extension:RegisterFunction("math", "tanh", "n", "n", 1, math.tanh, true);
+	extension:RegisterFunction("math", "timeFraction", "n,n,n", "n", 1, math.TimeFraction, true);
+	extension:RegisterFunction("math", "truncate", "n,n", "n", 1, math.Truncate, true);
+	extension:RegisterFunction("math", "huge", "", "n", 1, huge, true);
+	extension:RegisterFunction("math", "lerpAngle", "n,a,a", "a", 1, LerpAngle, true);
+	extension:RegisterFunction("math", "lerpVector", "n,v,v", "v", 1, LerpVector, true);
 
 	extension:RegisterFunction("math", "round", "n", "n", 1, function(n)
 		return math.floor(n + 0.5);
