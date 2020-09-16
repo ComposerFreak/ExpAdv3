@@ -90,6 +90,8 @@ extension:RegisterFunction("time", "realtime", "", "n", 1, RealTime, true);
 
 extension:RegisterFunction("time", "systime", "", "n", 1, SysTime, true);
 
+extension:RegisterFunction("time", "frametime", "", "n", 1, FrameTime, true);
+
 
 extension:RegisterFunction("time", "now", "", "n", 1, os.time, true);
 

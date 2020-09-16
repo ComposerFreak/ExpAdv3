@@ -111,8 +111,16 @@ extension:RegisterOperator("mul", "v,n", "v", 1, function(a, b)
 	return Vector((a.x * b), (a.y * b), (a.z * b));
 end, true);
 
+extension:RegisterOperator("mul", "n,v", "v", 1, function(a, b)
+	return Vector((a * b.x), (a * b.y), (a * b.z));
+end, true);
+
 extension:RegisterOperator("div", "v,n", "v", 1, function(a, b)
 	return Vector((a.x / b), (a.y / b), (a.z / b));
+end, true);
+
+extension:RegisterOperator("div", "n,v", "v", 1, function(a, b)
+	return Vector((a / b.x), (a / b.y), (a / b.z));
 end, true);
 
 --[[
@@ -227,6 +235,13 @@ extension:RegisterMethod("v", "rotated", "a", "v", 1, function(v, a)
 	local vec = Vector(v.x, v.y, v.z);
 	vec:Rotate(a);
 	return vec;
+end, true)
+
+extension:RegisterMethod("v", "toScreen", "", "v2", 1, function(v)
+	
+	local v2 = Vector(v.x, v.y, v.z):ToScreen()
+	return Vector2(v2.x, v2.y)
+
 end, true)
 
 --[[

@@ -61,8 +61,24 @@ extension:RegisterOperator("mul", "a,a", "a", 1, function(a, b)
 	return Angle(a.p * b.p, a.y * b.y, a.r * b.r);
 end, true);
 
+extension:RegisterOperator("mul", "a,n", "a", 1, function(a, b)
+	return Angle(a.p * b, a.y * b, a.r * b);
+end, true);
+
+extension:RegisterOperator("mul", "n,a", "a", 1, function(a, b)
+	return Angle(a * b.p, a * b.y, a * b.r);
+end, true);
+
 extension:RegisterOperator("div", "a,a", "a", 1, function(a, b)
 	return Angle(a.p / b.p, a.y / b.y, a.r / b.r);
+end, true);
+
+extension:RegisterOperator("div", "a,n", "a", 1, function(a, b)
+	return Angle(a.p / b, a.y / b, a.r / b);
+end, true);
+
+extension:RegisterOperator("div", "n,a", "a", 1, function(a, b)
+	return Angle(a / b.p, a / b.y, a / b.r);
 end, true);
 
 --[[

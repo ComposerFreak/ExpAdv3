@@ -16,6 +16,15 @@ local extension = EXPR_LIB.RegisterExtension("vector2");
 		CLASS
 ]]
 
+vector2 = {}
+vector2.__index = vector2
+
+local function Vector2(x,y)
+
+	return setmetatable({x = x, y = y}, vector2)
+
+end
+
 local function notNil(v)
 	return v ~= nil;
 end

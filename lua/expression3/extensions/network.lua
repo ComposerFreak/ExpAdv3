@@ -271,7 +271,7 @@ local function queueMessage(ctx, msg, filter)
 	local queue = ctx.data.net_queue or {};
 
 	if (#queue >= NET_MAX) then
-		this:Throw("Attempt to send net stream, too meany streams queued.")
+		ctx:Throw("Attempt to send net stream, too meany streams queued.")
 	elseif (CLIENT) then
 		queue[#queue + 1] = {msg = msg};
 	else

@@ -57,10 +57,40 @@ if (CLIENT) then
 	end
 
 	hook.Add("Expression3.Entity.PreDrawScreen", "Expression3.Render", resetRenderer);
+
 end
 
+EXPR3_HUD = false
+
+local function renderHUD()
+
+	local scrW, scrH = ScrW(), ScrH();
+			
+	for _, context in pairs(EXPR_LIB.GetAll()) do
+
+		if (IsValid(context.entity)) then
+
+			if context.events.RenderHUD and context:ppPlayer(context.player, "RenderHUD") then
+
+				EXPR3_HUD = true;
+
+				surface.SetDrawColor(255, 255, 255, 255)
+				surface.SetTextColor(0, 0, 0, 255)
+
+				context.entity:CallEvent("", 0, "RenderHUD", {"n", scrW}, {"n", scrH});
+
+				EXPR3_HUD = false;
+
+			end
+		end
+	end			
+end
+
+hook.Add("HUDPaint", "Expression3.Event", renderHUD)
+
+
 local function preDraw(ctx)
-	if (not EXPR3_DRAWSCREEN) then
+	if (not (EXPR3_DRAWSCREEN or EXPR3_HUD)) then
 		ctx:Throw("Attempted to render outside of a rendering event.");
 	end
 end
@@ -82,6 +112,7 @@ extension:SetClientState();
 ]]--
 
 extension:RegisterPermission("RenderScreen", "fugue/monitor-screensaver.png", "This gate is allowed to render to\nits inbuilt screen.");
+extension:RegisterPermission("RenderHUD", "fugue/monitor-screensaver.png", "This gate is allowed to render to\nyour HUD");
 
 extension:RegisterLibrary("render");
 
@@ -279,9 +310,15 @@ extension:RegisterFunction("render", "getTextSize", "s", "n", 2, function(str)
 end, true);
 
 extension:RegisterFunction("render", "drawText", "v2,s", "n", 2, function(ctx, p, str)
-	preText(ctx);
+	preDraw(ctx);
 	surface.SetTextPos(p.x, p.y);
 	surface.DrawText(str);
 end, false);
+
+--[[
+	*****************************************************************************************************************************************************
+		HUD
+	*****************************************************************************************************************************************************
+]]--
 
 extension:EnableExtension();
