@@ -21,6 +21,8 @@ local blankfunc = function() end;
 
 E3Fonts = {};
 
+local FONT;
+
 local function setFont(basefont, size)
 	local font = "WireEGP_" .. size .. "_" .. basefont;
 
@@ -39,6 +41,9 @@ local function setFont(basefont, size)
 	end
 
 	surface.SetFont(font);
+
+	FONT = font;
+
 end
 
 --[[
@@ -305,7 +310,7 @@ end, false);
 ]]--
 
 extension:RegisterFunction("render", "getTextSize", "s", "n", 2, function(str)
-	surface.setFont(FONT);
+	surface.SetFont(FONT);
 	return surface.GetTextSize(str);
 end, true);
 
@@ -320,5 +325,12 @@ end, false);
 		HUD
 	*****************************************************************************************************************************************************
 ]]--
+
+extension:RegisterFunction("render", "scrW", "", "n", 1, ScrW, true)
+extension:RegisterFunction("render", "scrH", "", "n", 1, ScrH, true)
+
+extension:RegisterFunction("render", "scrSize", "", "n", 1, function()
+	return Vector2(ScrW, ScrH);
+end, true)
 
 extension:EnableExtension();

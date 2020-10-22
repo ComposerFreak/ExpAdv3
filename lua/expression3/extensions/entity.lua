@@ -422,7 +422,7 @@ extension:RegisterMethod("e", "getMassCenter", "", "v", 1, function(e)
 	local ph = e:GetPhysicsObject();
 
 	if IsValid(ph) then
-		return ph:GetMassCenter();
+		return ph:LocalToWorld(ph:GetMassCenter());
 	end
 
 	return Vector(0, 0, 0);
