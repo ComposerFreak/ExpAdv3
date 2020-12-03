@@ -63,13 +63,14 @@
 			Expr21 ← ("#" Expr24)? Expr22
 			Expr22 ← (("$" / "~") Var)? Expr23
 			Expr23 ← ("("type")" Expr1)? Expr24
-			Expr24 ← ("(" Expr1 ")" (Trailing)?)? Expr25
-			Expr25 ← (Library "." Function  "(" (Expr1 ((",")?)*)?) ")")? Expr26
-			Expr26 ← (Var (Trailing)?)? Expr27
-			Expr27 ← ("new" Type "(" (Expr1 ((","")?)*)?) ")")? Expr28
-			Expr28 ← ("Function" Params Block1)? Expr29
-			Expr29 ← Expr30? Error
-			Expr30 ← (String / Number / "true" / "false", "void")?
+			Expr24 ← (Params "=>" Block1)? Expr25
+			Expr25 ← ("(" Expr1 ")" (Trailing)?)? Expr26
+			Expr26 ← (Library "." Function  "(" (Expr1 ((",")?)*)?) ")")? Expr27
+			Expr27 ← (Var (Trailing)?)? Expr28
+			Expr28 ← ("new" Type "(" (Expr1 ((","")?)*)?) ")")? Expr29
+			Expr29 ← ("Function" Params Block1)? Expr30
+			Expr30 ← Expr31? Error
+			Expr31 ← (String / Number / "true" / "false", "void")?
 
 		:::Syntax:::
 			Cond 		← "(" Expr1 ")"
@@ -1815,21 +1816,57 @@ function PARSER.Expression_23(this)
 	return this:Expression_24();
 end
 
+
 function PARSER.Expression_24(this)
+
+	local token = this.__token;
+
+	if (this:CheckToken("lpa")) then
+
+		local inst = this:StartInstruction("lambda", this.__token);
+
+		local params, signature = this:InputParameters(inst, true);
+
+		if (params and signature) then -- did InputParameters get ( permas )
+			
+			if (this:Accept("lmd")) then -- Do we have => ?
+
+				-- We now know its a lambda
+
+				local block = this:Block_1(true, " ");
+
+				return this:EndInstruction(inst, {params = params; signature = signature; block = block});
+
+			end
+
+		end
+
+		this:GotoToken(token); --Rewind Token
+
+	end
+
+	return this:Expression_25();
+end
+
+-->>> HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+function PARSER.Expression_25(this)
 	if (this:Accept("lpa")) then
 		local inst = this:StartInstruction("group", this.__token);
 
 		local expr = this:Expression_1();
+
+		print(this.__token.data)
 
 		this:Require("rpa", "Right parenthesis ( )) missing, to close grouped equation.");
 
 		return this:EndInstruction(inst, {expr = expr});
 	end
 
-	return this:Expression_25();
+	return this:Expression_26();
 end
 
-function PARSER.Expression_25(this)
+function PARSER.Expression_26(this)
 	if (this:CheckToken("var")) then
 		local token = this.__next;
 		local library = this.__next.data;
@@ -1842,7 +1879,7 @@ function PARSER.Expression_25(this)
 
 			if (not this:Accept("prd")) then
 				this:StepBackward(1);
-				return this:Expression_26();
+				return this:Expression_27();
 			end
 
 			local name = this:Require("var", "function name expected after library name");
@@ -1873,10 +1910,10 @@ function PARSER.Expression_25(this)
 		end
 	end
 
-	return this:Expression_26();
+	return this:Expression_27();
 end
 
-function PARSER.Expression_26(this)
+function PARSER.Expression_27(this)
 	if (this:Accept("var")) then
 		local inst = this:StartInstruction("var", this.__token);
 
@@ -1885,10 +1922,10 @@ function PARSER.Expression_26(this)
 		return this:Expression_Trailing(inst);
 	end
 
-	return this:Expression_27()
+	return this:Expression_28()
 end
 
-function PARSER.Expression_27(this)
+function PARSER.Expression_28(this)
 
 	local new = this:Accept("new");
 
@@ -1922,10 +1959,10 @@ function PARSER.Expression_27(this)
 		return this:EndInstruction(inst, {class = class.data; expressions = expressions});
 	end
 
-	return this:Expression_28();
+	return this:Expression_29();
 end
 
-function PARSER.Expression_28(this)
+function PARSER.Expression_29(this)
 	if (this:AcceptWithData("typ", "f")) then
 		local inst = this:StartInstruction("lambda", this.__token);
 
@@ -1936,12 +1973,16 @@ function PARSER.Expression_28(this)
 		return this:EndInstruction(inst, {params = params; signature = signature; block = block});
 	end
 
-	return this:Expression_29();
+	return this:Expression_30(); --this:Expression_30();
 end
 
-function PARSER.InputParameters(this, inst)
-	this:Require("lpa", "Left parenthesis (( ) expected to open function parameters.");
-
+function PARSER.InputParameters(this, inst, optional)
+	
+	if (!this:Accept("lpa")) then
+		if (optional) then return; end
+		this:Require("lpa", "Left parenthesis (( ) expected to open function parameters.");
+	end
+	
 	inst.__lpa = this.__token;
 
 	local signature = {};
@@ -1973,13 +2014,16 @@ function PARSER.InputParameters(this, inst)
 		end
 	end
 
-	this:Require("rpa", "Right parenthesis ( )) expected to close function parameters. %s", this.__next.data);
+	if (!this:Accept("rpa")) then
+		if (optional) then return; end
+		this:Require("rpa", "Right parenthesis ( )) expected to close function parameters. %s", this.__next.data);
+	end
 
 	return params, table.concat(signature, ",");
 end
 
-function PARSER.Expression_29(this)
-	expr = this:Expression_30();
+function PARSER.Expression_30(this)
+	expr = this:Expression_31();
 
 	if (expr) then
 		return expr;
@@ -1988,7 +2032,7 @@ function PARSER.Expression_29(this)
 	this:ExpressionErr();
 end
 
-function PARSER.Expression_30(this)
+function PARSER.Expression_31(this)
 	if (this:Accept("tre")) then
 		local inst = this:StartInstruction("bool", this.__token);
 		return this:EndInstruction(inst, {value = true});
@@ -2177,6 +2221,7 @@ function PARSER.ExpressionErr(this)
 	--this:Exclude("cth", "Catch keyword (catch) must be part of an try-statement");
 	--this:Exclude("fnl", "Final keyword (final) must be part of an try-statement");
 	this:Exclude("dir", "directive operator (@) must not appear inside an equation");
+	this:Exclude("lmd", "lamda operator (=>) must not appear inside an equation");
 
 	this:Throw(this.__token, "Unexpected symbol found (%s)", this.__token.type);
 end

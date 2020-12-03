@@ -87,6 +87,7 @@ local TOKENS = {
 		["$"] ={ "dlt", "delta" },
 		["#"] ={ "len", "length" },
 		["~"] ={ "cng", "changed" },
+		["=>"] ={ "lmd", "lambda" },
 		["->"] ={ "wc", "connect" },
 		["."] ={ "prd", "period" },
 		["("] ={ "lpa", "left parenthesis" },
