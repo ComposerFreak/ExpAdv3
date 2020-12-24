@@ -4384,7 +4384,7 @@ function COMPILER.Compile_TOSTR(this, inst, token, data)
 	this:writeToBuffer(inst, "if(not CheckHash(%q, this)) then CONTEXT:Throw(%q); end", userclass.hash, error);
 
 	this:Compile(data.block);
-	this:writeToBuffer(inst, data.block)
+	this:writeToBuffer(inst, data.block);
 	this:PopScope();
 
 	this:writeToBuffer(inst, "\nend\n");
@@ -4397,17 +4397,21 @@ function COMPILER.Compile_INTABLE(this, inst, token, data)
 	local prf = EXPR_LOW;
 	local values = data.values;
 
+	this:PushScope();
+
 	this:writeToBuffer(inst, "(function()\n");
 
-	this:writeToBuffer(inst, "local _intable_ = {tbl = {}, children = {}, parents = {}, size = 0};\n");
+	this:writeToBuffer(inst, "local intable = {tbl = {}, children = {}, parents = {}, size = 0};\n");
 
-	local inst2 = fakeInstruction(inst, "_intable_", "t", 1);
+	this:AssignVariable(token, true, "intable", "t");
+
+	local inst2 = fakeInstruction(inst, "intable", "t", 1);
 
 	for i = 1, #values do
 
 		local info = values[i];
 
-		this:writeToBuffer(inst, "eTable.set(CONTEXT, _intable_,");
+		this:writeToBuffer(inst, "eTable.set(CONTEXT, intable,");
 
 		local kr, kc, kp = this:Compile(info.expr1);
 
@@ -4422,7 +4426,9 @@ function COMPILER.Compile_INTABLE(this, inst, token, data)
 		prf = prf + kp + vp;
 	end
 
-	this:writeToBuffer(inst, "return _intable_;\nend)()");
+	this:writeToBuffer(inst, "return intable;\nend)()");
+
+	this:PopScope();
 
 	return "t", 1, prf;
 end
