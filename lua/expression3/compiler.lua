@@ -3048,26 +3048,43 @@ function COMPILER.Compile_LAMBDA(this, inst, token, data)
 		local var = param[2];
 		local class = param[1];
 
-		this:writeToBuffer(inst, var);
 		this:AssignVariable(token, true, var, class);
 
-		if (k < tArgs) then
-			this:writeToBuffer(inst, ",");
+		if (not inst.inTable) then
+			this:writeToBuffer(inst, var);
+
+			if (k < tArgs) then
+				this:writeToBuffer(inst, ",");
+			end
 		end
 	end
 
+	if (inst.inTable) then
+		this:AssignVariable(inst.token, true, "input", "t");
+		this:writeToBuffer(inst, "input");
+	end
+
 	this:writeToBuffer(inst, ")\n");
+
+	if (inst.inTable) then
+		this:writeToBuffer(inst, "if (input == nil or input[1] == nil) then CONTEXT:Throw(\"table expected for peramater, got void\"); end\n");
+		this:writeToBuffer(inst, "if (input[1] ~= \"t\") then CONTEXT:Throw(\"table expected for peramater, got \" .. input[1]); end\n");
+		this:writeToBuffer(inst, "input = input[2];\n", var, var);
+	end
 
 	for k = 1, tArgs do
 		local param = args[k];
 		local var = param[2];
 		local class = param[1];
 
+		if (inst.inTable) then
+			this:writeToBuffer(inst, "local %s = input.tbl[%q];\n", var, var);
+		end
+
 		if (class ~= "_vr") then
 			this:writeToBuffer(inst, "if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end\n", var, var, name(class), var);
 			this:writeToBuffer(inst, "if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end\n", var, class, name(class), var, var);
 			this:writeToBuffer(inst, "%s = %s[2];\n", var, var);
-			--this:writeToBuffer(inst, "print('called function')");
 		end
 	end
 
@@ -3242,20 +3259,38 @@ function COMPILER.Compile_FUNCT(this, inst, token, data)
 		local var = param[2];
 		local class = param[1];
 
-		this:writeToBuffer(inst, var);
 		this:AssignVariable(token, true, var, class);
+		
+		if (not inst.inTable) then
+			this:writeToBuffer(inst, var);
 
-		if (k < tArgs) then
-			this:writeToBuffer(inst, ",");
+			if (k < tArgs) then
+				this:writeToBuffer(inst, ",");
+			end
 		end
 	end
 
+	if (inst.inTable) then
+		this:AssignVariable(inst.token, true, "input", "t");
+		this:writeToBuffer(inst, "input");
+	end
+
 	this:writeToBuffer(inst, ")\n");
+
+	if (inst.inTable) then
+		this:writeToBuffer(inst, "if (input == nil or input[1] == nil) then CONTEXT:Throw(\"table expected for peramater, got void\"); end\n");
+		this:writeToBuffer(inst, "if (input[1] ~= \"t\") then CONTEXT:Throw(\"table expected for peramater, got \" .. input[1]); end\n");
+		this:writeToBuffer(inst, "input = input[2];\n", var, var);
+	end
 
 	for k = 1, tArgs do
 		local param = args[k];
 		local var = param[2];
 		local class = param[1];
+
+		if (inst.inTable) then
+			this:writeToBuffer(inst, "local %s = input.tbl[%q];\n", var, var);
+		end
 
 		if (class ~= "_vr") then
 			this:writeToBuffer(inst, "if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end\n", var, var, name(class), var);

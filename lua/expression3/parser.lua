@@ -322,7 +322,7 @@ end
 
 function PARSER.Accept(this, type, ...)
 	if (this:CheckToken(type, ...)) then
-		--print("Accept(" .. type .. ", " .. this.__next.data .. ") -> ", this.cur_instruction and this.cur_instruction.type or "?")
+		print("Accept(" .. type .. ", " .. this.__next.data .. ") -> ", this.cur_instruction and this.cur_instruction.type or "?")
 		this:Next();
 		return true;
 	end
@@ -1288,7 +1288,7 @@ function PARSER.Statment_10(this)
 
 		local variable = this.__token.data;
 
-		local params, signature = this:InputParameters(inst);
+		local params, signature = this:InputOrTableParameters(inst);
 
 		local block = this:Block_1(true, " ");
 
@@ -1825,7 +1825,7 @@ function PARSER.Expression_24(this)
 
 		local inst = this:StartInstruction("lambda", this.__token);
 
-		local params, signature = this:InputParameters(inst, true);
+		local params, signature = this:InputOrTableParameters(inst, true);
 
 		if (params and signature) then -- did InputParameters get ( permas )
 			
@@ -1847,8 +1847,6 @@ function PARSER.Expression_24(this)
 
 	return this:Expression_25();
 end
-
--->>> HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 function PARSER.Expression_25(this)
 	if (this:Accept("lpa")) then
@@ -1966,7 +1964,7 @@ function PARSER.Expression_29(this)
 	if (this:AcceptWithData("typ", "f")) then
 		local inst = this:StartInstruction("lambda", this.__token);
 
-		local params, signature = this:InputParameters(inst);
+		local params, signature = this:InputOrTableParameters(inst);
 
 		local block = this:Block_1(true, " ");
 
@@ -1989,7 +1987,6 @@ function PARSER.InputParameters(this, inst, optional)
 
 	local params = {};
 
-
 	if (this:Accept("typ")) then
 
 		local class = this.__token.data;
@@ -1998,7 +1995,7 @@ function PARSER.InputParameters(this, inst, optional)
 
 		this:Require("var", "Parameter expected after %s.", class);
 
-		params[1] = {class, this.__token.data}
+		params[1] = {class, this.__token.data};
 
 		while(this:Accept("com")) do
 			this:Require("typ", "Class expected for new parameter.");
@@ -2009,9 +2006,63 @@ function PARSER.InputParameters(this, inst, optional)
 
 			this:Require("var", "Parameter expected after %s.", class);
 
-			params[#params + 1] = {class, this.__token.data}
+			params[#params + 1] = {class, this.__token.data};
 
 		end
+
+	end
+
+	if (!this:Accept("rpa")) then
+		if (optional) then return; end
+		this:Require("rpa", "Right parenthesis ( )) expected to close function parameters. %s", this.__next.data);
+	end
+
+	return params, table.concat(signature, ",");
+end
+
+function PARSER.InputOrTableParameters(this, inst, optional)
+	
+	if (!this:Accept("lpa")) then
+		if (optional) then return; end
+		this:Require("lpa", "Left parenthesis (( ) expected to open function parameters.");
+	end
+	
+	inst.__lpa = this.__token;
+
+	inst.inTable = this:Accept("lcb"); ---
+
+	local signature = {};
+
+	local params = {};
+
+	if (this:Accept("typ")) then
+
+		local class = this.__token.data;
+
+		signature[1] = class;
+
+		this:Require("var", "Parameter expected after %s.", class);
+
+		params[1] = {class, this.__token.data};
+
+		while(this:Accept("com")) do
+			this:Require("typ", "Class expected for new parameter.");
+
+			local class = this.__token.data;
+
+			signature[#signature + 1] = class;
+
+			this:Require("var", "Parameter expected after %s.", class);
+
+			params[#params + 1] = {class, this.__token.data};
+
+		end
+
+	end
+
+	if (inst.inTable) then
+		this:Require("rcb", "Right curly bracket ( }) expected to close function parameters.");
+		signature = {"t"};
 	end
 
 	if (!this:Accept("rpa")) then
