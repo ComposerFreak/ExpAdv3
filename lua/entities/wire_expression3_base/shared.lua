@@ -153,6 +153,9 @@ function ENT:BuildEnv(context, instance)
 		env._METH	= instance.methods;
 		env._FUN	= instance.functions;
 
+	-- Table Helpers
+		env.eTable = EXPR_LIB.TABLE;
+
 	-- Fucntions we need
 		env.invoke  = EXPR_LIB.Invoke;
 		env.setmetatable = setmetatable;

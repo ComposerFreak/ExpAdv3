@@ -322,7 +322,7 @@ end
 
 function PARSER.Accept(this, type, ...)
 	if (this:CheckToken(type, ...)) then
-		print("Accept(" .. type .. ", " .. this.__next.data .. ") -> ", this.cur_instruction and this.cur_instruction.type or "?")
+		--print("Accept(" .. type .. ", " .. this.__next.data .. ") -> ", this.cur_instruction and this.cur_instruction.type or "?")
 		this:Next();
 		return true;
 	end
@@ -1960,7 +1960,60 @@ function PARSER.Expression_28(this)
 	return this:Expression_29();
 end
 
+function PARSER.NextTableIndex(this)
+	local expr1;
+
+	if (this:Accept("var")) then
+		expr1 = this:EndInstruction(this:StartInstruction("str", this.__token), {value = '"' .. this.__token.data .. '"'});
+	elseif (this:Accept("lsb")) then
+		expr1 = this:Expression_1();
+
+		if (not expr1) then
+			this:Throw(this.__token, "Further input expected, for table defintion.");
+		end
+
+		this:Require("rsb", "Right sqaure bracket ( ]) expected after table index.");
+	else
+		this:Throw(this.__token, "Further input expected, for table defintion.");
+	end
+
+	this:Require("ass", "Assignment operator (=) expected after table index.");
+
+	local expr2 = this:Expression_1();
+
+	if (not expr2) then
+		this:Throw(this.__token, "Further input expected, for table defintion.");
+	end
+
+	return { class = class, expr1 = expr1, expr2 = expr2 };
+end
+
 function PARSER.Expression_29(this)
+
+	if (this:Accept("lcb")) then
+
+		local values = {};
+
+		local inst = this:StartInstruction("intable", this.__token);
+
+		if (not this:CheckToken("rcb")) then
+
+			values[1] = this:NextTableIndex();
+
+			while (this:Accept("com")) do
+				values[#values + 1]  = this:NextTableIndex();
+			end
+		end
+
+		this:Require("rcb", "Right curly bracket ( }) expected, to close table defintion.");
+
+		return this:EndInstruction(inst, { values = values });
+	end
+
+	return this:Expression_30();
+end
+
+function PARSER.Expression_30(this)
 	if (this:AcceptWithData("typ", "f")) then
 		local inst = this:StartInstruction("lambda", this.__token);
 
@@ -1971,7 +2024,7 @@ function PARSER.Expression_29(this)
 		return this:EndInstruction(inst, {params = params; signature = signature; block = block});
 	end
 
-	return this:Expression_30(); --this:Expression_30();
+	return this:Expression_31();
 end
 
 function PARSER.InputParameters(this, inst, optional)
@@ -2073,8 +2126,8 @@ function PARSER.InputOrTableParameters(this, inst, optional)
 	return params, table.concat(signature, ",");
 end
 
-function PARSER.Expression_30(this)
-	expr = this:Expression_31();
+function PARSER.Expression_31(this)
+	expr = this:Expression_32();
 
 	if (expr) then
 		return expr;
@@ -2083,7 +2136,7 @@ function PARSER.Expression_30(this)
 	this:ExpressionErr();
 end
 
-function PARSER.Expression_31(this)
+function PARSER.Expression_32(this)
 	if (this:Accept("tre")) then
 		local inst = this:StartInstruction("bool", this.__token);
 		return this:EndInstruction(inst, {value = true});

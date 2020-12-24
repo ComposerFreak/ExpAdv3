@@ -4392,6 +4392,42 @@ function COMPILER.Compile_TOSTR(this, inst, token, data)
 	return nil, nil, EXPR_LOW;
 end
 
+function COMPILER.Compile_INTABLE(this, inst, token, data)
+
+	local prf = EXPR_LOW;
+	local values = data.values;
+
+	this:writeToBuffer(inst, "(function()\n");
+
+	this:writeToBuffer(inst, "local _intable_ = {tbl = {}, children = {}, parents = {}, size = 0};\n");
+
+	local inst2 = fakeInstruction(inst, "_intable_", "t", 1);
+
+	for i = 1, #values do
+
+		local info = values[i];
+
+		this:writeToBuffer(inst, "eTable.set(CONTEXT, _intable_,");
+
+		local kr, kc, kp = this:Compile(info.expr1);
+
+		this:writeToBuffer(inst, info.expr1);
+
+		local vr, vc, vp = this:Compile(info.expr2);
+
+		this:writeToBuffer(inst, ",\"" .. vr .. "\",");
+		this:writeToBuffer(inst, info.expr2);
+		this:writeToBuffer(inst, ");\n");
+
+		prf = prf + kp + vp;
+	end
+
+	this:writeToBuffer(inst, "return _intable_;\nend)()");
+
+	return "t", 1, prf;
+end
+
+
 --[[
 ]]
 
