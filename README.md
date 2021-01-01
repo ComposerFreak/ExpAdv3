@@ -1,6 +1,9 @@
 # ExpAdv3
 Expression Advanced 3
 
+# Install Instructions:
+Copy ExpAdv3 folder into your Gmod addons folder, if you are on a Linux enviroment you will need to rename the folder to expadv3 (lower case) or the addon will not load.
+
 Workshop: 
 https://steamcommunity.com/sharedfiles/filedetails/?id=2001386268
 
