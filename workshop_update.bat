@@ -18,25 +18,24 @@ gmad create -folder "%adir%" -out "%gma%"
 @echo off
 
 if exist "%gma%" (
-
 	echo Addon was packaged to gma file 
 	echo publishing to workshop
-
-	@echo on
-	gmpublish update -addon "%gma%" -id "2001386268"
-	@echo off
-
-	pause
-
-	echo Deleting temporary gma file
-	del "%gma%"
-
-	pause
-
 ) else (
-
 	echo Failed to create gma file, please check error log!
 	pause
-
+	exit
 )
+
+@echo on
+gmpublish update -addon "%gma%" -id "2001386268"
+@echo off
+pause
+
+
+echo Deleting temporary gma file
+del "%gma%"
+
+
+
+
 

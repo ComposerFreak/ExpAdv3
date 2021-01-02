@@ -95,12 +95,16 @@ if (SERVER) then
 		
 		local files, folders = file.Find(path, gamepath);
 		
-		for _, file in pairs(files) do
-			resource.AddFile( string.format("%s/%s", path, file) );
+		if (files) then
+			for _, file in pairs(files) do
+				resource.AddFile( string.format("%s/%s", path, file) );
+			end
 		end
-		
-		for _, folder in pairs(folders) do
-			addAll( string.format("%s/%s", path, folder), gamepath );
+
+		if (folders) then
+			for _, folder in pairs(folders) do
+				addAll( string.format("%s/%s", path, folder), gamepath );
+			end
 		end
 	end;
 	
