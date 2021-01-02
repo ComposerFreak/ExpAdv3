@@ -65,6 +65,10 @@ local ply_perms = {};
 EXPR_PERMS.__PlayerPerms =  ply_perms;
 
 SetGlobal = function(player, perm, value)
+	if (not IsValid(player) or not player.UserID) then
+		return;
+	end
+
 	local id = player:UserID();
 
 	local perms = ply_perms[id];
@@ -84,6 +88,11 @@ EXPR_PERMS.SetGlobal = SetGlobal;
 ****************************************************************************************************************************/
 
 GetGlobal = function(player, perm)
+	
+	if (not IsValid(player) or not player.UserID) then
+		return EXPR_DENY;
+	end
+
 	local id = player:UserID();
 
 	local perms = ply_perms[id];
@@ -102,7 +111,7 @@ EXPR_PERMS.GetGlobal = GetGlobal;
 Set = function(entity, target, perm, value)
 	
 	if not IsValid(entity) then return false; end
-	if not IsValid(target) then return false; end
+	if not IsValid(target) or not target.UserID then return false; end
 	if not entity.Expression3 then return false; end
 
 	local tid = target:UserID();
@@ -140,6 +149,10 @@ Get = function(entity, target, perm, notGlobal)
 	
 		if owner == target and not notGlobal then
 			return EXPR_ALLOW;
+		end
+
+		if (not target or not target.UserID) then
+			return EXPR_DENY;
 		end
 
 		local tid = target:UserID();
