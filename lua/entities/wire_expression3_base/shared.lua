@@ -153,7 +153,8 @@ function ENT:BuildEnv(context, instance)
 		env._METH	= instance.methods;
 		env._FUN	= instance.functions;
 
-	-- Table Helpers
+	-- Librarys & Helpers
+		env.bit = bit;
 		env.eTable = EXPR_LIB.TABLE;
 
 	-- Fucntions we need
