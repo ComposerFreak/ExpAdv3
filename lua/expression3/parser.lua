@@ -2075,7 +2075,7 @@ end
 
 function PARSER.InputOrTableParameters(this, inst, optional)
 	
-	if (!this:Accept("lpa")) then
+	if (not this:Accept("lpa")) then
 		if (optional) then return; end
 		this:Require("lpa", "Left parenthesis (( ) expected to open function parameters.");
 	end
@@ -2090,24 +2090,46 @@ function PARSER.InputOrTableParameters(this, inst, optional)
 
 	if (this:Accept("typ")) then
 
+		local expr;
 		local class = this.__token.data;
 
 		signature[1] = class;
 
 		this:Require("var", "Parameter expected after %s.", class);
 
-		params[1] = {class, this.__token.data};
+		local var = this.__token.data;
+			
+		if (this:Accept("ass")) then
+			expr = this:Expression_1();
 
-		while(this:Accept("com")) do
+			if (not expr) then
+				this:Throw(this.__token, "Further input required at end of code, incomplete expression");
+			end
+		end
+
+		params[1] = {class, var, expr};
+
+		while (this:Accept("com")) do
 			this:Require("typ", "Class expected for new parameter.");
 
+			local expr;
 			local class = this.__token.data;
 
 			signature[#signature + 1] = class;
 
 			this:Require("var", "Parameter expected after %s.", class);
 
-			params[#params + 1] = {class, this.__token.data};
+			local var = this.__token.data;
+
+			if (this:Accept("ass")) then
+				expr = this:Expression_1();
+
+				if (not expr) then
+					this:Throw(this.__token, "Further input required at end of code, incomplete expression");
+				end
+			end
+
+			params[#params + 1] = {class, var, expr};
 
 		end
 

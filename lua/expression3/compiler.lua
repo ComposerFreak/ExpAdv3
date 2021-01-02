@@ -3040,6 +3040,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, data)
 
 	this:writeToBuffer(inst, "{op = function(");
 
+	local prf = EXPR_LOW;
 	local args = data.params;
 	local tArgs = #args;
 
@@ -3074,11 +3075,32 @@ function COMPILER.Compile_LAMBDA(this, inst, token, data)
 
 	for k = 1, tArgs do
 		local param = args[k];
-		local var = param[2];
 		local class = param[1];
+		local var = param[2];
+		local expr = param[3];
 
 		if (inst.inTable) then
 			this:writeToBuffer(inst, "local %s = input.tbl[%q];\n", var, var);
+		end
+
+		if (expr) then
+			local r, c, p = this:Compile(expr);
+
+			if (r ~= class) then
+				this:Throw(expr.token, "Can not default to %s here, %s expected.", name(r), name(class));
+			end
+
+			this:writeToBuffer(inst, "if (%s == nil or %s[1] == nil) then %s = ", var, var, var );
+			
+			if (r ~= "_vr") then this:writeToBuffer(inst, "{%q, ", r); end
+
+			this:addInstructionToBuffer(inst, expr);
+
+			if (r ~= "_vr") then this:writeToBuffer(inst, "}"); end
+
+			this:writeToBuffer(inst, "end\n");
+
+			prf = prf + p;
 		end
 
 		if (class ~= "_vr") then
@@ -3111,7 +3133,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, data)
 
 	this:writeToBuffer(inst, "\nend,\nresult = %q, count = %i, scr = CONTEXT}", result, count);
 
-	return "f", 1, EXPR_LOW;
+	return "f", 1, prf;
 end
 
 --[[
@@ -3251,6 +3273,7 @@ function COMPILER.Compile_FUNCT(this, inst, token, data)
 
 	this:PushScope();
 
+	local prf = EXPR_MIN;
 	local args = data.params;
 	local tArgs = #args;
 
@@ -3285,11 +3308,32 @@ function COMPILER.Compile_FUNCT(this, inst, token, data)
 
 	for k = 1, tArgs do
 		local param = args[k];
-		local var = param[2];
 		local class = param[1];
+		local var = param[2];
+		local expr = param[3];
 
 		if (inst.inTable) then
 			this:writeToBuffer(inst, "local %s = input.tbl[%q];\n", var, var);
+		end
+
+		if (expr) then
+			local r, c, p = this:Compile(expr);
+
+			if (r ~= class) then
+				this:Throw(expr.token, "Can not default to %s here, %s expected.", name(r), name(class));
+			end
+
+			this:writeToBuffer(inst, "if (%s == nil or %s[1] == nil) then %s = ", var, var, var );
+			
+			if (r ~= "_vr") then this:writeToBuffer(inst, "{%q, ", r); end
+
+			this:addInstructionToBuffer(inst, expr);
+
+			if (r ~= "_vr") then this:writeToBuffer(inst, "}"); end
+
+			this:writeToBuffer(inst, "end\n");
+
+			prf = prf + p;
 		end
 
 		if (class ~= "_vr") then
@@ -3324,7 +3368,7 @@ function COMPILER.Compile_FUNCT(this, inst, token, data)
 
 	this:writeToBuffer(inst, "\nend,\nresult = %q, count = %i, scr = CONTEXT};\n", data.resultClass, count);
 
-	return nil, nil, EXPR_MIN;
+	return nil, nil, prf;
 end
 
 --[[
