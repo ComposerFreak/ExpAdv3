@@ -31,6 +31,9 @@ if (SERVER) then
 	AddCSLuaFile("expression3/compiler.lua");
 	AddCSLuaFile("expression3/debuger.lua");
 	
+	AddCSLuaFile("expression3/uploader.lua");
+	AddCSLuaFile("expression3/core/init.lua");
+	
 	AddCSLuaFile( "expression3/editor.lua" )
 	
 	AddCSLuaFile( "expression3/editor/vector2.lua" )
