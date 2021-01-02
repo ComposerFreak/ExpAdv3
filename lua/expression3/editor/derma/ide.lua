@@ -228,13 +228,21 @@ function PANEL:Init( )
 	self.btnHideSidebar = vgui.Create( "GOLEM_ImageButton", self )
 	self.btnHideSidebar:Dock( LEFT )
 	self.btnHideSidebar:DockMargin( 0, 5, 0, 5 )
-	self.btnHideSidebar:SetMaterial( Material( "diagona-icons/132.png" ) )
 	self.btnHideSidebar:DrawButton( false )
 	self.btnHideSidebar:SetIconCentered( true )
 	self.btnHideSidebar:SetIconFading( false )
 	self.btnHideSidebar:SetOutlined( true )
-	self.btnHideSidebar.Expanded = true
-
+	
+	local nSidebar = cookie.GetNumber( "golem_sidebar_state", 1 )
+	if nSidebar == 0 then
+		self.btnHideSidebar:SetMaterial( Material( "diagona-icons/131.png" ) )
+		self.btnHideSidebar.Expanded = false
+		self.pnlSideTabHolder:SetWidth( 0 )
+	else 
+		self.btnHideSidebar:SetMaterial( Material( "diagona-icons/132.png" ) )
+		self.btnHideSidebar.Expanded = true
+	end
+	
 	self.btnHideSidebar.DoClick = function( btn )
 		if btn.mov then return end
 		if btn.Expanded then
@@ -243,6 +251,7 @@ function PANEL:Init( )
 				btn:SetMaterial( Material( "diagona-icons/131.png" ) )
 				btn.Expanded = false
 				btn.mov = nil
+				cookie.Set( "golem_sidebar_state", 0 )
 			end )
 		else
 			btn.mov = true
@@ -250,10 +259,11 @@ function PANEL:Init( )
 				btn:SetMaterial( Material( "diagona-icons/132.png" ) )
 				btn.Expanded = true
 				btn.mov = nil
+				cookie.Set( "golem_sidebar_state", 1 )
 			end )
 		end
 	end
-
+	
 
 	self.pnlTabHolder = vgui.Create( "GOLEM_PropertySheet", self )
 	self.pnlTabHolder:Dock( FILL )
