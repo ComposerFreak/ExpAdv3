@@ -93,10 +93,10 @@ local function sDefaultScript()
 	return screen and sDefaultScreenTab or sDefaultGateTab
 end
 
-AccessorFunc( PANEL, "m_sText", 		"Text", FORCE_STRING )
-AccessorFunc( PANEL, "m_bSizable", 		"Sizable", FORCE_BOOL )
-AccessorFunc( PANEL, "m_bCanMaximize", 	"CanMaximize", FORCE_BOOL )
-AccessorFunc( PANEL, "m_bScreenLock", 	"ScreenLock", FORCE_BOOL )
+AccessorFunc( PANEL, "m_sText", 		"Text", 		FORCE_STRING )
+AccessorFunc( PANEL, "m_bSizable", 		"Sizable", 		FORCE_BOOL )
+AccessorFunc( PANEL, "m_bCanMaximize", 	"CanMaximize", 	FORCE_BOOL )
+AccessorFunc( PANEL, "m_bScreenLock", 	"ScreenLock", 	FORCE_BOOL )
 
 AccessorFunc( PANEL, "m_iMinWidth", 	"MinWidth" )
 AccessorFunc( PANEL, "m_iMinHeight", 	"MinHeight" )
@@ -346,7 +346,7 @@ function PANEL:Init( )
 	
 	--This was annoying.
 	--self:NewMenuTab( "options" )
-	--self:NewMenuTab( "options2" )
+	-- self:NewMenuTab( "options2" )
 	
 	Golem.Font.OnFontChange = function( Font, sFontID )
 		for i = 1, #self.pnlTabHolder.Items do
@@ -1290,10 +1290,12 @@ end
 function PANEL:Paint( w, h )
 	surface.SetDrawColor( 100, 100, 100, 255 )
 	-- surface.SetDrawColor( 60, 100, 180, 255 )
+	if GOLEM_LIGHT then surface.SetDrawColor(220, 220, 220, 255 ) end
 	surface.DrawRect( 0, 0, w, h )
 
 	surface.SetDrawColor( 80, 80, 80, 255 )
 	-- surface.SetDrawColor( 40, 80, 160, 255 )
+	if GOLEM_LIGHT then surface.SetDrawColor(200, 200, 200, 255 ) end
 	surface.SetMaterial( gradient_up )
 	surface.DrawTexturedRect( 0, 0, w, 25 )
 
@@ -1308,6 +1310,7 @@ function PANEL:Paint( w, h )
 	local x, y = surface.GetTextSize( Text )
 
 	surface.SetTextColor( 220, 220, 220, 255 )
+	if GOLEM_LIGHT then surface.SetTextColor( 60, 60, 60, 255 ) end
 	surface.SetTextPos( (self.pImage.m_Material and self.pImage.ActualWidth + 5 or 0) + 5, 12.5 - y / 2 )
 	surface.DrawText( Text )
 end

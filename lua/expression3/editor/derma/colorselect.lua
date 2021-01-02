@@ -10,7 +10,7 @@ function PANEL:Init( )
 	self.pLanguageSelector:SetTall( 20 )
 	self.pLanguageSelector:DockMargin( 5, 5, 5, 0 )
 	
-	self.pLanguageSelector:AddChoice( "E3", nil ,true )
+	self.pLanguageSelector:AddChoice( "Expression 3", nil ,true )
 	
 	self.pColorMixer = self:Add( "DColorMixer" ) 
 	self.pColorMixer:Dock( TOP )
@@ -32,6 +32,10 @@ function PANEL:Init( )
 	for k, v in pairs( Golem.Syntax.Colors.e3.Defaults ) do
 		self.pColorSelector:AddChoice( k, v, false )
 	end
+	
+	self.pColorReset = self:Add( "GOLEM_Button" ) 
+	self.pColorReset:Dock(TOP)
+	self.pColorReset:DockMargin(5, 5, 5, 0)
 	
 	self.pColorSelector:ChooseOptionID( 1 )
 end

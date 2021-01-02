@@ -39,6 +39,7 @@ local draw_WordBox 					= draw.WordBox
 local BookmarkMaterial 				= Material( "diagona-icons/152.png" )
 
 local C_white = Color( 255, 255, 255 )
+local C_black = Color( 0, 0, 0 )
 
 local Golem = Golem
 local PANEL = { }
@@ -1593,9 +1594,11 @@ function PANEL:Paint( w, h )
 	w = w - (self.pScrollBar.Enabled and 16 or 0)
 
 	surface_SetDrawColor( 0, 0, 0, 255 )
+	if GOLEM_LIGHT then surface_SetDrawColor( 255, 255, 255, 255 ) end 
 	surface_DrawRect( 0, 0, w, h )
 
 	surface_SetDrawColor( 32, 32, 32, 255 )
+	if GOLEM_LIGHT then surface_SetDrawColor( 255, 255, 255, 255 ) end 
 	surface_DrawRect( 0, 0, self.LinePadding, h )
 
 	if self.bParamMatching then
@@ -1743,8 +1746,12 @@ end
 
 function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 	if Row > #self.tRows then return end
-
-	draw_SimpleText( tostring( Row ), self.Font, self.BookmarkWidth + self.LineNumberWidth, self.FontHeight * LinePos, C_white, TEXT_ALIGN_RIGHT )
+	
+	if GOLEM_LIGHT then
+		draw_SimpleText( tostring( Row ), self.Font, self.BookmarkWidth + self.LineNumberWidth, self.FontHeight * LinePos, C_black, TEXT_ALIGN_RIGHT )
+	else 
+		draw_SimpleText( tostring( Row ), self.Font, self.BookmarkWidth + self.LineNumberWidth, self.FontHeight * LinePos, C_white, TEXT_ALIGN_RIGHT )
+	end 
 
 	if editor_debug_folding then
 		surface_SetDrawColor( 0, 200, 255 )
@@ -1927,6 +1934,8 @@ function PANEL:PaintCursor( Caret )
 
 		if ( RealTime( ) - self.Blink ) % 0.8 < 0.4 then
 			surface_SetDrawColor( 240, 240, 240, 255 )
+			if GOLEM_LIGHT then surface_SetDrawColor( 0, 0, 0, 255 ) end 
+			
 			local Offset = Caret.x - self.Scroll.x
 			local Insert = Caret.Insert or self.Insert
 			Offset = Offset - self:GetFoldingOffset( Caret.x )
@@ -1953,7 +1962,12 @@ function PANEL:PaintStatus( )
 
 	local Width, Height = surface_GetTextSize( Line )
 	local Wide, Tall = self:GetSize( )
-	draw_WordBox( 4, Wide - Width - 20 - ( self.pScrollBar.Enabled and 16 or 0 ) , Tall - Height - 20 - ( self.pHScrollBar.Enabled and 16 or 0 ), Line, "Trebuchet18", Color( 50, 50, 50, 100 ), Color( 235, 235, 235, 255 ) )
+	
+	if GOLEM_LIGHT then 
+		draw_WordBox( 4, Wide - Width - 20 - ( self.pScrollBar.Enabled and 16 or 0 ) , Tall - Height - 20 - ( self.pHScrollBar.Enabled and 16 or 0 ), Line, "Trebuchet18", Color( 50, 50, 50, 100 ), Color( 50, 50, 50, 255 ) )
+	else 
+		draw_WordBox( 4, Wide - Width - 20 - ( self.pScrollBar.Enabled and 16 or 0 ) , Tall - Height - 20 - ( self.pHScrollBar.Enabled and 16 or 0 ), Line, "Trebuchet18", Color( 50, 50, 50, 100 ), Color( 235, 235, 235, 255 ) )
+	end
 end
 
 -- TODO: this

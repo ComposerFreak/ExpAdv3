@@ -21,6 +21,11 @@ function PANEL:Init( )
 	self.btnNewTab:SetOutlined( true )
 	self.btnNewTab:DrawButton( true )
 	self.btnNewTab:SetMaterial( Material( "fugue/script--plus.png" ) )
+	
+	if GOLEM_LIGHT then 
+		self.btnNewTab:SetColor( Color( 255, 255, 255 ) )
+		self.btnNewTab:SetTextColor( Color( 0, 0, 0 ) )
+	end 
 
 	self.btnNewTab.DoClick = function( btn )
 		self:GetParent( ):NewTab( "editor", false, nil, "generic" )
@@ -48,6 +53,11 @@ function PANEL:AddSheet( strName, pnlContent, strMaterial, fClose )
 	Sheet.Tab:SetPadding( 5 )
 	Sheet.Tab:SetMaterial( Material( strMaterial ) )
 	Sheet.Tab:SetIconFading( false )
+	if GOLEM_LIGHT then 
+		Sheet.Tab:SetColor( Color( 255, 255, 255, 255 ) )
+		Sheet.Tab:SetTextColor( Color( 0, 0, 0, 255 ) )
+	end 
+
 
 	Sheet.Tab.btnClose = vgui.Create( "GOLEM_ImageButton", Sheet.Tab )
 	Sheet.Tab.btnClose.DoClick = fClose
@@ -128,11 +138,15 @@ function PANEL:SetActiveTab( active )
 	if not IsValid(self.m_pActiveTab) or not ispanel(self.m_pActiveTab) then self.m_pActiveTab = nil end
 	if self.m_pActiveTab then
 		self.m_pActiveTab:GetPanel( ):SetVisible( false )
-		self.m_pActiveTab:SetColor( Color( 100, 100, 100 ) )
+		self.m_pActiveTab:SetColor( Color( 180, 180, 180 ) )
 	end
 
 	if active then
-		active:SetColor( Color( 20, 20, 20 ) )
+		if GOLEM_LIGHT then 
+			active:SetColor( Color( 255, 255, 255 ) )
+		else
+			active:SetColor( Color( 20, 20, 20 ) )
+		end
 	end
 
 	self.m_pActiveTab = active

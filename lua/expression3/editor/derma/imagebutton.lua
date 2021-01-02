@@ -92,6 +92,7 @@ local function PaintButton( self, w, h )
 	local col = self:GetColor( )
 	
 	surface.SetDrawColor( col )
+	-- surface.SetDrawColor( Color(255,255,255,255) )
 	surface.DrawRect( 0, 0, w, h )
 
 	if not self:GetFlat( ) then

@@ -31,6 +31,9 @@ function PANEL:SetupButton( sName, sMaterial, nDock, fDoClick )
 	btn:SetFlat( true )
 	btn:SetColor( Color( 70, 70, 70 ) )
 	-- btn:SetColor( Color( 40, 80, 160 ) )
+	if GOLEM_LIGHT then
+		btn:SetColor( Color( 180, 180, 180 ) )
+	end
 
 	if fDoClick then
 		btn.DoClick = fDoClick
@@ -44,6 +47,9 @@ function PANEL:SetupStateButton( tStates, nDock, fStateChanged )
 	btn:Dock( nDock )
 	btn:SetPadding( 5 )
 	btn:SetColor( Color( 70, 70, 70 ) )
+	if GOLEM_LIGHT then
+		btn:SetColor( Color( 180, 180, 180 ) )
+	end
 	btn:SetFlat( true )
 	btn:SetIconFading( false )
 	btn:DrawButton( true )
@@ -73,6 +79,9 @@ function PANEL:SetupCheckBox( sOn, sOff, sMaterialT, sMaterialC, nDock, fChanged
 	btn:SetFlat( true )
 	btn:SetColor( Color( 70, 70, 70 ) )
 	-- btn:SetColor( Color( 40, 80, 160 ) )
+	if GOLEM_LIGHT then
+		btn:SetColor( Color( 180, 180, 180 ) )
+	end
 	btn:SetValue( true, true )
 	btn:SetValue( false, true )
 
@@ -103,6 +112,8 @@ end
 function PANEL:Paint( w, h )
 	surface.SetDrawColor( 70, 70, 70, 255 )
 	-- surface.SetDrawColor( 40, 80, 160, 255 )
+	if GOLEM_LIGHT then surface.SetDrawColor( 180, 180, 180, 255 ) end 
+	
 	surface.DrawRect( 0, 0, w, h )
 end
 
