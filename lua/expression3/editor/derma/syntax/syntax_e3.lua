@@ -342,6 +342,8 @@ function Syntax:BuildKeywordsTable( )
 	-- Special cases
 	-- self.tKeywords["function"] = true
 	self.tKeywords["this"] = true
+	self.tKeywords["input"] = true 
+	self.tKeywords["intable"] = true 
 end
 
 function Syntax:BuildClassTable( )
@@ -549,13 +551,18 @@ function Syntax:Parse( )
 								self:AddToken( "operator", match )
 								continue
 							end
-							-- Check if we are assigning a function to a variable
 						elseif string_match( self.sLine, "^ +[a-zA-Z][a-zA-Z0-9_]* *=", self.nPosition ) then
+							-- Check if we are assigning a function to a variable
 							self:AddToken( "class" )
 							self:NextPattern( "^ +[a-zA-Z][a-zA-Z0-9_]*" )
 							self:AddUserFunction( self.nRow, string.Trim( self.sBuffer ) )
 							self:AddToken( "userfunction" )
-							continue
+							 
+							if self:NextPattern( " *= * %( *" ) then
+								self:AddToken( "operator" )
+							else
+								continue
+							end
 						end
 					end
 					
@@ -586,6 +593,12 @@ function Syntax:Parse( )
 						self:SkipSpaces( )
 					end
 					
+					local bTable = false
+					if self:NextPattern( " *{ *" ) then
+						self:AddToken( "operator" ) 
+						bTable = true 
+					end
+					
 					-- Time to catch all variables that the function can have
 					while self:NextPattern( "[a-zA-Z][a-zA-Z0-9_]*" ) do
 						local sType = ""
@@ -606,6 +619,11 @@ function Syntax:Parse( )
 						end
 						
 						if not self:NextPattern( " *, *" ) then break end
+						self:AddToken( "operator" )
+					end
+					
+					if bTable then
+						self:NextPattern( " *} *" )
 						self:AddToken( "operator" )
 					end
 					
@@ -793,6 +811,14 @@ function Syntax:Parse( )
 						end
 					end
 					
+					continue
+				end
+				
+				local match = self:NextPattern( " *= *", true ) 
+				if match then
+					self:AddToken( "string" )
+					self:AddToken( "operator", match )
+					self.sBuffer = ""
 					continue
 				end
 				
