@@ -128,7 +128,9 @@ end
 if CLIENT then
 
 	function TOOL:DrawToolScreen(width, height)
-		EXPR_UPLOADER.DrawUploadScreen(width, height, "Gate");
+		if (EXPR_UPLOADER) then
+			EXPR_UPLOADER.DrawUploadScreen(width, height, "Gate");
+		end
 	end
 
 end

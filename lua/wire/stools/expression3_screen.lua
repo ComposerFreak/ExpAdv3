@@ -102,7 +102,9 @@ if CLIENT then
 	local background = surface.GetTextureID("omicron/bulb");
 
 	function TOOL:DrawToolScreen(width, height)
-		EXPR_UPLOADER.DrawUploadScreen(width, height, "Screen");
+		if (EXPR_UPLOADER) then
+			EXPR_UPLOADER.DrawUploadScreen(width, height, "Screen");
+		end
 	end
 
 end
