@@ -50,10 +50,12 @@
 	if SERVER then
 		for _, filepath in pairs(core_files) do
 			AddCSLuaFile(filepath);
+			print("Adding CS file: ", filepath);
 		end
 
 		for i, filename in pairs( extensions ) do
 			AddCSLuaFile(path .. filename);
+			print("Adding CS file: ", path .. filename);
 		end
 	end
 
@@ -67,12 +69,12 @@ hook.Add("Expression3.RegisterExtensions", "Expression3.Core.Extensions", functi
 	
 	for i, filename in pairs( core_files ) do
 		include(filename);
-		--print("[E3] Loading core file " .. filename);
+		print("[E3] Loading core file " .. filename);
 	end
 
 	for i, filename in pairs( extensions ) do
 		include(path .. filename);
-		--print("[E3] Loading file " .. path .. filename);
+		print("[E3] Loading file " .. path .. filename);
 	end
 
 end);

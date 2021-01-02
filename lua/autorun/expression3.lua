@@ -10,14 +10,23 @@
 	::AutoRun::
 ]]
 
+print("------------------------------------------------------------");
+print("Installing...");
+print("Expression Advanced 3");
+print("------------------------------------------------------------");
+
+
 EXPR_ROOT = "";
+
 local _, addons = file.Find("addons\\*", "GAME");
+
 for _, addon in pairs( addons ) do
 	if file.Exists( string.format("addons\\%s\\lua\\autorun\\expression3.lua", addon), "GAME" ) then
 		EXPR_ROOT = string.format("addons\\%s\\", addon);
 		break;
 	end
 end
+
 
 print("E3 Root directory:", EXPR_ROOT);
 
@@ -107,3 +116,8 @@ if (SERVER) then
 elseif (CLIENT) then
 	include("expression3/expr_lib.lua");
 end
+
+print("------------------------------------------------------------");
+print("Expression Advanced 3");
+print("Has been installed");
+print("------------------------------------------------------------");
