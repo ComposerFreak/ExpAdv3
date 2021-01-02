@@ -9,7 +9,7 @@ Make sure to remove any old ExpAdv2 or Lemongate addons from Garrysmod before in
 
 ## Links:
 
-Workshop (out of date due to issues with GPublish2): 
+Workshop (Will be regularly updated but not as much as GitHub): 
 https://steamcommunity.com/sharedfiles/filedetails/?id=2001386268
 
 Video Tutorials:
