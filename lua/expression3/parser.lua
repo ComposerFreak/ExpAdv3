@@ -63,12 +63,12 @@
 			Expr21 ← ("#" Expr24)? Expr22
 			Expr22 ← (("$" / "~") Var)? Expr23
 			Expr23 ← ("("type")" Expr1)? Expr24
-			Expr24 ← (Params "=>" Block1)? Expr25
+			Expr24 ← (Params2 "=>" Block1)? Expr25
 			Expr25 ← ("(" Expr1 ")" (Trailing)?)? Expr26
 			Expr26 ← (Library "." Function  "(" (Expr1 ((",")?)*)?) ")")? Expr27
 			Expr27 ← (Var (Trailing)?)? Expr28
 			Expr28 ← ("new" Type "(" (Expr1 ((","")?)*)?) ")")? Expr29
-			Expr29 ← ("Function" Params Block1)? Expr30
+			Expr29 ← ("Function" Params2 Block1)? Expr30
 			Expr30 ← Expr31? Error
 			Expr31 ← (String / Number / "true" / "false", "void")?
 
@@ -76,12 +76,13 @@
 			Cond 		← "(" Expr1 ")"
 			Block 		← "{" (Stmt1 ((";" / " ") Stmt1)*)? "}"
 			Values 		← "[" Expr1 ("," Expr1)* "]"
-			Raw 		← (Str / Num / Bool)
+			Raw 		← (Str / Num / Bool)? Table
 			Trailing 	← (Method / Get /Call)?
 			Method 		← (("." Method "(" (Expr1 ((","")?)*)?) ")")
 			Get 		← ("[" Expr1 ("," Type)? "]")
 			Call 		← ("(" (Expr1 ((","")?)*)?) ")")?
 			Params 		← ("(" (Type Var (("," Type Var)*)?)? ")")
+			Params2 	← ( "{" Params "}" )? Params
 
 ]]
 
