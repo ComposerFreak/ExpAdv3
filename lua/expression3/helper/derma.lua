@@ -177,11 +177,11 @@ function HELPER_PANEL:LoadDefaultHelpers()
 		local ok, err = EXPR_DOCS.LoadCustomDocFile("default.txt", "DATA");
 
 		if ok then
-			pnl:WriteLine(Color(255, 255, 255), "Loaded Custom Helpers ", Color(0, 255, 0), filename);
+			--pnl:WriteLine(Color(255, 255, 255), "Loaded Custom Helpers ", Color(0, 255, 0), filename);
 			return true;
 		else
-			pnl:WriteLine(Color(255, 255, 255), "Error Loading Custom Helpers ", Color(0, 255, 0), filename);
-			pnl:WriteLine(Color(255, 255, 255), "Error ", Color(0, 255, 0), err);
+			--pnl:WriteLine(Color(255, 255, 255), "Error Loading Custom Helpers ", Color(0, 255, 0), filename);
+			--pnl:WriteLine(Color(255, 255, 255), "Error ", Color(0, 255, 0), err);
 		end
 	end
 	
