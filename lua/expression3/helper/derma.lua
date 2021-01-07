@@ -122,8 +122,10 @@ function HELPER_PANEL:Init()
 	self.cls_btn:SetVisible(false);
 
 	self.expt_btn = self.ctrl_pnl:SetupTextBox( "Export Custom Helper Data", "fugue/disk-black.png", RIGHT, function(_, str)
+		
 		if str ~= "" then
 			EXPR_DOCS.SaveChangedDocs(str .. ".txt");
+			self.CurrentHelperPath = str .. ".txt";
 			self:WriteLine(Color(255, 255, 255), "Exported Custom Helpers");
 			self:WriteLine(Color(0, 255, 0), str .. ".txt");
 		end
@@ -163,6 +165,27 @@ end
 
 function HELPER_PANEL:WriteLine(...)
 	Golem.Print(...);
+end
+
+
+/*********************************************************************************
+	function
+*********************************************************************************/
+function HELPER_PANEL:LoadDefaultHelpers()
+	if file.Exists("e3docs/saved/default.txt", "DATA") then
+		self.CurrentHelperPath = "default.txt";
+		local ok, err = EXPR_DOCS.LoadCustomDocFile("default.txt", "DATA");
+
+		if ok then
+			pnl:WriteLine(Color(255, 255, 255), "Loaded Custom Helpers ", Color(0, 255, 0), filename);
+			return true;
+		else
+			pnl:WriteLine(Color(255, 255, 255), "Error Loading Custom Helpers ", Color(0, 255, 0), filename);
+			pnl:WriteLine(Color(255, 255, 255), "Error ", Color(0, 255, 0), err);
+		end
+	end
+	
+	return false;
 end
 
 /*********************************************************************************
@@ -225,6 +248,8 @@ function HELPER_PANEL:Reload()
 	end);
 
 	hook.Run("Expression3.LoadHelperNodes", self);
+
+	self:LoadDefaultHelpers();
 end
 
 /*********************************************************************************

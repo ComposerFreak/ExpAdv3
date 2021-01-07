@@ -86,7 +86,7 @@ server {
     
     int i = 0;
     
-    timer.create("buildDisplay", 0.1, 60, function() {
+    timer.create("buildDisplay", 0.3, 60, function() {
         buildDisplay(i);
         i += 1;
     });

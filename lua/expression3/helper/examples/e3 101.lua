@@ -74,7 +74,7 @@ catch( theError )
     string msg = theError.message();
     //To call a method on an object the syntax is object.method(...)
 
-    system.print("Caught Error:", msg);
+    system.print("The Example Code Caught Error:", msg, " (this is part of the example!)");
     //All functions are on libraries, the system library is where we find the print functions.
 }
 

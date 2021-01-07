@@ -227,8 +227,9 @@ if CLIENT then
       end
   end
 
-    function ENT:Draw()
+    function ENT:_Draw()
       if not EXPR_LIB.RING_RT or not EXPR_LIB.RING_MAT then return; end
+      
       if LocalPlayer() ~= self:GetParent() then
         render.MaterialOverride(EXPR_LIB.RING_MAT);
 
@@ -242,5 +243,17 @@ if CLIENT then
 
         render.MaterialOverride();
       end
+
     end
+
+    function ENT:Draw()
+      local ok, err = pcall(self._Draw, self);
+
+      if (not ok) then
+        print("Warning: E3 Ring.Draw had an error rendering");
+        print(err);
+      end
+      
+    end
+
 end

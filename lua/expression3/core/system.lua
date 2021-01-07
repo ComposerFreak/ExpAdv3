@@ -67,6 +67,12 @@
 	extension:RegisterFunction("system", "isClient", "", "b", 1, function(context) return CLIENT end);
 	extension:RegisterFunction("system", "getEntity", "", "e", 1, function(context) return context.entity end);
 	extension:RegisterFunction("system", "getOwner", "", "p", 1, function(context) return context.player end);
+
+	extension:RegisterFunction("system", "getInterval", "", "n", 1, function(context) return context.tps end);
+	extension:RegisterFunction("system", "setInterval", "n", "", 0, function(context, n)
+		if (n < 1) then n = 1; elseif (n > 200) then n = 200; elseif (n / 1 ~= n) then n = math.ceil(n); end
+		context.tps = n;
+	end);
 	
 --[[
 	*****************************************************************************************************************************************************

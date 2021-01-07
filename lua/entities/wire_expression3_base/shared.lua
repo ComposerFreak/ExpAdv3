@@ -78,6 +78,8 @@ function ENT:SetCode(script, files, run, cb2)
 		self.validator.stop();
 	end
 
+	local this = self;
+
 	local cb = function(ok, res)
 
 		if cb2 then
@@ -85,14 +87,16 @@ function ENT:SetCode(script, files, run, cb2)
 		end
 
 		if (not ok) then
-			self:HandelThrown(res);
+			this:HandelThrown(res);
 			return false;
 		end
 
-		self.validator = nil;
-		self.nativeScript = res.compiled;
+		this.validator = nil;
+		this.nativeScript = res.compiled;
 		
-		self:ExecuteInstance(res, run);
+		if (this.ExecuteInstance) then
+			this:ExecuteInstance(res, run);
+		end
 
 		return true;
 	end
@@ -110,6 +114,7 @@ end
 
 function ENT:BuildContext(instance)
 	self.context = EXPR_CONTEXT.New();
+	self.context.tps = 20;
 	self.context.data = {};
 	self.context.events = {};
 	self.context.entity = self;
@@ -540,6 +545,16 @@ function ENT:Think()
 	end
 
 	hook.Run("Expression3.Entity.Think", self, self.context);
+
+	local tps = 0.05;
+	
+	if self:IsRunning() then
+		tps = (1 / self.context.tps);
+	end
+
+	self:NextThink(CurTime() + tps);
+	
+	return true;
 end
 
 /****************************************************************************************************************************
