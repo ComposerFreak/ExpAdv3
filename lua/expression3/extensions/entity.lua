@@ -187,7 +187,7 @@ end, true);
 
 
 --[[
-	Velecotity
+	Velocity
 ]]
 
 extension:RegisterMethod("e", "Vel", "", "v", 1, function(e)

@@ -67,9 +67,27 @@ end
 
 extension:SetServerState();
 
+local lim = 1e24
+local function vecClamp(v)
+	v.x = math.Clamp(v.x, -lim, lim)
+	v.y = math.Clamp(v.y, -lim, lim)
+	v.z = math.Clamp(v.z, -lim, lim)
+
+	return Vector(v.x, v.y, v.z)
+end
+
+local function angClamp(a)
+	a.p = math.Clamp(a.p, -lim, lim)
+	a.y = math.Clamp(a.y, -lim, lim)
+	a.r = math.Clamp(a.r, -lim, lim)
+
+	return Angle(a.p, a.y, a.r)
+end
+
 extension:RegisterMethod("e", "applyForce", "v", "", 0, function(context, e, v)
 	if context:CanUseEntity(e) then
 		local ph = e:GetPhysicsObject();
+		vecClamp(v);
 
 		if IsValid(ph) then
 			ph:ApplyForceCenter(v);
@@ -80,6 +98,7 @@ end, false);
 extension:RegisterMethod("e", "applyOffsetForce", "v", "", 0, function(context, e, v)
 	if context:CanUseEntity(e) then
 		local ph = e:GetPhysicsObject();
+		vecClamp(v);
 
 		if IsValid(ph) then
 			ph:ApplyForceOffset(v);
@@ -90,6 +109,7 @@ end, false);
 extension:RegisterMethod("e", "applyAngForce", "a", "", 0, function(context, e, a)
 	if context:CanUseEntity(e) then
 		local ph = e:GetPhysicsObject();
+		angClamp(a);
 
 		if IsValid(ph) then
 			applyangForce(ph, a);
@@ -100,6 +120,7 @@ end, false);
 extension:RegisterMethod("ph", "applyForce", "v", "", 0, function(context, ph, v)
 	if IsValid(ph) then
 		local e = ph:GetEntity();
+		vecClamp(v);
 
 		if context:CanUseEntity(e) then
 			ph:ApplyForceCenter(v);
@@ -110,6 +131,7 @@ end, false);
 extension:RegisterMethod("ph", "applyOffsetForce", "v", "", 0, function(context, ph, v)
 	if IsValid(ph) then
 		local e = ph:GetEntity();
+		vecClamp(v);
 
 		if context:CanUseEntity(e) then
 			ph:ApplyForceOffset(v);
@@ -120,6 +142,7 @@ end, false);
 extension:RegisterMethod("ph", "applyAngForce", "a", "", 0, function(context, ph, a)
 	if IsValid(ph) then
 		local e = ph:GetEntity();
+		angClamp(a);
 
 		if context:CanUseEntity(e) then
 			applyangForce(ph, a);
@@ -130,6 +153,7 @@ end, false);
 extension:RegisterMethod("e", "applyTorque", "v", "", 0, function(context, e, v) 
 	if context:CanUseEntity(e) then
 		local ph = e:GetPhysicsObject();
+		vecClamp(v);
 
 		if IsValid(ph) then
 			applyTorque(ph, v);
@@ -149,6 +173,7 @@ extension:SetServerState();
 extension:RegisterMethod("e", "setVel", "v", "", 0, function(context, e, v)
 	if context:CanUseEntity(e) then
 		local ph = e:GetPhysicsObject();
+		vecClamp(v);
 		if IsValid(ph) then
 			ph:SetVelocity(v);
 		end
@@ -158,6 +183,7 @@ end, false);
 extension:RegisterMethod("ph", "setVel", "v", "", 0, function(context, ph, v)
 	if IsValid(ph) then
 		local e = ph:GetEntity();
+		vecClamp(v);
 		if IsValid(e) and context:CanUseEntity(e) then
 			ph:SetVelocity(v);
 		end

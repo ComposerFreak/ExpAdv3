@@ -45,7 +45,7 @@
 
 	end
 
-	extension:RegisterClass("q", "quaternion", isQuaternion, EXPR_LIB.NOTNIL);
+	extension:RegisterClass("q", {"quaternion", "quat"}, isQuaternion, EXPR_LIB.NOTNIL);
 
 	extension:RegisterConstructor("q", "n", function(n) return Quaternion(n,0,0,0) end, true);
 	extension:RegisterConstructor("q", "", function() return Quaternion(1,0,0,0) end, true);
@@ -55,7 +55,7 @@
 	extension:RegisterConstructor("q", "e", function(e)
 		
 		local ph = e:GetPhysicsObject();
-		
+
 		if IsValid(ph) then
 			return angToQuat( ph:GetAngles() );
 		end
@@ -122,8 +122,8 @@
 
 	end
 
-	local function angToQuat(a)
-
+	function angToQuat(a)
+		
 		local P = a.p * deg2rad * 0.5
 		local Y = a.y * deg2rad * 0.5
 		local R = a.r * deg2rad * 0.5
@@ -131,7 +131,7 @@
 		local qP = Quaternion(cos(P), 0, sin(P), 0)
 		local qY = Quaternion(cos(Y), 0, 0, sin(Y))
 		local qR = Quaternion(cos(R), sin(R), 0, 0)
-
+		
 		return qmul(qY, qmul(qP, qR));
 
 	end
@@ -515,7 +515,7 @@
 
 	end, true)
 	
-	extension:RegisterFunction("quaternion", "nlerp", "q,q,n", "q", 1, function(a,b,t)//////////////////////////////////////////////////
+	extension:RegisterFunction("quaternion", "nlerp", "q,q,n", "q", 1, function(a,b,t)
 
 		local d
 		local range = 1 - t

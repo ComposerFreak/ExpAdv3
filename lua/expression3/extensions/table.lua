@@ -95,7 +95,7 @@ function eTable.updateChildren(tbl, oldweight, newweight, updated)
 		if (not updated[child]) then
 			local weight = child.size;
 			child.size = (child.size - oldweight) + newweight;
-			eTable.updateChildren(tbl, weight, child.size);
+			eTable.updateChildren(child, weight, child.size);
 			updated[child] = true;
 		end
 	end
