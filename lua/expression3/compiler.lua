@@ -301,12 +301,14 @@ function COMPILER.PushScope(this)
 	this.__scope.interfaces = {};
 	this.__scopeID = this.__scopeID + 1;
 	this.__scopeData[this.__scopeID] = this.__scope;
+	return this.__scopeID;
 end
 
 function COMPILER.PopScope(this)
 	this.__scopeData[this.__scopeID] = nil;
 	this.__scopeID = this.__scopeID - 1;
 	this.__scope = this.__scopeData[this.__scopeID];
+	return this.__scopeID;
 end
 
 function COMPILER.SetOption(this, option, value, deep)
@@ -386,10 +388,13 @@ local bannedVars = {
 	["SERVER"] = true,
 	["CLIENT"] = true,
 	["CONTEXT"] = true,
+	["DELTA"] = true,
+
 	["_OPS"] = true,
 	["_CONST"] = true,
 	["_METH"] = true,
 	["_FUN"] = true,
+
 	["invoke"] = true,
 	["assert"] = true,
 	["in"] = true,
@@ -397,6 +402,11 @@ local bannedVars = {
 	["then"] = true,
 	["end"] = true,
 	["pairs"] = true,
+
+	["bit"] = true,
+	["eTable"] = true,
+	["clsname"] = true,
+	["CheckHash"] = true,
 };
 
 function COMPILER.AssignVariable(this, token, declaired, varName, class, scope, prefix, global)
@@ -3069,7 +3079,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, data)
 
 	if (inst.inTable) then
 		this:writeToBuffer(inst, "if (input == nil or input[1] == nil) then CONTEXT:Throw(\"table expected for peramater, got void\"); end\n");
-		this:writeToBuffer(inst, "if (input[1] ~= \"t\") then CONTEXT:Throw(\"table expected for peramater, got \" .. input[1]); end\n");
+		this:writeToBuffer(inst, "if (input[1] ~= \"t\") then CONTEXT:Throw(\"table expected for peramater, got \" .. clsname(input[1])); end\n");
 		this:writeToBuffer(inst, "input = input[2];\n", var, var);
 	end
 
@@ -3105,7 +3115,7 @@ function COMPILER.Compile_LAMBDA(this, inst, token, data)
 
 		if (class ~= "_vr") then
 			this:writeToBuffer(inst, "if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end\n", var, var, name(class), var);
-			this:writeToBuffer(inst, "if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end\n", var, class, name(class), var, var);
+			this:writeToBuffer(inst, "if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. clsname(%s[1])); end\n", var, class, name(class), var, var);
 			this:writeToBuffer(inst, "%s = %s[2];\n", var, var);
 		end
 	end
@@ -3302,7 +3312,7 @@ function COMPILER.Compile_FUNCT(this, inst, token, data)
 
 	if (inst.inTable) then
 		this:writeToBuffer(inst, "if (input == nil or input[1] == nil) then CONTEXT:Throw(\"table expected for peramater, got void\"); end\n");
-		this:writeToBuffer(inst, "if (input[1] ~= \"t\") then CONTEXT:Throw(\"table expected for peramater, got \" .. input[1]); end\n");
+		this:writeToBuffer(inst, "if (input[1] ~= \"t\") then CONTEXT:Throw(\"table expected for peramater, got \" .. clsname(input[1])); end\n");
 		this:writeToBuffer(inst, "input = input[2];\n", var, var);
 	end
 
@@ -3338,7 +3348,7 @@ function COMPILER.Compile_FUNCT(this, inst, token, data)
 
 		if (class ~= "_vr") then
 			this:writeToBuffer(inst, "if (%s == nil or %s[1] == nil) then CONTEXT:Throw(\"%s expected for %s, got void\"); end\n", var, var, name(class), var);
-			this:writeToBuffer(inst, "if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. %s[1]); end\n", var, class, name(class), var, var);
+			this:writeToBuffer(inst, "if (%s[1] ~= %q) then CONTEXT:Throw(\"%s expected for %s, got \" .. clsname(%s[1])); end\n", var, class, name(class), var, var);
 			this:writeToBuffer(inst, "%s = %s[2];\n", var, var);
 		end
 	end
@@ -3772,6 +3782,8 @@ function COMPILER.Compile_WHILE(this, inst, token, data)
 end
 
 function COMPILER.Compile_EACH(this, inst, token, data)
+
+
 	local r, c, p = this:Compile(data.expr);
 	local op = this:GetOperator("itor", r);
 
@@ -3779,34 +3791,36 @@ function COMPILER.Compile_EACH(this, inst, token, data)
 		this:Throw(token, "%s can not be used inside a foreach loop", name(r));
 	end
 
-	this:PushScope();
+	local scope = this:PushScope();
+
 	this:SetOption("loop", true);
 
-	this:writeToBuffer(inst, "for _kt, _kv, _vt, _vv in ");
+	this:writeToBuffer(inst, "for _kt%i, _kv%i, _vt%i, _vv%i in ", scope, scope, scope, scope);
 
 	this:writeOperationCall(inst, op, data.expr);
 
 	this:writeToBuffer(inst, " do\n");
 
 	this:AssignVariable(token, true, data.vValue, data.vType, nil);
-
+	--COMPILER.AssignVariable(token, declaired, varName, class, scope, prefix, global)
+	
 	if data.kType then
 		this:AssignVariable(token, true, data.kValue, data.kType,  nil);
 
 		if (data.kType ~= "_vr") then
-			this:writeToBuffer(inst, "if (_kt ~= %q) then continue end\n", data.kType);
-			this:writeToBuffer(inst, "local %s = _kv\n", data.kValue);
+			this:writeToBuffer(inst, "if (_kt%i ~= %q) then continue end\n", scope, data.kType);
+			this:writeToBuffer(inst, "local %s = _kv%i\n", data.kValue, scope);
 		else
-			this:writeToBuffer(inst, "local %s = {_kt, _kv}\n", data.kValue);
+			this:writeToBuffer(inst, "local %s = {_kt%i, _kv%i}\n", data.kValue, scope, scope);
 		end
 	end
 
 	if (data.vType) then
 		if (data.vType ~= "_vr") then
-			this:writeToBuffer(inst, "if (_vt ~= %q) then continue end\n", data.vType);
-			this:writeToBuffer(inst, "local %s = _vv\n", data.vValue);
+			this:writeToBuffer(inst, "if (_vt%i ~= %q) then continue end\n", scope, data.vType);
+			this:writeToBuffer(inst, "local %s = _vv%i\n", data.vValue, scope);
 		else
-			this:writeToBuffer(inst, "local %s = {_vt, _vv}\n", data.vValue);
+			this:writeToBuffer(inst, "local %s = {_vt%i, _vv%i}\n", data.vValue, scope, scope);
 		end
 	end
 

@@ -1036,7 +1036,6 @@ function PARSER.Statment_5(this)
 
 		if (this:Accept("as")) then
 			kType, kValue = a, b;
-
 			this:Require("typ", "Class expected after as, for foreach loop")
 			a = this.__token.data
 
@@ -1044,7 +1043,7 @@ function PARSER.Statment_5(this)
 			b = this.__token.data
 		end
 
-		vType, vValue = a, b;
+		local vType, vValue = a, b;
 
 		this:Require("in", "In expected after variable, for foreach loop");
 
@@ -1054,7 +1053,7 @@ function PARSER.Statment_5(this)
 
 		local block = this:Block_1(true, "do");
 
-		return this:EndInstruction(inst, {expr = expr; vType = vType; vValue = vValue; kType = kType, kValue = kValue, block = block});
+		return this:EndInstruction(inst, {expr = expr, vType = vType, vValue = vValue, kType = kType, kValue = kValue, block = block});
 	end
 
 	return this:Statment_6();

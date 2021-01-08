@@ -136,6 +136,11 @@ local env_meta = {
 	end
 }
 
+local function name(id)
+	local obj = E3Class(id);
+	return obj and obj.name or id;
+end
+
 function ENT:BuildEnv(context, instance)
 
 	context.env = instance.enviroment;
@@ -160,6 +165,7 @@ function ENT:BuildEnv(context, instance)
 
 	-- Librarys & Helpers
 		env.bit = bit;
+		env.clsname = name;
 		env.eTable = EXPR_LIB.TABLE;
 
 	-- Fucntions we need
