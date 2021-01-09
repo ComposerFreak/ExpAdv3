@@ -1368,7 +1368,9 @@ local SysTime, bench = SysTime;
 
 function EXPR_LIB.Validate(cb, script, files)
 	local vldr = {};
+
 	local ok, res;
+
 	vldr.timer = "Validator:" .. tostring(vldr);
 
 	vldr.func = coroutine.create(function()
@@ -1382,6 +1384,8 @@ function EXPR_LIB.Validate(cb, script, files)
 			vldr.tokenizerCount = 0;
 
 			vldr.tokenizer.vldr = vldr;
+
+			vldr.tokenizer.Yeild = function() coroutine.yield(); end
 
 			vldr.tokenizer:Initialize("EXPADV", script);
 
@@ -1397,6 +1401,8 @@ function EXPR_LIB.Validate(cb, script, files)
 				bench = SysTime();
 
 				vldr.parser = EXPR_PARSER.New();
+				
+				vldr.parser.Yeild = function() coroutine.yield(); end
 
 				vldr.parser:Initialize(res, files);
 
@@ -1412,6 +1418,8 @@ function EXPR_LIB.Validate(cb, script, files)
 					bench = SysTime();
 
 					vldr.compiler = EXPR_COMPILER.New();
+					
+					vldr.compiler.Yeild = function() coroutine.yield(); end
 
 					vldr.compiler:Initialize(res, files);
 

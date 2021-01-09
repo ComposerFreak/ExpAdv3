@@ -106,6 +106,14 @@ function COMPILER.Initialize(this, instance, files)
 	this.__files = files;
 end
 
+--[[
+
+]]
+
+function COMPILER.Yield(this)
+
+end
+
 function COMPILER.Run(this)
 	--TODO: PcallX for stack traces on internal errors?
 	local status, result = pcall(this._Run, this);
@@ -153,8 +161,10 @@ end
 
 local addNativeLua;
 
-function addNativeLua(instruction, outBuffer, traceTable, char, line)
+function addNativeLua(this, instruction, outBuffer, traceTable, char, line)
 	--print("\nadding instruction to buffer: ", instruction.type);
+
+	this:Yield();
 
 	if (not instruction) then
 		debug.Trace();
@@ -175,7 +185,7 @@ function addNativeLua(instruction, outBuffer, traceTable, char, line)
 		local _type = type(value);
 
 		if _type == "table" then
-			char, line = addNativeLua(value, outBuffer, traceTable, char, line);
+			char, line = addNativeLua(this, value, outBuffer, traceTable, char, line);
 		else
 			if _type ~= "string" then value = tostring(value); end
 
@@ -211,7 +221,7 @@ function COMPILER.BuildScript(this, instruction)
 	local outBuffer = {};
 	local traceTable = {};
 
-	addNativeLua(instruction, outBuffer, traceTable, 0, 1);
+	addNativeLua(this, instruction, outBuffer, traceTable, 0, 1);
 
 	return table_concat(outBuffer, " "), traceTable;
 end
@@ -494,6 +504,9 @@ end
 ]]
 
 function COMPILER.Compile(this, inst)
+
+	this:Yield();
+
 	if (not inst) then
 		debug.Trace();
 		error("Compiler was asked to compile a nil instruction.")
@@ -706,6 +719,7 @@ function COMPILER.Compile_SEQ(this, inst, token, data)
 		for i = 1, #stmts do
 			this:addInstructionToBuffer(inst, stmts[i]);
 		end
+
 	end
 
 	return "", 0, 0;

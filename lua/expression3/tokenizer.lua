@@ -195,6 +195,18 @@ function TOKENIZER._Run(this)
 	return result;
 end
 
+--[[
+
+]]
+
+function TOKENIZER.Yield(this)
+
+end
+
+--[[
+
+]]
+
 function TOKENIZER.Throw(this, offset, msg, fst, ...)
 	if this.etokens then
 		this:NextPattern("^.-\n")
@@ -447,6 +459,8 @@ function TOKENIZER.Loop(this)
 		return false;
 	end
 
+	this:Yield();
+
 	this:SkipSpaces();
 
 	-- Comments need to be (--[[]] && --) not (/**/ & //)
@@ -471,6 +485,8 @@ function TOKENIZER.Loop(this)
 		return true;
 	end
 
+	this:Yield();
+	
 	-- Numbers
 
 	if (this:NextPattern("^0x[%x]+")) then

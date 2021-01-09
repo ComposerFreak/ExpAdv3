@@ -126,6 +126,14 @@ function PARSER.Initialize(this, instance, files)
 	this.__files = files;
 end
 
+--[[
+
+]]
+
+function PARSER.Yield(this)
+
+end
+
 function PARSER.Run(this)
 	--TODO: PcallX for stack traces on internal errors?
 	local status, result = pcall(this._Run, this);
@@ -897,6 +905,9 @@ end;
 
 
 function PARSER.Statment_1(this)
+
+	this:Yield();
+
 	if (this:Accept("try")) then
 		local inst = this:StartInstruction("try", this.__token);
 
@@ -1389,6 +1400,9 @@ end
 ]]
 
 function PARSER.Expression_1(this)
+
+	this:Yield();
+	
 	local expr = this:Expression_2();
 
 	while this:Accept("qsm") do
