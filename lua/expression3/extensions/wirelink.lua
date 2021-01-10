@@ -21,14 +21,15 @@ ext_wl:RegisterWiredInport("wl", "WIRELINK");
 ext_wl:RegisterWiredOutport("wl", "WIRELINK");
 
 ext_wl:RegisterCastingOperator("e", "wl", function(e) return e; end, true);
-ext_wl:RegisterCastingOperator("wl", "e", function(context, e)
-  if context:CanUseEntity(e) then return e; end
-  return nil;
-end, false);
 
 --[[
   Basic Methods
 ]]
+
+ext_wl:RegisterMethod("e", "getWirelink", "", "wl", 1, function(context, e)
+  if context:CanUseEntity(e) then return e; end
+  context:Throw("Unable to cast entity to wirelink.");
+end, false);
 
 ext_wl:RegisterMethod("wl", "hasInput", "s", "b", 1, function(e, i)
   return IsValid( e ) and e.Inputs and e.Inputs[i];
