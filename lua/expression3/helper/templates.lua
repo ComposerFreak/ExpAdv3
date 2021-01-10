@@ -564,7 +564,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.Examples", function(pnl)
 		
 		node.DoClick = function()
 			local sCode = file.Read(path .. filename, "GAME");
-			return editor:NewTab("editor", sCode, path, filename);
+			return editor:NewTab("editor", sCode, path .. filename, filename);
 		end;
 
 		node:SetIcon("fugue/script-text.png");
