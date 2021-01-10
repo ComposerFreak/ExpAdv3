@@ -639,7 +639,7 @@ net.Receive("Expression3.EntMessage", function()
 
 		net.Start("Expression3.EntMessage");
 
-		net.WriteEntity(self);
+		net.WriteEntity(entity);
 
 		net.WriteString(name);
 
