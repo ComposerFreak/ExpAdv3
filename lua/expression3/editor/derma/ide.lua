@@ -192,13 +192,15 @@ function PANEL:Init( )
 
 		FileMenu:MakePopup( )
 	end )
-
+	
 	self.tbBottom:SetupButton( "Save As", "fugue/disks-black.png", RIGHT, function( ) self:SaveFile( true, true ) end )
 	self.tbBottom:SetupButton( "Save", 	"fugue/disk-black.png", RIGHT, function( ) self:SaveFile( true ) end )
-
+	
+	self.pVoice = self.tbRight:SetupButton( "Toggle Microphone", "fugue/microphone.png", BOTTOM, function ( ) self:ToggleVoice() end )
+	
 	self.tbRight:SetupButton( "Increase font size.", "fugue/edit-size-up.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( 1 ) end )
 	self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( -1 ) end )
-
+	
 	self.tbRight:SetupButton( "Options", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options" ) end )
 	self.tbRight:SetupButton( "Options2", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options2" ) end )
 	self.tbRight:SetupButton( "Open find & replace", "fugue/magnifier.png", TOP, function( ) self.pnlSearch:Toggle() end )
@@ -950,14 +952,17 @@ end
 /*---------------------------------------------------------------------------
 Voice stuff
 ---------------------------------------------------------------------------*/
-local MicMaterial = Material( "fugue/microphone.png" )
+local MicMaterialOff = Material( "fugue/microphone.png" )
+local MicMaterialOn = Material( "fugue/microphone--plus.png" )
 
 function PANEL:ToggleVoice( )
 	self.bVoice = not self.bVoice
-
+	
 	if self.bVoice then
+		self.pVoice:SetMaterial( MicMaterialOn )
 		RunConsoleCommand( "+voicerecord" )
 	else
+		self.pVoice:SetMaterial( MicMaterialOff )
 		RunConsoleCommand( "-voicerecord" )
 	end
 end
@@ -1023,6 +1028,15 @@ function PANEL:SetTall( n, bool )
 end
 
 function PANEL:Think( )
+	if (input.IsKeyDown( KEY_LCONTROL ) or input.IsKeyDown( KEY_LCONTROL )) and input.IsKeyDown( KEY_B ) then 
+		if not self.bVoice then 
+			self:ToggleVoice( )
+		end 
+	elseif self.bVoice then
+		self:ToggleVoice( )
+	end 
+	
+	
 	self:DoAutoRefresh( )
 
 	if self.IsMoving then

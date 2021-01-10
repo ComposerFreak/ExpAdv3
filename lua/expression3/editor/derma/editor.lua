@@ -1587,8 +1587,9 @@ function PANEL:Paint( w, h )
 	if not self.Font then return end
 	surface_SetFont( self.Font )
 
-	self.LineNumberWidth = 6 + self.FontWidth * string_len( tostring( math_min( self.Scroll.x, #self.tRows - self.Size.x + 1 ) + self.Size.x - 1 ) )
-	self.LinePadding = self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth
+	-- self.LineNumberWidth = 6 + (self.FontWidth * string_len( tostring( math_min( self.Scroll.x, #self.tRows - self.Size.x + 1 ) + self.Size.x - 1 ) ))
+	self.LineNumberWidth = 4 + self.FontWidth * string_len( tostring( #self.tRows ) ) 
+	self.LinePadding = self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth + 3
 
 	h = h - (self.pHScrollBar.Enabled and 16 or 0)
 	w = w - (self.pScrollBar.Enabled and 16 or 0)
@@ -1772,7 +1773,7 @@ function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 			surface_DrawRect( self.LinePadding + self.FontWidth * self.tFoldData[Row][1], self.FontHeight * LinePos, self.FontWidth * 1, self.FontHeight )
 		end
 	end
-
+	
 	-- Setup buttons for codefolding
 	if Row < #self.tRows and self.bCodeFolding and (self.tFoldData[Row][1] < self.tFoldData[Row+1][1] or self.tFoldData[Row][3]) then
 		if not IsValid( self.FoldButtons[Row] ) or not ispanel( self.FoldButtons[Row]) then
@@ -1782,20 +1783,20 @@ function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 		self.FoldButtons[Row]:SetVisible( true )
 		self.FoldButtons[Row]:SetPos( self.BookmarkWidth + self.LineNumberWidth, LinePos * self.FontHeight )
 	end
-
+	
 	if self.Bookmarks[Row] then
 		surface_SetDrawColor( 255, 255, 255, 255 )
 		surface_SetMaterial( BookmarkMaterial )
-		surface_DrawTexturedRect( 3, LinePos * self.FontHeight, 16, 16 )
+		surface_DrawTexturedRect( 2, 2 + LinePos * self.FontHeight, 16, 16 )
 	end
-
+	
 	local offset = -self.Scroll.y + 1
 	for i, cell in ipairs( self.tSyntax:GetSyntax( Row ) ) do
 		if not cell[1] then
 			cell[1] = ""
 			cell[2] = C_white
 		end
-
+		
 		if cell[3] then
 			local mat = cell[4]
 			if type( mat ) == "IMaterial" then
@@ -1811,7 +1812,7 @@ function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 				end
 			end
 		end
-
+		
 		local len = #cell[1]
 		if offset < 0 then
 			if len > -offset then
@@ -1843,25 +1844,25 @@ function PANEL:PaintSelection( selection, color, outline )
 	local start, stop = self:MakeSelection( selection )
 	local line, char = start.x, start.y
 	local endline, endchar = stop.x, stop.y
-
+	
 	char = char - self.Scroll.y
 	endchar = endchar - self.Scroll.y
-
+	
 	if char < 0 then char = 0 end
 	if endchar < 0 then endchar = 0 end
-
+	
 	color = color or Color( 0, 0, 160, 255 )
 	outline = outline or false
-
+	
 	local LinePos = line - self.Scroll.x - 1 - self:GetFoldingOffset( line )
-
+	
 	for Row = line, endline do
 		if Row > #self.tRows then break end
 		if istable( self.tRows[Row] ) and self.tRows[Row].Primary ~= Row then continue end
 		local length = istable( self.tRows[Row] ) and #self.tRows[Row][1] or #self.tRows[Row]
 		length = length - self.Scroll.y + 1
 		LinePos = LinePos + 1
-
+		
 		surface_SetDrawColor( color )
 		if outline then
 			if Row == line and line == endline then -- Same line selection

@@ -2,24 +2,51 @@ local PANEL = {};
 
 function PANEL:Init( )
 	self.BaseClass.Init(self);
-
+	
 	self.nLine = 1;
 	self.row = {};
 	self.format = {};
 	self.funcs = {};
-
+	
 	self.tFormat = {};
 	self.tFuncs = {};
-
+	
 	--self:NewLine();
 	self:SetEditable(false);
 	self:SetDefaultTextColor(Color(255, 255, 255));
-
+	
 	function self:PaintStatus() end
-
+	
+	self.pClearButton = self:Add( "GOLEM_ImageButton" )
+	self.pClearButton:SetMaterial( Material( "fugue/cross-button.png" ) )
+	
+	self.pClearButton.DoClick = function(btn)
+		self:Clear( )
+	end
+	
+	self.BookmarkWidth = 0
 end
 
-function PANEL:ScrollToBottom()
+function PANEL:PerformLayout( )
+	self.BaseClass.PerformLayout(self)
+	if not IsValid (self.pClearButton ) then return end 
+	self.pClearButton:SetPos( self:GetWide( ) - self.pClearButton:GetWide( ) - (self.pScrollBar:IsVisible() and self.pScrollBar:GetWide( ) or 0), 0 )
+	
+end
+
+function PANEL:Clear( )
+	self.nLine = 1
+	self.row = { }
+	self.format = { }
+	self.funcs = { }
+	
+	self.tFormat = { }
+	self.tFuncs = { }
+	
+	self:SetCode("")
+end
+
+function PANEL:ScrollToBottom( )
 	self:SetCaret( Vector2( #self.tRows, #self.tRows[#self.tRows] ) );
 	self:ScrollCaret();
 end

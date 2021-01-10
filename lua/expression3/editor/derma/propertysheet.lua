@@ -138,7 +138,11 @@ function PANEL:SetActiveTab( active )
 	if not IsValid(self.m_pActiveTab) or not ispanel(self.m_pActiveTab) then self.m_pActiveTab = nil end
 	if self.m_pActiveTab then
 		self.m_pActiveTab:GetPanel( ):SetVisible( false )
-		self.m_pActiveTab:SetColor( Color( 180, 180, 180 ) )
+		if GOLEM_LIGHT then 
+			self.m_pActiveTab:SetColor( Color( 180, 180, 180 ) )
+		else 
+			self.m_pActiveTab:SetColor( Color( 100, 100, 100 ) )
+		end 
 	end
 
 	if active then
