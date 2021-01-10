@@ -171,6 +171,9 @@ function ENT:BuildEnv(context, instance)
 	-- Fucntions we need
 		env.invoke  = EXPR_LIB.Invoke;
 		env.setmetatable = setmetatable;
+		env.getdebughook = debug.gethook;
+		env.setdebughook = debug.sethook;
+		env.unpack = unpack;
 		env.error = error;
 		env.pcall = pcall;
 

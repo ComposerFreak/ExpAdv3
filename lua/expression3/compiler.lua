@@ -412,11 +412,30 @@ local bannedVars = {
 	["then"] = true,
 	["end"] = true,
 	["pairs"] = true,
+	["unpack"] = true,
+	["getdebughook"] = true,
+	["setdebughook"] = true,
 
 	["bit"] = true,
 	["eTable"] = true,
 	["clsname"] = true,
 	["CheckHash"] = true,
+
+	["_internala"] = true,
+	["_internalb"] = true,
+	["_internalc"] = true,
+	["_internald"] = true,
+	["_internale"] = true,
+	["_internalf"] = true,
+	["_internalg"] = true,
+	["_internalh"] = true,
+	["_internali"] = true,
+	["_internalj"] = true,
+	["_internalk"] = true,
+	["_internall"] = true,
+	["_internalm"] = true,
+	["_internaln"] = true,
+	["_internalz"] = true,
 };
 
 function COMPILER.AssignVariable(this, token, declaired, varName, class, scope, prefix, global)
@@ -3202,7 +3221,11 @@ function COMPILER.Compile_RETURN(this, inst, token, data)
 		outClass = result;
 	end
 
-	this:writeToBuffer(inst, "\nreturn ");
+	if (this:GetOption("try", false)) then
+		this:writeToBuffer(inst, "\nerror({exit = 'return', values = {");
+	else
+		this:writeToBuffer(inst, "\nreturn");
+	end
 
 	local outCount = 0;
 
@@ -3232,6 +3255,12 @@ function COMPILER.Compile_RETURN(this, inst, token, data)
 		end
 	end
 
+	if (this:GetOption("try", false)) then
+		this:writeToBuffer(inst, "}, 0)");
+	else
+		this:writeToBuffer(inst, "\n");
+	end
+
 	this:writeToBuffer(inst, ";\n");
 
 	if (count == -1) then
@@ -3251,7 +3280,11 @@ function COMPILER.Compile_BREAK(this, inst, token)
 		this:Throw(token, "Break must not appear outside of a loop");
 	end
 
-	this:writeToBuffer(inst, "\nbreak\n;");
+	if (this:GetOption("try", false)) then
+		this:writeToBuffer(inst, "\nerror({exit = 'break'}, 0);\n");
+	else
+		this:writeToBuffer(inst, "\nbreak\n;");
+	end
 
 	return nil, nil, EXPR_MIN;
 end
@@ -3261,7 +3294,11 @@ function COMPILER.Compile_CONTINUE(this, inst, token)
 		this:Throw(token, "Continue must not appear outside of a loop");
 	end
 
-	this:writeToBuffer(inst, "\ncontinue\n;");
+	if (this:GetOption("try", false)) then
+		this:writeToBuffer(inst, "\nerror({exit = 'continue'}, 0);\n");
+	else
+		this:writeToBuffer(inst, "\ncontinue\n;");
+	end
 
 	return nil, nil, EXPR_MIN;
 end
@@ -3809,7 +3846,7 @@ function COMPILER.Compile_EACH(this, inst, token, data)
 
 	this:SetOption("loop", true);
 
-	this:writeToBuffer(inst, "for _kt%i, _kv%i, _vt%i, _vv%i in ", scope, scope, scope, scope);
+	this:writeToBuffer(inst, "for _internale%i, _internalf%i, _internalg%i, _internali%i in ", scope, scope, scope, scope);
 
 	this:writeOperationCall(inst, op, data.expr);
 
@@ -3822,19 +3859,19 @@ function COMPILER.Compile_EACH(this, inst, token, data)
 		this:AssignVariable(token, true, data.kValue, data.kType,  nil);
 
 		if (data.kType ~= "_vr") then
-			this:writeToBuffer(inst, "if (_kt%i ~= %q) then continue end\n", scope, data.kType);
-			this:writeToBuffer(inst, "local %s = _kv%i\n", data.kValue, scope);
+			this:writeToBuffer(inst, "if (_internale%i ~= %q) then continue end\n", scope, data.kType);
+			this:writeToBuffer(inst, "local %s = _internalf%i\n", data.kValue, scope);
 		else
-			this:writeToBuffer(inst, "local %s = {_kt%i, _kv%i}\n", data.kValue, scope, scope);
+			this:writeToBuffer(inst, "local %s = {_internale%i, _internalf%i}\n", data.kValue, scope, scope);
 		end
 	end
 
 	if (data.vType) then
 		if (data.vType ~= "_vr") then
-			this:writeToBuffer(inst, "if (_vt%i ~= %q) then continue end\n", scope, data.vType);
-			this:writeToBuffer(inst, "local %s = _vv%i\n", data.vValue, scope);
+			this:writeToBuffer(inst, "if (_internalg%i ~= %q) then continue end\n", scope, data.vType);
+			this:writeToBuffer(inst, "local %s = _internali%i\n", data.vValue, scope);
 		else
-			this:writeToBuffer(inst, "local %s = {_vt%i, _vv%i}\n", data.vValue, scope, scope);
+			this:writeToBuffer(inst, "local %s = {_internalg%i, _internali%i}\n", data.vValue, scope, scope);
 		end
 	end
 
@@ -3854,21 +3891,36 @@ end
 ]]
 
 function COMPILER.Compile_TRY(this, inst, token, data)
-	this:writeToBuffer(inst, "\nlocal ok, %s = pcall(function()\n", data.var.data);
-
+	this:writeToBuffer(inst, "\nlocal _internala, _internalb, _internalc, _internald = getdebughook();\n");
+	this:writeToBuffer(inst, "\nlocal _internalz, %s = pcall(function()\n", data.var.data);
+	this:writeToBuffer(inst, "\nsetdebughook(_internala, _internalb, _internalc, _internald);\n");
 	this:PushScope();
-		this:SetOption("canReturn", false);
-		this:SetOption("loop", false);
+		this:SetOption("try", true);
 
 		this:Compile(data.block1);
 		this:addInstructionToBuffer(inst, data.block1);
 
 	this:PopScope();
 
-	this:writeToBuffer(inst, "\nend\n); if (not ok and %s.state == 'runtime') then\n", data.var.data);
+	this:writeToBuffer(inst, "\nend\n);");
+
+	this:writeToBuffer(inst, "if (not _internalz and %s.exit) then\n", data.var.data);
+		
+		if this:GetOption("loop", false) then
+			this:writeToBuffer(inst, "if (%s.exit == 'break') then break; end\n", data.var.data);
+			this:writeToBuffer(inst, "if (%s.exit == 'continue') then continue; end\n", data.var.data);
+		end
+
+		if this:GetOption("canReturn", false) then
+			this:writeToBuffer(inst, "if (%s.exit == 'return') then return unpack(%s.values); end\n", data.var.data, data.var.data);
+		end
+
+		this:writeToBuffer(inst, "error(%s, 0);\n", data.var.data);
+
+	this:writeToBuffer(inst, "elseif (not _internalz and %s.state == 'runtime') then\n", data.var.data);
 
 	this:PushScope();
-		this:SetOption("loop", false);
+		this:SetOption("catch", true);
 
 		this:AssignVariable(token, true, data.var.data, "_er", nil);
 
@@ -3877,7 +3929,7 @@ function COMPILER.Compile_TRY(this, inst, token, data)
 
 	this:PopScope();
 
-	this:writeToBuffer(inst, "\nelseif (not ok) then\nerror(%q, 0);\nend\n", data.var.data);
+	this:writeToBuffer(inst, "\nelseif (not _internalz) then\nerror(%s, 0);\nend\n", data.var.data);
 end
 
 --[[
