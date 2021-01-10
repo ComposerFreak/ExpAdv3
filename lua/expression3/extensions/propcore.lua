@@ -280,7 +280,7 @@ end, false);
 extension:RegisterMethod("e", "isFrozen", "", "b", 1, function(context, e)
 	if IsValid(e) then
 		local ph = e:GetPhysicsObject();
-		if IsValid(ph) then return ph:IsMotionEnabled(); end
+		if IsValid(ph) then return not ph:IsMotionEnabled(); end
 	end
 	return false;
 end, false);

@@ -96,7 +96,7 @@ function ext_wl:PostLoadClasses(classes)
 
           end
 
-          context:Throw("No such Output WireLink[%s, %s].", i, c.id);
+          c:Throw("No such Output WireLink[%s, %s].", i, c.id);
 
         end, false);
 
@@ -123,7 +123,7 @@ function ext_wl:PostLoadClasses(classes)
 
           end
 
-          context:Throw("No such Input WireLink[%s, %s].", i, c.id);
+          c:Throw("No such Input WireLink[%s, %s].", i, c.id);
 
         end, false);
     end
