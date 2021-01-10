@@ -68,7 +68,7 @@ local function filter(a, ff)
 
 			if a.ep or a.ip then
 
-				local o = e:getOWner();
+				local o = e:GetOwner();
 
 				if IsValid(o) then
 
