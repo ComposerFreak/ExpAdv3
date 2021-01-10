@@ -710,7 +710,8 @@ function COMPILER.Compile_ROOT(this, inst, token, data)
 			price = price + p;
 		end
 
-		this:writeToBuffer(inst, "\n --PRICE: " .. price .. "\n");
+		this:writeToBuffer(inst, "\n --PRICE: %i\n", price);
+		this:writeToBuffer(inst, "\n CONTEXT:CheckPrice(%i)\n", price);
 
 		for i = 1, #stmts do
 			this:addInstructionToBuffer(inst, stmts[i]);
@@ -733,7 +734,8 @@ function COMPILER.Compile_SEQ(this, inst, token, data)
 			price = price + p;
 		end
 
-		this:writeToBuffer(inst, "\n --PRICE: " .. price .. "\n");
+		this:writeToBuffer(inst, "\n --PRICE: %i\n", price);
+		this:writeToBuffer(inst, "\n CONTEXT:CheckPrice(%i)\n", price);
 
 		for i = 1, #stmts do
 			this:addInstructionToBuffer(inst, stmts[i]);

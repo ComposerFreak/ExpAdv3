@@ -23,25 +23,21 @@ CONTEXT.__index = CONTEXT;
 ]]
 
 local cvar_softtime;
---local cvar_hardtime;
 local cvar_softtimesize;
 local cvar_netquota;
---local cvar_ram_max;
 
 if SERVER then
 	cvar_softtime = CreateConVar("e3_softtime", 0.005, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.")
-	--cvar_hardtime = CreateConVar("e3_hardtime", 0.01, FCVAR_ARCHIVE, "The max CPU time e3 can reach.")
 	cvar_softtimesize = CreateConVar("e3_timebuffersize", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
-	--cvar_ram_max = CreateConVar("e3_ram_max", 1500000, "If ram exceeds this limit (in kB), e3s will be terminated");
 	cvar_netquota = CreateConVar("e3_netquota", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
+	cvar_hardlimit = CreateConVar("e3_hardlimit", 64000, FCVAR_ARCHIVE, "The max cost a tick.");
 end
 
 if CLIENT then
 	cvar_softtime = CreateConVar("e3_softtime_cl", 0.005, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.");
-	--cvar_hardtime = CreateConVar("e3_hardtime_cl", 0.01, FCVAR_ARCHIVE, "The max CPU time e3 can reach.")
 	cvar_softtimesize = CreateConVar("e3_timebuffersize_cl", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
-	--cvar_ram_max = CreateConVar("e3_ram_max_cl", 1500000, "If ram exceeds this limit (in kB), e3s will be terminated");
 	cvar_netquota = CreateConVar("e3_netquota_cl", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
+	cvar_hardlimit = CreateConVar("e3_hardlimit_cl", 64000, FCVAR_ARCHIVE, "The max cost a tick.");
 end
 
 --[[
@@ -53,6 +49,7 @@ function CONTEXT.New()
 
 	tbl.perms = {};
 	tbl.net_total = 0;
+	tbl.prf_total = 0;
 	tbl.cpu_total = 0;
 	tbl.cpu_average = 0;
 	tbl.cpu_timestamp = 0;
@@ -66,21 +63,20 @@ end
 	CVar acessor methods
 ]]
 
+
+function CONTEXT:hardLimit()
+	return cvar_hardlimit:GetFloat();
+end
+
 function CONTEXT:softTimeLimit()
 	return cvar_softtime:GetFloat();
 end
 
---[[function CONTEXT:hardTimeLimit()
-	return cvar_hardtime:GetFloat();
-end]]
 
 function CONTEXT:softTimeLimitSize()
 	return 1 / cvar_softtimesize:GetInt();
 end
 
---[[function CONTEXT:maxRam()
-	return cvar_ram_max:GetInt();
-end]]
 
 function CONTEXT:GetNetQuota()
 	return cvar_netquota:GetInt();
@@ -89,6 +85,15 @@ end
 --[[
 
 ]]
+
+function CONTEXT:CheckPrice(price)
+	self.prf_total = self.prf_total + price;
+
+	if self.prf_total > self:hardLimit() then
+		self:Throw("Hard execution limit reached.");
+	end
+end
+
 
 local __exe;
 
@@ -181,6 +186,7 @@ function CONTEXT:UpdateQuotaValues()
 
 		self.net_total = 0;
 		self.cpu_total = 0;
+		self.prf_total = 0;
 
 		if (self.update) then
 			self.update = false;
