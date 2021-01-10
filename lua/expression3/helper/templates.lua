@@ -618,7 +618,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.SavedHelpers", function(pnl
 			local ok, err = EXPR_DOCS.LoadCustomDocFile(path .. filename, "DATA");
 
 			if ok then
-				self.CurrentHelperPath = path .. filename;
+				pnl.CurrentHelperPath = path .. filename;
 				pnl:WriteLine(Color(255, 255, 255), "Loaded Custom Helpers ", Color(0, 255, 0), filename);
 			else
 				pnl:WriteLine(Color(255, 255, 255), "Error Loading Custom Helpers ", Color(0, 255, 0), filename);
