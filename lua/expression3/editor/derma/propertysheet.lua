@@ -39,10 +39,10 @@ end
 
 function PANEL:AddSheet( strName, pnlContent, strMaterial, fClose )
 	if not IsValid( pnlContent ) then return end
-
+	
 	local Sheet = { }
 	Sheet.Name = strLabel
-
+	
 	Sheet.Tab = vgui.Create( "GOLEM_ImageButton", self )
 	Sheet.Tab.DoClick = function( tab ) self:SetActiveTab( tab ) end
 	Sheet.Tab:SetFont( "Trebuchet18" )
@@ -57,28 +57,29 @@ function PANEL:AddSheet( strName, pnlContent, strMaterial, fClose )
 		Sheet.Tab:SetColor( Color( 255, 255, 255, 255 ) )
 		Sheet.Tab:SetTextColor( Color( 0, 0, 0, 255 ) )
 	end 
-
-
+	
+	
 	Sheet.Tab.btnClose = vgui.Create( "GOLEM_ImageButton", Sheet.Tab )
 	Sheet.Tab.btnClose.DoClick = fClose
 	Sheet.Tab.btnClose:SetMaterial( Material( "oskar/close.png" ) )
+	-- Sheet.Tab.btnClose:SetMaterial( Material( "fugue/cross-button.png" ) )
 	Sheet.Tab.btnClose:SetSize( 16, 16 )
 	Sheet.Tab.btnClose:Dock( RIGHT )
 	Sheet.Tab.btnClose:DockMargin( 2, 2, 5, 2 )
 	Sheet.Tab.Sheet = Sheet
-
+	
 	Sheet.Tab.PerformLayout = function( tab )
 		tab:SizeToContentsX( )
 		tab:SetWide( tab:GetWide( ) + tab.btnClose:GetWide( ) )
 	end
-
+	
 	Sheet.Tab.SetName = function( tab, name )
 		tab:SetText( name )
 		tab.Sheet.Name = name
 		self:InvalidateLayout( true )
 	end
 	Sheet.Tab:SetName( strName )
-
+	
 	Sheet.Tab.GetName = function( tab )
 		return string.Trim( tab:GetText( ) )
 	end
@@ -139,7 +140,7 @@ function PANEL:SetActiveTab( active )
 	if self.m_pActiveTab then
 		self.m_pActiveTab:GetPanel( ):SetVisible( false )
 		if GOLEM_LIGHT then 
-			self.m_pActiveTab:SetColor( Color( 180, 180, 180 ) )
+			self.m_pActiveTab:SetColor( Color( 130, 130, 130 ) )
 		else 
 			self.m_pActiveTab:SetColor( Color( 100, 100, 100 ) )
 		end 
@@ -147,7 +148,7 @@ function PANEL:SetActiveTab( active )
 
 	if active then
 		if GOLEM_LIGHT then 
-			active:SetColor( Color( 255, 255, 255 ) )
+			active:SetColor( Color( 220, 220, 220 ) )
 		else
 			active:SetColor( Color( 20, 20, 20 ) )
 		end

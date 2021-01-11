@@ -97,6 +97,14 @@ function Font:GetFont( )
 	return self.sFontID
 end
 
+function Font:GetFontName( ) 
+	return cvFontName:GetString( )
+end 
+
+function Font:GetFontSize( )
+	return cvFontSize:GetInt( )
+end
+
 local CreatedFonts = { }
 
 local function CreateFont( sFont, nSize )

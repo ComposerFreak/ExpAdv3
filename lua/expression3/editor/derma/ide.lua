@@ -202,7 +202,6 @@ function PANEL:Init( )
 	self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( -1 ) end )
 	
 	self.tbRight:SetupButton( "Options", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options" ) end )
-	self.tbRight:SetupButton( "Options2", "fugue/gear.png", TOP, function( ) self:NewMenuTab( "options2" ) end )
 	self.tbRight:SetupButton( "Open find & replace", "fugue/magnifier.png", TOP, function( ) self.pnlSearch:Toggle() end )
 	
 	-- self.debugButton = self.tbRight:SetupStateButton( { 
@@ -317,25 +316,6 @@ function PANEL:Init( )
 		self.Options = nil
 	end )
 	
-	
-	self:AddCustomTab( false, "options2", function( self )
-		if self.Options2 then
-			self.pnlSideTabHolder:SetActiveTab( self.Options2.Tab )
-			self.Options2.Panel:RequestFocus( )
-			return self.Options2
-		end
-		
-		local Panel = vgui.Create( "GOLEM_Options2" )
-		local Sheet = self.pnlSideTabHolder:AddSheet( "", Panel, "fugue/gear.png", function(pnl) self:CloseMenuTab( pnl:GetParent( ), true ) end )
-		self.pnlSideTabHolder:SetActiveTab( Sheet.Tab )
-		self.Options2 = Sheet
-		Sheet.Panel:RequestFocus( )
-		
-		return Sheet
-	end, function( self )
-		self.Options2 = nil
-	end )
-	
 	if not self:OpenOldTabs( ) then
 		self:NewTab( "editor", sDefaultScript() )
 	end
@@ -347,8 +327,7 @@ function PANEL:Init( )
 	self.pnlSearch:Close(true);
 	
 	--This was annoying.
-	--self:NewMenuTab( "options" )
-	-- self:NewMenuTab( "options2" )
+	-- self:NewMenuTab( "options" )
 	
 	Golem.Font.OnFontChange = function( Font, sFontID )
 		for i = 1, #self.pnlTabHolder.Items do

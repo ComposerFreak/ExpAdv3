@@ -814,14 +814,6 @@ function Syntax:Parse( )
 					continue
 				end
 				
-				local match = self:NextPattern( " *= *", true ) 
-				if match then
-					self:AddToken( "string" )
-					self:AddToken( "operator", match )
-					self.sBuffer = ""
-					continue
-				end
-				
 				if self.tLibrary[word] then
 					self:AddToken( "library" )
 					self:SkipSpaces( )
@@ -864,6 +856,14 @@ function Syntax:Parse( )
 					end
 					
 					self:AddToken( "notfound" )
+					continue
+				end
+				
+				local match = self:NextPattern( " *= *", true ) 
+				if match then
+					self:AddToken( "variable" )
+					self:AddToken( "operator", match )
+					self.sBuffer = ""
 					continue
 				end
 				

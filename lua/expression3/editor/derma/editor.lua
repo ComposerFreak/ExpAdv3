@@ -30,6 +30,7 @@ local surface_GetTextSize 			= surface.GetTextSize
 local surface_SetDrawColor 			= surface.SetDrawColor
 local surface_SetMaterial 			= surface.SetMaterial
 local surface_DrawTexturedRect 		= surface.DrawTexturedRect
+local surface_DrawLine 				= surface.DrawLine
 
 local input_IsKeyDown 				= input.IsKeyDown
 
@@ -135,7 +136,7 @@ function PANEL:SetFont( sFont )
 			end
 		end
 	else
-		self.FoldingWidth = 0
+		self.FoldingWidth = 3
 	end
 
 	self:InvalidateLayout( true )
@@ -1525,7 +1526,7 @@ function PANEL:SetCodeFolding( bActive )
 			end
 		end
 	else
-		self.FoldingWidth = 0
+		self.FoldingWidth = 3
 	end
 end
 
@@ -1589,7 +1590,7 @@ function PANEL:Paint( w, h )
 
 	-- self.LineNumberWidth = 6 + (self.FontWidth * string_len( tostring( math_min( self.Scroll.x, #self.tRows - self.Size.x + 1 ) + self.Size.x - 1 ) ))
 	self.LineNumberWidth = 4 + self.FontWidth * string_len( tostring( #self.tRows ) ) 
-	self.LinePadding = self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth + 3
+	self.LinePadding = self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth
 
 	h = h - (self.pHScrollBar.Enabled and 16 or 0)
 	w = w - (self.pScrollBar.Enabled and 16 or 0)
@@ -1599,9 +1600,9 @@ function PANEL:Paint( w, h )
 	surface_DrawRect( 0, 0, w, h )
 
 	surface_SetDrawColor( 32, 32, 32, 255 )
-	if GOLEM_LIGHT then surface_SetDrawColor( 255, 255, 255, 255 ) end 
+	if GOLEM_LIGHT then surface_SetDrawColor( 240, 240, 240, 255 ) end 
 	surface_DrawRect( 0, 0, self.LinePadding, h )
-
+	
 	if self.bParamMatching then
 		self.Params = self.tSyntax:FindMatchingParam( self.Caret.x, self.Caret.y )
 	end

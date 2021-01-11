@@ -29,6 +29,8 @@ function Syntax:SetColor( sName, sColor, cColor )
 	
 	cColor = cColor or self.Colors[sName].Defaults[sColor]
 	
+	if tColorData[sName][sColor] == cColor and self.Colors[sName].Colors[sColor] == cColor then return end 
+	
 	tColorData[sName][sColor] = cColor
 	self.Colors[sName].Colors[sColor] = cColor
 	
@@ -43,6 +45,31 @@ function Syntax:GetColor( sName, sColor )
 	return tColorData[sName][sColor]
 end
 
+function Syntax:ResetColor( sName, sColor )
+	if not tLangList[sName] then error( string.format( "Error tried to change color of unknown language %q", sName) ) end
+	if not self.Colors[sName] then error( string.format( "Error tried to change color of language without color options %q", sName) ) end
+	if not self.Colors[sName].Colors[sColor] then error( string.format( "Token %q does not exists in language %q", sColor, sName ) ) end
+	
+	local cColor = self.Colors[sName].Defaults[sColor]
+	
+	tColorData[sName][sColor] = cColor
+	self.Colors[sName].Colors[sColor] = cColor
+	
+	self:Update( )
+end 
+
+function Syntax:ResetColors( sName )
+	if not tLangList[sName] then error( string.format( "Error tried to change color of unknown language %q", sName) ) end
+	if not self.Colors[sName] then error( string.format( "Error tried to change color of language without color options %q", sName) ) end
+	
+	for sColor, cColor in pairs( Syntax.Colors[sName].Defaults ) do
+		tColorData[sName][sColor] = cColor
+		self.Colors[sName].Colors[sColor] = cColor
+	end
+	
+	self:Update( )
+end
+	
 function Syntax:Add( sName, tData )
 	if tLangList[sName] then return ErrorNoHalt( string.format( "Syntax %q already created.\n", sName ) ) end
 	tLangList[sName] = tData
@@ -66,6 +93,8 @@ function Syntax:RegisterColors( sName, tColors )
 		defaults[k] = Color( v.r, v.g, v.b )
 		if tColorData[sName][k] then
 			tColors[k] = Color( tColorData[sName][k].r, tColorData[sName][k].g, tColorData[sName][k].b )
+		else 
+			tColorData[sName][k] = Color( v.r, v.g, v.b )
 		end
 	end
 	
