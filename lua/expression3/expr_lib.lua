@@ -441,7 +441,18 @@ function EXPR_LIB.RegisterNativeDefault(class, native)
 		EXPR_LIB.ThrowInternal(0, "Attempt to register native default for none existing class %s", class);
 	end
 
+	RunString(
+		string.format([[
+			function __E3Func__()
+				return %s;
+			end
+		]], native)
+	);
+
 	cls.native_default = native;
+	cls.native_default_func = __E3Func__;
+
+	__E3Func__ = nil;
 end
 
 local loadConstructors = false;
