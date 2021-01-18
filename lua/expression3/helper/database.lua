@@ -238,7 +238,7 @@ do
 				["result type"] = op.result,
 				["result count"] = op.rCount,
 				["state"] = op.state,
-				["desc"] = "",
+				["desc"] = op.desc or "",
 			});
 
 		end
@@ -286,7 +286,7 @@ do
 				["name"] = data.name,
 				["extends"] = data.base,
 				["state"] = data.state,
-				["desc"] = "",
+				["desc"] = data.desc or "",
 			});
 		end
 
@@ -340,7 +340,7 @@ do
 						["result type"] = op.result,
 						["result count"] = op.rCount,
 						["state"] = op.state,
-						["desc"] = "",
+						["desc"] = op.desc or "",
 					});
 				end
 
@@ -398,7 +398,7 @@ do
 						["id"] = cls.id,
 						["name"] = op.attribute,
 						["type"] = op.class,
-						["desc"] = "",
+						["desc"] = op.desc or "",
 					});
 				end
 
@@ -455,7 +455,7 @@ do
 				["result type"] = op.result,
 				["result count"] = op.rCount,
 				["state"] = op.state,
-				["desc"] = "",
+				["desc"] = op.desc or "",
 			});
 
 		end
@@ -508,7 +508,7 @@ do
 				["result type"] = op.result,
 				["result count"] = op.rCount,
 				["state"] = op.state,
-				["desc"] = "",
+				["desc"] = op.desc or "",
 			});
 
 		end
@@ -522,7 +522,7 @@ do
 				["result type"] = op.result,
 				["result count"] = op.rCount,
 				["state"] = op.state,
-				["desc"] = "",
+				["desc"] = op.desc or "",
 			});
 
 		end
@@ -570,7 +570,7 @@ do
 				
 			EXPR_DOCS.DescribeLibrary({
 				["name"] = op.name,
-				["desc"] = "",
+				["desc"] = op.desc or "",
 			});
 
 		end
@@ -626,7 +626,7 @@ do
 					["result type"] = op.result,
 					["result count"] = op.rCount,
 					["state"] = op.state,
-					["desc"] = "",
+					["desc"] = op.desc or "",
 				});
 			end
 
@@ -681,7 +681,7 @@ do
 					["result type"] = op.result,
 					["result count"] = 1,
 					["state"] = op.state,
-					["desc"] = "",
+					["desc"] = op.desc or "",
 				});
 			end
 

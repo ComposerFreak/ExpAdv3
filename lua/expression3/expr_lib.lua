@@ -196,20 +196,6 @@
 			CLIENTSIDE ONLY: Used to add a new tab to the lefthand menu with its own menu icon to open it.
 			The first function (arg #3) is called when the tab is created for the first time. The panel returned is used as the tabs main panel.
 			The second function (arg #4) is called when the tab is closed.
-
-	::WIKI::
-		EXPR_WIKI.RegisterConstructor(str class, str parameter, str html)
-			Creates a wiki section for this constructor.
-
-		EXPR_WIKI.RegisterMethod(str class, str name, str parameter, str html)
-			Creates a wiki section for this method.
-
-		EXPR_WIKI.RegisterFunction(str library, str name, str parameter, str html)
-			Creates a wiki section for this function.
-
-		EXPR_WIKI.RegisterPage(str title, str catagory, str html)
-			Creates a new wiki page.
-
 ]]
 
 EXPR_LIB = {};
@@ -298,7 +284,7 @@ end
 local events = {};
 local loadEvents = false;
 
-function EXPR_LIB.RegisterEvent(name, parameter, type, count)
+function EXPR_LIB.RegisterEvent(name, parameter, type, count, desc)
 	if (not loadEvents) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register Event %s(%s) outside of Hook::Expression3.LoadEvents", name, parameter);
 	end
@@ -324,6 +310,11 @@ function EXPR_LIB.RegisterEvent(name, parameter, type, count)
 	evt.signature = string.format("%s(%s)", name, signature);
 	evt.result = res.id;
 	evt.rCount = count or 0;
+
+	if CLIENT then
+		evt.desc = desc;
+	end
+
 	events[evt.signature] = evt;
 
 	return evt;
@@ -333,7 +324,7 @@ end
 
 ]]
 
-function EXPR_LIB.RegisterClass(id, name, isType, isValid)
+function EXPR_LIB.RegisterClass(id, name, isType, isValid, desc)
 
 	if (not loadClasses) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register class %s outside of Hook::Expression3.LoadClasses }}", name);
@@ -370,6 +361,10 @@ function EXPR_LIB.RegisterClass(id, name, isType, isValid)
 	class.attributes = {};
 	class.constructors = {};
 
+	if CLIENT then
+		class.desc = desc;
+	end
+
 	classIDs[class.id] = class;
 	classes[class.name] = class;
 
@@ -381,7 +376,7 @@ end
 --[[
 ]]
 
-function EXPR_LIB.RegisterExtendedClass(id, name, base, isType, isValid)
+function EXPR_LIB.RegisterExtendedClass(id, name, base, isType, isValid, desc)
 
 	if (not loadClasses) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register class %s outside of Hook::Expression3.LoadClasses", name);
@@ -393,7 +388,7 @@ function EXPR_LIB.RegisterExtendedClass(id, name, base, isType, isValid)
 		EXPR_LIB.ThrowInternal(0, "Attempt to register extended class %s from none existing class %s", class, base);
 	end
 
-	local class = EXPR_LIB.RegisterClass(id, name, isType, isValid);
+	local class = EXPR_LIB.RegisterClass(id, name, isType, isValid, desc);
 
 	class.base = cls.id;
 
@@ -407,8 +402,10 @@ function EXPR_LIB.RegisterWiredInport(class, wiretype, func)
 		EXPR_LIB.ThrowInternal(0, "Attempt to register wired inport for none existing class %s", class);
 	end
 
-	if (SERVER) and (not WireLib.DT[wiretype]) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register wired inport for class %s, with invalid wire type %s", class, wiretype);
+	if (SERVER) then
+		if (not WireLib.DT[wiretype]) then
+			EXPR_LIB.ThrowInternal(0, "Attempt to register wired inport for class %s, with invalid wire type %s", class, wiretype);
+		end
 	end
 
 	cls.wire_out_func = func;
@@ -422,8 +419,10 @@ function EXPR_LIB.RegisterWiredOutport(class, wiretype, func)
 		EXPR_LIB.ThrowInternal(0, "Attempt to register wired outport for none existing class %s", class);
 	end
 
-	if (SERVER) and (not WireLib.DT[wiretype]) then
-		EXPR_LIB.ThrowInternal(0, "Attempt to register wired outport for class %s, with invalid wire type %s", class, wiretype);
+	if (SERVER) then
+		if (not WireLib.DT[wiretype]) then
+			EXPR_LIB.ThrowInternal(0, "Attempt to register wired outport for class %s, with invalid wire type %s", class, wiretype);
+		end
 	end
 
 	cls.wire_in_func = func;
@@ -437,23 +436,12 @@ function EXPR_LIB.RegisterNativeDefault(class, native)
 		EXPR_LIB.ThrowInternal(0, "Attempt to register native default for none existing class %s", class);
 	end
 
-	RunString(
-		string.format([[
-			function __E3Func__()
-				return %s;
-			end
-		]], native)
-	);
-
 	cls.native_default = native;
-	cls.native_default_func = __E3Func__;
-
-	__E3Func__ = nil;
 end
 
 local loadConstructors = false;
 
-function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeContext)
+function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeContext, desc)
 	if (not loadConstructors) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register Constructor new %s(%s) outside of Hook::Expression3.LoadConstructors", class, parameter);
 	end
@@ -482,6 +470,10 @@ function EXPR_LIB.RegisterConstructor(class, parameter, constructor, excludeCont
 	op.operator = constructor;
 	op.context = not excludeContext;
 
+	if CLIENT then
+		op.desc = desc;
+	end
+
 	cls.constructors[op.signature] = op;
 
 	return op;
@@ -490,7 +482,7 @@ end
 local methods;
 local loadMethods = false;
 
-function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method, excludeContext)
+function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method, excludeContext, desc)
 	-- if method is nil lua, compiler will use native Object:(...);
 
 	if (not loadMethods) then
@@ -527,6 +519,10 @@ function EXPR_LIB.RegisterMethod(class, name, parameter, type, count, method, ex
 	meth.operator = method;
 	meth.context = not excludeContext;
 
+	if CLIENT then
+		meth.desc = desc;
+	end
+
 	methods[meth.signature] = meth;
 	-- <Insert Heisenburg joke here>
 
@@ -535,7 +531,7 @@ end
 
 local loadAttributes;
 
-function EXPR_LIB.RegisterAttribute(class, attribute, type, native)
+function EXPR_LIB.RegisterAttribute(class, attribute, type, native, desc)
 	native = native or attribute;
 
 	if (not loadAttributes) then
@@ -559,6 +555,10 @@ function EXPR_LIB.RegisterAttribute(class, attribute, type, native)
 	atr.class = typ.id;
 	atr.attribute = attribute;
 
+	if CLIENT then
+		atr.desc = desc;
+	end
+
 	cls.attributes[attribute] = atr;
 
 	--MsgN("Registered attribute: ", class .. "." .. attribute);
@@ -569,7 +569,7 @@ end
 local operators;
 local loadOperators = false;
 
-function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator, excludeContext)
+function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator, excludeContext, desc)
 	-- if operator is nil lua, compiler will use native if possible (+, -, /, *, ^, etc)
 
 	if (not loadOperators) then
@@ -600,6 +600,10 @@ function EXPR_LIB.RegisterOperator(operation, parameter, type, count, operator, 
 	op.context = not excludeContext;
 	op.operation = operation;
 
+	if CLIENT then
+		op.desc = desc;
+	end
+
 	operators[op.signature] = op;
 
 	return op;
@@ -607,7 +611,7 @@ end
 
 local castOperators;
 
-function EXPR_LIB.RegisterCastingOperator(type, parameter, operator, excludeContext)
+function EXPR_LIB.RegisterCastingOperator(type, parameter, operator, excludeContext, desc)
 	if (not loadOperators) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register casting operator [(%s) %s] outside of Hook::Expression3.LoadOperators", type, parameter);
 	end
@@ -638,6 +642,10 @@ function EXPR_LIB.RegisterCastingOperator(type, parameter, operator, excludeCont
 	op.operator = operator;
 	op.context = not excludeContext;
 
+	if CLIENT then
+		op.desc = desc;
+	end
+
 	castOperators[op.signature] = op;
 
 	return op;
@@ -646,7 +654,7 @@ end
 local libraries;
 local loadLibraries = false;
 
-function EXPR_LIB.RegisterLibrary(name)
+function EXPR_LIB.RegisterLibrary(name, desc)
 	if (not loadLibraries) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register library %s) outside of Hook::Expression3.LoadLibariess", name);
 	end
@@ -655,6 +663,10 @@ function EXPR_LIB.RegisterLibrary(name)
 	lib.name = string.lower(name);
 	lib._functions = {};
 	lib._constants = {};
+
+	if CLIENT then
+		lib.desc = desc;
+	end
 
 	libraries[lib.name] = lib;
 
@@ -665,7 +677,7 @@ local functions;
 local loadFunctions = false;
 local blank = function() end
 
-function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _function, excludeContext)
+function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _function, excludeContext, desc)
 	if (not loadFunctions) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register function %s.%s(%s) outside of Hook::Expression3.LoadFunctions", library, name, parameter);
 	end
@@ -699,6 +711,10 @@ function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _funct
 	op.operator = _function or blank;
 	op.context = not excludeContext;
 
+	if CLIENT then
+		op.desc = desc;
+	end
+
 	lib._functions[op.signature] = op;
 
 	--MsgN("Registered function ", library, ".", op.signature);
@@ -707,17 +723,13 @@ function EXPR_LIB.RegisterFunction(library, name, parameter, type, count, _funct
 end
 
 --[[
-]]
-
-
---[[
 
 ]]
 
 local constants;
 local loadConstants = false;
 
-function EXPR_LIB.RegisterConstant(library, name, type, value, native)
+function EXPR_LIB.RegisterConstant(library, name, type, value, native, desc)
 	if (not loadConstants) then
 		EXPR_LIB.ThrowInternal(0, "Attempt to register constant %s.%s outside of Hook::Expression3.LoadConstantss", library, name);
 	end
@@ -757,6 +769,10 @@ function EXPR_LIB.RegisterConstant(library, name, type, value, native)
 	op.value = value;
 	op.native = native;
 	op.signature = signature;
+
+	if CLIENT then
+		op.desc = desc;
+	end
 
 	lib._constants[op.name] = op;
 
@@ -889,17 +905,17 @@ function Extension.RegisterPermission(this, name, image, desc)
 	this.perms[#this.perms+1] = {name, image, desc};
 end
 
-function Extension.RegisterEvent(this, name, parameter, type, count)
-	this.events[#this.events+1] = {name, parameter, type, count, this.state};
+function Extension.RegisterEvent(this, name, parameter, type, count, desc)
+	this.events[#this.events+1] = {name, parameter, type, count, this.state, desc};
 end
 
-function Extension.RegisterClass(this, id, name, isType, isValid)
+function Extension.RegisterClass(this, id, name, isType, isValid, desc)
 	local entry = {id, name, isType, isValid, this.state};
 	this.classes[#this.classes + 1] = entry;
 end
 
-function Extension.RegisterExtendedClass(this, id, name, base, isType, isValid)
-	local entry = {[0] = base, id, name, isType, isValid, this.state};
+function Extension.RegisterExtendedClass(this, id, name, base, isType, isValid, desc)
+	local entry = {[0] = base, id, name, isType, isValid, this.state, desc};
 	this.classes[#this.classes + 1] = entry;
 end
 
@@ -919,7 +935,7 @@ function Extension.RegisterWiredOutport(this, class, wiretype, func)
 	end);
 end
 
-function Extension.RegisterNativeDefault(this, class, native)
+function Extension.RegisterNativeDefault(this, class, native, desc)
 	hook.Add("Expression3.LoadConstructors", "Expression3.Native." .. class, function()
 		if (this.enabled) then
 			EXPR_LIB.RegisterNativeDefault(class, native);
@@ -927,28 +943,28 @@ function Extension.RegisterNativeDefault(this, class, native)
 	end);
 end
 
-function Extension.RegisterConstructor(this, class, parameter, constructor, excludeContext)
-	local entry = {class, parameter, constructor, excludeContext, this.state, this.price};
+function Extension.RegisterConstructor(this, class, parameter, constructor, excludeContext, desc)
+	local entry = {class, parameter, constructor, excludeContext, this.state, this.price, desc};
 	this.constructors[#this.constructors + 1] = entry;
 end
 
-function Extension.RegisterMethod(this, class, name, parameter, type, count, method, excludeContext)
-	local entry = {class, name, parameter, type, count, method, excludeContext, this.state, this.price};
+function Extension.RegisterMethod(this, class, name, parameter, type, count, method, excludeContext, desc)
+	local entry = {class, name, parameter, type, count, method, excludeContext, this.state, this.price, desc};
 	this.methods[#this.methods + 1] = entry;
 end
 
 function Extension.RegisterAttribute(this, class, attribute, type, native)
-	local entry = {class, attribute, type, native, this.state, this.price};
+	local entry = {class, attribute, type, native, this.state, this.price, desc};
 	this.attributes[#this.attributes + 1] = entry;
 end
 
-function Extension.RegisterOperator(this, operation, parameter, type, count, operator, excludeContext)
-	local entry = {operation, parameter, type, count, operator, excludeContext, this.state, this.price};
+function Extension.RegisterOperator(this, operation, parameter, type, count, operator, excludeContext, desc)
+	local entry = {operation, parameter, type, count, operator, excludeContext, this.state, this.price, desc};
 	this.operators[#this.operators + 1] = entry;
 end
 
-function Extension.RegisterCastingOperator(this, type, parameter, operator, excludeContext)
-	local entry = {type, parameter, operator, excludeContext, this.state, this.price};
+function Extension.RegisterCastingOperator(this, type, parameter, operator, excludeContext, desc)
+	local entry = {type, parameter, operator, excludeContext, this.state, this.price, desc};
 	this.castOperators[#this.castOperators + 1] = entry;
 end
 
@@ -957,13 +973,13 @@ function Extension.RegisterLibrary(this, name)
 	this.libraries[#this.libraries + 1] = entry;
 end
 
-function Extension.RegisterFunction(this, library, name, parameter, type, count, _function, excludeContext)
-	local entry = {library, name, parameter, type, count, _function, excludeContext, this.state, this.price};
+function Extension.RegisterFunction(this, library, name, parameter, type, count, _function, excludeContext, desc)
+	local entry = {library, name, parameter, type, count, _function, excludeContext, this.state, this.price, desc};
 	this.functions[#this.functions + 1] = entry;
 end
 
-function Extension.RegisterConstant(this, library, name, type, value, native)
-	local entry = {library, name, type, value, native, this.state};
+function Extension.RegisterConstant(this, library, name, type, value, native, desc)
+	local entry = {library, name, type, value, native, this.state, desc};
 	this.constants[#this.constants + 1] = entry;
 end
 
@@ -999,7 +1015,7 @@ function Extension.EnableExtension(this)
 			if (not v[0]) then
 				STATE = v[5];
 
-				local op = this:CheckRegistration(EXPR_LIB.RegisterEvent, v[1], v[2], v[3], v[4]);
+				local op = this:CheckRegistration(EXPR_LIB.RegisterEvent, v[1], v[2], v[3], v[4], v[6]);
 				op.extension = this.name;
 				events[op.name] = op;
 			end
@@ -1014,7 +1030,7 @@ function Extension.EnableExtension(this)
 				STATE = v[5];
 				PRICE = v[6];
 
-				local op = this:CheckRegistration(EXPR_LIB.RegisterClass, v[1], v[2], v[3], v[4]);
+				local op = this:CheckRegistration(EXPR_LIB.RegisterClass, v[1], v[2], v[3], v[4], v[7]);
 				op.extension = this.name;
 				classes[op.id] = op;
 			end
@@ -1027,7 +1043,7 @@ function Extension.EnableExtension(this)
 				STATE = v[5];
 				PRICE = v[6];
 
-				local op = this:CheckRegistration(EXPR_LIB.RegisterExtendedClass, v[1], v[2], v[0], v[3], v[4]);
+				local op = this:CheckRegistration(EXPR_LIB.RegisterExtendedClass, v[1], v[2], v[0], v[3], v[4], v[7]);
 				op.extension = this.name;
 				classes[op.id] = op;
 			end
@@ -1041,7 +1057,7 @@ function Extension.EnableExtension(this)
 			STATE = v[5];
 			PRICE = v[6];
 
-			local op = this:CheckRegistration(EXPR_LIB.RegisterConstructor, v[1], v[2], v[3], v[4]);
+			local op = this:CheckRegistration(EXPR_LIB.RegisterConstructor, v[1], v[2], v[3], v[4], v[7]);
 			op.extension = this.name;
 			constructors[op.signature] = op;
 		end
@@ -1056,7 +1072,7 @@ function Extension.EnableExtension(this)
 			STATE = v[8];
 			PRICE = v[9];
 
-			local op = this:CheckRegistration(EXPR_LIB.RegisterMethod, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+			local op = this:CheckRegistration(EXPR_LIB.RegisterMethod, v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[10]);
 			op.extension = this.name;
 			methods[op.signature] = op;
 		end
@@ -1069,7 +1085,7 @@ function Extension.EnableExtension(this)
 			STATE = v[5];
 			PRICE = v[6];
 
-			local atr = this:CheckRegistration(EXPR_LIB.RegisterAttribute, v[1], v[2], v[3], v[4]);
+			local atr = this:CheckRegistration(EXPR_LIB.RegisterAttribute, v[1], v[2], v[3], v[4], v[7]);
 			atr.extension = this.name;
 			attributes[atr.attribute] = atr;
 		end
@@ -1082,7 +1098,7 @@ function Extension.EnableExtension(this)
 			STATE = v[7];
 			PRICE = v[8];
 
-			local op = this:CheckRegistration(EXPR_LIB.RegisterOperator, v[1], v[2], v[3], v[4], v[5], v[6]);
+			local op = this:CheckRegistration(EXPR_LIB.RegisterOperator, v[1], v[2], v[3], v[4], v[5], v[6], v[9]);
 			op.extension = this.name;
 			operators[op.signature] = op;
 		end
@@ -1091,7 +1107,7 @@ function Extension.EnableExtension(this)
 			STATE = v[5];
 			PRICE = v[6];
 
-			local op = this:CheckRegistration(EXPR_LIB.RegisterCastingOperator, v[1], v[2], v[3], v[4]);
+			local op = this:CheckRegistration(EXPR_LIB.RegisterCastingOperator, v[1], v[2], v[3], v[4], v[7]);
 			op.extension = this.name;
 			operators[op.signature] = op;
 		end
@@ -1099,7 +1115,7 @@ function Extension.EnableExtension(this)
 
 	hook.Add("Expression3.LoadLibraries", "Expression3.Extension." .. this.name, function()
 		for _, v in pairs(this.libraries) do
-			this:CheckRegistration(EXPR_LIB.RegisterLibrary, v[1]);
+			this:CheckRegistration(EXPR_LIB.RegisterLibrary, v[1], v[2]);
 		end
 	end);
 
@@ -1110,7 +1126,7 @@ function Extension.EnableExtension(this)
 			STATE = v[8];
 			PRICE = v[9];
 
-			local op = this:CheckRegistration(EXPR_LIB.RegisterFunction, v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+			local op = this:CheckRegistration(EXPR_LIB.RegisterFunction, v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[10]);
 			op.extension = this.name;
 			functions[op.signature] = op;
 		end
@@ -1122,7 +1138,7 @@ function Extension.EnableExtension(this)
 		for _, v in pairs(this.constants) do
 			STATE = v[6];
 
-			local op = this:CheckRegistration(EXPR_LIB.RegisterConstant, v[1], v[2], v[3], v[4], v[5]);
+			local op = this:CheckRegistration(EXPR_LIB.RegisterConstant, v[1], v[2], v[3], v[4], v[5], v[7]);
 			op.extension = this.name;
 			constants[op.signature] = op;
 		end
