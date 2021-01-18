@@ -1388,68 +1388,95 @@ function EXPR_LIB.Validate(cb, script, files)
 		local a, b = pcall(function()
 			bench = SysTime();
 
-			vldr.tokenizer = EXPR_TOKENIZER.New();
-
+			local tokenizer = EXPR_TOKENIZER.New();
 			vldr.tokenizerTime = 0;
-
 			vldr.tokenizerCount = 0;
+			vldr.state = "Tokenizing ( 0% )...";
 
-			vldr.tokenizer.vldr = vldr;
+			tokenizer.Yield = function()
+				local tm = SysTime() - bench;
+				if tm > 0.1 then
+					vldr.tokenizerTime = vldr.tokenizerTime + tm;
+					MsgN("Tokenizer Yield");
+					coroutine.yield();
+					bench = SysTime();
+				end
+			end
 
-			vldr.tokenizer.Yeild = function() coroutine.yield(); end
-
-			vldr.tokenizer:Initialize("EXPADV", script);
-
-			ok, res = vldr.tokenizer:Run();
-
+			tokenizer:Initialize("EXPADV", script);
+			ok, res = tokenizer:Run();
 			vldr.tokenizerTime = vldr.tokenizerTime + (SysTime() - bench);
-
-			--print("Token Time -> ", SysTime() - bench);
+			print("Token Time -> ", vldr.tokenizerTime);
 
 			if ok then
 				coroutine.yield();
 
 				bench = SysTime();
 
-				vldr.parser = EXPR_PARSER.New();
-				
-				vldr.parser.Yeild = function() coroutine.yield(); end
+				local parser = EXPR_PARSER.New();
+				vldr.parserTime = 0;
+				vldr.state = "Parsing ( 0% )...";
 
-				vldr.parser:Initialize(res, files);
+				parser.Yield = function()
+					local tm = SysTime() - bench;
+					if tm > 0.1 then
+						vldr.parserTime = vldr.parserTime + tm;
+						MsgN("Parser Yield");
+						coroutine.yield();
+						bench = SysTime();
+					end
+				end
 
-				ok, res = vldr.parser:Run();
-
-				vldr.parserTime = SysTime() - bench;
-
-				--print("Parser Time -> ", SysTime() - bench);
+				parser:Initialize(res, files);
+				ok, res = parser:Run();
+				vldr.parserTime = vldr.parserTime + (SysTime() - bench);
+				print("Parser Time -> ", vldr.parserTime);
 
 				if ok then
 					coroutine.yield();
 
 					bench = SysTime();
 
-					vldr.compiler = EXPR_COMPILER.New();
-					
-					vldr.compiler.Yeild = function() coroutine.yield(); end
+					local compiler = EXPR_COMPILER.New();
+					vldr.compilerTime = 0;
+					vldr.state = "Compiling ( 0% )...";
 
-					vldr.compiler:Initialize(res, files);
+					compiler.Yield = function()
+						local tm = SysTime() - bench;
+						if tm > 0.1 then
+							vldr.compilerTime = vldr.compilerTime + tm;
+							MsgN("Parser Yield");
+							coroutine.yield();
+							bench = SysTime();
+						end
+					end
 
-					ok, res = vldr.compiler:Run();
-
-					vldr.compilerTime = SysTime() - bench;
-
-					--print("Compiler Time -> ", SysTime() - bench);
+					compiler:Initialize(res, files);
+					ok, res = compiler:Run();
+					vldr.compilerTime = vldr.compilerTime + (SysTime() - bench);
+					print("Compiler Time -> ", vldr.compilerTime);
 
 					if ok then
 						coroutine.yield();
 
 						bench = SysTime();
 
+						vldr.buildTime = 0;
+						vldr.state = "Building ( 0% )...";
+
+						compiler.Yield = function()
+							local tm = SysTime() - bench;
+							if tm > 0.1 then
+								vldr.buildTime = vldr.buildTime + tm;
+								MsgN("Builder Yield");
+								coroutine.yield();
+								bench = SysTime();
+							end
+						end
+
 						res.build();
-
-						vldr.buildTime = SysTime() - bench;
-
-						--print("Build Time -> ", SysTime() - bench);
+						vldr.buildTime = vldr.buildTime + (SysTime() - bench);
+						print("Build Time -> ", vldr.buildTime);
 					end
 				end
 			end
@@ -1464,12 +1491,13 @@ function EXPR_LIB.Validate(cb, script, files)
 	end);
 
 	vldr.start = function()
-		timer.Create(vldr.timer, 0.01, 0, vldr.resume);
+		MsgN("Start: " ..vldr.timer)
+		timer.Create(vldr.timer, 0, 0, vldr.resume);
 
 		timer.Create(vldr.timer .. 2, 60, 1, function()
 			if (not vldr.finished) then
-				timer.Remove(vldr.timer);
-				cb(false, "Validation took to long.");
+				vldr.stop();
+				cb(false, {state = "compiler", msg = "Validation took to long."});
 			end
 		end);
 
@@ -1477,15 +1505,21 @@ function EXPR_LIB.Validate(cb, script, files)
 	end;
 
 	vldr.stop = function()
+		vldr.func = nil;
 		timer.Remove(vldr.timer);
+		collectgarbage();
+		collectgarbage(); -- Called twice cus apparently you have too!
+		MsgN("GC: " ..vldr.timer)
 	end;
 
 	vldr.resume = function()
 		if (not vldr.finished) then
+			--MsgN("Resume: " ..vldr.timer)
 			coroutine.resume(vldr.func);
 		end
 
 		if (vldr.finished) then
+			MsgN("Finish: " ..vldr.timer)
 			vldr.stop();
 			cb(ok, res);
 			return true;

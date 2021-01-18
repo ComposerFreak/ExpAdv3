@@ -139,7 +139,7 @@ function COMPILER._Run(this)
 	this:Compile(this.__root);
 
 	local result = {}
-	result.script = this.__script;
+	--result.script = this.__script;
 	result.constructors = this.__constructors;
 	result.operators = this.__operators;
 	result.functions = this.__functions;
@@ -147,7 +147,7 @@ function COMPILER._Run(this)
 	result.enviroment = this.__enviroment;
 	result.directives = this.__directives;
 	result.hashTable = this.__hashtable;
-	result.rootInstruction = this.__root;
+	--result.rootInstruction = this.__root;
 
 	result.build = function()
 		local script, traceTbl = this:BuildScript(this.__root);

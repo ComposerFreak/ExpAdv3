@@ -830,6 +830,7 @@ Code Validation
 function PANEL:DoValidate( Goto, Code, Native )
 	if (self.validator and not self.validator.finished) then
 		self.validator.stop();
+		self.validator = nil;
 	end
 
 	Code = Code or self:GetCode( )
@@ -871,13 +872,14 @@ function PANEL:DoValidate( Goto, Code, Native )
 
 	self.validator.start();
 
-	timer.Create("Golem_Validator", 0.5, 0, function()
+	--[[Removed refrence tot okenizer via validator for memory reasons.
+		timer.Create("Golem_Validator", 0.5, 0, function()
 		if (self.validator and not self.validator.finished) then
-			local v = math.ceil(((self.validator.tokenizer.__pos or 1) / (self.validator.tokenizer.__lengh or 1)) * 100);
+			--local v = math.ceil(((self.validator.tokenizer.__pos or 1) / (self.validator.tokenizer.__lengh or 1)) * 100);
 			self.btnValidate:SetColor( Color( 50, 50, 150 ) );
-			self.btnValidate:SetText( "Validating... (" .. v .. "%)" );
+			self.btnValidate:SetText( "Validating... " ); --(" .. v .. "%)" );
 		end
-	end)
+	end)]]
 end
 
 function PANEL:OnValidateError( Goto, Thrown )
@@ -926,6 +928,8 @@ function PANEL:OnValidateError( Goto, Thrown )
 	self.btnValidate:SetText( string.format("%s %s", message, location) );
 	-- self:Warning( 1, Color(255, 0, 0), "Compiler Error", Color(255, 255, 255), ":\n", message, " ", { func, location } );
 	self:Warning(2, Color(255, 0, 0), "Compiler Error", Color(255, 255, 255), ": ", message, " ", { func, location } );
+
+	self.validator = nil;
 end
 
 /*---------------------------------------------------------------------------
