@@ -525,10 +525,10 @@ function PARSER.StartInstruction(this, _type, token, perfhandler)
 	if (not istable(token)) then
 		debug.Trace();
 		error("PARSER:StartInstruction got bad token type " .. tostring(token));
-	elseif (not type(_type) == "string") then
+	elseif (type(_type) ~= "string") then
 		debug.Trace();
 		error("PARSER:StartInstruction got bad instruction type " .. tostring(_type));
-	elseif (not type(token) == "table") then
+	elseif (type(token) ~= "table") then
 		debug.Trace();
 		error("PARSER:StartInstruction got bad instruction token " .. tostring(token));
 	end
@@ -666,8 +666,9 @@ function PARSER.ConstructorStatment(this, stmtc)
 
 			while(this:Accept("com")) do
 				this:Exclude("rpa", "Expression or value expected after comma (,).");
-
-				expressions[#expressions + 1] = this:Expression_1();
+				
+				local expr = this:Expression_1( ) 
+				if expr then table.insert( expressions, expr ) end 
 			end
 
 		end
@@ -764,8 +765,8 @@ if (not class_obj.wire_in_class) then
 
 	while (this:Accept("com")) do
 		this:Require("var", "Variable expected after comma (,).");
-
-		variables[#variables + 1] = this.__token;
+		
+		table.insert( variables, this.__token )
 	end
 
 	return this:EndInstruction(inst, {class = class_obj.id, variables = variables, wire_type = class_obj.wire_in_class, wire_func = class_obj.wire_in_func});
@@ -792,8 +793,8 @@ function PARSER.Directive_OUTPUT(this, token, directive)
 
 	while (this:Accept("com")) do
 		this:Require("var", "Variable expected after comma (,).");
-
-		variables[#variables + 1] = this.__token;
+		
+		table.insert( variables, this.__token )
 	end
 
 	return this:EndInstruction(inst, {class = class_obj.id, variables = variables, wire_type = class_obj.wire_out_class, wire_func = class_obj.wire_out_func, wire_func2 = class_obj.wire_out_func});
@@ -811,8 +812,8 @@ function PARSER.Statements(this, block, call)
 		while true do
 
 			local stmt = call(this, #stmts);
-
-			stmts[#stmts + 1] = stmt;
+			
+			table.insert( stmts, stmt )
 
 			local seperated = this:Accept("sep");
 
@@ -830,10 +831,8 @@ function PARSER.Statements(this, block, call)
 
 			local pre = stmts[#stmts - 1];
 
-			if (pre) then
-				if (pre.line == stmt.line and not sep) then
-					this:Throw(stmt.token, "Statements must be separated by semicolon (;) or newline")
-				end
+			if (pre) and (pre.line == stmt.line and not sep) then
+				this:Throw(stmt.token, "Statements must be separated by semicolon (;) or newline")
 			end
 
 			if (stmt.type == "return") then
@@ -946,12 +945,15 @@ function PARSER.Statment_2(this)
 				if not stmt then
 					break;
 				end
-
-				eif[#eif + 1] = stmt;
+				
+				table.insert( eif, stmt )
 			end
 		end
-
-		eif[#eif + 1] = this:Statment_4();
+		
+		local stmt = this:Statment_4( )
+		if stmt then 
+			table.insert( eif, stmt )
+		end 
 
 		return this:EndInstruction(inst, {condition = condition; block = block; eif = eif});
 	end
@@ -1108,7 +1110,7 @@ function PARSER.Statment_7(this)
 
 		while (this:Accept("com")) do
 			this:Require("var", "Variable expected after comma (,).");
-			variables[#variables + 1] = this.__token;
+			table.insert( variables, this.__token )
 		end
 
 		local expressions = {};
@@ -1120,7 +1122,8 @@ function PARSER.Statment_7(this)
 
 			while (this:Accept("com")) do
 				this:ExcludeWhiteSpace( "comma (,) must not be preceded by whitespace." );
-				expressions[#expressions + 1] = this:Expression_1();
+				local expr = this:Expression_1( )
+				if expr then table.insert( expressions, expr ) end 
 			end
 		end
 
@@ -1142,7 +1145,7 @@ function PARSER.Statment_7(this)
 		variables[1] = this:Require("var", "Variable('s) expected after class for variable.");
 
 		while (this:Accept("com")) do
-			variables[#variables + 1] = this:Require("var", "Variable expected after comma (,).");
+			table.insert( variables, this:Require("var", "Variable expected after comma (,).") )
 		end
 
 		local expressions = {};
@@ -1154,7 +1157,7 @@ function PARSER.Statment_7(this)
 
 			while (this:Accept("com")) do
 				this:ExcludeWhiteSpace( "comma (,) must not be preceded by whitespace." );
-				expressions[#expressions + 1] = this:Expression_1();
+				table.insert( expressions, this:Expression_1( ) )
 			end
 		end
 
@@ -1177,7 +1180,7 @@ function PARSER.Statment_8(this)
 
 			while (this:Accept("com")) do
 				this:Require("var", "Variable expected after comma (,).");
-				variables[#variables + 1] = this.__token;
+				table.insert( variables, this.__token )
 			end
 
 			local expressions = {};
@@ -1189,7 +1192,8 @@ function PARSER.Statment_8(this)
 
 				while (this:Accept("com")) do
 					this:ExcludeWhiteSpace( "comma (,) must not be preceeded by whitespace." );
-					expressions[#expressions + 1] = this:Expression_1();
+					local expr = this:Expression_1( )
+					if expr then table.insert( expressions, expr ) end 
 				end
 
 				return this:EndInstruction(inst, {expressions = expressions; variables = variables});
@@ -1206,7 +1210,8 @@ function PARSER.Statment_8(this)
 
 				while (this:Accept("com")) do
 					this:ExcludeWhiteSpace( "comma (,) must not be preceeded by whitespace." );
-					expressions[#expressions + 1] = this:Expression_1();
+					local expr = this:Expression_1( )
+					if expr then table.insert( expressions, expr) end 
 				end
 
 				if (#expressions ~= #variables) then
@@ -1239,7 +1244,7 @@ function PARSER.GetTypeInputs(this)
 		while (true) do
 			this:Require("typ", "Parameter type expected for parameter.");
 
-			parameters[#parameters + 1] = this.__token.data;
+			table.insert( parameters, this.__token.data )
 
 			if (not this:Accept("com")) then
 				break;
@@ -1316,7 +1321,9 @@ function PARSER.Statment_11(this)
 
 		if (not this:CheckToken("sep", "rcb")) then
 			while (true) do
-				expressions[#expressions + 1] = this:Expression_1();
+				
+				local expr = this:Expression_1( )
+				if expr then table.insert( expressions, expr ) end 
 
 				if (not this:HasTokens()) then
 					break;
@@ -1506,7 +1513,8 @@ function PARSER.Expression_7(this)
 				expressions[2] = this:Expression_1();
 
 				while this:Accept("com") do
-					expressions[#expressions + 1] = this:Expression_1();
+					local expr = this:Expression_1( )
+					if expr then table.insert( expressions, expr ) end
 				end
 
 				expr = this:EndInstruction(inst, {expressions = expressions});
@@ -1533,7 +1541,8 @@ function PARSER.Expression_7(this)
 				expressions[2] = this:Expression_1();
 
 				while this:Accept("com") do
-					expressions[#expressions + 1] = this:Expression_1();
+					local expr = this:Expression_1( )
+					if expr then table.insert( expressions, expr ) end
 				end
 
 				expr = this:EndInstruction(inst, {expressions = expressions});
@@ -1840,23 +1849,17 @@ function PARSER.Expression_24(this)
 		local inst = this:StartInstruction("lambda", this.__token);
 
 		local params, signature = this:InputOrTableParameters(inst, true);
-
-		if (params and signature) then -- did InputParameters get ( permas )
+		
+		-- did InputParameters get ( permas )
+		if (params and signature) and (this:Accept("lmd")) then -- Do we have => ?
+			-- We now know its a lambda
 			
-			if (this:Accept("lmd")) then -- Do we have => ?
-
-				-- We now know its a lambda
-
-				local block = this:Block_1(true, " ");
-
-				return this:EndInstruction(inst, {params = params; signature = signature; block = block});
-
-			end
-
+			local block = this:Block_1(true, " ");
+			
+			return this:EndInstruction(inst, {params = params; signature = signature; block = block});
 		end
 
 		this:GotoToken(token); --Rewind Token
-
 	end
 
 	return this:Expression_25();
@@ -1868,7 +1871,7 @@ function PARSER.Expression_25(this)
 
 		local expr = this:Expression_1();
 
-		print(this.__token.data)
+		-- print(this.__token.data)
 
 		this:Require("rpa", "Right parenthesis ( )) missing, to close grouped equation.");
 
@@ -1911,7 +1914,8 @@ function PARSER.Expression_26(this)
 				while(this:Accept("com")) do
 					this:Exclude("rpa", "Expression or value expected after comma (,).");
 
-					expressions[#expressions + 1] = this:Expression_1();
+					local expr = this:Expression_1( )
+					if expr then table.insert( expressions, expr ) end
 				end
 
 			end
@@ -1961,7 +1965,8 @@ function PARSER.Expression_28(this)
 			while(this:Accept("com")) do
 				this:Exclude("rpa", "Expression or value expected after comma (,).");
 
-				expressions[#expressions + 1] = this:Expression_1();
+				local expr = this:Expression_1( )
+				if expr then table.insert( expressions, expr ) end
 			end
 
 		end
@@ -2015,7 +2020,7 @@ function PARSER.Expression_29(this)
 			values[1] = this:NextTableIndex();
 
 			while (this:Accept("com")) do
-				values[#values + 1]  = this:NextTableIndex();
+				table.insert( values, this:NextTableIndex() )
 			end
 		end
 
@@ -2069,11 +2074,11 @@ function PARSER.InputParameters(this, inst, optional)
 
 			local class = this.__token.data;
 
-			signature[#signature + 1] = class;
+			table.insert( signature, class )
 
 			this:Require("var", "Parameter expected after %s.", class);
 
-			params[#params + 1] = {class, this.__token.data};
+			table.insert( params, {class, this.__token.data} )
 
 		end
 
@@ -2129,7 +2134,7 @@ function PARSER.InputOrTableParameters(this, inst, optional)
 			local expr;
 			local class = this.__token.data;
 
-			signature[#signature + 1] = class;
+			table.insert( signature, class )
 
 			this:Require("var", "Parameter expected after %s.", class);
 
@@ -2143,7 +2148,7 @@ function PARSER.InputOrTableParameters(this, inst, optional)
 				end
 			end
 
-			params[#params + 1] = {class, var, expr};
+			table.insert( params, {class, var, expr} )
 
 		end
 
@@ -2224,7 +2229,8 @@ function PARSER.Expression_Trailing(this, expr)
 					while(this:Accept("com")) do
 						this:Exclude("rpa", "Expression or value expected after comma (,).");
 
-						expressions[#expressions + 1] = this:Expression_1();
+						local expr = this:Expression_1( )
+						if expr then table.insert( expressions, expr ) end
 					end
 
 				end
@@ -2292,7 +2298,8 @@ function PARSER.Expression_Trailing(this, expr)
 				while (this:Accept("com")) do
 					this:Exclude("rpa", "Expression or value expected after comma (,).");
 
-					expressions[#expressions + 1] = this:Expression_1();
+					local expr = this:Expression_1( )
+					if expr then table.insert( expressions, expr ) end
 				end
 
 			end
@@ -2394,7 +2401,7 @@ function PARSER.ClassStatment_0(this)
 			while(this:Accept("com")) do
 				this:Require("typ", "Class name expected after implements");
 
-				implements[#implements + 1] = this.__token;
+				table.insert( implements, this.__token )
 			end
 		end
 
@@ -2441,7 +2448,7 @@ function PARSER.ClassStatment_1(this)
 		variables[1] = this:Require("var", "Variable('s) expected after class for variable.");
 
 		while (this:Accept("com")) do
-			variables[#variables + 1] = this:Require("var", "Variable expected after comma (,).");
+			table.insert( variables, this:Require("var", "Variable expected after comma (,).") )
 		end
 
 		local expressions = {};
@@ -2453,7 +2460,8 @@ function PARSER.ClassStatment_1(this)
 
 			while (this:Accept("com")) do
 				this:ExcludeWhiteSpace( "comma (,) must not be preceded by whitespace." );
-				expressions[#expressions + 1] = this:Expression_1();
+				local expr = this:Expression_1()
+				if expr then table.insert( expressions, expr ) end 
 			end
 		end
 
@@ -2569,7 +2577,7 @@ function PARSER.InterfaceStatment_1(this)
 			while (true) do
 				this:Require("typ", "Parameter type expected for parameter.");
 
-				params[#params + 1] = this.__token.data;
+				table.insert( params, this.__token.data )
 
 				if (not this:Accept("com")) then
 					break;

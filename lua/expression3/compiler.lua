@@ -11,9 +11,21 @@
 ]]
 
 local string_Explode = string.Explode;
+local string_find = string.find
 local string_upper = string.upper;
 local string_format = string.format;
+
 local table_concat = table.concat;
+local table_insert = table.insert
+
+local EXPR_CAST_OPERATORS = EXPR_CAST_OPERATORS
+local EXPR_OPERATORS = EXPR_OPERATORS
+local EXPR_LOW = EXPR_LOW
+local EXPR_MIN = EXPR_MIN
+local EXPR_SHARED = EXPR_SHARED
+local EXPR_SERVER = EXPR_SERVER
+local EXPR_CLIENT = EXPR_CLIENT
+
 
 E3Class = EXPR_LIB.GetClass;
 
@@ -117,27 +129,27 @@ end
 function COMPILER.Run(this)
 	--TODO: PcallX for stack traces on internal errors?
 	local status, result = pcall(this._Run, this);
-
+	
 	if (status) then
 		return true, result;
 	end
-
+	
 	if (type(result) == "table") then
 		return false, result;
 	end
-
+	
 	local err = {};
 	err.state = "internal";
 	err.msg = result;
-
+	
 	return false, err;
 end
 
 function COMPILER._Run(this)
 	this:SetOption("state", EXPR_SHARED);
-
+	
 	this:Compile(this.__root);
-
+	
 	local result = {}
 	--result.script = this.__script;
 	result.constructors = this.__constructors;
@@ -148,14 +160,14 @@ function COMPILER._Run(this)
 	result.directives = this.__directives;
 	result.hashTable = this.__hashtable;
 	--result.rootInstruction = this.__root;
-
+	
 	result.build = function()
 		local script, traceTbl = this:BuildScript(this.__root);
 		result.compiled = script;
 		result.traceTbl = traceTbl;
 		return script, traceTbl;
 	end
-
+	
 	return result;
 end
 
@@ -190,24 +202,24 @@ function addNativeLua(this, instruction, outBuffer, traceTable, char, line)
 			if _type ~= "string" then value = tostring(value); end
 
 			--print("\nadding token to buffer: ", value, _type);
+			
+			table_insert( outBuffer, value )
 
-			outBuffer[#outBuffer + 1] = value;
-
-			if string.find(value, "\n") then
-				local lines = string.Explode("\n", value);
+			if string_find(value, "\n") then
+				local lines = string_Explode("\n", value);
 
 				line = line + #lines;
 				char = #lines[#lines] + 1;
 			else
 				char = char + (#value + 1); -- Include the space added by concat later.
 			end
-
-			traceTable[#traceTable + 1] = {
+			
+			table_insert( traceTable, {
 				e3_line = instruction.line - 1;
 				e3_char = instruction.char;
 				native_line = line;
 				native_char = char
-			};
+			} )
 		end
 	end
 
@@ -220,9 +232,9 @@ function COMPILER.BuildScript(this, instruction)
 	-- This will probably become a separate stage (post compiler?).
 	local outBuffer = {};
 	local traceTable = {};
-
+	
 	addNativeLua(this, instruction, outBuffer, traceTable, 0, 1);
-
+	
 	return table_concat(outBuffer, " "), traceTable;
 end
 
@@ -480,17 +492,17 @@ function COMPILER.GetOperator(this, operation, fst, snd, ...)
 	if (not fst) then
 		return EXPR_OPERATORS[operation .. "()"];
 	end
-
+	
 	local signature = string_format("%s(%s)", operation, table_concat({fst, snd, ...},","));
-
+	
 	local Op = EXPR_OPERATORS[signature];
-
+	
 	if (Op) then
 		return Op;
 	end
-
+	
 	-- First peram base class.
-
+	
 	if (fst) then
 		local cls = E3Class(fst);
 
@@ -502,12 +514,12 @@ function COMPILER.GetOperator(this, operation, fst, snd, ...)
 			end
 		end
 	end
-
+	
 	-- Second peram base class.
-
+	
 	if (snd) then
 		local cls = E3Class(snd);
-
+		
 		if (cls and cls.base) then
 			local Op = this:GetOperator(operation, fst, cls.base, ...);
 
@@ -516,54 +528,54 @@ function COMPILER.GetOperator(this, operation, fst, snd, ...)
 			end
 		end
 	end
-
+	
 end
 
 --[[
 ]]
 
 function COMPILER.Compile(this, inst)
-
+	
 	this:Yield();
-
+	
 	if (not inst) then
 		debug.Trace();
 		error("Compiler was asked to compile a nil instruction.")
 	end
-
+	
 	if (not istable(inst.token)) then
 		debug.Trace();
 		print("token is ", type(inst.token), inst.token);
 	end
-
+	
 	if (not inst.compiled) then
 		inst.buffer = {};
-
+		
 		local instruction = string_upper(inst.type);
 		local fun = this["Compile_" .. instruction];
-
+		
 		if (not fun) then
 			this:Throw(inst.token, "Failed to compile unknown instruction %s", instruction);
 		end
-
+		
 		local preInst = this.cur_instruction;
 
 		this.cur_instruction = inst;
-
+		
 		local type, count, price = fun(this, inst, inst.token, inst.data);
-
+		
 		this.cur_instruction = preInst;
-
+		
 		if (type) then
 			inst.result = type;
 			inst.rCount = count or 1;
 		end
-
+		
 		inst.price = price or EXPR_LOW;
-
+		
 		inst.compiled = true;
 	end
-
+	
 	return inst.result, inst.rCount, inst.price;
 end
 
@@ -577,14 +589,14 @@ function COMPILER.writeToBuffer(this, inst, line, a, ...)
 	end
 
 	if (a) then
-		line = string.format(line, a, ...);
+		line = string_format(line, a, ...);
 	end
-
-	inst.buffer[#inst.buffer + 1] = line;
+	
+	table_insert( inst.buffer, line )
 end
 
 function COMPILER.addInstructionToBuffer(this, inst, inst2)
-	inst.buffer[#inst.buffer + 1] = inst2;
+	table_insert( inst.buffer, line )
 end
 
 function COMPILER.writeOperationCall(this, inst, op, expr1, ...)
@@ -937,10 +949,10 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 		if (not data.variables[i]) then
 			this:Throw(arg.token, "Invalid assignment, value #%i is not being assigned to a variable.", i);
 		elseif (i < tArgs) then
-			results[#results + 1] = {r, arg, true};
+			table_insert( results, {r, arg, true} )
 		else
 			for j = 1, c do
-				results[#results + 1] = {r, arg, j == 1};
+				table_insert( results, {r, arg, j == 1} )
 			end
 		end
 	end
@@ -1015,10 +1027,10 @@ function COMPILER.Compile_LOCAL(this, inst, token, data)
 		if (not data.variables[i]) then
 			this:Throw(arg.token, "Invalid assignment, value #%i is not being assigned to a variable.", i);
 		elseif (i < tArgs) then
-			results[#results + 1] = {r, arg, true};
+			table_insert( results, {r, arg, true} )
 		else
 			for j = 1, c do
-				results[#results + 1] = {r, arg, j == 1};
+				table_insert( results, {r, arg, j == 1} )
 			end
 		end
 	end
@@ -1244,10 +1256,8 @@ function COMPILER.Compile_AADD(this, inst, token, data)
 
 		local op = this:GetOperator("add", class, r);
 
-		if (not op and r ~= class) then
-			if (this:CastExpression(class, expr)) then
-				op = this:GetOperator("add", class, class);
-			end
+		if (not op and r ~= class) and (this:CastExpression(class, expr)) then
+			op = this:GetOperator("add", class, class);
 		end
 
 		if (not op) then
@@ -1343,10 +1353,8 @@ function COMPILER.Compile_ASUB(this, inst, token, data)
 
 		local op = this:GetOperator("sub", class, r);
 
-		if (not op and r ~= class) then
-			if (this:CastExpression(class, expr)) then
-				op = this:GetOperator("sub", class, class);
-			end
+		if (not op and r ~= class) and (this:CastExpression(class, expr)) then
+			op = this:GetOperator("sub", class, class);
 		end
 
 		if (not op) then
@@ -1438,10 +1446,8 @@ function COMPILER.Compile_ADIV(this, inst, token, data)
 
 		local op = this:GetOperator("div", class, r);
 
-		if (not op and r ~= class) then
-			if (this:CastExpression(class, expr)) then
-				op = this:GetOperator("div", class, class);
-			end
+		if (not op and r ~= class) and (this:CastExpression(class, expr)) then
+			op = this:GetOperator("div", class, class);
 		end
 
 		if (not op) then
@@ -1531,10 +1537,8 @@ function COMPILER.Compile_AMUL(this, inst, token, data)
 
 		local op = this:GetOperator("mul", class, r);
 
-		if (not op and r ~= class) then
-			if (this:CastExpression(class, expr)) then
-				op = this:GetOperator("mul", class, class);
-			end
+		if (not op and r ~= class) and (this:CastExpression(class, expr)) then
+			op = this:GetOperator("mul", class, class);
 		end
 
 		if (not op) then
@@ -2754,14 +2758,12 @@ function COMPILER.Compile_NEW(this, inst, token, data)
 		for k, expr in pairs(data.expressions) do
 			local r, c, p = this:Compile(expr);
 
-			ids[#ids + 1] = r;
+			table_insert( ids, r )
 			price = price + p;
 
-			if (k == total) then
-				if (c > 1) then
-					for i = 2, c do
-						ids[#ids + 1] = r;
-					end
+			if (k == total) and (c > 1) then
+				for i = 2, c do
+					table_insert( ids, r )
 				end
 			end
 		end
@@ -2872,16 +2874,14 @@ function COMPILER.Compile_METH(this, inst, token, data)
 		for k, expr in pairs(expressions) do
 			if (k > 1) then
 				local r, c, p = this:Compile(expr);
-
-				ids[#ids + 1] = r;
-
+				
+				table_insert( ids, r )
+				
 				price = price + p;
-
-				if (k == total) then
-					if (c > 1) then
-						for i = 2, c do
-							ids[#ids + 1] = r;
-						end
+				
+				if (k == total) and (c > 1) then
+					for i = 2, c do
+						table_insert( ids, r )
 					end
 				end
 			end
@@ -2990,16 +2990,14 @@ function COMPILER.Compile_FUNC(this, inst, token, data)
 	else
 		for k, expr in pairs(data.expressions) do
 			local r, c, p = this:Compile(expr);
-
-			ids[#ids + 1] = r;
+			
+			table_insert( ids, r )
 
 			price = price + p;
 
-			if (k == total) then
-				if (c > 1) then
-					for i = 2, c do
-						ids[#ids + 1] = r;
-					end
+			if (k == total) and (c > 1) then
+				for i = 2, c do
+					table_insert (ids, r )
 				end
 			end
 		end
@@ -3198,10 +3196,10 @@ function COMPILER.Compile_RETURN(this, inst, token, data)
 
 	for _, expr in pairs(data.expressions) do
 		local r, c, p = this:Compile(expr);
-
+		
 		price = price + p;
-
-		results[#results + 1] = {r, c};
+		
+		table_insert( results, {r, c} )
 	end
 
 	local outClass;
@@ -3441,28 +3439,25 @@ end
 function COMPILER.getAssigmentPrediction(this, inst, data)
 	local parent = inst.parent;
 	local resultClass, resultCount;
-
-	if (parent and parent.data) then
-		if (parent.data.variables) then 
+	
+	if (parent and parent.data) and (parent.data.variables) then 
+		if (parent.data.class) then
+			resultClass = parent.data.class;
+			resultCount = data.call_pred or #parent.data.variables;
+		else
+			local var = parent.data.variables[1];
 			
-			if (parent.data.class) then
-				resultClass = parent.data.class;
-				resultCount = data.call_pred or #parent.data.variables;
-			else
-				local var = parent.data.variables[1];
-
-				if (var) then
-					local c, s, info = this:GetVariable(var.data);
-					
-					if (c) then 
-						resultClass = c;
-						resultCount = data.call_pred or #parent.data.variables;
-					end
+			if (var) then
+				local c, s, info = this:GetVariable(var.data);
+				
+				if (c) then 
+					resultClass = c;
+					resultCount = data.call_pred or #parent.data.variables;
 				end
 			end
 		end
 	end
-
+	
 	return resultClass, resultCount;
 end
 
@@ -3489,14 +3484,14 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 		for i = 2, tArgs do
 			local arg = args[i];
 			local r, c, p = this:Compile(arg);
-
+			
 			price = price + p;
-
-			prms[#prms + 1] = r;
+			
+			table_insert( prms, r )
 
 			if (i == targs and c > 1) then
 				for j = 2, c do
-					prms[#prms + 1] = r;
+					table_insert( prms, r )
 				end
 			end
 		end
@@ -3523,10 +3518,8 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 
 			this:writeToBuffer(inst, "invoke(CONTEXT, %q, %i,", resultClass, resultCount);
 
-			if (info) then
-				if (info.signature and info.signature ~= signature) then
-					this:Throw(token, "Invalid arguments to user function got %s(%s), %s(%s) expected.", expr.data.variable, names(signature), expr.data.variable, names(info.signature));
-				end
+			if info and info.signature and info.signature ~= signature then
+				this:Throw(token, "Invalid arguments to user function got %s(%s), %s(%s) expected.", expr.data.variable, names(signature), expr.data.variable, names(info.signature));
 			end
 
 			this:addInstructionToBuffer(inst, expr);
@@ -4272,10 +4265,10 @@ function COMPILER.Compile_DEF_FIELD(this, inst, token, data)
 		if (not data.variables[i]) then
 			this:Throw(arg.token, "Unable to assign here, value #%i has no matching variable.", i);
 		elseif (i < tArgs) then
-			results[#results + 1] = {r, arg, true};
+			table_insert( results, {r, arg, true} )
 		else
 			for j = 1, c do
-				results[#results + 1] = {r, arg, j == 1};
+				table_insert( results, {r, arg, j == 1} )
 			end
 		end
 	end

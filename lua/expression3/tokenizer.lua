@@ -385,16 +385,16 @@ end
 ]]
 
 function TOKENIZER.CreateToken(this, type, name, data, origonal)
-
+	
 	if (not data) then
 		data = this.__data;
 	end
-
+	
 	local tkn = {};
 	tkn.type = type;
 	tkn.name = name;
 	tkn.data = data;
-
+	
 	tkn.start = this.__dataStart + this.__offset;
 	tkn.stop = this.__dataEnd + this.__offset;
 	tkn.pos = this.__pos;
@@ -404,13 +404,12 @@ function TOKENIZER.CreateToken(this, type, name, data, origonal)
 	tkn.orig = origonal;
 	
 	local prev = this.__tokens[#this.__tokens];
-
+	
 	if (prev and prev.line < tkn.line) then
 		tkn.newLine = true;
 	end
-
-	tkn.index = #this.__tokens + 1;
-	this.__tokens[tkn.index] = tkn;
+	
+	tkn.index = table.insert( this.__tokens, tkn )
 end
 
 --[[

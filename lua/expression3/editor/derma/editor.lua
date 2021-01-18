@@ -1860,7 +1860,7 @@ function PANEL:PaintSelection( selection, color, outline )
 	for Row = line, endline do
 		if Row > #self.tRows then break end
 		if istable( self.tRows[Row] ) and self.tRows[Row].Primary ~= Row then continue end
-		local length = istable( self.tRows[Row] ) and #self.tRows[Row][1] or #self.tRows[Row]
+		local length = istable( self.tRows[Row] ) and #(self.tRows[Row][1] or "") or #(self.tRows[Row] or "")
 		length = length - self.Scroll.y + 1
 		LinePos = LinePos + 1
 		

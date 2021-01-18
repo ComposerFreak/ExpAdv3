@@ -832,23 +832,22 @@ function PANEL:DoValidate( Goto, Code, Native )
 		self.validator.stop();
 		self.validator = nil;
 	end
-
+	
 	Code = Code or self:GetCode( )
-
+	
 	if not Code or Code == "" then
 		self:OnValidateError( false, {msg = "No code submited, compiler exited.", line = 0, char = 0});
 		return false
 	end
-
+	
 	local cb = function(status, instance)
-
 		if (status and Native) then
 			self.btnValidate:SetColor( Color( 50, 255, 50 ) );
 			self.btnValidate:SetText( "Generated debug file." );
-
+			
 			local name = instance.directives.name;
 			local nLua, traceTbl = instance.build();
-
+			
 			self:NewTab( "editor", nLua, false, "DEBUG", "lua", true )
 		elseif (status) then
 			self.btnValidate:SetColor( Color( 50, 255, 50 ) );
@@ -859,27 +858,18 @@ function PANEL:DoValidate( Goto, Code, Native )
 		else
 			self:OnValidateError( Goto, instance )
 		end
-
+		
 		self.validator = nil;
-
+		
 		timer.Remove("Golem_Validator");
 	end
-
+	
 	self.validator = EXPR_LIB.Validate(cb, Code);
-
+	
 	self.btnValidate:SetColor( Color( 50, 50, 150 ) );
-	self.btnValidate:SetText( "Validating... (0%)" );
-
+	self.btnValidate:SetText( "Validating..." );
+	
 	self.validator.start();
-
-	--[[Removed refrence tot okenizer via validator for memory reasons.
-		timer.Create("Golem_Validator", 0.5, 0, function()
-		if (self.validator and not self.validator.finished) then
-			--local v = math.ceil(((self.validator.tokenizer.__pos or 1) / (self.validator.tokenizer.__lengh or 1)) * 100);
-			self.btnValidate:SetColor( Color( 50, 50, 150 ) );
-			self.btnValidate:SetText( "Validating... " ); --(" .. v .. "%)" );
-		end
-	end)]]
 end
 
 function PANEL:OnValidateError( Goto, Thrown )
@@ -887,24 +877,24 @@ function PANEL:OnValidateError( Goto, Thrown )
 	local message = "";
 	local File;
 	local func;
-
+	
 	if ( istable(Thrown) ) then
 		message = Thrown.msg;
-
+		
 		if (string.sub(message, -1) == ".") then
 			message = string.sub(message, 1, -2);
 		end
-
+		
 		if (Thrown.file) then
 			File = Thrown.file;
 		end
-
+		
 		line = Thrown.line or line;
 		char = Thrown.char or char;
 	end
-
+	
 	local location = "";
-
+	
 	if ( Goto ) then
 		func = function()
 			timer.Simple(0.1, function()
@@ -913,22 +903,22 @@ function PANEL:OnValidateError( Goto, Thrown )
 				inst:SetCaret( Vector2( line, char ) );
 			end);
 		end;
-
+		
 		if line and char then
 			location = string.format("at line %i char %i", line, char);
 		end
-
+		
 		if File then
 			location = string.format("%s in %s.txt", location, Thrown.file);
 		end
 	end
-
+	
 	if func then func(); end
 	self.btnValidate:SetColor( Color( 255, 50, 50 ) )
 	self.btnValidate:SetText( string.format("%s %s", message, location) );
 	-- self:Warning( 1, Color(255, 0, 0), "Compiler Error", Color(255, 255, 255), ":\n", message, " ", { func, location } );
 	self:Warning(2, Color(255, 0, 0), "Compiler Error", Color(255, 255, 255), ": ", message, " ", { func, location } );
-
+	
 	self.validator = nil;
 end
 

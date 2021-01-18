@@ -407,10 +407,8 @@ function EXPR_LIB.RegisterWiredInport(class, wiretype, func)
 		EXPR_LIB.ThrowInternal(0, "Attempt to register wired inport for none existing class %s", class);
 	end
 
-	if (SERVER) then
-		if (not WireLib.DT[wiretype]) then
-			EXPR_LIB.ThrowInternal(0, "Attempt to register wired inport for class %s, with invalid wire type %s", class, wiretype);
-		end
+	if (SERVER) and (not WireLib.DT[wiretype]) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register wired inport for class %s, with invalid wire type %s", class, wiretype);
 	end
 
 	cls.wire_out_func = func;
@@ -424,10 +422,8 @@ function EXPR_LIB.RegisterWiredOutport(class, wiretype, func)
 		EXPR_LIB.ThrowInternal(0, "Attempt to register wired outport for none existing class %s", class);
 	end
 
-	if (SERVER) then
-		if (not WireLib.DT[wiretype]) then
-			EXPR_LIB.ThrowInternal(0, "Attempt to register wired outport for class %s, with invalid wire type %s", class, wiretype);
-		end
+	if (SERVER) and (not WireLib.DT[wiretype]) then
+		EXPR_LIB.ThrowInternal(0, "Attempt to register wired outport for class %s, with invalid wire type %s", class, wiretype);
 	end
 
 	cls.wire_in_func = func;
@@ -1386,18 +1382,13 @@ function EXPR_LIB.Validate(cb, script, files)
 
 	vldr.func = coroutine.create(function()
 		local a, b = pcall(function()
-			bench = SysTime();
-
+			local bench = SysTime();
 			local tokenizer = EXPR_TOKENIZER.New();
-			vldr.tokenizerTime = 0;
-			vldr.tokenizerCount = 0;
 			vldr.state = "Tokenizing ( 0% )...";
 
 			tokenizer.Yield = function()
 				local tm = SysTime() - bench;
 				if tm > 0.1 then
-					vldr.tokenizerTime = vldr.tokenizerTime + tm;
-					MsgN("Tokenizer Yield");
 					coroutine.yield();
 					bench = SysTime();
 				end
@@ -1405,23 +1396,18 @@ function EXPR_LIB.Validate(cb, script, files)
 
 			tokenizer:Initialize("EXPADV", script);
 			ok, res = tokenizer:Run();
-			vldr.tokenizerTime = vldr.tokenizerTime + (SysTime() - bench);
-			print("Token Time -> ", vldr.tokenizerTime);
-
+			
 			if ok then
 				coroutine.yield();
 
 				bench = SysTime();
 
 				local parser = EXPR_PARSER.New();
-				vldr.parserTime = 0;
 				vldr.state = "Parsing ( 0% )...";
 
 				parser.Yield = function()
 					local tm = SysTime() - bench;
 					if tm > 0.1 then
-						vldr.parserTime = vldr.parserTime + tm;
-						MsgN("Parser Yield");
 						coroutine.yield();
 						bench = SysTime();
 					end
@@ -1429,23 +1415,18 @@ function EXPR_LIB.Validate(cb, script, files)
 
 				parser:Initialize(res, files);
 				ok, res = parser:Run();
-				vldr.parserTime = vldr.parserTime + (SysTime() - bench);
-				print("Parser Time -> ", vldr.parserTime);
-
+				
 				if ok then
 					coroutine.yield();
 
 					bench = SysTime();
 
 					local compiler = EXPR_COMPILER.New();
-					vldr.compilerTime = 0;
 					vldr.state = "Compiling ( 0% )...";
 
 					compiler.Yield = function()
 						local tm = SysTime() - bench;
 						if tm > 0.1 then
-							vldr.compilerTime = vldr.compilerTime + tm;
-							MsgN("Parser Yield");
 							coroutine.yield();
 							bench = SysTime();
 						end
@@ -1453,34 +1434,28 @@ function EXPR_LIB.Validate(cb, script, files)
 
 					compiler:Initialize(res, files);
 					ok, res = compiler:Run();
-					vldr.compilerTime = vldr.compilerTime + (SysTime() - bench);
-					print("Compiler Time -> ", vldr.compilerTime);
-
+					
 					if ok then
 						coroutine.yield();
-
+						
 						bench = SysTime();
-
+						
 						vldr.buildTime = 0;
 						vldr.state = "Building ( 0% )...";
-
+						
 						compiler.Yield = function()
 							local tm = SysTime() - bench;
 							if tm > 0.1 then
-								vldr.buildTime = vldr.buildTime + tm;
-								MsgN("Builder Yield");
 								coroutine.yield();
 								bench = SysTime();
 							end
 						end
-
+						
 						res.build();
-						vldr.buildTime = vldr.buildTime + (SysTime() - bench);
-						print("Build Time -> ", vldr.buildTime);
 					end
 				end
 			end
-		end);
+		end );
 
 		if (not a) then
 			ok = a;
@@ -1488,10 +1463,9 @@ function EXPR_LIB.Validate(cb, script, files)
 		end
 
 		vldr.finished = true;
-	end);
+	end );
 
 	vldr.start = function()
-		MsgN("Start: " ..vldr.timer)
 		timer.Create(vldr.timer, 0, 0, vldr.resume);
 
 		timer.Create(vldr.timer .. 2, 60, 1, function()
@@ -1503,23 +1477,20 @@ function EXPR_LIB.Validate(cb, script, files)
 
 		return vldr.resume();
 	end;
-
+	
 	vldr.stop = function()
 		vldr.func = nil;
 		timer.Remove(vldr.timer);
+		timer.Remove(vldr.timer..2);
 		collectgarbage();
-		collectgarbage(); -- Called twice cus apparently you have too!
-		MsgN("GC: " ..vldr.timer)
 	end;
 
 	vldr.resume = function()
 		if (not vldr.finished) then
-			--MsgN("Resume: " ..vldr.timer)
 			coroutine.resume(vldr.func);
 		end
 
 		if (vldr.finished) then
-			MsgN("Finish: " ..vldr.timer)
 			vldr.stop();
 			cb(ok, res);
 			return true;
