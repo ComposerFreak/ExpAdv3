@@ -481,9 +481,10 @@ extension:RegisterMethod("ed", "results", "", "n", 1, function(a)
 	return #a.a;
 end, true);
 
-extension:RegisterMethod("ed", "first", "", "e", 1, function(a)
-	return a[1].a;
-end, true);
+extension:RegisterMethod("ed", "first", "", "e", 1, function(c, a)
+	if a and a.a then return a.a[1]; end
+	c:Throw("Attempt to get null entity.");
+end, false);
 
 extension:RegisterMethod("ed", "toArray", "", "t", 1, function(a)
 	local t = {};
