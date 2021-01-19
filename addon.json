@@ -15,6 +15,7 @@
 		"LICENSE",
 		"*.org",
 		"*.code-workspace",
-		"glualint.json"
+		"glualint.json",
+		".vscode*"
 	]
 }

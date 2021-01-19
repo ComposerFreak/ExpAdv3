@@ -26,14 +26,6 @@ local EXPR_SHARED = EXPR_SHARED
 local EXPR_SERVER = EXPR_SERVER
 local EXPR_CLIENT = EXPR_CLIENT
 
--- local _table_concat = table.concat
--- local ctime = 0
--- local function table_concat(...)
--- 	local t = SysTime()
--- 	local s = _table_concat(...)
--- 	ctime = ctime + SysTime()-t
--- 	return s
--- end
 
 E3Class = EXPR_LIB.GetClass;
 
@@ -77,15 +69,35 @@ end
 
 ]]
 
+local function copyInstruction(inst)
+	return {
+		type = inst.type,
+		perfhandler = inst.perfhandler,
+		rCount = inst.rCount,
+		result = inst.result,
+		token = inst.token,
+		start = inst.start,
+		char = inst.char,
+		line = inst.line,
+		parent = inst.parent,
+		depth = inst.depth,
+		scope = inst.scope,
+		cur_instruction = inst.cur_instruction,
+		__depth = inst.__depth,
+		stmt_deph = inst.stmt_deph,
+		buffer = inst.buffer,
+	};
+end
+
 local function fakeInstruction(inst, lua, r, c)
-	local new = table.Copy(inst);
+	local new = copyInstruction(inst); --table.Copy(inst); This might not end well :D
 
 	new.buffer = { lua };
 	new.result = r or new.result;
 	new.rCount = c or new.rCount;
 
 	return new;
-end
+end 
 
 --[[
 ]]
@@ -137,8 +149,6 @@ end
 function COMPILER.Run(this)
 	--TODO: PcallX for stack traces on internal errors?
 	local status, result = pcall(this._Run, this);
-	
-	-- print( "ctime", ctime )
 	
 	if (status) then
 		return true, result;
@@ -2530,7 +2540,8 @@ function COMPILER.Expression_IS(this, expr)
 
 			return true, expr;
 		else
-			local temp = table.Copy(expr);
+			-- local temp = table.Copy(expr); 
+			local temp = copyInstruction(expr); -- This might be really bad
 
 			expr.buffer = {};
 
@@ -2600,11 +2611,11 @@ function COMPILER.CastUserType(this, left, right)
 end
 
 function COMPILER.CastExpression(this, type, expr)
-
 	local op = this:CastUserType(type, expr.result);
 
 	if op then
-		local temp = table.Copy(expr);
+		-- local temp = table.Copy(expr);
+		local temp = copyInstruction(expr); --This might be bad
 
 		expr.buffer = {};
 
@@ -2623,8 +2634,9 @@ function COMPILER.CastExpression(this, type, expr)
 		end
 
 		if (op.operator) then
-			local temp = table.Copy(expr);
-
+			-- local temp = table.Copy(expr);
+			local temp = copyInstruction(expr); -- This might be bad
+			
 			expr.buffer = {};
 
 			this:writeOperationCall(expr, op, temp);
@@ -2634,7 +2646,7 @@ function COMPILER.CastExpression(this, type, expr)
 	expr.result = op.result;
 	expr.rCount = op.rCount;
 	expr.price = expr.price + op.price;
-
+	
 	return true, expr;
 end
 
@@ -3489,7 +3501,7 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 	end
 
 	local prms = {};
-
+	
 	if (tArgs > 1) then
 		for i = 2, tArgs do
 			local arg = args[i];
@@ -3509,7 +3521,7 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 
 	local signature = table_concat(prms, ",");
 	local resultClass, resultCount = this:getAssigmentPrediction(inst, data);
-
+	
 	if (res == "f") then
 
 		local c, s, info;
@@ -3559,7 +3571,7 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 			end
 
 			this:writeToBuffer(inst, ")");
-
+			
 			return resultClass, resultCount, (price + EXPR_MIN);
 		end
 	end
@@ -3599,7 +3611,7 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 	--this:QueueRemove(inst, token); -- Removes (
 
 	this:writeOperationCall(inst, op, unpack(args));
-
+	
 	return op.result, op.rCount, (op.price + price);
 end
 
