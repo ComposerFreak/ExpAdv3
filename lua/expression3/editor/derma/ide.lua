@@ -845,8 +845,11 @@ function PANEL:DoValidate( Goto, Code, Native )
 			self.btnValidate:SetColor( Color( 50, 255, 50 ) );
 			self.btnValidate:SetText( "Generated debug file." );
 			
+			print( self.validator.state )
+			
 			local name = instance.directives.name;
-			local nLua, traceTbl = instance.build();
+			-- local nLua, traceTbl = instance.build();
+			local nLua = instance.compiled
 			
 			self:NewTab( "editor", nLua, false, "DEBUG", "lua", true )
 		elseif (status) then

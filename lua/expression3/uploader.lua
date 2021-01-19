@@ -160,8 +160,7 @@ if CLIENT then
 	timer.Create("Expression3.UploadValidator", 0.5, 0, function()
 		if UPLOADER.GetState() ~= CL_VALIDATING then return; end
 		if not validator or validator.finished then return; end
-		local v = math.ceil(((validator.tokenizer.__pos or 1) / (validator.tokenizer.__lengh or 1)) * 100);
-		UPLOADER.SetState(CL_VALIDATING, v);
+		UPLOADER.SetState(CL_VALIDATING, 0); -- TODO: Should be % of validation
 	end)
 
 	net.Receive("Expression3.RequestFromClient", function(len)
@@ -406,13 +405,8 @@ if SERVER then
 
 		for client, validator in pairs(cl_validators) do
 			
-			if validator and not validator.finished then
-
-				if UPLOADER.GetState(client) == SL_VALIDATING then
-					local per = math.ceil(((validator.tokenizer.__pos or 1) / (validator.tokenizer.__lengh or 1)) * 100);
-					UPLOADER.SetState(client, SL_VALIDATING, per, true);
-				end
-
+			if validator and not validator.finished and UPLOADER.GetState(client) == SL_VALIDATING then
+				UPLOADER.SetState(client, SL_VALIDATING, 0, true); -- TODO: Should be % of validation
 			end
 		end
 

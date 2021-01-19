@@ -26,6 +26,14 @@ local EXPR_SHARED = EXPR_SHARED
 local EXPR_SERVER = EXPR_SERVER
 local EXPR_CLIENT = EXPR_CLIENT
 
+-- local _table_concat = table.concat
+-- local ctime = 0
+-- local function table_concat(...)
+-- 	local t = SysTime()
+-- 	local s = _table_concat(...)
+-- 	ctime = ctime + SysTime()-t
+-- 	return s
+-- end
 
 E3Class = EXPR_LIB.GetClass;
 
@@ -62,7 +70,7 @@ local function strrep(word, count, sep)
 		a[i] = word;
 	end
 
-	return table.concat(a, sep);
+	return table_concat(a, sep);
 end
 
 --[[
@@ -130,6 +138,8 @@ function COMPILER.Run(this)
 	--TODO: PcallX for stack traces on internal errors?
 	local status, result = pcall(this._Run, this);
 	
+	-- print( "ctime", ctime )
+	
 	if (status) then
 		return true, result;
 	end
@@ -174,7 +184,7 @@ end
 local addNativeLua;
 
 function addNativeLua(this, instruction, outBuffer, traceTable, char, line)
-	--print("\nadding instruction to buffer: ", instruction.type);
+	-- print("\nadding instruction to buffer: ", instruction.type);
 
 	this:Yield();
 
@@ -201,7 +211,7 @@ function addNativeLua(this, instruction, outBuffer, traceTable, char, line)
 		else
 			if _type ~= "string" then value = tostring(value); end
 
-			--print("\nadding token to buffer: ", value, _type);
+			-- print("\nadding token to buffer: ", value, _type);
 			
 			table_insert( outBuffer, value )
 
@@ -223,7 +233,7 @@ function addNativeLua(this, instruction, outBuffer, traceTable, char, line)
 		end
 	end
 
-	--print("\nfinished instruction: ", instruction.type);
+	-- print("\nfinished instruction: ", instruction.type);
 
 	return char, line;
 end
@@ -596,7 +606,7 @@ function COMPILER.writeToBuffer(this, inst, line, a, ...)
 end
 
 function COMPILER.addInstructionToBuffer(this, inst, inst2)
-	table_insert( inst.buffer, line )
+	table_insert( inst.buffer, inst2 )
 end
 
 function COMPILER.writeOperationCall(this, inst, op, expr1, ...)

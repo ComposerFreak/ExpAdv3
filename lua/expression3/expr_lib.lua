@@ -1399,6 +1399,7 @@ function EXPR_LIB.Validate(cb, script, files)
 	vldr.func = coroutine.create(function()
 		local a, b = pcall(function()
 			local bench = SysTime();
+			-- local starttime = SysTime()
 			local tokenizer = EXPR_TOKENIZER.New();
 			vldr.state = "Tokenizing ( 0% )...";
 
@@ -1456,7 +1457,6 @@ function EXPR_LIB.Validate(cb, script, files)
 						
 						bench = SysTime();
 						
-						vldr.buildTime = 0;
 						vldr.state = "Building ( 0% )...";
 						
 						compiler.Yield = function()
@@ -1468,6 +1468,7 @@ function EXPR_LIB.Validate(cb, script, files)
 						end
 						
 						res.build();
+						-- print( SysTime()-starttime )
 					end
 				end
 			end
