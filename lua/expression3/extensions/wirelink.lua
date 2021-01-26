@@ -99,8 +99,8 @@ function ext_wl:PostLoadClasses(classes)
 			
 			ext_wl:RegisterOperator("set", string.format("wl,s,%s", id), "", 0, function(c, e, i, v)
 
-				if IsValid(e) and e.Outputs then
-					local port = e.Outputs[i];
+				if IsValid(e) and e.Inputs then
+					local port = e.Inputs[i];
 
 					if port and port.Type == class.wire_in_class then
 
@@ -111,7 +111,7 @@ function ext_wl:PostLoadClasses(classes)
 						WireLib.TriggerInput(e, i, v);
 					end
 				
-					--c:Throw("No such Input WireLink[%s, %s].", i, c.id);
+					c:Throw("No such Input WireLink[%s, %s].", i, class.name);
 				end
 
 			end, false);
