@@ -109,9 +109,9 @@ function ext_wl:PostLoadClasses(classes)
 						end
 
 						WireLib.TriggerInput(e, i, v);
+					else
+						c:Throw("No such Input WireLink[%s, %s].", i, class.name);
 					end
-				
-					c:Throw("No such Input WireLink[%s, %s].", i, class.name);
 				end
 
 			end, false);
