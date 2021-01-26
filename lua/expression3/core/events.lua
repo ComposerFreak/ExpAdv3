@@ -99,23 +99,23 @@
 		return resultsToTable(status, class, results);
 	end);
 
-
 --[[
 	*****************************************************************************************************************************************************
 		
 	*****************************************************************************************************************************************************
 ]]--
 
-	extension:RegisterEvent("Trigger", "s");
-	extension:RegisterEvent("UseScreen", "n,n,p,e");
-	extension:RegisterEvent("RenderScreen", "n,n,e");
-	extension:RegisterEvent("RenderHUD", "n,n");
-	extension:RegisterEvent("Think", "");
-	extension:RegisterEvent("OnPlayerChat","p,s,n");
-	extension:RegisterEvent("OnPlayerSpawn", "p");
-	extension:RegisterEvent("OnPlayerJoin", "p");
-	extension:RegisterEvent("OnPlayerDisconnect", "p");
-	extension:RegisterEvent("OnPlayerDeath", "p,e,e");
+	extension:RegisterEvent("Trigger", "s", "", 0, "Called when a wire input is triggered,");
+	extension:RegisterEvent("UseScreen", "n,n,p,e", "", 0);
+	extension:RegisterEvent("RenderScreen", "n,n,e", "", 0);
+	extension:RegisterEvent("RenderHUD", "n,n", "", 0);
+	extension:RegisterEvent("Think", "", "", 0);
+	extension:RegisterEvent("OnPlayerChat","p,s,n", "", 0);
+	extension:RegisterEvent("OnPlayerSpawn", "p", "", 0);
+	extension:RegisterEvent("OnPlayerJoin", "p", "", 0);
+	extension:RegisterEvent("OnPlayerDisconnect", "p", "", 0);
+	extension:RegisterEvent("OnPlayerDeath", "p,e,e", "", 0);
+	extension:RegisterEvent("InitializedClient", "p", "", 0, "Called once a client has initalized this script.");
 
 --[[
 	*****************************************************************************************************************************************************

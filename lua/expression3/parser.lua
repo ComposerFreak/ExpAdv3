@@ -501,6 +501,7 @@ end
 
 function PARSER.Require( this, type, msg, ... )
 	if (not this:Accept(type)) then
+		msg = string.gsub(msg, "$GOT", this.__next and (this.__next.type or "nothing") or "nothing");
 		this:Throw( this.__token, msg, ... )
 	end; return this.__token;
 end
@@ -2065,7 +2066,7 @@ function PARSER.InputParameters(this, inst, optional)
 
 		signature[1] = class;
 
-		this:Require("var", "Parameter expected after %s.", class);
+		this:Require("var", "Parameter name expected after %s, got $GOT.", name(class));
 
 		params[1] = {class, this.__token.data};
 
@@ -2076,7 +2077,7 @@ function PARSER.InputParameters(this, inst, optional)
 
 			table.insert( signature, class )
 
-			this:Require("var", "Parameter expected after %s.", class);
+			this:Require("var", "Parameter name expected after %s, got $GOT.", name(class));
 
 			table.insert( params, {class, this.__token.data} )
 
@@ -2114,7 +2115,7 @@ function PARSER.InputOrTableParameters(this, inst, optional)
 
 		signature[1] = class;
 
-		this:Require("var", "Parameter expected after %s.", class);
+		this:Require("var", "Parameter name expected after %s, got $GOT.", name(class));
 
 		local var = this.__token.data;
 			
@@ -2136,7 +2137,7 @@ function PARSER.InputOrTableParameters(this, inst, optional)
 
 			table.insert( signature, class )
 
-			this:Require("var", "Parameter expected after %s.", class);
+			this:Require("var", "Parameter name expected after %s, got $GOT.", name(class));
 
 			local var = this.__token.data;
 

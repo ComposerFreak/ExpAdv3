@@ -133,19 +133,24 @@ local function writeFloat(ctx, msg, float)
 	float = math.abs(float);
 
 	local e = 0;
-	if (float >= 1) then
-		while (float >= 1) do
-			float = float / 10;
-			e = e + 1;
+
+	if float ~= 0 then
+
+		if float >= 1 then
+			while (float >= 1) do
+				float = float / 10;
+				e = e + 1;
+			end
+		else
+			while (float < 0.1) do
+				float = float * 10;
+				e = e - 1;
+			end
 		end
-	else
-		while (f < 0.1) do
-			float = float * 10;
-			e = e - 1;
-		end
+
 	end
 
-	local s = tonumber(string.sub(float,3,9));
+	local s = tonumber(string.sub(float,3,9)) or 0;
 	s = (neg and -s or s) + 8388608;
 
 	local a = math.modf(s / 65536);
