@@ -12,124 +12,130 @@
 	*****************************************************************************************************************************************************
 ]]--
 	
-	local setmetatable = setmetatable;
+	local Throw = function(void, msg, ...)
+		local context = rawget(void, "context");
 
-	local mtvoid = {};
-
-	EXPR_LIB.Void = function(context)
-		return setmetatable({context = context}, mtvoid);
-	end;
-
-	mtvoid.__type = "void";
-	
-	mtvoid.Throw = function(this, msg, ...)
-		if (this.context) then this.context:Throw("debug-nil:" .. msg, ...); end
-		error("Debug: E3 Nil, I forgot to do a thing here?");
+		if context then
+			context:Throw("debug-nil:" .. msg, ...);
+		else
+			error("Debug: E3 Nil, I forgot to do a thing here?");
+		end
 	end
 
-	mtvoid.__index = function(this, key)
-		this:Throw("_index(%q)", key);
+	local mt = {};
+
+	mt.__index = function(this, key)
+		Throw(this, "__index(" .. tostring(key) .. ")");
 	end
 
-	mtvoid.__newindex = function(this, key)
-		this:Throw("__newindex(%q)", key);
+	mt.__newindex = function(this, key)
+		Throw(this, "__newindex(" .. tostring(key) .. ")");
 	end
 
-	mtvoid.__mode = function(this)
-		this:Throw("__mode()");
+	mt.__mode = function(this)
+		Throw(this, "__mode()");
 	end
 
-	mtvoid.__call = function(this)
-		this:Throw("__call()");
+	mt.__call = function(this)
+		Throw(this, "__call()");
 	end
 
-	mtvoid.__metatable = function(this)
-		this:Throw("__call()");
+	mt.__metatable = function(this)
+		Throw(this, "__call()");
 	end
 
-	mtvoid.__tostring = function(this)
-		this:Throw("__tostring()");
+	mt.__tostring = function(this)
+		Throw(this, "__tostring()");
 	end
 
-	mtvoid.__len = function(this)
-		this:Throw("__len()");
+	mt.__len = function(this)
+		Throw(this, "__len()");
 	end
 
-	mtvoid.__pairs = function(this)
-		this:Throw("__pairs()");
+	mt.__pairs = function(this)
+		Throw(this, "__pairs()");
 	end
 
-	mtvoid.__ipairs = function(this)
-		this:Throw("__ipairs()");
+	mt.__ipairs = function(this)
+		Throw(this, "__ipairs()");
 	end
 
-	mtvoid.__unm = function(this)
-		this:Throw("__unm()");
+	mt.__unm = function(this)
+		Throw(this, "__unm()");
 	end
 
-	mtvoid.__add = function(this)
-		this:Throw("__add()");
+	mt.__add = function(this)
+		Throw(this, "__add()");
 	end
 
-	mtvoid.__sub = function(this)
-		this:Throw("__sub()");
+	mt.__sub = function(this)
+		Throw(this, "__sub()");
 	end
 
-	mtvoid.__mul = function(this)
-		this:Throw("__mul()");
+	mt.__mul = function(this)
+		Throw(this, "__mul()");
 	end
 
-	mtvoid.__div = function(this)
-		this:Throw("__div()");
+	mt.__div = function(this)
+		Throw(this, "__div()");
 	end
 
-	mtvoid.__idiv = function(this)
-		this:Throw("__idiv()");
+	mt.__idiv = function(this)
+		Throw(this, "__idiv()");
 	end
 
-	mtvoid.__mod = function(this)
-		this:Throw("__mod()");
+	mt.__mod = function(this)
+		Throw(this, "__mod()");
 	end
 
-	mtvoid.__pow = function(this)
-		this:Throw("__pow()");
+	mt.__pow = function(this)
+		Throw(this, "__pow()");
 	end
 
-	mtvoid.__concat = function(this)
-		this:Throw("__concat()");
+	mt.__concat = function(this)
+		Throw(this, "__concat()");
 	end
 
-	mtvoid.__band = function(this)
-		this:Throw("__band()");
+	mt.__band = function(this)
+		Throw(this, "__band()");
 	end
 
-	mtvoid.__bor = function(this )
-		this:Throw("__bor()");
+	mt.__bor = function(this )
+		Throw(this, "__bor()");
 	end
 
-	mtvoid.__bxor = function(this)
-		this:Throw("__bxor()");
+	mt.__bxor = function(this)
+		Throw(this, "__bxor()");
 	end
 
-	mtvoid.__bnot = function(this)
-		this:Throw("__bnot()");
+	mt.__bnot = function(this)
+		Throw(this, "__bnot()");
 	end
 
-	mtvoid.__shl = function(this)
-		this:Throw("__shl()");
+	mt.__shl = function(this)
+		Throw(this, "__shl()");
 	end
 
-	mtvoid.__shr = function(this)
-		this:Throw("__shr()");
+	mt.__shr = function(this)
+		Throw(this, "__shr()");
 	end
 
-	mtvoid.__tostring = function(this)
+	mt.__tostring = function(this)
 		return "void";
 	end
 
-	mtvoid.IsValid = function(this)
-		return false;
-	end
+	mt.__type = "void";
+
+	-----------------------------------------------
+
+	local setmetatable = setmetatable;
+	
+	EXPR_LIB.Void = function(context)
+		return setmetatable({
+			context = context,
+			IsValid = function() return false; end,
+		}, mt);
+	end;
 
 --[[
 	*****************************************************************************************************************************************************
@@ -150,11 +156,11 @@
 ]]--
 
 	local function isnil(obj)
-		return obj == nil or getmetatable(obj) == mtvoid;
+		return obj == nil or getmetatable(obj) == mt;
 	end;
 
 	local function notnil(obj)
-		return obj ~= nil and getmetatable(obj) ~= mtvoid;
+		return obj ~= nil and getmetatable(obj) ~= mt;
 	end
 
 	EXPR_LIB.ISVOID = isnil;

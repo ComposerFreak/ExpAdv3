@@ -87,7 +87,7 @@ function ext_wl:PostLoadClasses(classes)
 						return class.native_default_func();
 					end
 
-					c:Throw("No such Output WireLink[%s, %s].", i, id);
+					c:Throw("No such Output WireLink[%s, %s].", i, class.name);
 				end
 
 				c:Throw("Attempted to read Output %s from invalid wirelink.", i);

@@ -2199,6 +2199,7 @@ function PARSER.Expression_32(this)
 	elseif this:Accept("void") then
 		local inst = this:StartInstruction("void", this.__token);
 		return this:EndInstruction(inst, {});
+		--this:Throw(this.__token, "void can not be used here!");
 	end
 end
 
