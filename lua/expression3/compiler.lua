@@ -1105,6 +1105,64 @@ function COMPILER.Compile_LOCAL(this, inst, token, data)
 	return "", 0, price;
 end
 
+function COMPILER.Compile_INC(this, inst, token, data)
+	
+	local class, scope, info = this:GetVariable(data.variable);
+
+	if not class then
+		this:Throw(token, "Unable to assign variable %s, Variable doesn't exist.", data.variable);
+	end
+
+	if class ~= "n" then
+		if data.first then
+			this:Throw(token, "No sutch operator ++%s.", name(class));
+		else
+			this:Throw(token, "No sutch operator %s.++", name(class));
+		end
+	end
+
+	this:writeToBuffer(inst, " (function() ");
+
+	if data.first then
+		this:writeToBuffer(inst, "%s = %s + 1; return %s;", data.variable, data.variable, data.variable);
+	else
+		this:writeToBuffer(inst, "local _internala = %s; %s = %s + 1; return _internala;", data.variable, data.variable, data.variable);
+	end
+
+	this:writeToBuffer(inst, " end)()");
+
+	return "n", 1, EXPR_LOW * 5;
+end
+
+function COMPILER.Compile_IND(this, inst, token, data)
+	
+	local class, scope, info = this:GetVariable(data.variable);
+
+	if not class then
+		this:Throw(token, "Unable to assign variable %s, Variable doesn't exist.", data.variable);
+	end
+
+	if class ~= "n" then
+		if data.first then
+			this:Throw(token, "No sutch operator --%s.", name(class));
+		else
+			this:Throw(token, "No sutch operator %s--.", name(class));
+		end
+	end
+
+	this:writeToBuffer(inst, " (function() ");
+
+	if data.first then
+		this:writeToBuffer(inst, "%s = %s - 1; return %s;", data.variable, data.variable, data.variable);
+	else
+		this:writeToBuffer(inst, "local _internala = %s; %s = %s - 1; return _internala;", data.variable, data.variable, data.variable);
+	end
+
+	this:writeToBuffer(inst, " end)()");
+
+	return "n", 1, EXPR_LOW * 5;
+end
+
 function COMPILER.Compile_ASS(this, inst, token, data)
 	local price = 1;
 	local classes = {};

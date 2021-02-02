@@ -109,14 +109,14 @@
 	extension:RegisterEvent("UseScreen", "n,n,p,e", "", 0);
 	extension:RegisterEvent("RenderScreen", "n,n,e", "", 0);
 	extension:RegisterEvent("RenderHUD", "n,n", "", 0);
-	extension:RegisterEvent("Think", "", "", 0);
+	extension:RegisterEvent("Think", "", "", 0, "Called every interval.");
 	extension:RegisterEvent("OnPlayerChat","p,s,n", "", 0);
 	extension:RegisterEvent("OnPlayerSpawn", "p", "", 0);
 	extension:RegisterEvent("OnPlayerJoin", "p", "", 0);
 	extension:RegisterEvent("OnPlayerDisconnect", "p", "", 0);
 	extension:RegisterEvent("OnPlayerDeath", "p,e,e", "", 0);
 	extension:RegisterEvent("InitializedClient", "p", "", 0, "Called once a client has initalized this script.");
-
+	extension:RegisterEvent("ShutDown", "", "", 0, "Called before the gate is removed or reset.");
 --[[
 	*****************************************************************************************************************************************************
 		

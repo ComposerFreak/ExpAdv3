@@ -312,6 +312,12 @@ function ENT:IsRunning()
 end
 
 function ENT:ShutDown(force)
+
+	if (self.context and self.context.status) and not force then
+		self:CallEvent("", 0, "ShutDown");
+		self:FlushLogger();
+	end
+
 	if self.context and (self.context.status or force) then
 		self.context.status = false;
 		hook.Run("Expression3.Entity.Stop", self, self.context);

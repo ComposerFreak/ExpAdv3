@@ -4,12 +4,18 @@ if SERVER then return; end
 	Make our signatures look pretty
 *********************************************************************************/
 
+local function name(id)
+	local obj = EXPR_LIB.GetClass(id);
+	return obj and obj.name or id;
+end
+
 function EXPR_DOCS.PrettyPerams(perams)
 	local r = {};
 
 	for k, v in pairs(string.Explode(",", perams)) do
-		if v[1] == "_" then v = v:sub(2); end
-		r[k] = v:upper();
+		--if v[1] == "_" then v = v:sub(2); end
+		--r[k] = v:upper();
+		r[k] = name(v);
 	end
 
 	return table.concat(r,",");
@@ -26,13 +32,13 @@ local prettyReturns = function(op)
 
 	if rc == 0 or rt == "" or rt == "NIL" then return "" end
 
-	local typ = EXPR_LIB.GetClass(rt);
+	--local typ = EXPR_LIB.GetClass(rt);
 
-	if typ then rt = typ.name; end
+	--if typ then rt = typ.name; end
 
 	if rc == 1 then return rt end
 
-	return string.format("%s *%i", rt, rc);
+	return string.format("%s *%i", name(rt), rc);
 end
 
 function EXPR_DOCS.PrettyEvent(op)
@@ -48,11 +54,11 @@ function EXPR_DOCS.PrettyConstructor(op)
 end
 
 function EXPR_DOCS.PrettyMethod(op)
-	local id = op.id:upper();
+	--local id = op.id:upper();
 
-	if id[1] == "_" then id = id:sub(2); end
+	--if id[1] == "_" then id = id:sub(2); end
 
-	return string.format("%s.%s(%s)", id, op.name, prettyPerams(op.parameter));
+	return string.format("%s.%s(%s)", name(op.id), op.name, prettyPerams(op.parameter));
 end
 
 function EXPR_DOCS.PrettyReturn(op)
@@ -360,12 +366,15 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 
 	attr_docs:ForEach( function(i, keyvalues)
 
-		local node = pnl:AddNode("Classes", lk[keyvalues.id], "Attributes", keyvalues.name);
+		local class = lk[keyvalues.id] or "";
+
+		local node = pnl:AddNode("Classes", class, "Attributes", string.format("%s.%s", class, keyvalues.name));
 
 		pnl:AddHTMLCallback(node, function()
 			local keyvalues = attr_docs:ToKV(attr_docs.data[i]);
+
 			return EXPR_DOCS.toHTML({
-				{"Attribute:", string.format("%s.%s", lk[keyvalues.id], keyvalues.name)},
+				{"Attribute:", string.format("%s.%s", class, keyvalues.name)},
 				{"Type:", lk[keyvalues.type]},
 				keyvalues.example,
 				describe(keyvalues.desc),
@@ -384,7 +393,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 
 	method_docs:ForEach( function(i, keyvalues)
 
-		local signature = EXPR_DOCS.PrettyMethod(keyvalues);
+		local signature = EXPR_DOCS.PrettyMethod(keyvalues, true);
 
 		local node = pnl:AddNode("Classes", lk[keyvalues.id], "Methods", signature);
 

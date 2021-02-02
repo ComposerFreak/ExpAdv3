@@ -1315,6 +1315,46 @@ function PARSER.Statment_10(this)
 	return this:Statment_11();
 end
 
+local ambiguous = {
+	["var"] = true,
+	["cast"] = true,
+	["ten"] = true,
+	["or"] = true,
+	["and"] = true,
+	["bxor"] = true,
+	["bor"] = true,
+	["band"] = true,
+	["eq_mul"] = true,
+	["eq"] = true,
+	["neq_mul"] = true,
+	["neq"] = true,
+	["lth"] = true,
+	["leq"] = true,
+	["gth"] = true,
+	["geq"] = true,
+	["bshl"] = true,
+	["bshr"] = true,
+	["add"] = true,
+	["sub"] = true,
+	["div"] = true,
+	["mul"] = true,
+	["exp"] = true,
+	["mod"] = true,
+	["neg"] = true,
+	["not"] = true,
+	["len"] = true,
+	["delta"] = true,
+	["changed"] = true,
+	["bool"] = true,
+	["num"] = true,
+	["str"] = true,
+	["ptrn"] = true,
+	["cls"] = true,
+	["void"] = true,
+	["cond"] = true,
+	["group"] = true,
+};
+
 function PARSER.Statment_11(this)
 	if (this:Accept("ret")) then
 		local expressions = {};
@@ -1361,6 +1401,10 @@ function PARSER.Statment_11(this)
 		expr = this:Statment_12(expr);
 	elseif (expr and this:CheckToken("prd")) then
 		expr = this:Statment_13(expr);
+	end
+
+	if expr and ambiguous[expr.type] then
+		this:Throw(this.__token, "Ambiguous statment, expression must not appear here.");
 	end
 
 	return expr;
@@ -1931,7 +1975,38 @@ function PARSER.Expression_26(this)
 end
 
 function PARSER.Expression_27(this)
+	
+	if (this:Accept("inc")) then
+		local inst = this:StartInstruction("inc", this.__token);
+
+		this:Require("var", "Variable expected after increment operator (++).");
+		
+		return this:EndInstruction(inst, {variable = this.__token.data, first = true});
+	end
+
+	if (this:Accept("dec")) then
+		local inst = this:StartInstruction("dec", this.__token);
+
+		this:Require("var", "Variable expected after decrement operator (--).");
+		
+		return this:EndInstruction(inst, {variable = this.__token.data, first = true});
+	end
+
 	if (this:Accept("var")) then
+		local var = this.__token.data;
+
+		if (this:Accept("inc")) then
+			local inst = this:StartInstruction("inc", this.__token);
+			
+			return this:EndInstruction(inst, {variable = var, first = false});
+		end
+
+		if (this:Accept("dec")) then
+			local inst = this:StartInstruction("dec", this.__token);
+			
+			return this:EndInstruction(inst, {variable = var, first = false});
+		end
+
 		local inst = this:StartInstruction("var", this.__token);
 
 		this:EndInstruction(inst, {variable = this.__token.data});
@@ -1939,7 +2014,7 @@ function PARSER.Expression_27(this)
 		return this:Expression_Trailing(inst);
 	end
 
-	return this:Expression_28()
+	return this:Expression_28();
 end
 
 function PARSER.Expression_28(this)

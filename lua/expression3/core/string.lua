@@ -67,7 +67,6 @@
 	extension:RegisterMethod("s", "reverse", "", "s", 1, "reverse", true);
 	extension:RegisterMethod("s", "right", "n", "s", 1, "Right", true);
 	extension:RegisterMethod("s", "setChar", "n,s", "s", 1, "SetChar", true);
-	extension:RegisterMethod("s", "split", "s", "s", 1, "Split", true);
 	extension:RegisterMethod("s", "startWith", "s", "b", 1, function(s, str) 
 		return string.StartWith(s, str);
 	end, true);
@@ -78,6 +77,17 @@
 	extension:RegisterMethod("s", "trimRight", "s", "s", 1, "TrimRight", true);
 	extension:RegisterMethod("s", "upper", "", "s", 1, "upper", true);
 
+	extension:RegisterMethod("s", "split", "s", "s", 1, function(str, sep)
+		local t = string.Explode(sep, str);
+		local c = #t;
+		
+		for i = 1, #c do
+			t[i] = {"s", t[i]};
+		end
+
+		return {tbl = t, children = {}, parents = {}, size = c};
+		
+	end, true);
 --[[
 	*****************************************************************************************************************************************************
 		Repeate method

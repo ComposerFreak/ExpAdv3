@@ -73,6 +73,13 @@
 		if (n < 1) then n = 1; elseif (n > 200) then n = 200; elseif (n / 1 ~= n) then n = math.ceil(n); end
 		context.tps = n;
 	end);
+
+	extension:RegisterFunction("system", "destroy", "", "", 0, function(context)
+		timer.Simple(0.1, function()
+			if IsValid(context.entity) then context.entity:Remove(); end
+		end);
+	end);
+	
 	
 --[[
 	*****************************************************************************************************************************************************
@@ -89,6 +96,9 @@
 	extension:RegisterFunction("system", "quotaUsage", "", "n", 1, function(context) return context.cpu_softusage or 0; end);
 	extension:RegisterFunction("system", "quotaAverage", "", "n", 1, function(context) return context.cpu_average or 0; end);
 	extension:RegisterFunction("system", "movingQuotaAverage", "", "n", 1, function(context) return context:movingCPUAverage(); end);
+
+	extension:RegisterFunction("system", "hardQuotaMax", "", "n", 1, function(context) return context:hardLimit(); end);
+	extension:RegisterFunction("system", "hardQuotaUse", "", "n", 1, function(context) return context.prf_total or 0; end);
 
 --[[
 	*****************************************************************************************************************************************************
