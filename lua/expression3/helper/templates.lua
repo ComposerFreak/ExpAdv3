@@ -13,8 +13,6 @@ function EXPR_DOCS.PrettyPerams(perams)
 	local r = {};
 
 	for k, v in pairs(string.Explode(",", perams)) do
-		--if v[1] == "_" then v = v:sub(2); end
-		--r[k] = v:upper();
 		r[k] = name(v);
 	end
 
@@ -30,11 +28,7 @@ local prettyReturns = function(op)
 
 	local rc = tonumber(op["result count"]) or 0;
 
-	if rc == 0 or rt == "" or rt == "NIL" then return "" end
-
-	--local typ = EXPR_LIB.GetClass(rt);
-
-	--if typ then rt = typ.name; end
+	if rc == 0 or rt == "" or rt == "NIL" then return "void" end
 
 	if rc == 1 then return rt end
 
@@ -510,12 +504,12 @@ local function prettyOp(op)
 	match1, match2 = string.match(op.signature, "^%(([A-Za-z0-9_]+)%)([A-Za-z0-9_]+)$");
 
 	if match1 and match2 then
-		match2 = match2:upper():Replace("_", "");
+		--match2 = match2:upper():Replace("_", "");
 
-		local class = EXPR_LIB.GetClass(match1);
-		if class then match1 = class.name; end;
+		--local class = EXPR_LIB.GetClass(match1);
+		--if class then match1 = class.name; end;
 
-		return string.format("(%s) %s", match1, match2), "casting";
+		return string.format("(%s) %s", name(match1), name(match2)), "casting";
 	end
 
 	return signature, "misc";
