@@ -77,7 +77,7 @@
 	extension:RegisterMethod("s", "trimRight", "s", "s", 1, "TrimRight", true);
 	extension:RegisterMethod("s", "upper", "", "s", 1, "upper", true);
 
-	extension:RegisterMethod("s", "split", "s", "s", 1, function(str, sep)
+	extension:RegisterMethod("s", "split", "s", "t", 1, function(str, sep)
 		local t = string.Explode(sep, str);
 		local c = #t;
 		
