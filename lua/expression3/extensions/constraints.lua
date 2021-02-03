@@ -264,7 +264,7 @@ extension:RegisterMethod("e", "noCollide", "e", "", 0, function(context, ent1, e
 	if not context:CanUseEntity(ent1) then return; end
 	if not context:CanUseEntity(ent2) then return; end
 	addundo(context, NoCollide(ent1, ent2, 0, 0), "nocollide");
-end, true, "Nocollides <ent1> to <ent2>");
+end, false, "Nocollides <ent1> to <ent2>");
 
 
 
@@ -276,7 +276,7 @@ extension:RegisterMethod("e", "noCollideAll", "b", "", 0, function(context, ent1
 	else
 		ent1:SetCollisionGroup( COLLISION_GROUP_NONE );
 	end
-end, true, "Nocollides <ent> to entities/players, just like Right Click of No-Collide Stool");
+end, false, "Nocollides <ent> to entities/players, just like Right Click of No-Collide Stool");
 
 
 
@@ -284,40 +284,40 @@ extension:RegisterMethod("e", "weld", "e", "", 0, function(context, ent1, ent2)
 	if not context:CanUseEntity(ent1) then return; end
 	if not context:CanUseEntity(ent2) then return; end
 	addundo(context, Weld(ent1, ent2, 0, 0), "weld");
-end, true, "Welds <ent1> to <ent2>");
+end, false, "Welds <ent1> to <ent2>");
 
 
 extension:RegisterMethod("e", "axis", "v,e,v", "", 0, function(context, ent1, v1, ent2, v2)
 	if not context:CanUseEntity(ent1) then return; end
 	if not context:CanUseEntity(ent2) then return; end
 	addundo(context, Axis(ent1, ent2, 0, 0, v1, v2, 0, 0, 0, 0), "axis");
-end, true, "Creates an axis between <ent1> and <ent2> at vector positions local to each ent.");
+end, false, "Creates an axis between <ent1> and <ent2> at vector positions local to each ent.");
 
 
 extension:RegisterMethod("e", "axis", "v,e,v,n", "", 0, function(context, ent1, v1, ent2, v2, n)
 	if not context:CanUseEntity(ent1) then return; end
 	if not context:CanUseEntity(ent2) then return; end
 	addundo(context, Axis(ent1, ent2, 0, 0, v1, v2, 0, 0, n, 0), "axis");
-end, true, "Creates an axis between <ent1> and <ent2> at vector positions local to each ent, with <friction> friction.");
+end, false, "Creates an axis between <ent1> and <ent2> at vector positions local to each ent, with <friction> friction.");
 
 
 extension:RegisterMethod("e", "axis", "v,e,v,n,v", "", 0, function(context, ent1, v1, ent2, v2, n, v3)
 	if not context:CanUseEntity(ent1) then return; end
 	if not context:CanUseEntity(ent2) then return; end
 	addundo(context, Axis(ent1, ent2, 0, 0, v1, v2, 0, 0, n, 0, c3), "axis");
-end, true, "Creates an axis between <ent1> and <ent2> at vector positions local to each ent, with <friction> friction and <localaxis> rotation axis.");
+end, false, "Creates an axis between <ent1> and <ent2> at vector positions local to each ent, with <friction> friction and <localaxis> rotation axis.");
 
 extension:RegisterMethod("e", "ballsocket", "e,v", "", 0, function(context, ent1, ent2, v1)
 	if not context:CanUseEntity(ent1) then return; end
 	if not context:CanUseEntity(ent2) then return; end
 	addundo(context, Ballsocket(ent1, ent2, 0, 0, v1, 0, 0, 0), "ballsocket");
-end, true, "Creates a ballsocket between <ent1> and <ent2> at <v>, which is local to <ent1>");
+end, false, "Creates a ballsocket between <ent1> and <ent2> at <v>, which is local to <ent1>");
 
 extension:RegisterMethod("e", "ballsocket", "e,v,n", "", 0, function(context, ent1, ent2, v1, n)
 	if not context:CanUseEntity(ent1) then return; end
 	if not context:CanUseEntity(ent2) then return; end
 	addundo(context, AdvBallsocket(ent1, ent2, 0, 0, Vector(), v1, 0, 0, -180, -180, -180, 180, 180, 180, n, n, n, 0, 0), "ballsocket");
-end, true, "Creates a ballsocket between <ent1> and <ent2> at <v>, which is local to <ent1>, with friction <friction>");
+end, false, "Creates a ballsocket between <ent1> and <ent2> at <v>, which is local to <ent1>, with friction <friction>");
 
 
 extension:RegisterMethod("e", "ballsocket", "v,e,v,v,v,n", "", 0, function(context, ent1, v1, ent2, v2, v3, v4, n)
@@ -330,12 +330,12 @@ extension:RegisterMethod("e", "weldAng", "v,e", "", 0, function(context, ent1, v
 	if not context:CanUseEntity(ent1) then return; end
 	if not context:CanUseEntity(ent2) then return; end
 	addundo(context, AdvBallsocket(ent1, ent2, 0, 0, Vector(), vec, 0, 0, 0, -0, 0, 0, 0, 0, 0, 0, 0, 1, 0), "ballsocket");
-end, true, "Creates an angular weld (angles are fixed, position isn't) between <ent1> and <ent2> at <v>, which is local to <ent1>");
+end, false, "Creates an angular weld (angles are fixed, position isn't) between <ent1> and <ent2> at <v>, which is local to <ent1>");
 
 extension:RegisterMethod("e", "constraintBreak", "", "", 0, function(context, ent1)
 	if not context:CanUseEntity(ent1) then return; end
 	constraint.RemoveAll(ent1)
-end, true, "Breaks every constraint on <ent>");
+end, false, "Breaks every constraint on <ent>");
 
 local function caps(text) -- again this is copied from E2
 	local capstext = text:sub(1,1):upper() .. text:sub(2):lower()
@@ -347,7 +347,7 @@ end
 extension:RegisterMethod("e", "constraintBreak", "s", "", 0, function(context, ent1)
 	if not context:CanUseEntity(ent1) then return; end
 	constraint.RemoveConstraints(ent1, caps(type))
-end, true, "Breaks all constraints of type <type> on <ent>");
+end, false, "Breaks all constraints of type <type> on <ent>");
 
 --[[
 	End of extention.
