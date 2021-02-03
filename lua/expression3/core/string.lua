@@ -81,7 +81,7 @@
 		local t = string.Explode(sep, str);
 		local c = #t;
 		
-		for i = 1, #c do
+		for i = 1, c do
 			t[i] = {"s", t[i]};
 		end
 
