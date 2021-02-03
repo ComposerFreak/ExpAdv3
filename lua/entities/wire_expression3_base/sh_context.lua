@@ -27,14 +27,14 @@ local cvar_softtimesize;
 local cvar_netquota;
 
 if SERVER then
-	cvar_softtime = CreateConVar("e3_softtime", 0.005, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.")
+	cvar_softtime = CreateConVar("e3_softtime", 0.05, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.")
 	cvar_softtimesize = CreateConVar("e3_timebuffersize", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
 	cvar_netquota = CreateConVar("e3_netquota", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
 	cvar_hardlimit = CreateConVar("e3_hardlimit", 64000, FCVAR_ARCHIVE, "The max cost a tick.");
 end
 
 if CLIENT then
-	cvar_softtime = CreateConVar("e3_softtime_cl", 0.005, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.");
+	cvar_softtime = CreateConVar("e3_softtime_cl", 0.05, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.");
 	cvar_softtimesize = CreateConVar("e3_timebuffersize_cl", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
 	cvar_netquota = CreateConVar("e3_netquota_cl", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
 	cvar_hardlimit = CreateConVar("e3_hardlimit_cl", 64000, FCVAR_ARCHIVE, "The max cost a tick.");
