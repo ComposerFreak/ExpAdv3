@@ -12,10 +12,11 @@
 	*****************************************************************************************************************************************************
 ]]--
 	
-	local class_type = extension:RegisterClass("cls", {"type", "class"}, isstring, isnil);
+	extension:RegisterClass("cls", {"type", "class"}, isstring, isnil);
 
 	extension:RegisterOperator("neq", "cls,cls", "b", 1);
 	extension:RegisterOperator( "eq", "cls,cls", "b", 1);
+
 
 --[[
 	*****************************************************************************************************************************************************

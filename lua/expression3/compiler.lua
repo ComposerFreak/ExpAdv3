@@ -2640,12 +2640,47 @@ function COMPILER.CastUserType(this, left, right)
 	local to = this:GetClassOrInterface(left);
 	local from = this:GetClassOrInterface(right);
 
-	if (not to) or (not from) then return end;
+	if left == "_vr" and from then -- To Variant
+
+		return {
+			signature = string_format("(_vr)%s", from.hash),
+			price = EXPR_LOW,
+			context = true,
+			result = right,
+			rCount = 1,
+			operator = function(ctx, obj)
+				return { from.hash, obj };
+			end,
+		};
+
+	end
+
+	if right == "_vr" and to then -- From Varaint
+		return {
+			signature = string_format("(%s)_vr", to.hash),
+			price = EXPR_LOW,
+			context = true,
+			result = left,
+			rCount = 1,
+			operator = function(ctx, obj)
+				if (not obj or obj[1] ~= to.hash) then
+					ctx:Throw("Failed to cast %s to %s, #class missmatched.", name(right), to.name);
+				end
+			end,
+		};
+	end
+
+	if not to or not from then
+		return;
+	end
 
 	if (not this.__hashtable[to.hash][from.hash]) then
+
 		if (this.__hashtable[from.hash][to.hash]) then
+			
 			return {
 				signature = string_format("(%s)%s", to.hash, from.hash),
+				price = EXPR_LOW,
 				context = true,
 				result = left,
 				rCount = 1,
@@ -2655,6 +2690,7 @@ function COMPILER.CastUserType(this, left, right)
 					end; return obj;
 				end,
 			};
+
 		end
 
 		return nil;
@@ -2669,6 +2705,7 @@ function COMPILER.CastUserType(this, left, right)
 end
 
 function COMPILER.CastExpression(this, type, expr)
+	
 	local op = this:CastUserType(type, expr.result);
 
 	if op then
@@ -3694,6 +3731,24 @@ function COMPILER.Compile_GET(this, inst, token, data)
 		class = this:getAssigmentPrediction(inst, data);
 	end
 
+	local userclass = this:GetClassOrInterface(class);
+
+	if userclass then
+		this:writeToBuffer(inst, "eTable.get(CONTEXT,");
+
+		this:addInstructionToBuffer(inst, value);
+
+		this:writeToBuffer(inst, ",");
+
+		this:addInstructionToBuffer(inst, index);
+
+		this:writeToBuffer(inst, ",%q", userclass.hash);
+
+		this:writeToBuffer(inst, ")");
+
+		return class, 1, EXPR_LOW;
+	end
+
 	if class then
 		op = this:GetOperator("get", vType, iType, class);
 
@@ -3787,10 +3842,31 @@ function COMPILER.Compile_SET(this, inst, token, data)
 		cls = vExpr;
 	end
 
+	local userclass = this:GetClassOrInterface(cls);
+
+	if userclass then
+		this:writeToBuffer(inst, "eTable.set(CONTEXT,");
+
+		this:addInstructionToBuffer(inst, value);
+
+		this:writeToBuffer(inst, ",");
+
+		this:addInstructionToBuffer(inst, index);
+
+		this:writeToBuffer(inst, ",%q,", userclass.hash);
+
+		this:addInstructionToBuffer(inst, vExpr);
+
+		this:writeToBuffer(inst, ");\n");
+
+		return nil, nil, EXPR_LOW;
+	end
+
 	local op = this:GetOperator("set", vType, iType, cls);
 
 	if (not op) then
 		keepclass = true;
+		
 		op = this:GetOperator("set", vType, iType, "_cls", vExpr)
 	end
 
@@ -3825,7 +3901,7 @@ function COMPILER.Compile_SET(this, inst, token, data)
 	else
 		this:writeOperationCall(inst, op, value, index, expr);
 	end
-
+	
 	return op.result, op.rCount, (op.price + p1 + p2 + p3);
 end
 

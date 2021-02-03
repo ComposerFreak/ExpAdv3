@@ -839,9 +839,9 @@ function EXPR_LIB.SortArgs(parameter)
 			return false, string.format("Vararg (...) must be last parameter", v, k);
 		elseif (not cls) then
 			return false, string.format("Invalid class (%s) for parameter #%i", v, k);
+		else
+			signature[k] = cls.id;
 		end
-
-		signature[k] = cls.id;
 	end
 
 	if (varg) then
