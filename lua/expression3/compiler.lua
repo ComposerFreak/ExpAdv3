@@ -490,7 +490,8 @@ function COMPILER.AssignVariable(this, token, declaired, varName, class, scope, 
 		if (c and c == class) then
 			this:Throw(token, "Unable to declare variable %s, Variable already exists.", varName);
 		elseif (c and class ~= "") then
-			this:Throw(token, "Unable to Initialize variable %s, %s expected got %s.", varName, name(c), name(class));
+			this:Throw(token, "Unable to declare variable %s, Variable already exists.", varName);
+			--this:Throw(token, "Unable to Initialize variable %s, %s expected got %s.", varName, name(c), name(class));
 		else
 			return this:SetVariable(varName, class, scope, prefix, global);
 		end

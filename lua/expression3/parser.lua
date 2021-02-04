@@ -1395,17 +1395,26 @@ function PARSER.Statment_11(this)
 		return this:EndInstruction(inst, expressions);
 	end
 
-	local expr = this:Expression_1();
+	--this:PushScope();
 
-	if (expr and this:CheckToken("lsb")) then
-		expr = this:Statment_12(expr);
-	elseif (expr and this:CheckToken("prd")) then
-		expr = this:Statment_13(expr);
-	end
+		--this:SetOption("ambiguous", true);
 
-	if expr and ambiguous[expr.type] then
-		this:Throw(this.__token, "Ambiguous statment, expression must not appear here.");
-	end
+		local expr = this:Expression_1();
+
+		if (expr and this:CheckToken("lsb")) then
+			expr = this:Statment_12(expr);
+		elseif (expr and this:CheckToken("prd")) then
+			expr = this:Statment_13(expr);
+		end
+
+		--if expr and  then
+		if expr and ambiguous[expr.type] then
+			--if this:GetOption("ambiguous", true) then
+				this:Throw(this.__token, "Ambiguous statment, expression must not appear here %s.", expr.type);
+			--end
+		end
+
+	--this:PopScope();
 
 	return expr;
 end
@@ -1965,7 +1974,9 @@ function PARSER.Expression_26(this)
 
 			end
 
-			this:Require("rpa", "Right parenthesis ( )) expected to close function parameters.")
+			this:Require("rpa", "Right parenthesis ( )) expected to close function parameters.");
+
+			--this:SetOption("ambiguous", false);
 
 			return this:EndInstruction(inst, {library = library; name = name.data; expressions = expressions});
 		end
@@ -1980,6 +1991,8 @@ function PARSER.Expression_27(this)
 		local inst = this:StartInstruction("inc", this.__token);
 
 		this:Require("var", "Variable expected after increment operator (++).");
+
+		--this:SetOption("ambiguous", false);
 		
 		return this:EndInstruction(inst, {variable = this.__token.data, first = true});
 	end
@@ -1988,6 +2001,8 @@ function PARSER.Expression_27(this)
 		local inst = this:StartInstruction("dec", this.__token);
 
 		this:Require("var", "Variable expected after decrement operator (--).");
+
+		--this:SetOption("ambiguous", false);
 		
 		return this:EndInstruction(inst, {variable = this.__token.data, first = true});
 	end
@@ -1998,12 +2013,16 @@ function PARSER.Expression_27(this)
 		if (this:Accept("inc")) then
 			local inst = this:StartInstruction("inc", this.__token);
 			
+			--this:SetOption("ambiguous", false);
+
 			return this:EndInstruction(inst, {variable = var, first = false});
 		end
 
 		if (this:Accept("dec")) then
 			local inst = this:StartInstruction("dec", this.__token);
 			
+			--this:SetOption("ambiguous", false);
+
 			return this:EndInstruction(inst, {variable = var, first = false});
 		end
 
@@ -2315,6 +2334,8 @@ function PARSER.Expression_Trailing(this, expr)
 				this:Require("rpa", "Right parenthesis ( )) expected to close method parameters.");
 
 				expr = this:EndInstruction(inst, {method = method.data; expressions = expressions});
+
+				--this:SetOption("ambiguous", false);
 			else
 				-- Check for an ass instruction and locate it,
 				-- If we are at our set attribute then we break.
@@ -2331,6 +2352,8 @@ function PARSER.Expression_Trailing(this, expr)
 				inst.type = "field";
 
 				expr = this:EndInstruction(inst, {expr = expr; var = varToken});
+
+				--this:SetOption("ambiguous", false);
 			end
 		elseif (this:Accept("lsb")) then
 			local class;
@@ -2384,6 +2407,8 @@ function PARSER.Expression_Trailing(this, expr)
 			this:Require("rpa", "Right parenthesis ( )) expected to close call parameters.")
 
 			expr = this:EndInstruction(inst, {expressions = expressions});
+
+			--this:SetOption("ambiguous", false);
 		end
 	end
 
