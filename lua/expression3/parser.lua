@@ -1466,7 +1466,7 @@ function PARSER.Expression_1(this)
 	
 	local expr = this:Expression_2();
 
-	while this:Accept("qsm") do
+	while this:Accept("ten") do
 		local inst = this:StartInstruction("ten", expr.token);
 
 		local expr2 = this:Expression_2();
@@ -1622,25 +1622,25 @@ function PARSER.Expression_8(this)
 		if (this:Accept("lth")) then
 			local inst = this:StartInstruction("lth", expr.token);
 
-			local expr2 = this:Expression_1();
+			local expr2 = this:Expression_9();
 
 			expr = this:EndInstruction(inst, {expr = expr; expr2 = expr2});
 		elseif (this:Accept("leq")) then
 			local inst = this:StartInstruction("leq", expr.token);
 
-			local expr2 = this:Expression_1();
+			local expr2 = this:Expression_9();
 
 			expr = this:EndInstruction(inst, {expr = expr; expr2 = expr2});
 		elseif (this:Accept("gth")) then
 			local inst = this:StartInstruction("gth", expr.token);
 
-			local expr2 = this:Expression_1();
+			local expr2 = this:Expression_9();
 
 			expr = this:EndInstruction(inst, {expr = expr; expr2 = expr2});
 		elseif (this:Accept("geq")) then
 			local inst = this:StartInstruction("geq", expr.token);
 
-			local expr2 = this:Expression_1();
+			local expr2 = this:Expression_9();
 
 			expr = this:EndInstruction(inst, {expr = expr; expr2 = expr2});
 		end
