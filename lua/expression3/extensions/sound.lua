@@ -15,222 +15,204 @@
 		O-O--O-O+++--O-O
 
 		For the trains :D
-		Yes Ripmax, this is your EA2 ext_sound.
 ]]
 
-local ext_sound = EXPR_LIB.RegisterExtension("sound");
+--[[=================================================================================================
+	Limits
+=================================================================================================]]--
 
-local maxsounds = 10; -- TODO: Make this convar!
-
---[[
-	Utility functions
-]]
-
-EXPR_SOUNDS = EXPR_SOUNDS or { };
-
-local function stopSound(context, index, fade)
-
-	if isnumber(index) then
-		index = math.floor( index );
-	end
-
-	local sound = context.data.sounds[index];
-
-	if not sound then
-		return;
-	end
-
-	if fade > 0 then
-		sound:FadeOut( fade );
-		timer.Simple( fade, function()
-			stopSound(context, index, 0);
-		end);
-	else
-		sound:Stop();
-		context.data.sound[index] = nil;
-	end
-
-	context.data.sound_count = context.data.sound_count - 1;
-end
-
-local function playSound(context, entity, duration, index, fade, file)
-
-	if not IsValid(entity) then
-		return;
-	end
-
-	if string.match(file, "[\"?]") then
-		return;
-	end
-
-	file = string.Trim( string.gsub( file, "\\", "/"), nil );
-
-	if isnumber(index) then
-		index = math.floor( index );
-	end
-
-	if context.data.sound_count >= maxsounds then
-		return;
-	end
-
-	if context.data.sounds[index] then
-		stopSound(context, index, 0);
-	end
-
-	local newSound = CreateSound(entity, file);
-
-	EXPR_SOUNDS[#EXPR_SOUNDS + 1] = newSound;
-
-	context.data.sounds[index] = newSound;
-
-	newSound:Play();
-
-	context.data.sound_count = context.data.sound_count + 1;
-
-	if duration > 0 and fade > 0 then
-		timer.Create( "E3Gate-" .. entity:EntIndex() .. ";STOPSound_" .. index, duration, 0, function()
-			stopSound(context, index, fade);
-		end );
-	end
-end
-
-local function volume(context, number, volume, fade)
-
-	if isnumber(index) then
-		index = math.floor( index );
-	end
-
-	local sound = context.data.sounds[index];
-
-	if volume > 1 then
-		volume = 1;
-	elseif volume < 0 then
-		volume = 0;
-	end
-
-	if sound then
-		sound:ChangeVolume(volume, fade or 0);
-	end
-end
-
-local function pitch(context, index, pitch, fade)
-	if isnumber(index) then
-		index = math.floor( index );
-	end
-
-	local sound = context.data.sounds[index];
-
-	if pitch > 255 then
-		pitch = 255;
-	elseif pitch < 0 then
-		pitch = 0;
-	end
-
-	if sound then
-		sound:ChangePitch(pitch, fade or 0);
-	end
-
-end
-
-local function duration(file)
-	if string.match(file, "[\"?]") then
-		return 0;
-	end
-
-	file = string.Trim( string.gsub( file, "\\", "/") );
-
-	return SoundDuration(file) or 0;
-end
-
-
--- Nothing to see here, just showing Ripmax how a true Jedi does thing!
-
---[[
-	Hooks
-]]
+local max = 20; -- Def Max Sounds
+local cvar_max;
 
 if SERVER then
-	hook.Add("Expression3.Entity.BuildSandbox", "Expression3.Sounds", function(entity, ctx, env)
-		ctx.data.sounds = {};
-		ctx.data.sound_count = 0;
-	end);
-
-	hook.Add("Expression3.Entity.Stop", "Expression3.Sounds",function(entity, ctx)
-		for _, sound in pairs( ctx.data.sounds ) do
-			sound:Stop();
-		end
-
-		ctx.data.sounds = {}
-		ctx.data.sound_count = 0;
-	end);
-
-	hook.Add("PlayerDisconnected", "Expression3.Sounds", function( ply )
-		for _, ctx in pairs(EXPR_LIB.GetAll()) do
-			if (ctx.player == ply) then
-
-				for _, sound in pairs( ctx.data.sounds ) do
-					sound:Stop();
-				end
-
-				ctx.data.sounds = {}
-				ctx.data.sound_count = 0;
-			end
-		end
-	end );
+	cvar_max = CreateConVar("wire_expression3_sound_max", max, FCVAR_ARCHIVE, "The maxamum sounds allowed per expression 3 entity.")
+elseif CLIENT then
+	cvar_max = CreateConVar("wire_expression3_sound_max_cl", max, FCVAR_ARCHIVE, "The maxamum sounds allowed per expression 3 entity.")
 end
 
---[[
-	Library
-]]
+timer.Create("Expression3.Sounds", 1, 0, function()
+	max = cvar_max:GetInt();
+end);
 
-ext_sound:SetServerState();
+--[[=================================================================================================
+	Stop Sound
+=================================================================================================]]--
 
-ext_sound:RegisterLibrary("sound");
+local function stopAll(context)
+	if context.sounds then
+		for k, v in pairs(context.sounds) do 
+			if v and v.Stop then v:Stop(); end
+		end
+	end
+end
 
---[[
-	Sound creators
-]]
+local function stopAllPlayer(player)
+	for _, context in pairs(EXPR_LIB.GetAll()) do
+		if (context.player == player) then
+			stopAll(context);
+		end
+	end
+end
 
-ext_sound:RegisterFunction("sound", "play", "n,n,s", "", 0, function(context, duration, index, file)
-	playSound(context, context.entity, duration, index, nil, file);
-end, false);
+--[[=================================================================================================
+	Hooks
+=================================================================================================]]--
 
-ext_sound:RegisterFunction("sound", "play", "n,n,n,s", "", 0, function(context, duration, index, fade, file)
-	playSound(context, context.entity, duration, index, fade, file);
-end, false);
+hook.Add("Expression3.Entity.BuildSandbox", "Expression3.Sound", function(entity, context, env)
+	context.data.sounds = { };
+	context.data.sounds_count = 0;
+end);
 
-ext_sound:RegisterFunction("sound", "play", "e,n,n,s", "", 0, function(context, entity, duration, index, file)
-	playSound(context, entity, duration, index, nil, file);
-end, false);
 
-ext_sound:RegisterFunction("sound", "play", "e,n,n,n,s", "", 0, playSound, false);
+hook.Add("Expression3.Entity.Stop", "Expression3.Sound", function(entity, context)
+	stopAll(context);
+end);
 
---[[
-	Sound destroyers
-]]
+hook.Add("PlayerDisconnected", "Expression3.Sound", function(player)
+	stopAllPlayer(player);
+end);
 
-ext_sound:RegisterFunction("sound", "stop", "n", "", 0, stopSound, false);
-ext_sound:RegisterFunction("sound", "stop", "n,n", "", 0, stopSound, false);
+--[[=================================================================================================
+	Create Sound
+=================================================================================================]]--
 
-ext_sound:RegisterFunction("sound", "volume", "n,n", "", 0, volume, false);
-ext_sound:RegisterFunction("sound", "volume", "n,n,n", "", 0, volume, false);
+local type = type;
+local match = string.match;
+local gsub = string.gsub;
+local trim = string.Trim;
+local CreateSound = CreateSound;
 
-ext_sound:RegisterFunction("sound", "pitch", "n,n", "", 0, pitch, false);
-ext_sound:RegisterFunction("sound", "pitch", "n,n,n", "", 0, pitch, false);
+local function createSound(context, entity, file)
+	if context.data.sounds_count >= max then return; end
+	
+	if context:CanUseEntity(e) then return; end
+	
+	if match(file, "[\"?]") then return; end
+	
+	file = trim(gsub( file, "\\", "/"), nil);
+	
+	local sound = CreateSound(entity, file);
 
-ext_sound:RegisterFunction("sound", "duration", "s", "n", 1, duration, true);
-
-ext_sound:RegisterFunction("sound", "stopAll", "", "", 0, function(context)
-	for index, sound in pairs(context.data.sounds) do
-		sound:Stop();
-		timer.Remove( "E3Gate-" .. entity:EntIndex() .. ";STOPSound_" .. index );
+	if sound then
+		context.data.sounds[sound] = sound;
+		context.data.sounds_count = context.data.sounds_count + 1;
 	end
 
-	context.data.sounds = {}
-	context.data.sound_count = 0;
-end, false);
+	return sound;
+end
+
+--[[=================================================================================================
+	Create an Extention and a Class
+=================================================================================================]]--
+
+local extension = EXPR_LIB.RegisterExtension("sound");
+
+extension:SetSharedState();
+
+extension:RegisterClass("snd", {"sound"}, function(sound)
+	return type(sound) == "CSoundPatch";
+end, function(sound)
+	return type(sound) == "CSoundPatch";
+end);
+
+--[[=================================================================================================
+	Constrcutors Create Sounds
+=================================================================================================]]--
+
+local _NIL = EXPR_LIB._NIL_;
+
+extension:RegisterConstructor("snd", "s", function(context, file)
+	return createSound(context, context.entity, file) or _NIL;
+end, false, "Creates a new sound object using <str> as the file path.");
+
+extension:RegisterConstructor("snd", "e,s", function(context, ent, file)
+	return createSound(context, ent, file) or _NIL;
+end, false, "Creates a new sound object parented to <ent> using <str> as the file path.");
+
+---------------------------------------------------------------------------------------------
+
+extension:RegisterConstructor("snd", "s,b", function(context, file, play)
+	local sound = createSound(context, context.entity, file);
+	if play and sound then sound:Play(); end
+	return sound or _NIL;
+end, false, "Creates a new sound object using <str> as the file path. Sound will auto play if <bool> is true.");
+
+extension:RegisterConstructor("snd", "e,s,b", function(context, ent, file, play)
+	local sound = createSound(context, ent, file);
+	if play and sound then sound:Play(); end
+	return sound or _NIL;
+end, false, "Creates a new sound object parented to <ent> using <str> as the file path. Sound will auto play if <bool> is true.");
+
+---------------------------------------------------------------------------------------------
+
+extension:RegisterConstructor("snd", "s,b,n", function(context, file, play, pitch)
+	local sound = createSound(context, context.entity, file);
+	if sound then sound:ChangePitch(pitch); end
+	if play and sound then sound:Play(); end
+	return sound or _NIL;
+end, false, "Creates a new sound object using <str> as the file path and <int> as pitch. Sound will auto play if <bool> is true.");
+
+extension:RegisterConstructor("snd", "e,s,b,n", function(context, ent, file, play, pitch)
+	local sound = createSound(context, ent, file);
+	if sound then sound:ChangePitch(pitch); end
+	if play and sound then sound:Play(); end
+	return sound or _NIL;
+end, false, "Creates a new sound object parented to <ent> using <str> as the file path and <int> as pitch. Sound will auto play if <bool> is true.");
+
+---------------------------------------------------------------------------------------------
+
+extension:RegisterConstructor("snd", "s,b,n,n", function(context, file, play, pitch, volume)
+	local sound = createSound(context, context.entity, file);
+	if sound then sound:ChangeVolume(volume); end
+	if play and sound then sound:Play(); end
+	return sound or _NIL;
+end, false, "Creates a new sound object using <str> as the file path and <int1> as pitch and <int2> as volume. Sound will auto play if <bool> is true.");
+
+extension:RegisterConstructor("snd", "e,s,b,n,n", function(context, ent, file, play, pitch, volume)
+	local sound = createSound(context, ent, file);
+	if sound then sound:ChangePitch(pitch); end
+	if sound then sound:ChangeVolume(volume); end
+	if play and sound then sound:Play(); end
+	return sound or _NIL;
+end, false, "Creates a new sound object parented to <ent> using <str> as the file path and <int1> as pitch and <int2> as volume. Sound will auto play if <bool> is true.");
+
+--[[=================================================================================================
+	Methods
+=================================================================================================]]--
+
+extension:RegisterMethod("snd", "setPitch", "n", "", 0, "ChangePitch", true, "Sets the pitch of the sound to <int>.");
+extension:RegisterMethod("snd", "setPitch", "n,n", "", 0, "ChangePitch", true, "Sets the pitch of the sound to <int1>, over time <int2>.");
+extension:RegisterMethod("snd", "getPitch", "", "n", 1, "GetPitch", true, "Returns the pitch of the sound.");
+
+
+extension:RegisterMethod("snd", "setVolume", "n", "", 0, "ChangeVolume", true, "Sets the volume of the sound to <int>.");
+extension:RegisterMethod("snd", "setVolume", "n,n", "", 0, "ChangeVolume", true, "Sets the volume of the sound to <int1>, over time <int2>.");
+extension:RegisterMethod("snd", "getVolume", "", "n", 1, "GetVolume", true, "Returns the volume of the sound.");
+
+extension:RegisterMethod("snd", "play", "", "", 0, "Play", true, "Plays the sound.");
+extension:RegisterMethod("snd", "stop", "", "", 0, "Stop", true, "Stops the sound.");
+extension:RegisterMethod("snd", "fadeOut", "n", "", 0, "FadeOut", true, "Fades a sound out over <int> seconds.");
+extension:RegisterMethod("snd", "isPlaying", "", "b", 1, "IsPlaying", true, "Returns true if the sound is playing.");
+
+---------------------------------------------------------------------------------------------
+
+local naf = function() end;
+
+local function remove(context, sound)
+	if not sound then return; end
+	if sound._nulled then return; end
+
+	context.data.sounds[sound] = nil;
+	context.data.sounds_count = context.data.sounds_count - 1;
+
+	if sound.Stop then sound.Stop(); end
+	sound._nulled = true;
+	sound.Play = naf;
+end
+
+extension:RegisterMethod("snd", "remove", "", "", 0, remove, false, "Destroys the sound object.");
 
 --[[
 ]]
 
-ext_sound:EnableExtension();
+extension:EnableExtension();
