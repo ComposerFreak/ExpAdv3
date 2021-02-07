@@ -2722,6 +2722,7 @@ function COMPILER.CastExpression(this, type, expr)
 		op = EXPR_CAST_OPERATORS[signature];
 
 		if (not op) then
+			this:Throw(expr.token, signature);
 			return false, expr;
 		end
 
@@ -4668,9 +4669,49 @@ function COMPILER.Compile_TOSTR(this, inst, token, data)
 	return nil, nil, EXPR_LOW;
 end
 
+
+--Zero = {tbl = {}, children = {}, parents = {}, size = 0};
 function COMPILER.Compile_INTABLE(this, inst, token, data)
 
-	local prf = EXPR_LOW;
+	this:PushScope();
+
+	local size = 0;
+	local price = EXPR_LOW;
+	local values = data.values;
+
+	this:writeToBuffer(inst, "{\n");
+		this:writeToBuffer(inst, "tbl = {\n");
+
+			for i = 1, #values do
+				local info = values[i];
+
+				local kr, kc, kp = this:Compile(info.expr1);
+				local vr, vc, vp = this:Compile(info.expr2);
+				price = price + kp + vp;
+				size = size + 1;
+
+				this:writeToBuffer(inst, "[");
+				this:writeToBuffer(inst, info.expr1);
+				this:writeToBuffer(inst, "] = ");
+
+				if vr == "_vr" then
+					this:writeToBuffer(inst, info.expr2);
+				else
+					this:writeToBuffer(inst, "{%q,", vr);
+					this:writeToBuffer(inst, info.expr2);
+					this:writeToBuffer(inst, "},\n");
+				end
+			end
+
+
+		this:writeToBuffer(inst, "},\nchildren = { },\n");
+		this:writeToBuffer(inst, "parents = { },\n");
+		this:writeToBuffer(inst, "size = %i,\n", size);
+	this:writeToBuffer(inst, "}\n");
+
+	return "t", 1, price;
+
+	--[[local prf = EXPR_LOW;
 	local values = data.values;
 
 	this:PushScope();
@@ -4706,7 +4747,7 @@ function COMPILER.Compile_INTABLE(this, inst, token, data)
 
 	this:PopScope();
 
-	return "t", 1, prf;
+	return "t", 1, prf;]]
 end
 
 

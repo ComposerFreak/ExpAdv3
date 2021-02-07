@@ -27,11 +27,11 @@
 
 			if (id ~= "_vr" and id ~= "") then
 
-				extension:RegisterCastingOperator("vr", id, function(ctx, obj)
+				extension:RegisterCastingOperator("_vr", id, function(ctx, obj)
 					return {id, obj};
 				end);
 
-				extension:RegisterCastingOperator(id, "vr", function(ctx, vr)
+				extension:RegisterCastingOperator(id, "_vr", function(ctx, vr)
 					if (not vr or not vr[1] or vr[2] == nil) then
 						ctx:Throw("attempt to cast variant of type nil to " .. c.name);
 					end
