@@ -1278,14 +1278,10 @@ function PANEL:OnMouseReleased( m )
 end
 
 function PANEL:Paint( w, h )
-	surface.SetDrawColor( 100, 100, 100, 255 )
-	-- surface.SetDrawColor( 60, 100, 180, 255 )
-	if GOLEM_LIGHT then surface.SetDrawColor(220, 220, 220, 255 ) end
+	surface.SetDrawColor( Golem.Style:GetColor( "main-bg" ) )
 	surface.DrawRect( 0, 0, w, h )
 
-	surface.SetDrawColor( 80, 80, 80, 255 )
-	-- surface.SetDrawColor( 40, 80, 160, 255 )
-	if GOLEM_LIGHT then surface.SetDrawColor(200, 200, 200, 255 ) end
+	surface.SetDrawColor( Golem.Style:GetColor( "main-bg-g" ) )
 	surface.SetMaterial( gradient_up )
 	surface.DrawTexturedRect( 0, 0, w, 25 )
 
@@ -1299,8 +1295,7 @@ function PANEL:Paint( w, h )
 	local Text = self:GetText( ) or ""
 	local x, y = surface.GetTextSize( Text )
 
-	surface.SetTextColor( 220, 220, 220, 255 )
-	if GOLEM_LIGHT then surface.SetTextColor( 60, 60, 60, 255 ) end
+	surface.SetTextColor( Golem.Style:GetColor( "main-tt" ) )
 	surface.SetTextPos( (self.pImage.m_Material and self.pImage.ActualWidth + 5 or 0) + 5, 12.5 - y / 2 )
 	surface.DrawText( Text )
 end

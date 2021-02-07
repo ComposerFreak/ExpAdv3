@@ -16,10 +16,10 @@ end
 --fugue/ui-check-box-uncheck.png
 --fugue/ui-check-box-mix.png
 
-function PANEL:AddState( sIcon, cColor, sText, sTooltip, tValue, bNoCycle )
+function PANEL:AddState( sIcon, sText, sTooltip, tValue, bNoCycle )
 	local nID = #self.tStates + 1
 	if isstring( sIcon ) then sIcon = Material( sIcon ) end 
-	self.tStates[nID] = { nID = nID, mIcon = sIcon, cColor = cColor, sText = sText, sTooltip = sTooltip, tValue = tValue, bNoCycle = bNoCycle }
+	self.tStates[nID] = { nID = nID, mIcon = sIcon, sText = sText, sTooltip = sTooltip, tValue = tValue, bNoCycle = bNoCycle }
 end
 
 function PANEL:RemoveState( nID ) 
@@ -28,14 +28,13 @@ function PANEL:RemoveState( nID )
 	table.remove( self.tStates, nID )
 end 
 
-function PANEL:UpdateState( nID, sIcon, cColor, sText, sTooltip, tValue, bNoCycle )
+function PANEL:UpdateState( nID, sIcon, sText, sTooltip, tValue, bNoCycle )
 	local tState = self.tStates[nID]
 	
 	if not tState then return end
 	if isstring( sIcon ) then sIcon = Material( sIcon ) end 
 	
 	tState.mIcon = sIcon or tState.mIcon
-	tState.cColor = cColor or tState.cColor
 	tState.sText = sText or tState.sText
 	tState.sTooltop = sTooltip or tState.sTooltop
 	tState.tValue = tValue or tState.tValue
@@ -49,7 +48,6 @@ function PANEL:SetState( nID, bNoChange )
 	
 	if tState then
 		if tState.mIcon then self:SetMaterial( tState.mIcon ) end 
-		if tState.cColor then self:SetColor( tState.cColor ) end 
 		if tState.sText then self:SetText( tState.sText ) end
 		if tState.sTooltip then self:SetTooltip( tState.sTooltip ) end 
 		

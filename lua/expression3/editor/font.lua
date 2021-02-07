@@ -117,12 +117,11 @@ local function CreateFont( sFont, nSize )
 			weight = 400
 		} )
 
-		surface.CreateFont( sFontID .. "_bold", {
-			font = sFont,
-			size = nSize,
-			weight = 800,
-			antialias = false
-		} )
+		-- surface.CreateFont( sFontID .. "_bold", {
+		-- 	font = sFont,
+		-- 	size = nSize,
+		-- 	weight = 800,
+		-- } )
 
 		CreatedFonts[sFontID] = true
 	end

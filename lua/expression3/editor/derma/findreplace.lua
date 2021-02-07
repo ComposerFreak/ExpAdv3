@@ -42,6 +42,7 @@ function SEARCH:Init()
 	self.replace_check:SetCross(Material("fugue\\binocular.png"));
 	self.replace_check:SetTick(Material("fugue\\quill.png"));
 	self.replace_check:SetTooltip("Toggle Find and Replace");
+	self.replace_check:ToggleForwards()
 
 	function self.replace_check.ChangedValue(this, bChecked)
 		if (bChecked) then self:ShowReplace(); else self:HideReplace(); end

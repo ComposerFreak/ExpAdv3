@@ -24,6 +24,7 @@ end
 
 function Golem.Reload( )
 	include( "expression3/editor/font.lua" )
+	include( "expression3/editor/style.lua" )
 	include( "expression3/editor/vector2.lua" )
 	
 	if Golem.Instance then

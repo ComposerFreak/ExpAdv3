@@ -47,6 +47,7 @@ if (SERVER) then
 	
 	AddCSLuaFile( "expression3/editor/vector2.lua" )
 	AddCSLuaFile( "expression3/editor/font.lua" )
+	AddCSLuaFile( "expression3/editor/style.lua" )
 	AddCSLuaFile( "expression3/editor/expr_editor_lib.lua" )
 	
 	AddCSLuaFile( "expression3/editor/derma/autocomplete.lua" )
