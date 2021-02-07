@@ -2074,11 +2074,14 @@ function PARSER.Expression_28(this)
 	return this:Expression_29();
 end
 
-function PARSER.NextTableIndex(this)
+function PARSER.NextTableIndex(this, nextindex)
 	local expr1;
 
 	if (this:Accept("var")) then
 		expr1 = this:EndInstruction(this:StartInstruction("str", this.__token), {value = '"' .. this.__token.data .. '"'});
+
+		this:Require("ass", "Assignment operator (=) expected after table index.");
+
 	elseif (this:Accept("lsb")) then
 		expr1 = this:Expression_1();
 
@@ -2087,11 +2090,16 @@ function PARSER.NextTableIndex(this)
 		end
 
 		this:Require("rsb", "Right sqaure bracket ( ]) expected after table index.");
+
+		this:Require("ass", "Assignment operator (=) expected after table index.");
+
+	elseif nextindex then
+		expr1 = this:EndInstruction(this:StartInstruction("num", this.__token), {value = nextindex});
+
+		nextindex = nextindex + 1;
 	else
 		this:Throw(this.__token, "Further input expected, for table defintion.");
 	end
-
-	this:Require("ass", "Assignment operator (=) expected after table index.");
 
 	local expr2 = this:Expression_1();
 
@@ -2099,7 +2107,7 @@ function PARSER.NextTableIndex(this)
 		this:Throw(this.__token, "Further input expected, for table defintion.");
 	end
 
-	return { class = class, expr1 = expr1, expr2 = expr2 };
+	return { class = class, expr1 = expr1, expr2 = expr2 }, nextindex;
 end
 
 function PARSER.Expression_29(this)
@@ -2112,10 +2120,13 @@ function PARSER.Expression_29(this)
 
 		if (not this:CheckToken("rcb")) then
 
-			values[1] = this:NextTableIndex();
+			local row, i = this:NextTableIndex(1);
 
-			while (this:Accept("com")) do
-				table.insert( values, this:NextTableIndex() )
+			values[1] = row;
+
+			while (this:Accept("com") and not this:CheckToken("rcb")) do
+				row, i = this:NextTableIndex(i);
+				table.insert( values, row );
 			end
 		end
 
