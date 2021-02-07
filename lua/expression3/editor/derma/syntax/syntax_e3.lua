@@ -922,20 +922,19 @@ function Syntax:Parse( )
 				-- Multi line comment type /*
 				if self.sChar == "*" then
 					self.bBlockComment = true
+					local sLastChar
 					
 					while self.sChar do
-						if self.sChar == "*" then
-							self:NextCharacter( )
-							
-							if self.sChar == "/" then
-								self:NextCharacter( )
-								self:AddToken( "comment" )
-								self.bBlockComment = false
-								break
-							end
-						end
-						
 						self:NextCharacter( )
+						
+						if self.sChar == "/" and sLastChar == "*" then 
+							self:NextCharacter( )
+							self:AddToken( "comment" ) 
+							self.bBlockComment = false 
+							break 
+						end 
+						
+						sLastChar = self.sChar
 					end
 					
 					self:AddToken( "comment" )

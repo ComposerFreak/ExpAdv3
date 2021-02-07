@@ -1,3 +1,4 @@
 e3workspace.code-workspace
 glualint.json
 lua/expression3/editor/todo.org
+.vscode/settings.json
