@@ -366,6 +366,13 @@ function PANEL:_OnKeyCodeTyped( code )
 		return
 	end
 
+	if self.pAutoComplete:OnKeyCodeTyped( code ) then 
+        
+        self:FoldAll( tFolds );
+        
+        return 
+    end
+
 	if control then
 		if code == KEY_A then
 			self:SelectAll( )

@@ -20,7 +20,7 @@ local function notNil(v)
 	return v ~= nil;
 end
 
-extension:RegisterClass("v", {"vector", "vector.3d"}, isvector, notNil)
+extension:RegisterClass("v", {"vector"}, isvector, notNil)
 
 extension:RegisterWiredInport("v", "VECTOR");
 extension:RegisterWiredOutport("v", "VECTOR");

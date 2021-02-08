@@ -33,7 +33,7 @@ local function isVector2(v)
 	return istable(v) and #v == 2 and v.x and v.y
 end
 
-extension:RegisterClass("v2", {"vector2", "vector.2d"}, isVector2, notNil)
+extension:RegisterClass("v2", {"vector2"}, isVector2, notNil)
 
 extension:RegisterWiredInport("v2", "VECTOR2");
 extension:RegisterWiredOutport("v2", "VECTOR2");

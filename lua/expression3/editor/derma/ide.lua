@@ -197,7 +197,7 @@ function PANEL:Init( )
 	self.tbBottom:SetupButton( "Save", 	"fugue/disk-black.png", RIGHT, function( ) self:SaveFile( true ) end )
 	
 	self.pVoice = self.tbRight:SetupButton( "Toggle Microphone", "fugue/microphone.png", BOTTOM, function ( ) self:ToggleVoice() end )
-	self.pToggleAC = self.tbRight:SetupButton( "Toggle Auto Helper", "fugue/camera-lens.png", BOTTOM, function ( ) self:ToggleAutoComplete() end )
+	self.pBtnAutoComplete = self.tbRight:SetupButton( "Toggle Auto Helper", "fugue/keyboard-space.png", BOTTOM, function ( ) self:ToggleAutoComplete() end )
 	
 	self.tbRight:SetupButton( "Increase font size.", "fugue/edit-size-up.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( 1 ) end )
 	self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( -1 ) end )
@@ -234,7 +234,7 @@ function PANEL:Init( )
 	self.btnHideSidebar:SetIconCentered( true )
 	self.btnHideSidebar:SetIconFading( false )
 	self.btnHideSidebar:SetOutlined( true )
-	
+
 	local nSidebar = cookie.GetNumber( "golem_sidebar_state", 1 )
 	if nSidebar == 0 then
 		self.btnHideSidebar:SetMaterial( Material( "diagona-icons/131.png" ) )
@@ -351,6 +351,8 @@ function PANEL:Init( )
 
 	local c = cookie.GetNumber( "golem_c", h - 50);
 	self.pnlConsoleDivider:SetTopHeight(c)
+	
+	self:ShowAutoComplete(cookie.GetNumber("golem_show_autocomplete", 1) ~= 0);
 end
 
 /*---------------------------------------------------------------------------
@@ -448,6 +450,9 @@ function PANEL:NewTab( sType, ... )
 		Sheet.Panel:RequestFocus( )
 		Golem.Syntax:Create( sLanguage, Editor )
 
+		if self.bShowAutoComplete then
+			Editor:ShowAutoComplete(true);
+		end
 
 		Sheet.Tab.__type = "editor"
 		Sheet.Tab.__lang = sLanguage
@@ -944,13 +949,25 @@ function PANEL:ToggleVoice( )
 	end
 end
 
+/*---------------------------------------------------------------------------
+Auto complete stuff
+---------------------------------------------------------------------------*/
+local AutoCompleteMaterialOff = Material( "fugue/keyboard-space.png" )
+local AutoCompleteMaterialOn = Material( "fugue/keyboard-smiley.png" )
+
 function PANEL:ShowAutoComplete(b)
 	self.bShowAutoComplete = b;
 	
-	for i = 1, #self.pnlTabHolder.Items do
-		if self.pnlTabHolder.Items[i].Tab.__type ~= "editor" then continue; end
-		self.pnlTabHolder.Items[i].Panel:ShowAutoComplete(b);
+	if self.pnlTabHolder then
+		for i = 1, #self.pnlTabHolder.Items do
+			if self.pnlTabHolder.Items[i].Tab.__type ~= "editor" then continue; end
+			self.pnlTabHolder.Items[i].Panel:ShowAutoComplete(b);
+		end
 	end
+
+	self.pBtnAutoComplete:SetMaterial(b and AutoCompleteMaterialOn or AutoCompleteMaterialOff);
+
+	cookie.Set("golem_show_autocomplete", b and 1 or 0)
 end
 
 function PANEL:ToggleAutoComplete()
