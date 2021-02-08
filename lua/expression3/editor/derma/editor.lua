@@ -102,12 +102,8 @@ function PANEL:Init( )
 	self.pHScrollBar = self:Add( "GOLEM_HScrollBar")
 	self.pHScrollBar:SetUp( 1, 1 )
 	
-	-- self.Autocomplete = self:Add( "GOLEM_Autocomplete")
-	-- self.Autocomplete.Editor = self
-	-- -- self.Autocomplete:SetVisible( false ) 
-	-- self.Autocomplete:SetPos( 100, 100 )
-	-- self.Autocomplete:SetSize( 600, 200 )
-	
+	self.pAutoComplete = self:Add( "GOLEM_AutoComplete")
+	self:ShowAutoComplete(false);
 	
 	self:SetFont( Golem.Font:GetFont( ) )
 end
@@ -118,6 +114,11 @@ end
 
 function PANEL:OnGetFocus( )
 	self.pTextEntry:RequestFocus( )
+end
+
+function PANEL:ShowAutoComplete(b)
+	self.bShowAutoComplete = b;
+	self.pAutoComplete:SetVisible(self.bShowAutoComplete) 
 end
 
 /*---------------------------------------------------------------------------
@@ -1257,7 +1258,7 @@ end
 function PANEL:TextChanged( tSelection, sText )
 	self.tSyntax:Parse( )
 	if self.OnTextChanged then self:OnTextChanged( tSelection, sText ) end
-	-- if self.Autocomplete then self.Autocomplete:Update( tSelection, sText ) end 
+	-- if self.AutoCompletete then self.AutoCompletete:Update( tSelection, sText ) end 
 end
 
 -- Might need fixing

@@ -197,6 +197,7 @@ function PANEL:Init( )
 	self.tbBottom:SetupButton( "Save", 	"fugue/disk-black.png", RIGHT, function( ) self:SaveFile( true ) end )
 	
 	self.pVoice = self.tbRight:SetupButton( "Toggle Microphone", "fugue/microphone.png", BOTTOM, function ( ) self:ToggleVoice() end )
+	self.pToggleAC = self.tbRight:SetupButton( "Toggle Auto Helper", "fugue/camera-lens.png", BOTTOM, function ( ) self:ToggleAutoComplete() end )
 	
 	self.tbRight:SetupButton( "Increase font size.", "fugue/edit-size-up.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( 1 ) end )
 	self.tbRight:SetupButton( "Decrease font size.", "fugue/edit-size-down.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( -1 ) end )
@@ -941,6 +942,19 @@ function PANEL:ToggleVoice( )
 		self.pVoice:SetMaterial( MicMaterialOff )
 		RunConsoleCommand( "-voicerecord" )
 	end
+end
+
+function PANEL:ShowAutoComplete(b)
+	self.bShowAutoComplete = b;
+	
+	for i = 1, #self.pnlTabHolder.Items do
+		if self.pnlTabHolder.Items[i].Tab.__type ~= "editor" then continue; end
+		self.pnlTabHolder.Items[i].Panel:ShowAutoComplete(b);
+	end
+end
+
+function PANEL:ToggleAutoComplete()
+	self:ShowAutoComplete(not self.bShowAutoComplete);
 end
 
 /*---------------------------------------------------------------------------

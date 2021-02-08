@@ -642,7 +642,6 @@ function EXPR_LIB.RegisterCastingOperator(type, parameter, operator, excludeCont
 	op.operator = operator;
 	op.context = not excludeContext;
 
-	print("------------------->", op.signature)
 	if CLIENT then
 		op.desc = desc;
 	end
