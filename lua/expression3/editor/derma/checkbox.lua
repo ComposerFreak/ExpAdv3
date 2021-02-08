@@ -42,15 +42,14 @@ function STATE:SetState(sName, noOnChnaged)
 			else
 				self:SetMaterial();
 			end
-
-			if state.c then self:SetColor(state.c); end
+			
 			--if state.t then self:SetText(state.t); end
 			if state.t then self:SetTooltip(state.t); end
 			
 			if self.m_oValue ~= state.v then
-
+				
 				self.m_oValue = state.v;
-
+				
 				if not noOnChnaged then
 					self:ChangedValue(state.v, state);
 				end
@@ -59,19 +58,19 @@ function STATE:SetState(sName, noOnChnaged)
 	end
 end
 
-function STATE:AddState(sName, sValue, sIcon, sText, cCol)
+function STATE:AddState(sName, sValue, sIcon, sText)
 	local id = #self.states + 1;
 
 	if sIcon and isstring(sIcon) then sIcon = Material(sIcon); end
 
-	self.states[id] = {id = id, n = sName, v = sValue, i = sIcon, c = cCol, t = sText};
+	self.states[id] = {id = id, n = sName, v = sValue, i = sIcon, t = sText};
 
 	self.lk[sName] = id;
 
 	return id;
 end
 
-function STATE:UpdateState(sName, sValue, sIcon, sText, cCol)
+function STATE:UpdateState(sName, sValue, sIcon, sText)
 	local i = self.lk[sName];
 	
 	if i then
@@ -83,7 +82,6 @@ function STATE:UpdateState(sName, sValue, sIcon, sText, cCol)
 			state.n = sName or state.n;
 			state.v = sValue or state.v;
 			state.i = sIcon or state.i;
-			state.c = (IsColor( cCol ) and cCol or nil) or state.c;
 			state.t = sText or state.t;
 			
 			if self.m_nState == sName then 
@@ -173,22 +171,22 @@ vgui.Register("GOLEM_StateBox", STATE, "GOLEM_ImageButton");
 local CHECK = {};
 
 function CHECK:Init()
-	self:AddState("tick", true, "fugue/tick.png", nil, Color(100, 100, 100));
-	self:AddState("cross", true, "fugue/cross-button.png", nil, Color(100, 100, 100));
+	self:AddState("tick", true, "fugue/tick.png" );
+	self:AddState("cross", true, "fugue/cross-button.png" );
 	self:SetValue(false, true);
 end
 
-function CHECK:SetTick(icon, col, val, text)
-	self:UpdateState("tick", val, icon, text, IsColor(col) and col or nil );
+function CHECK:SetTick(icon, val, text)
+	self:UpdateState("tick", val, icon, text );
 end
 
-function CHECK:SetCross(icon, col, val, text)
-	self:UpdateState("cross", val, icon, text, IsColor(col) and col or nil );
+function CHECK:SetCross(icon, val, text)
+	self:UpdateState("cross", val, icon, text );
 end
 
 function CHECK:SetStatic(image)
-	self:SetTick(image, Color(0, 255, 0));
-	self:SetCross(image, Color(255, 0, 0));
+	self:SetTick( image );
+	self:SetCross( image );
 end
 
 vgui.Register("GOLEM_CheckBox", CHECK, "GOLEM_StateBox");

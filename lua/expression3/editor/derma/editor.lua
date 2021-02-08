@@ -1588,33 +1588,31 @@ Paint
 function PANEL:Paint( w, h )
 	if not self.Font then return end
 	surface_SetFont( self.Font )
-
+	
 	-- self.LineNumberWidth = 6 + (self.FontWidth * string_len( tostring( math_min( self.Scroll.x, #self.tRows - self.Size.x + 1 ) + self.Size.x - 1 ) ))
 	self.LineNumberWidth = 4 + self.FontWidth * string_len( tostring( #self.tRows ) ) 
 	self.LinePadding = self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth
-
+	
 	h = h - (self.pHScrollBar.Enabled and 16 or 0)
 	w = w - (self.pScrollBar.Enabled and 16 or 0)
-
-	surface_SetDrawColor( 0, 0, 0, 255 )
-	if GOLEM_LIGHT then surface_SetDrawColor( 255, 255, 255, 255 ) end 
+	
+	surface_SetDrawColor( Golem.Style:GetColor( "editor-bg" ) )
 	surface_DrawRect( 0, 0, w, h )
-
-	surface_SetDrawColor( 32, 32, 32, 255 )
-	if GOLEM_LIGHT then surface_SetDrawColor( 240, 240, 240, 255 ) end 
+	
+	surface_SetDrawColor( Golem.Style:GetColor( "editor-side-bg" ) )
 	surface_DrawRect( 0, 0, self.LinePadding, h )
 	
 	if self.bParamMatching then
 		self.Params = self.tSyntax:FindMatchingParam( self.Caret.x, self.Caret.y )
 	end
-
+	
 	if self.MouseDown and self.MouseDown == MOUSE_LEFT then
 		self.Caret = self:CursorToCaret( )
 	end
-
+	
 	self.Scroll.x = math_floor( self.pScrollBar:GetScroll( ) + 1 )
 	self.Scroll.y = math_floor( self.pHScrollBar:GetScroll( ) + 1 )
-
+	
 	if self.bCodeFolding then
 		for k, v in pairs( self.FoldButtons ) do
 			if IsValid( v ) and ispanel( v ) then
@@ -1750,12 +1748,8 @@ end
 function PANEL:DrawRow( Row, LinePos, bForceRepaint )
 	if Row > #self.tRows then return end
 	
-	if GOLEM_LIGHT then
-		draw_SimpleText( tostring( Row ), self.Font, self.BookmarkWidth + self.LineNumberWidth, self.FontHeight * LinePos, C_black, TEXT_ALIGN_RIGHT )
-	else 
-		draw_SimpleText( tostring( Row ), self.Font, self.BookmarkWidth + self.LineNumberWidth, self.FontHeight * LinePos, C_white, TEXT_ALIGN_RIGHT )
-	end 
-
+	draw_SimpleText( tostring( Row ), self.Font, self.BookmarkWidth + self.LineNumberWidth, self.FontHeight * LinePos, Golem.Style:GetColor("editor-side-idx",true), TEXT_ALIGN_RIGHT )
+	
 	if editor_debug_folding then
 		surface_SetDrawColor( 0, 200, 255 )
 		surface_DrawRect( self.LinePadding, self.FontHeight * LinePos, self.FontWidth * self.tFoldData[Row][1], self.FontHeight )
@@ -1936,8 +1930,9 @@ function PANEL:PaintCursor( Caret )
 		local width, height = self.FontWidth, self.FontHeight
 
 		if ( RealTime( ) - self.Blink ) % 0.8 < 0.4 then
-			surface_SetDrawColor( 240, 240, 240, 255 )
-			if GOLEM_LIGHT then surface_SetDrawColor( 0, 0, 0, 255 ) end 
+			-- surface_SetDrawColor( 240, 240, 240, 255 )
+			-- if GOLEM_LIGHT then surface_SetDrawColor( 0, 0, 0, 255 ) end 
+			surface_SetDrawColor( Golem.Style:GetColor( "editor-caret" ) )
 			
 			local Offset = Caret.x - self.Scroll.x
 			local Insert = Caret.Insert or self.Insert
@@ -1966,11 +1961,13 @@ function PANEL:PaintStatus( )
 	local Width, Height = surface_GetTextSize( Line )
 	local Wide, Tall = self:GetSize( )
 	
-	if GOLEM_LIGHT then 
-		draw_WordBox( 4, Wide - Width - 20 - ( self.pScrollBar.Enabled and 16 or 0 ) , Tall - Height - 20 - ( self.pHScrollBar.Enabled and 16 or 0 ), Line, "Trebuchet18", Color( 50, 50, 50, 100 ), Color( 50, 50, 50, 255 ) )
-	else 
-		draw_WordBox( 4, Wide - Width - 20 - ( self.pScrollBar.Enabled and 16 or 0 ) , Tall - Height - 20 - ( self.pHScrollBar.Enabled and 16 or 0 ), Line, "Trebuchet18", Color( 50, 50, 50, 100 ), Color( 235, 235, 235, 255 ) )
-	end
+	draw_WordBox( 4, Wide - Width - 20 - ( self.pScrollBar.Enabled and 16 or 0 ) , Tall - Height - 20 - ( self.pHScrollBar.Enabled and 16 or 0 ), Line, "Trebuchet18", Golem.Style:GetColor( "editor-status", true ), Golem.Style:GetColor( "editor-status-txt", true ) )
+	
+	-- if GOLEM_LIGHT then 
+	-- 	draw_WordBox( 4, Wide - Width - 20 - ( self.pScrollBar.Enabled and 16 or 0 ) , Tall - Height - 20 - ( self.pHScrollBar.Enabled and 16 or 0 ), Line, "Trebuchet18", Color( 50, 50, 50, 100 ), Color( 50, 50, 50, 255 ) )
+	-- else 
+	-- 	draw_WordBox( 4, Wide - Width - 20 - ( self.pScrollBar.Enabled and 16 or 0 ) , Tall - Height - 20 - ( self.pHScrollBar.Enabled and 16 or 0 ), Line, "Trebuchet18", Color( 50, 50, 50, 100 ), Color( 235, 235, 235, 255 ) )
+	-- end
 end
 
 -- TODO: this

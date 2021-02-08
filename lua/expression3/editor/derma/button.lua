@@ -14,6 +14,7 @@ AccessorFunc( PANEL, "m_tColor", 			"Color" )
 AccessorFunc( PANEL, "m_tTextColor", 		"TextColor" )
 AccessorFunc( PANEL, "m_tTextShadow", 		"TextShadow" )
 
+AccessorFunc( PANEL, "m_sStyleNames", 		"StyleNames" )
 AccessorFunc( PANEL, "m_sFont", 			"Font", FORCE_STRING )
 
 AccessorFunc( PANEL, "m_bOutline", 			"Outlined", FORCE_BOOL )
@@ -23,10 +24,10 @@ AccessorFunc( PANEL, "m_bFlat", 			"Flat", FORCE_BOOL )
 
 function PANEL:Init( )
 	self:SetSize( 25, 25 )
-
+	
 	self:SetFont( "Trebuchet22" )
 	self:SetText( "" )
-
+	
 	self:SetColor( Color( 100, 100, 100 ) )
 	self:SetTextColor( Color( 255, 255, 255 ) )
 	self:SetOutlined( false )
@@ -65,37 +66,42 @@ function PANEL:SizeToContentsY( )
 end
 
 function PANEL:Paint( w, h )
-	surface.SetDrawColor( self:GetColor( ) )
+	surface.SetDrawColor( self:GetColor( ):Unpack( ) )
+	if self.m_sStyleNames and self.m_sStyleNames[1] then 
+		surface.SetDrawColor( Golem.Style:GetColor( self.m_sStyleNames[1] ) )
+	end 
 	surface.DrawRect( 0, 0, w, h )
-
+	
 	if not self:GetFlat( ) then
 		surface.SetDrawColor( 200, 200, 200, 100 )
+		if self.m_sStyleNames and self.m_sStyleNames[2] then surface.SetDrawColor( Golem.Style:GetColor( self.m_sStyleNames[2] ) ) end
 		surface.SetMaterial( gradient_down )
 		surface.DrawTexturedRect( 0, 0, w, h )
 	end
-
+	
 	if self:GetFading( ) then
 		surface.SetDrawColor( 0, 0, 0, 0 )
 		if self.Hovered then surface.SetDrawColor( 0, 0, 0, 100 ) end
 		if self.Depressed then surface.SetDrawColor( 0, 0, 0, 150 ) end
 		surface.DrawRect( 0, 0, w, h )
 	end
-
+	
 	if self:GetOutlined( ) then
 		surface.SetDrawColor( 0, 0, 0, 255 )
 		surface.DrawOutlinedRect( 0, 0, w, h )
 	end
-
+	
 	surface.SetFont( self:GetFont( ) )
 	local Text = self:GetText( )
 	local tw, th = surface.GetTextSize( Text )
 	local x, y = math.floor( w / 2 ) - math.floor( tw / 2 ), math.floor( h / 2 ) - math.floor( th / 2 )
-
+	
 	if not self:GetTextCentered( ) then x = 5 end
-
+	
 	if self:GetTextShadow( ) then
-		surface.SetTextColor( self:GetTextShadow( ) )
-
+		surface.SetTextColor( self:GetTextShadow( ):Unpack( ) )
+		if self.m_sStyleNames and self.m_sStyleNames[3] then surface.SetTextColor( Golem.Style:GetColor( self.m_sStyleNames[3] ) ) end
+		
 		for _x = -1, 1 do
 			for _y = -1, 1 do
 				surface.SetTextPos( x + _x, y + _y )
@@ -103,11 +109,12 @@ function PANEL:Paint( w, h )
 			end
 		end
 	end
-
-	surface.SetTextColor( self:GetTextColor( ) )
+	
+	surface.SetTextColor( self:GetTextColor( ):Unpack( ) )
+	if self.m_sStyleNames and self.m_sStyleNames[4] then surface.SetTextColor( Golem.Style:GetColor( self.m_sStyleNames[4] ) ) end
 	surface.SetTextPos( x, y )
 	surface.DrawText( Text )
-
+	
 	return true
 end
 
