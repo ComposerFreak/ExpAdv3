@@ -499,12 +499,18 @@ end
 --[[
 ]]
 
-function PARSER.Require( this, type, msg, ... )
+function PARSER.RequireAt( this, token, type, msg, ... )
 	if (not this:Accept(type)) then
 		msg = string.gsub(msg, "$GOT", this.__next and (this.__next.type or "nothing") or "nothing");
-		this:Throw( this.__token, msg, ... )
+		this:Throw( token or this.__token, msg, ... );
 	end; return this.__token;
 end
+
+function PARSER.Require( this, type, msg, ... )
+	return this:RequireAt( nil, type, msg, ... );
+end
+
+
 
 function PARSER.Exclude( this, tpye, msg, ... )
 	if (this:Accept(type)) then
@@ -1431,7 +1437,8 @@ function PARSER.Statment_12(this, expr)
 		expressions[2] = this:Expression_1();
 
 		if (this:Accept("com")) then
-			this:Require("typ", "Class expected for index operator, after coma (,).");
+			
+			this:Require("typ", "class name expected after comma (,) for Index operator.");
 
 			class = E3Class(this.__token.data);
 

@@ -402,6 +402,8 @@ end
 ]]
 
 function TOKENIZER.SkipSpaces(this)
+	local pre = this.__readChar;
+
 	this:NextPattern("^[%s\n]*");
 
 	local r = this.__match;
@@ -635,6 +637,7 @@ function TOKENIZER.Loop(this)
 
 	if tkn then
 		this.__pos = this.__pos + #chars;
+		this.__readChar = this.__readChar + #chars;
 		this:CreateToken(tkn[1], tkn[2], nil, nil, char, line);
 		return true;
 	end
