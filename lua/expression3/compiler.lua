@@ -2722,7 +2722,6 @@ function COMPILER.CastExpression(this, type, expr)
 		op = EXPR_CAST_OPERATORS[signature];
 
 		if (not op) then
-			this:Throw(expr.token, signature);
 			return false, expr;
 		end
 

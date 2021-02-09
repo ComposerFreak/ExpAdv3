@@ -236,22 +236,6 @@ function TOKENIZER.NextChar(this)
 	this:SkipChar();
 end
 
---[[
-function TOKENIZER.PrevChar(this)
-	-- REPLACED:
-	this.__readChar = this.__readChar - 2;
-	this.__dataEnd = this.__dataEnd - 2;
-	this.__pos = this.__pos - 2;
-	this.__data = string.sub(this.__data, -2);
-
-	this:SkipChar();
-
-	if (this.__char == "\n") then
-		this.__readLine = this.__readLine - 2
-	end
-end
-]]
-
 function TOKENIZER.GetState(this)
 	return {
 		pos = this.__pos,
@@ -384,7 +368,7 @@ end
 --[[
 ]]
 
-function TOKENIZER.CreateToken(this, type, name, data, origonal)
+function TOKENIZER.CreateToken(this, type, name, data, origonal, char, line)
 	
 	if (not data) then
 		data = this.__data;
@@ -398,8 +382,8 @@ function TOKENIZER.CreateToken(this, type, name, data, origonal)
 	tkn.start = this.__dataStart + this.__offset;
 	tkn.stop = this.__dataEnd + this.__offset;
 	tkn.pos = this.__pos;
-	tkn.char = this.__readChar;
-	tkn.line = this.__readLine;
+	tkn.char = char or this.__readChar;
+	tkn.line = line or this.__readLine;
 	tkn.depth = this.__depth;
 	tkn.orig = origonal;
 	
@@ -410,6 +394,8 @@ function TOKENIZER.CreateToken(this, type, name, data, origonal)
 	end
 	
 	tkn.index = table.insert( this.__tokens, tkn )
+
+	--print( tkn.type, tkn.name, tkn.data, tkn.pos, tkn.char, tkn.line )
 end
 
 --[[
@@ -488,6 +474,9 @@ function TOKENIZER.Loop(this)
 	
 	-- Numbers
 
+	local char = this.__readChar;
+	local line = this.__readLine;
+
 	if (this:NextPattern("^0x[%x]+")) then
 		local n = tonumber(this.__data);
 
@@ -495,7 +484,7 @@ function TOKENIZER.Loop(this)
 			this:Throw(0, "Invalid number format (%s)", 0, this.__data);
 		end
 
-		this:CreateToken("num", "hex", n);
+		this:CreateToken("num", "hex", n, nil, char, line);
 
 		return true;
 	end
@@ -507,7 +496,7 @@ function TOKENIZER.Loop(this)
 			this:Throw(0, "Invalid number format (%s)", 0, this.__data);
 		end
 
-		this:CreateToken("num", "bin", n);
+		this:CreateToken("num", "bin", n, nil, char, line);
 
 		return true;
 	end
@@ -519,7 +508,7 @@ function TOKENIZER.Loop(this)
 			this:Throw(0, "Invalid number format (%s)", 0, this.__data);
 		end
 
-		this:CreateToken("num", "real", n);
+		this:CreateToken("num", "real", n, nil, char, line);
 
 		return true;
 	end
@@ -617,9 +606,9 @@ function TOKENIZER.Loop(this)
 			end
 
 			if (not pattern) then
-				this:CreateToken("str", "string");
+				this:CreateToken("str", "string", nil, nil, char, line);
 			else
-				this:CreateToken("ptr", "string pattern");
+				this:CreateToken("ptr", "string pattern", nil, nil, char, line);
 			end
 
 			return true;
@@ -646,7 +635,7 @@ function TOKENIZER.Loop(this)
 
 	if tkn then
 		this.__pos = this.__pos + #chars;
-		this:CreateToken(tkn[1], tkn[2]);
+		this:CreateToken(tkn[1], tkn[2], nil, nil, char, line);
 		return true;
 	end
 
@@ -655,7 +644,7 @@ function TOKENIZER.Loop(this)
 		local cls = this.classes[this.__data];
 
 		if cls then
-			this:CreateToken("cst", "cast", cls[1], cls[2]);
+			this:CreateToken("cst", "cast", cls[1], cls[2], char, line);
 			return true;
 		end
 	end
@@ -666,7 +655,7 @@ function TOKENIZER.Loop(this)
 		local cls = this.classes[this.__data];
 
 		if cls then
-			this:CreateToken("typ", "type", cls[1], cls[2]);
+			this:CreateToken("typ", "type", cls[1], cls[2], char, line);
 			return true;
 		end
 	end
@@ -679,9 +668,9 @@ function TOKENIZER.Loop(this)
 		local tkn = this.keywords[this.__data];
 
 		if (tkn) then
-			this:CreateToken(tkn[1], tkn[2]);
+			this:CreateToken(tkn[1], tkn[2], nil, nil, char, line);
 		else
-			this:CreateToken("var", "variable");
+			this:CreateToken("var", "variable", nil, nil, char, line);
 		end
 		
 		return true;
