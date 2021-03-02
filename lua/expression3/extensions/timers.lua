@@ -49,6 +49,11 @@ extension:RegisterFunction("timer", "create", "s,n,n,f,...", "", 0, function(ctx
 
 end, false);
 
+extension:RegisterFunction("timer", "exists", "s", "b", function(ctx, name)
+	local timers = ctx.data.timers;
+	return timers[name] != nil;
+end, false);
+
 extension:RegisterFunction("timer", "remove", "s", "", 0, function(ctx, name)
 	local timers = ctx.data.timers;
 	timers[name] = nil;
