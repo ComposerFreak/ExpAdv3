@@ -1116,9 +1116,9 @@ function COMPILER.Compile_INC(this, inst, token, data)
 
 	if class ~= "n" then
 		if data.first then
-			this:Throw(token, "No sutch operator ++%s.", name(class));
+			this:Throw(token, "No such operator ++%s.", name(class));
 		else
-			this:Throw(token, "No sutch operator %s.++", name(class));
+			this:Throw(token, "No such operator %s.++", name(class));
 		end
 	end
 
@@ -1145,9 +1145,9 @@ function COMPILER.Compile_IND(this, inst, token, data)
 
 	if class ~= "n" then
 		if data.first then
-			this:Throw(token, "No sutch operator --%s.", name(class));
+			this:Throw(token, "No such operator --%s.", name(class));
 		else
-			this:Throw(token, "No sutch operator %s--.", name(class));
+			this:Throw(token, "No such operator %s--.", name(class));
 		end
 	end
 
@@ -4307,7 +4307,7 @@ function COMPILER.Compile_CLASS(this, inst, token, data)
 				local interface = this:GetInterface(imp.data);
 
 				if (not interface) then
-					this:Throw(imp, "No sutch interface %s", imp.data);
+					this:Throw(imp, "No such interface %s", imp.data);
 				end
 
 				for mName, info in pairs(interface.methods) do
@@ -4381,7 +4381,7 @@ function COMPILER.Compile_FIELD(this, inst, token, data)
 		local info = cls.attributes[var];
 
 		if (not info) then
-			this:Throw(token, "No sutch attribute %s.%s", name(type), var);
+			this:Throw(token, "No such attribute %s.%s", name(type), var);
 		end
 
 		this:writeToBuffer(inst, info.field or var);
@@ -4392,7 +4392,7 @@ function COMPILER.Compile_FIELD(this, inst, token, data)
 	local info = userclass.memory[var];
 
 	if (not info) then
-		this:Throw(token, "No sutch attribute %s.%s", type, var);
+		this:Throw(token, "No such attribute %s.%s", type, var);
 	end
 
 	if (info) then
@@ -4480,7 +4480,7 @@ function COMPILER.Compile_SET_FIELD(this, inst, token, data)
 	end
 
 	if (not info) then
-		this:Throw(token, "No sutch attribute %s.%s", name(r1), attribute);
+		this:Throw(token, "No such attribute %s.%s", name(r1), attribute);
 	end
 
 	if (info.class ~= r2) then
