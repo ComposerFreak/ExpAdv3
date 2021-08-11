@@ -320,6 +320,14 @@ extension:RegisterFunction("render", "drawText", "v2,s", "n", 2, function(ctx, p
 	surface.DrawText(str);
 end, false);
 
+extension:RegisterFunction("render", "drawText", "v2,s,n", "n", 2, function(ctx, p, str, align)
+	surface.SetFont(FONT);
+	local width, _ = surface.GetTextSize(str);
+	preDraw(ctx);
+	surface.SetTextPos(p.x-width*align/2, p.y);
+	surface.DrawText(str);
+end, false);
+
 --[[
 	*****************************************************************************************************************************************************
 		HUD
