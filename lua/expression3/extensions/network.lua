@@ -226,9 +226,11 @@ end, false);
 	Recipient Filter Class
 ]]
 
+extension:SetServerState();
+
 extension:RegisterClass("crf", "recipientfilter", istable, istable);
 
-extension:RegisterConstructor("crf", "", RecipientFilter, true);
+extension:RegisterConstructor("crf", "", RecipientFilter or function()end, true);
 
 extension:RegisterMethod("crf", "addAllPlayers", "", "", 0);
 
@@ -263,6 +265,8 @@ extension:RegisterMethod("crf", "getPlayers", "", "t", 1, function(crf)
 
 	return {tbl = t, children = {}, parents = {}, size = #t};
 end, true);
+
+extension:SetSharedState();
 
 --[[
 	Send the data.
