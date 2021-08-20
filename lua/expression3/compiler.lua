@@ -3058,8 +3058,12 @@ function COMPILER.Compile_METH(this, inst, token, data)
 
 		this:addInstructionToBuffer(inst, ")");
 	else
-		local signature = string_format("%s.%s", name(inst.class), op.signature);
-		error("Attempt to inject " .. op.signature .. " but operator was incorrect, got " .. type(op.operator));
+		this:addInstructionToBuffer(inst, expressions[1]);
+		this:writeToBuffer(inst, ":");
+		this:writeToBuffer(inst, method);
+		this:writeToBuffer(inst, "(");
+		this:writeArgsToBuffer(inst, vargs, unpack(expressions, 2));
+		this:writeToBuffer(inst, ")");
 	end
 
 	return op.result, op.rCount, (op.price + price);

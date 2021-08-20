@@ -232,29 +232,37 @@ extension:RegisterClass("crf", "recipientfilter", istable, istable);
 
 extension:RegisterConstructor("crf", "", RecipientFilter or function()end, true);
 
-extension:RegisterMethod("crf", "addAllPlayers", "", "", 0);
+extension:RegisterMethod("crf", "addAllPlayers", "", "", 0, "AddAllPlayers");
 
-extension:RegisterMethod("crf", "addPAS", "v", "", 0);
+extension:RegisterMethod("crf", "addPAS", "v", "", 0, "AddPAS");
 
-extension:RegisterMethod("crf", "addPlayer", "p", "", 0);
+extension:RegisterMethod("crf", "addPlayer", "p", "", 0, function(crf, player)
+	if (IsValid(player)) then
+		crf.AddPlayer(player)
+	end
+end);
 
-extension:RegisterMethod("crf", "addPVS", "v", "", 0);
+extension:RegisterMethod("crf", "addPVS", "v", "", 0, "AddPVS");
 
-extension:RegisterMethod("crf", "addRecipientsByTeam", "n", "", 0);
+extension:RegisterMethod("crf", "addRecipientsByTeam", "n", "", 0, "AddRecipientsByTeam");
 
-extension:RegisterMethod("crf", "getCount", "", "n", 1);
+extension:RegisterMethod("crf", "getCount", "", "n", 1, "GetCount");
 
-extension:RegisterMethod("crf", "removeAllPlayers", "", "", 0);
+extension:RegisterMethod("crf", "removeAllPlayers", "", "", 0, "RemoveAllPlayers");
 
-extension:RegisterMethod("crf", "removePAS", "v", "", 0);
+extension:RegisterMethod("crf", "removePAS", "v", "", 0, "RemovePAS");
 
-extension:RegisterMethod("crf", "removePlayer", "p", "", 0);
+extension:RegisterMethod("crf", "removePlayer", "p", "", 0, function(crf, player)
+	if (IsValid(player)) then
+		crf.RemovePlayer(player)
+	end
+end);
 
-extension:RegisterMethod("crf", "removePVS", "v", "", 0);
+extension:RegisterMethod("crf", "removePVS", "v", "", 0, "RemovePVS");
 
-extension:RegisterMethod("crf", "removeRecipientsByTeam", "n", "", 0);
+extension:RegisterMethod("crf", "removeRecipientsByTeam", "n", "", 0, "RemoveRecipientsByTeam");
 
-extension:RegisterMethod("crf", "removeRecipientsNotOnTeam", "n", "", 0);
+extension:RegisterMethod("crf", "removeRecipientsNotOnTeam", "n", "", 0, "RemoveRecipientsNotOnTeam");
 
 extension:RegisterMethod("crf", "getPlayers", "", "t", 1, function(crf)
 	local t = {};
