@@ -242,8 +242,8 @@ function HELPER_PANEL:Reload()
 			"information.",
 			"",
 			"Click one of the saved custom",
-			"helper files to load the the",
-			"files saved helper data.",
+			"helper files to load the",
+			"modified saved helper data.",
 		});
 	end);
 

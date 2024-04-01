@@ -10,13 +10,15 @@ local function name(id)
 end
 
 function EXPR_DOCS.PrettyPerams(perams)
+	if (!perams or perams == "") then return ""; end
+	
 	local r = {};
 
 	for k, v in pairs(string.Explode(",", perams)) do
 		r[k] = name(v);
 	end
 
-	return table.concat(r,",");
+	return table.concat(r,", ");
 end
 
 local prettyPerams = EXPR_DOCS.PrettyPerams;
@@ -24,15 +26,17 @@ local prettyPerams = EXPR_DOCS.PrettyPerams;
 local prettyReturns = function(op)
 	local rt = op["result type"] or "";
 
-	--if rt then rt = prettyPerams(rt); end
-
 	local rc = tonumber(op["result count"]) or 0;
-
 	if rc == 0 or rt == "" or rt == "NIL" then return "void" end
 
+	rt = name(rt);
 	if rc == 1 then return rt end
 
-	return string.format("%s *%i", name(rt), rc);
+	for i = 2, rc do
+		rt = rt .. ", " .. rt;
+	end
+
+	return rt;
 end
 
 function EXPR_DOCS.PrettyEvent(op)
@@ -89,18 +93,35 @@ local post_html = [[
 	</html>
 ]];
 
-EXPR_DOCS.toHTML = function(tbl)
+EXPR_DOCS.parseBB = function(html)
+	html = html:gsub("%[b%](.-)%[/b%]", "<strong>%1</strong>");
+	html = html:gsub("%[i%](.-)%[/i%]", "<em>%1</em>");
+	html = html:gsub("%[u%](.-)%[/u%]", "<u>%1</u>");
+	html = html:gsub("%[color=(.-)%](.-)%[/color%]", "<span style='color:%1;'>%2</span>");
+	html = html:gsub("%[h1%](.-)%[/h1%]", "<h1>%1</h1>");
+	html = html:gsub("%[h2%](.-)%[/h2%]", "<h2>%1</h2>");
+	html = html:gsub("%[h3%](.-)%[/h3%]", "<h3>%1</h3>");
+	html = html:gsub("%[img%s?size=(%d+)x(%d+)%](.-)%[/img%]", "<img src='%3' width='%1' height='%2' />");
+	html = html:gsub("%[img%](.-)%[/img%]", "<img src='%1' />");
+	html = html:gsub("%[box color=(.-)%](.-)%[/box%]", "<div style='border-radius: 10px; padding: 10px; background-color:%1; display: inline-block;'>%2</div>");
+	return html;
+end
 
+EXPR_DOCS.toHTML = function(tbl)
 	local lines = {pre_html};
 
 	for k, v in pairs(tbl) do
 		
 		if istable(v) then
 			local str = string.format("<td>%s</td>\n<td>%s</td>", tostring(v[1] or ""), tostring(v[2] or ""));
-			lines[#lines + 1] = string.format("<tr>%s</tr>", str);
+			str = string.format("<tr>%s</tr>", str);
+			str = EXPR_DOCS.parseBB(str);
+			lines[#lines + 1] = str;
 		else
 			local str = string.format("<td colspan=\"2\">%s</td>", tostring(v or ""));
-			lines[#lines + 1] = string.format("<tr>%s</tr>", str);
+			str = string.format("<tr>%s</tr>", str);
+			str = EXPR_DOCS.parseBB(str);
+			lines[#lines + 1] = str;
 		end
 
 	end
@@ -147,9 +168,9 @@ end
 
 local function state(n)
 	n = tonumber(n);
-	if n == EXPR_SERVER then return "[SERVER]"; end
-	if n == EXPR_CLIENT then return "[CLIENT]"; end
-	if n == EXPR_SHARED then return "[CLIENT/SERVER]"; end
+	if n == EXPR_SERVER then return {"State:", "[color=orange][SERVER][/color] Must be part of a server side statment."}; end
+	if n == EXPR_CLIENT then return {"State:", "[color=blue][CLIENT][/color] Must be part of a client side statment."}; end
+	if n == EXPR_SHARED then return {"State:", "[color=yellow][SHARED][/color]"}; end
 	return "[ERROR]";
 end
 
@@ -658,4 +679,12 @@ hook.Add( "Expression3.AddGolemTabTypes", "HelperTab", function(editor)
 	end );
 
 	editor.tbRight:SetupButton( "Helper", "fugue/question.png", TOP, function( ) editor:NewMenuTab( "helper" ); end )
+
+	if (editor.btnHideSidebar.Expanded) then
+		local tab = editor.pnlSideTabHolder:GetActiveTab()
+		
+		if (!IsValid( tab ) or !ispanel( tab )) then
+			timer.Simple(1, function() editor:NewMenuTab( "helper" ); end)
+		end
+	end
 end );

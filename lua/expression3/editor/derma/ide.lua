@@ -22,7 +22,7 @@ local sDefaultGateTab = [[
 /*
 	Generic Gate Code.
 	
-	Wiki:     https://github.com/Rusketh/ExpAdv3/wiki or [?].
+	Wiki:     https://github.com/ComposerFreak/ExpAdv3/wiki or [?].
 	Workshop: https://steamcommunity.com/sharedfiles/filedetails/?id=2001386268
 */
 
@@ -46,7 +46,7 @@ local sDefaultScreenTab = [[
     This code uses another E3-Gates Screen events,
     providing an additonal parameter for the screens entity.
 
-    Wiki:     https://github.com/Rusketh/ExpAdv3/wiki or [?].
+    Wiki:     https://github.com/ComposerFreak/ExpAdv3/wiki or [?].
     Workshop: https://steamcommunity.com/sharedfiles/filedetails/?id=2001386268
 */
 
@@ -234,16 +234,6 @@ function PANEL:Init( )
 	self.btnHideSidebar:SetIconCentered( true )
 	self.btnHideSidebar:SetIconFading( false )
 	self.btnHideSidebar:SetOutlined( true )
-
-	local nSidebar = cookie.GetNumber( "golem_sidebar_state", 1 )
-	if nSidebar == 0 then
-		self.btnHideSidebar:SetMaterial( Material( "diagona-icons/131.png" ) )
-		self.btnHideSidebar.Expanded = false
-		self.pnlSideTabHolder:SetWidth( 0 )
-	else 
-		self.btnHideSidebar:SetMaterial( Material( "diagona-icons/132.png" ) )
-		self.btnHideSidebar.Expanded = true
-	end
 	
 	self.btnHideSidebar.DoClick = function( btn )
 		if btn.mov then return end
@@ -251,6 +241,8 @@ function PANEL:Init( )
 			btn.mov = true
 			self.pnlSideTabHolder:SizeTo( 0, -1, 0.5, nil, nil, function()
 				btn:SetMaterial( Material( "diagona-icons/131.png" ) )
+				self.btmResizeSidebar:SetVisible(false)
+				self.btmResizeSidebar:SetEnabled(false)
 				btn.Expanded = false
 				btn.mov = nil
 				cookie.Set( "golem_sidebar_state", 0 )
@@ -259,13 +251,64 @@ function PANEL:Init( )
 			btn.mov = true
 			self.pnlSideTabHolder:SizeTo( 265, -1, 0.5, nil, nil, function()
 				btn:SetMaterial( Material( "diagona-icons/132.png" ) )
+				self.btmResizeSidebar:SetVisible(true)
+				self.btmResizeSidebar:SetEnabled(true)
 				btn.Expanded = true
 				btn.mov = nil
 				cookie.Set( "golem_sidebar_state", 1 )
 			end )
 		end
 	end
-	
+
+	self.btmResizeSidebar = vgui.Create( "GOLEM_ImageButton", self.btnHideSidebar )
+	self.btmResizeSidebar:Dock(BOTTOM)
+	self.btmResizeSidebar:DrawButton( false )
+	self.btmResizeSidebar:SetIconCentered( true )
+	self.btmResizeSidebar:SetMaterial( Material( "diagona-icons/v-grip.png" ) )
+	self.btmResizeSidebar:DockMargin( 0, 5, 0, 5 )
+
+	self.btmResizeSidebar.OnMousePressed = function(btn, code)
+		if (self.btnHideSidebar.Expanded and !self.btnHideSidebar.mov) then
+			if (code == MOUSE_LEFT) then
+				btn.bResizing = true;
+				btn.nXPos = btn:ScreenToLocal( gui.MouseX(), 0 );
+			end
+		end
+	end
+
+	self.btmResizeSidebar.Think = function(btn)
+		if (btn.bResizing) then
+			if (!input.IsMouseDown(MOUSE_LEFT)) then
+				btn.bResizing = false;
+			else
+				local x = btn:ScreenToLocal( gui.MouseX(), 0 );
+				
+				local offset = math.floor(x - btn.nXPos);
+				offset = math.Clamp(offset, -10, 10);
+
+				local wide = self.pnlSideTabHolder:GetWide() + offset;
+				wide = math.Clamp(wide, 265, self:GetWide() -  265);
+
+				self.pnlSideTabHolder:SetWide(wide);
+			end
+		end
+	end
+
+	local nSidebar = cookie.GetNumber( "golem_sidebar_state", 1 )
+	if nSidebar == 0 then
+		self.btmResizeSidebar:SetVisible(false)
+		self.btmResizeSidebar:SetEnabled(false)
+
+		self.btnHideSidebar:SetMaterial( Material( "diagona-icons/131.png" ) )
+		self.btnHideSidebar.Expanded = false
+		self.pnlSideTabHolder:SetWidth( 0 )
+	else 
+		self.btmResizeSidebar:SetVisible(true)
+		self.btmResizeSidebar:SetEnabled(true)
+
+		self.btnHideSidebar:SetMaterial( Material( "diagona-icons/132.png" ) )
+		self.btnHideSidebar.Expanded = true
+	end
 
 	self.pnlTabHolder = vgui.Create( "GOLEM_PropertySheet", self )
 	self.pnlTabHolder:Dock( FILL )
