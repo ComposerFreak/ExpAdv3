@@ -35,4 +35,4 @@ https://p.yusukekamiyamane.com/
 
 All rights of Fugue Icons belong to origonal authors.
 
-Used under Creative Commons v3 (https://creativecommons.org/licenses/by/3.0)
+Used under Creative Commons Attribution 3.0 License (https://creativecommons.org/licenses/by/3.0)
