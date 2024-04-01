@@ -150,10 +150,15 @@ function HELPER_PANEL:CloseEditor()
 	self:InvalidateLayout();
 end
 
-function HELPER_PANEL:OpenHTML(h)
+function HELPER_PANEL:OpenHTML(h, w)
 	self.cls_btn:SetVisible(true);
 	self.html_pnl:SetVisible(true);
 	self.html_pnl:SetTall(h);
+
+	if (w && w > 100) then
+		Golem.GetInstance( ).pnlSideTabHolder:SetWide(w + 30);
+	end
+
 	self:CloseEditor();
 end
 
@@ -207,6 +212,7 @@ function HELPER_PANEL:Reload()
 	--e3docs/saved/
 
 	local Links = self:AddNode("Links");
+	local Tutorials = self:AddNode("Tutorials");
 	local Examples = self:AddNode("Examples");
 	local BookMarks = self:AddNode("Bookmarks");
 	local CustomHelpers = self:AddNode("Custom Helpers");
@@ -236,7 +242,7 @@ function HELPER_PANEL:Reload()
 			"Right click a node to",
 			"change its helper data.",
 			"",
-			"Click the export button",
+			"Click the [img]asset://garrysmod/materials/fugue/disk-black.png[/img]export button",
 			"at the bottom of the helper",
 			"to export your custom helper",
 			"information.",
@@ -258,10 +264,10 @@ end
 
 function HELPER_PANEL:AddHTMLCallback(node, callback)
 	node.DoClick = function(this)
-		local str, num = callback();
-		local tall = num and ((num * 25) + 10) or 100;
+		local str, h, w = callback();
+		local tall = h and ((h * 25) + 10) or 100;
 		self.html_pnl:SetHTML(str);
-		self:OpenHTML(tall);
+		self:OpenHTML(tall, w);
 	end;
 end
 

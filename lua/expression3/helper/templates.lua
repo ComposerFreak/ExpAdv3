@@ -5,8 +5,12 @@ if SERVER then return; end
 *********************************************************************************/
 
 local function name(id)
+	if (id == nil) then return nil; end
 	local obj = EXPR_LIB.GetClass(id);
-	return obj and obj.name or id;
+	if (!obj) then obj = EXPR_LIB.GetClass(id:lower()); end
+	if (obj and obj.name) then return obj.name; end
+	if (id == "o") then return "object"; end
+	return id;
 end
 
 function EXPR_DOCS.PrettyPerams(perams)
@@ -168,9 +172,9 @@ end
 
 local function state(n)
 	n = tonumber(n);
-	if n == EXPR_SERVER then return {"State:", "[color=orange][SERVER][/color] Must be part of a server side statment."}; end
-	if n == EXPR_CLIENT then return {"State:", "[color=blue][CLIENT][/color] Must be part of a client side statment."}; end
-	if n == EXPR_SHARED then return {"State:", "[color=yellow][SHARED][/color]"}; end
+	if n == EXPR_SERVER then return {"[img]asset://garrysmod/materials/fugue/state-server.png[/img]", "Must be part of a server side statment."}; end
+	if n == EXPR_CLIENT then return {"[img]asset://garrysmod/materials/fugue/state-client.png[/img]", "Must be part of a client side statment."}; end
+	if n == EXPR_SHARED then return {"[img]asset://garrysmod/materials/fugue/state-shared.png[/img]", "Can appear anywhere, both server side and clientside."}; end
 	return "[ERROR]";
 end
 
@@ -327,10 +331,10 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.ClassHelpers", function(pnl
 
 			pnl:AddHTMLCallback(node, function()
 				local keyvalues = type_docs:ToKV(type_docs.data[i]);
-
+				
 				return EXPR_DOCS.toHTML({
 					{"Class:", string.format("%s (%s)", keyvalues.name, EXPR_DOCS.PrettyPerams(keyvalues.id))},
-					{"Extends:", string.format("%s", lk[keyvalues.extends] or "")},
+					{"Extends:", string.format("%s", name(keyvalues.extends))},
 					keyvalues.example,
 					describe(keyvalues.desc),
 					state(keyvalues.state),
@@ -455,88 +459,73 @@ local function prettyOp(op)
 		local c = #args;
 
 		local token;
+		local named;
 
-		    if match1 == "EQ"  then token = "==";
-		elseif match1 == "NEQ" then token = "!=";
-		elseif match1 == "LEG" then token = "<=";
-		elseif match1 == "GEQ" then token = ">=";
-		elseif match1 == "LTH" then token = "<";
-		elseif match1 == "GTH" then token = ">";
-		elseif match1 == "DIV" then token = "/";
-		elseif match1 == "MUL" then token = "*"; 
-		elseif match1 == "SUB" then token = "-"; 
-		elseif match1 == "ADD" then token = "+"; 
-		elseif match1 == "EXP" then token = "^";
-		elseif match1 == "MOD" then token = "%";
-		elseif match1 == "AND" then token = "&&";
-		elseif match1 == "OR" then token = "||";
-		elseif match1 == "BAND" then token = "&";
-		elseif match1 == "BOR" then token = "|";
-		elseif match1 == "BXOR" then token = "^^";
-		elseif match1 == "BSHL" then token = "<<";
-		elseif match1 == "BSHR" then token = ">>";
+		    if match1 == "EQ"  then token, named = "==", "Equal to ( == )";
+		elseif match1 == "NEQ" then token, named = "!=", "Not equal to ( != )";
+		elseif match1 == "LEG" then token, named = "<=", "Less or equal to ( <= )";
+		elseif match1 == "GEQ" then token, named = ">=", "Greather or equal to ( >= )";
+		elseif match1 == "LTH" then token, named = "<", "Less then ( < )";
+		elseif match1 == "GTH" then token, named = ">", "Greater than ( > )";
+		elseif match1 == "DIV" then token, named = "/", "Divide ( / )";
+		elseif match1 == "MUL" then token, named = "*", "Multiply ( * )"; 
+		elseif match1 == "SUB" then token, named = "-", "Subtract ( - )";
+		elseif match1 == "ADD" then token, named = "+", "Add ( + )";
+		elseif match1 == "EXP" then token, named = "^", "Exponent ( ^ )";
+		elseif match1 == "MOD" then token, named = "%", "Modulo ( % )";
+		elseif match1 == "AND" then token, named = "&&", "Logical and ( && )";
+		elseif match1 == "OR" then token, named = "||", "Logical or ( || )";
+		elseif match1 == "BAND" then token, named = "&", "Bitwise and ( & )";
+		elseif match1 == "BOR" then token, named = "|", "Bitwise or ( | )";
+		elseif match1 == "BXOR" then token, named = "^^", "^^";
+		elseif match1 == "BSHL" then token, named = "<<", "Bitwise shift l ( << )";
+		elseif match1 == "BSHR" then token, named = ">>", "Bitwise shift r ( >> )";
 		end
 
 		if token then
-			if c == 2 then return string.format("%s %s %s", args[1], token, args[2]), token; end
+			if c == 2 then return string.format("%s %s %s", name(args[1]), token, name(args[2])), token, named; end
 		end
 
-
-
 		if match1 == "SET" then
-			local cls = args[3] or "CLS";
+			local cls = name(args[3]) or "CLS";
 			if cls and cls == "CLS" then cls = "type"; end
 
-			if c >= 3 then return string.format("%s[%s,%s] = %s", args[1], args[2], cls, args[4] or cls), "[]="; end
+			if c >= 3 then return string.format("%s[%s,%s] = %s", name(args[1]), name(args[2]), cls, name(args[4]) or cls), "[]=", "Set ( []= )"; end
 		end
 
 		if match1 == "GET" then
-			local cls = args[3] or "CLS";
+			local cls = name(args[3]) or "CLS";
 			if cls and cls == "CLS" then cls = "type"; end
 
-			if c >= 2 then return string.format("%s[%s,%s]", args[1], args[2], cls), "[]"; end
+			if c >= 2 then return string.format("%s[%s,%s]", name(args[1]), name(args[2]), cls), "[]", "Get ( [] )"; end
 		end
 
-
-
-		    if match1 == "IS" then token = "";
-		elseif match1 == "NOT" then token = "!";
-		elseif match1 == "LEN" then token = "#";
-		elseif match1 == "NEG" then token = "-";
+		//if match1 == "IS" then token = ""; //else
+			if match1 == "NOT" then token, named = "!", "Not ( ! )";
+		elseif match1 == "LEN" then token, named = "#", "Length ( # )";
+		elseif match1 == "NEG" then token, named = "-", "Negative ( - )";
 		end
 
 		if token then
-			if c == 1 then return string.format("%s%s", token, args[2]), token; end
+			if c == 1 then return string.format("%s%s", token, name(args[2])), token, named; end
 		end
-
-
 
 		if match1 == "TEN" then
-			if c == 3 then return string.format("%s ? %s : %s", args[1], args[2], args[3]), "?"; end
+			if c == 3 then return string.format("%s ? %s : %s", name(args[1]), name(args[2]), name(args[3])), "?:", "Tenary ( ?: )"; end
 		end
-
-
 
 		if match1 == "ITOR" then
-			if c == 1 then return string.format("foreach(type k; type v in %s) {}", args[1]), "foreach"; end
+			if c == 1 then return string.format("foreach(type k; type v in %s) {}", name(args[1])), "foreach", "Foreach loop"; end
 		end
-
 	end
-
-
 
 	match1, match2 = string.match(op.signature, "^%(([A-Za-z0-9_]+)%)([A-Za-z0-9_]+)$");
 
 	if match1 and match2 then
-		--match2 = match2:upper():Replace("_", "");
-
-		--local class = EXPR_LIB.GetClass(match1);
-		--if class then match1 = class.name; end;
-
-		return string.format("(%s) %s", name(match1), name(match2)), "casting";
+		return string.format("(%s) %s", name(match1), name(match2)), "casting", "casting";
 	end
 
-	return signature, "misc";
+	return signature, "misc", "unsorted";
 end
 
 /*********************************************************************************
@@ -547,9 +536,9 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.OperatorHelpers", function(
 
 	op_docs:ForEach( function(i, keyvalues)
 
-		local signature, class = prettyOp(keyvalues);
+		local signature, token, named = prettyOp(keyvalues);
 
-		local node = pnl:AddNode("Operators", class, signature);
+		local node = pnl:AddNode("Operators", named, signature);
 
 		stateIcon(node, keyvalues.state);
 
@@ -621,6 +610,40 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.Links", function(pnl)
 	
 	hook.Run("Expression3.LoadHelperLinks", addLink);
 
+end);
+
+
+/*********************************************************************************
+	Youtube Videos
+*********************************************************************************/
+hook.Add("Expression3.LoadHelperNodes", "Expression3.Youtube", function(pnl)
+
+	function AddYoutube(video, name)
+		local node = pnl:AddNode("Tutorials", name);
+		
+		if (BRANCH == "x86-64") then
+			local HTML = [[<iframe width="560" height="315" src="https://www.youtube.com/embed/]] .. video .. [[" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>]];
+			
+			pnl:AddHTMLCallback(node, function()
+				return HTML, 14, 600;
+			end);
+
+		else
+			node.DoClick = function() RequestOpenURL("https://youtube.com/watch?v=" .. video); end
+		end
+	
+		node:SetIcon("e3_youtube.png");
+	end
+	
+	AddYoutube("BkWZpEEb13o", "Editor Overview");
+	AddYoutube("n636qx5A_o4", "Hellow World");
+	AddYoutube("GUozLFU9YBM", "Directives and Wire IO");
+	AddYoutube("VTfu3gu5uyE", "Variables and Constructors");
+	AddYoutube("lNBLRmNXnpg", "User Functions and Delegates");
+	AddYoutube("5jdTEPrpuPw", "Callbacks, Events and Timers");
+	AddYoutube("YrfpKMaOW3g", "User Classes");
+
+	hook.Run("Expression3.LoadTutorials", pnl, AddYoutube);
 end);
 
 /*********************************************************************************
