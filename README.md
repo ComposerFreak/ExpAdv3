@@ -27,9 +27,9 @@ https://github.com/Rusketh/ExpAdv3/blob/master/docs/Expression%20Advanced%203%20
 #Discord:
 https://discord.gg/CtBdU7m
 
-## Attributions
+# Attributions
 
-# Yusuke Kamiyamane [Fugue Icons]
+## Yusuke Kamiyamane [Fugue Icons]
 
 https://p.yusukekamiyamane.com/
 
