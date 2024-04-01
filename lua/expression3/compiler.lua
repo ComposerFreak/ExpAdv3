@@ -886,7 +886,7 @@ end
 
 function COMPILER.CheckState(this, state, token, msg, frst, ...)
 	local s = this:GetOption("state");
-
+	
 	if (state == EXPR_SHARED or s == state) then
 		return true;
 	end
@@ -898,7 +898,7 @@ function COMPILER.CheckState(this, state, token, msg, frst, ...)
 
 		if (state == EXPR_SERVER) then
 			this:Throw(token, "%s is server-side only.", msg);
-		elseif (state == EXPR_SERVER) then
+		elseif (state == EXPR_CLIENT) then
 			this:Throw(token, "%s is client-side only.", msg);
 		end
 	end

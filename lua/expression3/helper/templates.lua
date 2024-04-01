@@ -146,15 +146,18 @@ local function describe(str)
 end
 
 local function state(n)
+	n = tonumber(n);
 	if n == EXPR_SERVER then return "[SERVER]"; end
 	if n == EXPR_CLIENT then return "[CLIENT]"; end
-	return "[SERVER] [CLIENT]";
+	if n == EXPR_SHARED then return "[CLIENT/SERVER]"; end
+	return "[ERROR]";
 end
 
 local function stateIcon(node, n)
-	if n == EXPR_SERVER then node:SetIcon("fugue/state-server.png") end
-	if n == EXPR_CLIENT then node:SetIcon("fugue/state-client.png") end
-	return node:SetIcon("fugue/state-shared.png");
+	n = tonumber(n);
+	if n == EXPR_SERVER then node:SetIcon("fugue/state-server.png"); end
+	if n == EXPR_CLIENT then node:SetIcon("fugue/state-client.png"); end
+	if n == EXPR_SHARED then node:SetIcon("fugue/state-shared.png"); end
 end
 
 /*********************************************************************************
@@ -228,7 +231,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 	fundocs:ForEach( function(i, keyvalues)
 		local signature = EXPR_DOCS.PrettyFunction(keyvalues);
 		local result = EXPR_DOCS.PrettyReturn(keyvalues);
-		
+
 		local node = pnl:AddNode("Libraries", keyvalues.library, "Functions", signature);
 
 		stateIcon(node, keyvalues.state);
@@ -591,9 +594,9 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.Links", function(pnl)
 		end;
 	end
 
-	addLink("Git Hub", "https://github.com/Rusketh/ExpAdv3", "e3_github.png");
+	addLink("Git Hub", "https://github.com/ComposerFreak/ExpAdv3", "e3_github.png");
 	addLink("Video Tutorials", "https://www.youtube.com/playlist?list=PLOxsj9mdwMARIj7m9MkFkV1mno6nc1TpN", "e3_youtube.png");
-	addLink("Offical Discord", "https://discord.gg/ktZFksbru7", "e3_discord.png");
+	//addLink("Offical Discord", "https://discord.gg/ktZFksbru7", "e3_discord.png");
 	
 	hook.Run("Expression3.LoadHelperLinks", addLink);
 
