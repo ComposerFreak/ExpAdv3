@@ -110,6 +110,7 @@ function PANEL:Init( )
 	self.pResetDivider:SetLeft( self.pColorReset )
 	self.pResetDivider:SetRight( self.pColorResetAll )
 	self.pResetDivider:SetLeftWidth( 120 )
+	self.pResetDivider:SetLeftMin( 120 )
 	self.pResetDivider.StartGrab = function( ) end
 	self.pResetDivider.m_DragBar:SetCursor( "" )
 	
@@ -118,7 +119,6 @@ function PANEL:Init( )
 	self.pFontName:SetValue( Golem.Font:GetFontName( ) )
 	self.pFontName:AddChoice( "Consolas" )
 	self.pFontName:AddChoice( "Courier New" )
-	self.pFontName:AddChoice( "DejaVu Sans Mono" )
 	self.pFontName:AddChoice( "Lucida Console" )
 	
 	if system.IsOSX( ) then
@@ -145,6 +145,7 @@ function PANEL:Init( )
 	self.pFontSelect:SetLeft( self.pFontName )
 	self.pFontSelect:SetRight( self.pFontSize )
 	self.pFontSelect:SetLeftWidth( 160 )
+	self.pFontSelect:SetLeftMin( 160 )
 	self.pFontSelect:SetTall( 20 )
 	self.pFontSelect.StartGrab = function( ) end
 	self.pFontSelect.m_DragBar:SetCursor( "" )

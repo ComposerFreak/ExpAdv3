@@ -707,7 +707,7 @@ hook.Add( "Expression3.AddGolemTabTypes", "HelperTab", function(editor)
 		local tab = editor.pnlSideTabHolder:GetActiveTab()
 		
 		if (!IsValid( tab ) or !ispanel( tab )) then
-			timer.Simple(1, function() editor:NewMenuTab( "helper" ); end)
+			timer.Simple(0.1, function() editor:NewMenuTab( "helper" ); end)
 		end
 	end
 end );

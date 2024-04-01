@@ -118,7 +118,7 @@ function PANEL:Init( )
 	self:DockPadding( 0, 25, 0, 0 )
 	self:ShowCloseButton( true )
 	self:SetSizable( true )
-	self:SetCanMaximize( false )
+	self:SetCanMaximize( true )
 	self:SetMinWidth( 800 )
 	self:SetMinHeight( 600 )
 	self:SetScreenLock( true )
@@ -225,7 +225,7 @@ function PANEL:Init( )
 	self.pnlSideTabHolder:Dock( LEFT )
 	self.pnlSideTabHolder:DockMargin( 5, 5, 0, 5 )
 	self.pnlSideTabHolder:SetPadding( 0 )
-	self.pnlSideTabHolder:SetWide( 265 )
+	self.pnlSideTabHolder:SetWide( cookie.GetNumber( "golem_sidebar_w", 265 ) )
 	self.pnlSideTabHolder.btnNewTab:Remove( )
 
 	self.btnHideSidebar = vgui.Create( "GOLEM_ImageButton", self )
@@ -239,6 +239,7 @@ function PANEL:Init( )
 	self.btnHideSidebar.DoClick = function( btn )
 		if btn.mov then return end
 		if btn.Expanded then
+			cookie.Set( "golem_sidebar_w", self.pnlSideTabHolder:GetWide( ) )
 			btn.mov = true
 			self.pnlSideTabHolder:SizeTo( 0, -1, 0.5, nil, nil, function()
 				btn:SetMaterial( Material( "diagona-icons/131.png" ) )
@@ -250,7 +251,7 @@ function PANEL:Init( )
 			end )
 		else
 			btn.mov = true
-			self.pnlSideTabHolder:SizeTo( 265, -1, 0.5, nil, nil, function()
+			self.pnlSideTabHolder:SizeTo( cookie.GetNumber( "golem_sidebar_w", 265 ), -1, 0.5, nil, nil, function()
 				btn:SetMaterial( Material( "diagona-icons/132.png" ) )
 				self.btmResizeSidebar:SetVisible(true)
 				self.btmResizeSidebar:SetEnabled(true)
@@ -269,14 +270,12 @@ function PANEL:Init( )
 	self.btmResizeSidebar:DockMargin( 0, 5, 0, 5 )
 
 	self.btmResizeSidebar.OnMousePressed = function(btn, code)
-		if (self.btnHideSidebar.Expanded and !self.btnHideSidebar.mov) then
-			if (code == MOUSE_LEFT) then
-				btn.bResizing = true;
-				btn.nXPos = btn:ScreenToLocal( gui.MouseX(), 0 );
-			end
+		if (self.btnHideSidebar.Expanded and !self.btnHideSidebar.mov) and (code == MOUSE_LEFT) then
+			btn.bResizing = true;
+			btn.nXPos = btn:ScreenToLocal( gui.MouseX(), 0 );
 		end
 	end
-
+	
 	self.btmResizeSidebar.Think = function(btn)
 		if (btn.bResizing) then
 			if (!input.IsMouseDown(MOUSE_LEFT)) then
@@ -291,43 +290,44 @@ function PANEL:Init( )
 				wide = math.Clamp(wide, 265, self:GetWide() -  265);
 
 				self.pnlSideTabHolder:SetWide(wide);
+				cookie.Set( "golem_sidebar_w", wide )
 			end
 		end
 	end
-
+	
 	local nSidebar = cookie.GetNumber( "golem_sidebar_state", 1 )
 	if nSidebar == 0 then
 		self.btmResizeSidebar:SetVisible(false)
 		self.btmResizeSidebar:SetEnabled(false)
-
+		
 		self.btnHideSidebar:SetMaterial( Material( "diagona-icons/131.png" ) )
 		self.btnHideSidebar.Expanded = false
 		self.pnlSideTabHolder:SetWidth( 0 )
 	else 
 		self.btmResizeSidebar:SetVisible(true)
 		self.btmResizeSidebar:SetEnabled(true)
-
+		
 		self.btnHideSidebar:SetMaterial( Material( "diagona-icons/132.png" ) )
 		self.btnHideSidebar.Expanded = true
 	end
-
+	
 	self.pnlTabHolder = vgui.Create( "GOLEM_PropertySheet", self )
 	self.pnlTabHolder:Dock( FILL )
 	self.pnlTabHolder:DockMargin( 0, 0, 0, 5 )
 	self.pnlTabHolder:SetPadding( 0 )
-
+	
 	self.pnlTabHolder.btnNewTab.DoClick = function( btn )
 		self:NewTab( "editor", sDefaultScript(), nil, "generic" )
 	end
-
+	
 	self.tbConsoleHolder = vgui.Create( "DPanel", self )
 	self.tbConsoleHolder.Paint = function( pnl, w, h ) end
-
+	
 	self.tbConsoleEditor = vgui.Create( "GOLEM_Console", self.tbConsoleHolder )--vgui.Create( "GOLEM_Console", self.tbConsoleHolder )
 	self.tbConsoleEditor:Dock( BOTTOM )
 	self.tbConsoleEditor:SetTall( 125 )
 	self.bConsoleVisible = true
-
+	
 	self.pnlConsoleDivider = vgui.Create( "DVerticalDivider", self )
 	self.pnlConsoleDivider:SetTop( self.pnlTabHolder )
 	self.pnlConsoleDivider:SetBottom( self.tbConsoleEditor )
@@ -335,11 +335,9 @@ function PANEL:Init( )
 	self.pnlConsoleDivider:DockPadding( 0, 5, 5, 5 )
 	self.pnlConsoleDivider:SetTopMin( 200 )
 	self.pnlConsoleDivider:SetBottomMin( 50 )
-
-
+	
+	
 	Golem.Syntax:Create( "console", self.tbConsoleEditor )
-
-	hook.Run( "Expression3.AddGolemTabTypes", self )
 	
 	--self:AddCustomTab( bScope, sName, fCreate, fClose )
 	
@@ -361,6 +359,9 @@ function PANEL:Init( )
 		self.Options = nil
 	end )
 	
+	self:NewMenuTab( "options" )
+	hook.Run( "Expression3.AddGolemTabTypes", self )
+	
 	if not self:OpenOldTabs( ) then
 		self:NewTab( "editor", sDefaultScript() )
 	end
@@ -370,9 +371,6 @@ function PANEL:Init( )
 	self.pnlSearch:SetOptions(self.searchOptions);
 	self.pnlSearch:InvalidateLayout( );
 	self.pnlSearch:Close(true);
-	
-	--This was annoying.
-	-- self:NewMenuTab( "options" )
 	
 	Golem.Font.OnFontChange = function( Font, sFontID )
 		for i = 1, #self.pnlTabHolder.Items do
