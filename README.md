@@ -27,7 +27,8 @@ https://github.com/Rusketh/ExpAdv3/blob/master/docs/Expression%20Advanced%203%20
 #Discord:
 https://discord.gg/CtBdU7m
 
-##Attributions
+## Attributions
+
 Yusuke Kamiyamane [Icons]
 https://p.yusukekamiyamane.com/icon/license/
 All rights of Fugue Icons belong to origonal authors.
