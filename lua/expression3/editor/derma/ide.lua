@@ -18,6 +18,7 @@ local PANEL = { }
 
 local sDefaultGateTab = [[
 @name "Generic Gate";
+@server; //Remove to allow clientside code.
 
 /*
 	Generic Gate Code.

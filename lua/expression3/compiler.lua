@@ -119,7 +119,7 @@ function COMPILER.Initialize(this, instance, files)
 	this.__scopeID = 0;
 	this.__scopeData = {};
 	this.__scopeData[0] = this.__scope;
-
+	
 	this.__scope.memory = {};
 	this.__scope.classes = {};
 	this.__scope.interfaces = {};
@@ -167,7 +167,7 @@ end
 
 function COMPILER._Run(this)
 	this:SetOption("state", EXPR_SHARED);
-	
+
 	this:Compile(this.__root);
 	
 	local result = {}
@@ -570,7 +570,7 @@ function COMPILER.Compile(this, inst)
 	end
 	
 	if (not inst.compiled) then
-		inst.buffer = {};
+		if (not inst.buffer) then inst.buffer = {}; end
 		
 		local instruction = string_upper(inst.type);
 		local fun = this["Compile_" .. instruction];
@@ -733,6 +733,14 @@ function COMPILER.Compile_ROOT(this, inst, token, data)
 	this:writeToBuffer(inst, "\nreturn function(env)\n");
 	this:writeToBuffer(inst, "\nsetfenv(1,env)\n");
 
+	if this.__directives.server then
+		this:SetOption("state", EXPR_SERVER);
+		this:writeToBuffer(inst, "if (SERVER) then\n");
+	elseif this.__directives.client then
+		this:SetOption("state", EXPR_CLIENT);
+		this:writeToBuffer(inst, "if (CLIENT) then\n");
+	end
+
 	local stmts = data.stmts;
 
 	if stmts then
@@ -749,6 +757,10 @@ function COMPILER.Compile_ROOT(this, inst, token, data)
 		for i = 1, #stmts do
 			this:addInstructionToBuffer(inst, stmts[i]);
 		end
+	end
+
+	if (this.__directives.server or this.__directives.client) then
+		this:writeToBuffer(inst, "\nend\n");
 	end
 
 	this:writeToBuffer(inst, "\nend\n");

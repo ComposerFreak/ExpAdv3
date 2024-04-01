@@ -272,7 +272,9 @@ local Directives = {
 	["model"] = true,
 	["input"] = true,
 	["output"] = true,
-	["include"] = true
+	["include"] = true,
+	["server"] = true,
+	["client"] = true
 }
 
 --[[---------------------------------------------------------------------------

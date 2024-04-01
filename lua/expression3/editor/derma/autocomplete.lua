@@ -274,7 +274,7 @@ function PANEL:Think()
 end
 
 function PANEL:OnKeyCodeTyped( code )
-
+	if not self.editor then return false; end
 	if not self.editor.bShowAutoComplete then return false; end
 	local control = input.IsKeyDown( KEY_LCONTROL ) or input.IsKeyDown( KEY_RCONTROL );
 

@@ -629,7 +629,7 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.Youtube", function(pnl)
 			end);
 
 		else
-			node.DoClick = function() RequestOpenURL("https://youtube.com/watch?v=" .. video); end
+			node.DoClick = function() gui.OpenURL("https://youtube.com/watch?v=" .. video); end
 		end
 	
 		node:SetIcon("e3_youtube.png");

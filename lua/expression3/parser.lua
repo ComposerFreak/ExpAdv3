@@ -692,6 +692,31 @@ end
 
 ]]
 
+function PARSER.Directive_SERVER(this, token, directive)
+	if (this.FirstStatment) then
+		this:Throw(token, "Directive @server must appear towards the top of your code");
+	elseif (this.__directives.client) then
+		this:Throw(token, "Directive @server conflicts with directive @client.");
+	elseif (this.__directives.server) then
+		this:Throw(token, "Directive @server must not appear twice.");
+	end
+
+	this.__directives.server = true;
+end
+
+function PARSER.Directive_CLIENT(this, token, directive)
+	if (this.FirstStatment) then
+		this:Throw(token, "Directive @client must appear towards the top of your code");
+	elseif (this.__directives.server) then
+		this:Throw(token, "Directive @client conflicts with directive @server.");
+	elseif (this.__directives.client) then
+		this:Throw(token, "Directive @client must not appear twice.");
+	end
+
+	this.__directives.client = true;
+end
+
+
 function PARSER.Directive_NAME(this, token, directive)
 	this:Require("str", "String expected to follow directive @name");
 
@@ -867,7 +892,7 @@ function PARSER.Statment_0(this)
 		local token = this.__token;
 		dirLine = this.__token.line;
 
-		if (not this:Accept("var")) then
+		if (not this:Accept("var", "sv", "cl")) then
 			this:Throw(token, "Directive name exspected after @");
 		end
 
@@ -1799,7 +1824,7 @@ function PARSER.Expression_19(this)
 
 		this:ExcludeWhiteSpace("Negation operator (-) must not be succeeded by whitespace");
 
-		local expr = this:Expression_1();
+		local expr = this:Expression_20();
 
 		return this:EndInstruction(inst, {expr = expr});
 	end
@@ -1813,7 +1838,7 @@ function PARSER.Expression_20(this)
 
 		this:ExcludeWhiteSpace("Not operator (!) must not be succeeded by whitespace");
 
-		local expr = this:Expression_1();
+		local expr = this:Expression_21();
 
 		return this:EndInstruction(inst, {expr = expr});
 	end
