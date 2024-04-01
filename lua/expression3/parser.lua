@@ -1106,7 +1106,14 @@ end
 
 function PARSER.Statment_6(this)
 	if (this:Accept("sv")) then
+
 		local inst = this:StartInstruction("server", this.__token);
+
+		if (this.__directives.server) then
+			this:Throw(inst.token, "server statment can not appear when using the @server directive.");
+		elseif (this.__directives.client) then
+			this:Throw(inst.token, "server statment can not appear when using the @client directive.");
+		end
 
 		local block = this:Block_1(true, "then");
 
@@ -1115,6 +1122,12 @@ function PARSER.Statment_6(this)
 
 	if (this:Accept("cl")) then
 		local inst = this:StartInstruction("client", this.__token);
+
+		if (this.__directives.server) then
+			this:Throw(inst.token, "client statment can not appear when using the @server directive.");
+		elseif (this.__directives.client) then
+			this:Throw(inst.token, "client statment can not appear when using the @client directive.");
+		end
 
 		local block = this:Block_1(true, "then");
 
