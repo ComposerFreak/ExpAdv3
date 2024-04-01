@@ -921,7 +921,7 @@ end
 function COMPILER.Compile_SERVER(this, inst, token, data)
 	this:writeToBuffer(inst, "if (SERVER) then\n");
 
-	if (not this:GetOption("server")) then
+	if (this:GetOption("state") == EXPR_CLIENT) then
 		this:Throw(token, "Server block must not appear inside a Client block.")
 	end
 
@@ -943,7 +943,7 @@ end
 function COMPILER.Compile_CLIENT(this, inst, token, data)
 	this:writeToBuffer(inst, "if (CLIENT) then\n");
 
-	if (not this:GetOption("client")) then
+	if (this:GetOption("state") == EXPR_SERVER) then
 		this:Throw(token, "Client block must not appear inside a Server block.")
 	end
 
