@@ -31,7 +31,7 @@ https://discord.gg/CtBdU7m
 
 # Yusuke Kamiyamane [Fugue Icons]
 
-https://p.yusukekamiyamane.com/icon/license/
+https://p.yusukekamiyamane.com/
 
 All rights of Fugue Icons belong to origonal authors.
 
