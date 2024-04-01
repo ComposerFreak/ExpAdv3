@@ -80,7 +80,7 @@ if (CLIENT) then
 
 		local status = false;
 		local context = self.context;
-		local res = self.GPU.Resolution or 512;
+		local res = self.GPU.Resolution or 1024;
 
 		if context then
 
@@ -190,9 +190,9 @@ function ENT:GetCursor(ply)
 
 	if (B >= 0) then
 		local HitPos = WorldToLocal( Start + Dir * B, Angle(), Pos, Ang )
-		local x = (0.5+HitPos.x/(monitor.RS*512/monitor.RatioX)) * 512
-		local y = (0.5-HitPos.y/(monitor.RS*512)) * 512
-		if (x < 0 or x > 512 or y < 0 or y > 512) then
+		local x = (0.5+HitPos.x/(monitor.RS*1024/monitor.RatioX)) * 1024
+		local y = (0.5-HitPos.y/(monitor.RS*1024)) * 1024
+		if (x < 0 or x > 1024 or y < 0 or y > 1024) then
 			return -1,-1
 		end -- Aiming off the screen
 		return x,y
@@ -211,7 +211,7 @@ function ENT:ScreenToLocalVector( x, y )
 	if !Monitor then return Vector( 0, 0, 0) end
 
 	local scrSize = Monitor.RS;
-	local res = self.GPU.Resolution or 512;
+	local res = self.GPU.Resolution or 1024;
 
 	local x = x - (scrSize * 0.5) * (Monitor.RS / Monitor.RatioX);
 	local y = y - (scrSize * 0.5) * res;
