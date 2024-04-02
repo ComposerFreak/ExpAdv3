@@ -267,8 +267,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 			return EXPR_DOCS.toHTML({
 				{"Function:", signature},
 				{"Returns:", prettyReturns(keyvalues)},
-				keyvalues.example,
-				describe(keyvalues.desc),
+				{"Example:", keyvalues.example},
+				{"Description:", describe(keyvalues.desc)},
 				state(keyvalues.state),
 			});
 		end);
@@ -295,8 +295,8 @@ hook.Add("Expression3.LoadHelperNodes", "Expression3.LibraryHelpers", function(p
 			return EXPR_DOCS.toHTML({
 				{"Constant:", keyvalues.signature},
 				{"Returns:", prettyReturns(keyvalues)},
-				keyvalues.example,
-				describe(keyvalues.desc),
+				--{"Example:", keyvalues.example},
+				{"Description:", describe(keyvalues.desc)},
 				state(keyvalues.state),
 			});
 		end);
