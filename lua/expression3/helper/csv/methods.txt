@@ -1,0 +1,1071 @@
+signature	id	name	parameter	result type	result count	state	desc	example
+_con.getType()	_con	getType		s	1	0		
+_crf.addAllPlayers()	_crf	addAllPlayers		_nil	0	0		
+_crf.addPAS(v)	_crf	addPAS	v	_nil	0	0		
+_crf.addPlayer(p)	_crf	addPlayer	p	_nil	0	0		
+_crf.addPVS(v)	_crf	addPVS	v	_nil	0	0		
+_crf.addRecipientsByTeam(n)	_crf	addRecipientsByTeam	n	_nil	0	0		
+_crf.getCount()	_crf	getCount		n	1	0		
+_crf.getPlayers()	_crf	getPlayers		t	1	0		
+_crf.removeAllPlayers()	_crf	removeAllPlayers		_nil	0	0		
+_crf.removePAS(v)	_crf	removePAS	v	_nil	0	0		
+_crf.removePlayer(p)	_crf	removePlayer	p	_nil	0	0		
+_crf.removePVS(v)	_crf	removePVS	v	_nil	0	0		
+_crf.removeRecipientsByTeam(n)	_crf	removeRecipientsByTeam	n	_nil	0	0		
+_crf.removeRecipientsNotOnTeam(n)	_crf	removeRecipientsNotOnTeam	n	_nil	0	0		
+_cv.height()	_cv	height		n	1	2		
+_cv.id()	_cv	id		n	1	2		
+_cv.width()	_cv	width		n	1	2		
+_e2t.exists(n)	_e2t	exists	n	b	1	1		
+_e2t.exists(s)	_e2t	exists	s	b	1	1		
+"_e2t.insert(n,a)"	_e2t	insert	"n,a"	_nil	0	1		
+"_e2t.insert(n,c)"	_e2t	insert	"n,c"	_nil	0	1		
+"_e2t.insert(n,e)"	_e2t	insert	"n,e"	_nil	0	1		
+"_e2t.insert(n,n)"	_e2t	insert	"n,n"	_nil	0	1		
+"_e2t.insert(n,p)"	_e2t	insert	"n,p"	_nil	0	1		
+"_e2t.insert(n,s)"	_e2t	insert	"n,s"	_nil	0	1		
+"_e2t.insert(n,v)"	_e2t	insert	"n,v"	_nil	0	1		
+_e2t.keys()	_e2t	keys		t	1	1		
+_e2t.popangle()	_e2t	popangle		a	1	1		
+_e2t.popcolor()	_e2t	popcolor		c	1	1		
+_e2t.popentity()	_e2t	popentity		e	1	1		
+_e2t.popnumber()	_e2t	popnumber		n	1	1		
+_e2t.popplayer()	_e2t	popplayer		p	1	1		
+_e2t.popstring()	_e2t	popstring		s	1	1		
+_e2t.popvector()	_e2t	popvector		v	1	1		
+_e2t.push(a)	_e2t	push	a	_nil	0	1		
+_e2t.push(c)	_e2t	push	c	_nil	0	1		
+_e2t.push(e)	_e2t	push	e	_nil	0	1		
+_e2t.push(n)	_e2t	push	n	_nil	0	1		
+_e2t.push(p)	_e2t	push	p	_nil	0	1		
+_e2t.push(s)	_e2t	push	s	_nil	0	1		
+_e2t.push(v)	_e2t	push	v	_nil	0	1		
+_e2t.shiftangle()	_e2t	shiftangle		a	1	1		
+_e2t.shiftcolor()	_e2t	shiftcolor		c	1	1		
+_e2t.shiftentity()	_e2t	shiftentity		e	1	1		
+_e2t.shiftnumber()	_e2t	shiftnumber		n	1	1		
+_e2t.shiftplayer()	_e2t	shiftplayer		p	1	1		
+_e2t.shiftstring()	_e2t	shiftstring		s	1	1		
+_e2t.shiftvector()	_e2t	shiftvector		v	1	1		
+_e2t.type(n)	_e2t	type	n	_cls	1	1		
+_e2t.type(s)	_e2t	type	s	_cls	1	1		
+_e2t.unshiftangle(a)	_e2t	unshiftangle	a	_nil	0	1		
+_e2t.unshiftcolor(c)	_e2t	unshiftcolor	c	_nil	0	1		
+_e2t.unshiftentity(e)	_e2t	unshiftentity	e	_nil	0	1		
+_e2t.unshiftnumber(n)	_e2t	unshiftnumber	n	_nil	0	1		
+_e2t.unshiftplayer(p)	_e2t	unshiftplayer	p	_nil	0	1		
+_e2t.unshiftstring(s)	_e2t	unshiftstring	s	_nil	0	1		
+_e2t.unshiftvector(v)	_e2t	unshiftvector	v	_nil	0	1		
+_ed.addBlackList(e)	_ed	addBlackList	e	_nil	0	1		
+_ed.addBlackList(t)	_ed	addBlackList	t	_nil	0	1		
+_ed.addWhiteList(e)	_ed	addWhiteList	e	_nil	0	1		
+_ed.addWhiteList(t)	_ed	addWhiteList	t	_nil	0	1		
+_ed.clearBlackList()	_ed	clearBlackList		_nil	0	1		
+_ed.clearClassFilters()	_ed	clearClassFilters		_nil	0	1		
+_ed.clearFilters()	_ed	clearFilters		_nil	0	1		
+_ed.clearModelFilters()	_ed	clearModelFilters		_nil	0	1		
+_ed.clearPlayerFilters()	_ed	clearPlayerFilters		_nil	0	1		
+_ed.clearWhiteList()	_ed	clearWhiteList		_nil	0	1		
+"_ed.clipFromBox(v,v)"	_ed	clipFromBox	"v,v"	_nil	0	1		
+"_ed.clipFromRegion(v,v)"	_ed	clipFromRegion	"v,v"	_nil	0	1		
+"_ed.clipFromSphere(v,n)"	_ed	clipFromSphere	"v,n"	_nil	0	1		
+"_ed.clipToBox(v,v)"	_ed	clipToBox	"v,v"	_nil	0	1		
+"_ed.clipToSphere(v,n)"	_ed	clipToSphere	"v,n"	_nil	0	1		
+_ed.copyFilters(_ed)	_ed	copyFilters	_ed	_nil	0	1		
+_ed.excludeClass(s)	_ed	excludeClass	s	_nil	0	1		
+_ed.excludeModel(s)	_ed	excludeModel	s	_nil	0	1		
+_ed.excludePlayerPpops(p)	_ed	excludePlayerPpops	p	_nil	0	1		
+_ed.findByClass(s)	_ed	findByClass	s	n	1	1		
+_ed.findByModel(s)	_ed	findByModel	s	n	1	1		
+"_ed.findInBox(v,v)"	_ed	findInBox	"v,v"	n	1	1		
+"_ed.findInCone(v,v,n,a)"	_ed	findInCone	"v,v,n,a"	n	1	1		
+"_ed.findInSphere(v,n)"	_ed	findInSphere	"v,n"	n	1	1		
+_ed.finInPVS(e)	_ed	finInPVS	e	n	1	1		
+_ed.finInPVS(v)	_ed	finInPVS	v	n	1	1		
+_ed.first()	_ed	first		e	1	1		
+_ed.includeClass(s)	_ed	includeClass	s	_nil	0	1		
+_ed.includeModel(s)	_ed	includeModel	s	_nil	0	1		
+_ed.includePlayerPpops(p)	_ed	includePlayerPpops	p	_nil	0	1		
+_ed.removeFromBlackList(e)	_ed	removeFromBlackList	e	_nil	0	1		
+_ed.removeFromWhiteList(e)	_ed	removeFromWhiteList	e	_nil	0	1		
+_ed.results()	_ed	results		n	1	1		
+_ed.sortByDistance(v)	_ed	sortByDistance	v	_nil	0	1		
+_ed.toArray()	_ed	toArray		t	1	1		
+_er.char()	_er	char		n	1	1		
+_er.line()	_er	line		n	1	1		
+_er.message()	_er	message		s	1	1		
+_mx2.column(n)	_mx2	column	n	_v2	1	1		
+"_mx2.element(n,n)"	_mx2	element	"n,n"	n	1	1		
+_mx2.row(n)	_mx2	row	n	_v2	1	1		
+"_mx2.setColumn(n,_v2)"	_mx2	setColumn	"n,_v2"	_mx2	1	1		
+"_mx2.setColumn(n,n,n)"	_mx2	setColumn	"n,n,n"	_mx2	1	1		
+"_mx2.setElement(n,n,n)"	_mx2	setElement	"n,n,n"	_mx2	1	1		
+"_mx2.setRow(n,_v2)"	_mx2	setRow	"n,_v2"	_mx2	1	1		
+"_mx2.setRow(n,n,n)"	_mx2	setRow	"n,n,n"	_mx2	1	1		
+_mx2.swapColumns()	_mx2	swapColumns		_mx2	1	1		
+"_mx2.swapElement(n,n,n,n)"	_mx2	swapElement	"n,n,n,n"	_mx2	1	1		
+_mx2.swapRows()	_mx2	swapRows		_mx2	1	1		
+_mx2.toString()	_mx2	toString		s	1	1		
+_mx3.column(n)	_mx3	column	n	v	1	1		
+"_mx3.element(n,n)"	_mx3	element	"n,n"	n	1	1		
+_mx3.getX()	_mx3	getX		v	1	1		
+_mx3.getY()	_mx3	getY		v	1	1		
+_mx3.getZ()	_mx3	getZ		v	1	1		
+_mx3.row(n)	_mx3	row	n	v	1	1		
+"_mx3.setColumn(n,n,n,n)"	_mx3	setColumn	"n,n,n,n"	_mx3	1	1		
+"_mx3.setColumn(n,v)"	_mx3	setColumn	"n,v"	_mx3	1	1		
+"_mx3.setDiagonal(n,n,n)"	_mx3	setDiagonal	"n,n,n"	_mx3	1	1		
+_mx3.setDiagonal(v)	_mx3	setDiagonal	v	_mx3	1	1		
+"_mx3.setElement(n,n,n)"	_mx3	setElement	"n,n,n"	_mx3	1	1		
+"_mx3.setRow(n,n,n,n)"	_mx3	setRow	"n,n,n,n"	_mx3	1	1		
+"_mx3.setRow(n,v)"	_mx3	setRow	"n,v"	_mx3	1	1		
+"_mx3.swapColumns(n,n)"	_mx3	swapColumns	"n,n"	_mx3	1	1		
+"_mx3.swapElement(n,n,n,n)"	_mx3	swapElement	"n,n,n,n"	_mx3	1	1		
+"_mx3.swapRows(n,n)"	_mx3	swapRows	"n,n"	_mx3	1	1		
+_mx3.toAngle()	_mx3	toAngle		a	1	1		
+_mx3.toString()	_mx3	toString		s	1	1		
+"_mx4.element(n,n)"	_mx4	element	"n,n"	n	1	1		
+_mx4.getPos()	_mx4	getPos		v	1	1		
+_mx4.getX()	_mx4	getX		v	1	1		
+_mx4.getY()	_mx4	getY		v	1	1		
+_mx4.getZ()	_mx4	getZ		v	1	1		
+"_mx4.setColumn(n,n,n,n,n)"	_mx4	setColumn	"n,n,n,n,n"	_mx4	1	1		
+"_mx4.setDiagonal(n,n,n,n)"	_mx4	setDiagonal	"n,n,n,n"	_mx4	1	1		
+"_mx4.setElement(n,n)"	_mx4	setElement	"n,n"	_mx4	1	1		
+"_mx4.setRow(n,n,n,n,n)"	_mx4	setRow	"n,n,n,n,n"	_mx4	1	1		
+"_mx4.swapColumns(n,n)"	_mx4	swapColumns	"n,n"	_mx4	1	1		
+"_mx4.swapElements(n,n,n,n)"	_mx4	swapElements	"n,n,n,n"	_mx4	1	1		
+"_mx4.swapRows(n,n)"	_mx4	swapRows	"n,n"	_mx4	1	1		
+_mx4.toString()	_mx4	toString		s	1	1		
+_ph.ang()	_ph	ang		v	1	1		
+_ph.angDamping()	_ph	angDamping		n	1	1		
+_ph.angVel()	_ph	angVel		a	1	1		
+_ph.applyAngForce(a)	_ph	applyAngForce	a	_nil	0	0		
+_ph.applyForce(v)	_ph	applyForce	v	_nil	0	0		
+_ph.applyOffsetForce(v)	_ph	applyOffsetForce	v	_nil	0	0		
+_ph.bearing(v)	_ph	bearing	v	n	1	1		
+_ph.damping()	_ph	damping		n	1	1		
+_ph.elevation(v)	_ph	elevation	v	n	1	1		
+_ph.energy()	_ph	energy		n	1	1		
+_ph.forward()	_ph	forward		v	1	1		
+_ph.getAng()	_ph	getAng		v	1	1		
+_ph.getMass()	_ph	getMass		n	1	1		
+_ph.getMassCenter()	_ph	getMassCenter		v	1	1		
+_ph.getPos()	_ph	getPos		v	1	1		
+_ph.heading(v)	_ph	heading	v	n	1	1		
+_ph.inertia()	_ph	inertia		v	1	1		
+_ph.invInertia()	_ph	invInertia		n	1	1		
+_ph.isFrozen()	_ph	isFrozen		b	1	0		
+_ph.isValid()	_ph	isValid		b	1	1		
+_ph.pos()	_ph	pos		v	1	1		
+_ph.right()	_ph	right		v	1	1		
+_ph.rotDamping()	_ph	rotDamping		n	1	1		
+_ph.setAng(a)	_ph	setAng	a	_nil	0	0		
+_ph.setFrozen(b)	_ph	setFrozen	b	_nil	0	0		
+_ph.setMass(n)	_ph	setMass	n	_nil	0	0		
+_ph.setPos(v)	_ph	setPos	v	_nil	0	0		
+_ph.setVel(v)	_ph	setVel	v	_nil	0	0		
+_ph.speedDamping()	_ph	speedDamping		n	1	1		
+_ph.toLocal(v)	_ph	toLocal	v	v	1	1		
+_ph.toWorld(v)	_ph	toWorld	v	v	1	1		
+_ph.up()	_ph	up		v	1	1		
+_ph.Vel()	_ph	Vel		v	1	1		
+_snd.fadeOut(n)	_snd	fadeOut	n	_nil	0	1	Fades a sound out over <int> seconds.	
+_snd.getPitch()	_snd	getPitch		n	1	1	Returns the pitch of the sound.	
+_snd.getVolume()	_snd	getVolume		n	1	1	Returns the volume of the sound.	
+_snd.isPlaying()	_snd	isPlaying		b	1	1	Returns true if the sound is playing.	
+_snd.play()	_snd	play		_nil	0	1	Plays the sound.	
+_snd.remove()	_snd	remove		_nil	0	1	Destroys the sound object.	
+_snd.setPitch(n)	_snd	setPitch	n	_nil	0	1	Sets the pitch of the sound to <int>.	
+"_snd.setPitch(n,n)"	_snd	setPitch	"n,n"	_nil	0	1	"Sets the pitch of the sound to <int1>, over time <int2>."	
+_snd.setVolume(n)	_snd	setVolume	n	_nil	0	1	Sets the volume of the sound to <int>.	
+"_snd.setVolume(n,n)"	_snd	setVolume	"n,n"	_nil	0	1	"Sets the volume of the sound to <int1>, over time <int2>."	
+_snd.stop()	_snd	stop		_nil	0	1	Stops the sound.	
+_ts.getDay()	_ts	getDay		n	1	1		
+_ts.getHour()	_ts	getHour		n	1	1		
+_ts.getMinute()	_ts	getMinute		n	1	1		
+_ts.getMonth()	_ts	getMonth		n	1	1		
+_ts.getSecond()	_ts	getSecond		n	1	1		
+_ts.getYear()	_ts	getYear		n	1	1		
+"_ts.setDate(n,n,n)"	_ts	setDate	"n,n,n"	_nil	0	1		
+_ts.setDay(n)	_ts	setDay	n	_nil	0	1		
+_ts.setHour(n)	_ts	setHour	n	_nil	0	1		
+_ts.setMinute(n)	_ts	setMinute	n	_nil	0	1		
+_ts.setMonth(n)	_ts	setMonth	n	_nil	0	1		
+_ts.setSecond(n)	_ts	setSecond	n	_nil	0	1		
+"_ts.setTime(n,n,n)"	_ts	setTime	"n,n,n"	_nil	0	1		
+_ts.setYear(n)	_ts	setYear	n	_nil	0	1		
+_usmg.readBool()	_usmg	readBool		b	1	1		
+_usmg.readChar()	_usmg	readChar		n	1	1		
+_usmg.readFloat()	_usmg	readFloat		n	1	1		
+_usmg.readLong()	_usmg	readLong		n	1	1		
+_usmg.readPos()	_usmg	readPos		n	1	1		
+_usmg.readShort()	_usmg	readShort		n	1	1		
+_usmg.readString()	_usmg	readString		s	1	1		
+_usmg.remain()	_usmg	remain		n	1	1		
+_usmg.size()	_usmg	size		n	1	1		
+_usmg.writeBool(b)	_usmg	writeBool	b	_nil	0	1		
+_usmg.writeChar(n)	_usmg	writeChar	n	_nil	0	1		
+_usmg.writeFloat(n)	_usmg	writeFloat	n	_nil	0	1		
+_usmg.writeLong(n)	_usmg	writeLong	n	_nil	0	1		
+_usmg.writeShort(n)	_usmg	writeShort	n	_nil	0	1		
+_usmg.writeString(s)	_usmg	writeString	s	_nil	0	1		
+_v2.ceil()	_v2	ceil		_nil	0	1		
+_v2.clone()	_v2	clone		_v2	1	1		
+_v2.distance(_v2)	_v2	distance	_v2	n	1	1		
+_v2.floor()	_v2	floor		_nil	0	1		
+_v2.getX()	_v2	getX		n	1	1		
+_v2.getXY()	_v2	getXY		n	2	1		
+_v2.getY()	_v2	getY		n	1	1		
+_v2.length()	_v2	length		n	1	1		
+_v2.lengthSqr(_v2)	_v2	lengthSqr	_v2	n	1	1		
+_v2.normalized()	_v2	normalized		_v2	1	1		
+_v2.round()	_v2	round		_nil	0	1		
+_v2.round(n)	_v2	round	n	_nil	0	1		
+_v2.setX(n)	_v2	setX	n	_nil	0	1		
+_v2.setY(n)	_v2	setY	n	_nil	0	1		
+_v2.withX(n)	_v2	withX	n	_v2	1	1		
+_v2.withY(n)	_v2	withY	n	_v2	1	1		
+_wl.hasInput(s)	_wl	hasInput	s	b	1	1		
+_wl.hasOutput(s)	_wl	hasOutput	s	b	1	1		
+_wl.inputType(s)	_wl	inputType	s	s	1	1		
+_wl.isHighSpeed()	_wl	isHighSpeed		b	1	1		
+_wl.outputType(s)	_wl	outputType	s	s	1	1		
+_wl.readAngleFromInput(s)	_wl	readAngleFromInput	s	a	1	1		
+_wl.readAngleFromOutput(s)	_wl	readAngleFromOutput	s	a	1	1		
+_wl.readE2.tableFromInput(s)	_wl	readE2.tableFromInput	s	_e2t	1	1		
+_wl.readE2.tableFromOutput(s)	_wl	readE2.tableFromOutput	s	_e2t	1	1		
+_wl.readEntityFromInput(s)	_wl	readEntityFromInput	s	e	1	1		
+_wl.readEntityFromOutput(s)	_wl	readEntityFromOutput	s	e	1	1		
+_wl.readFunctionFromInput(s)	_wl	readFunctionFromInput	s	f	1	1		
+_wl.readFunctionFromOutput(s)	_wl	readFunctionFromOutput	s	f	1	1		
+_wl.readNumberFromInput(s)	_wl	readNumberFromInput	s	n	1	1		
+_wl.readNumberFromOutput(s)	_wl	readNumberFromOutput	s	n	1	1		
+_wl.readPlayerFromInput(s)	_wl	readPlayerFromInput	s	p	1	1		
+_wl.readPlayerFromOutput(s)	_wl	readPlayerFromOutput	s	p	1	1		
+_wl.readStringFromInput(s)	_wl	readStringFromInput	s	s	1	1		
+_wl.readStringFromOutput(s)	_wl	readStringFromOutput	s	s	1	1		
+_wl.readTableFromInput(s)	_wl	readTableFromInput	s	t	1	1		
+_wl.readTableFromOutput(s)	_wl	readTableFromOutput	s	t	1	1		
+_wl.readVector2FromInput(s)	_wl	readVector2FromInput	s	_v2	1	1		
+_wl.readVector2FromOutput(s)	_wl	readVector2FromOutput	s	_v2	1	1		
+_wl.readVectorFromInput(s)	_wl	readVectorFromInput	s	v	1	1		
+_wl.readVectorFromOutput(s)	_wl	readVectorFromOutput	s	v	1	1		
+_wl.readWirelinkFromInput(s)	_wl	readWirelinkFromInput	s	_wl	1	1		
+_wl.readWirelinkFromOutput(s)	_wl	readWirelinkFromOutput	s	_wl	1	1		
+"_wl.writeToInput(s,_e2t)"	_wl	writeToInput	"s,_e2t"	_nil	0	1		
+"_wl.writeToInput(s,_e2t,b)"	_wl	writeToInput	"s,_e2t,b"	_nil	0	1		
+"_wl.writeToInput(s,_v2)"	_wl	writeToInput	"s,_v2"	_nil	0	1		
+"_wl.writeToInput(s,_v2,b)"	_wl	writeToInput	"s,_v2,b"	_nil	0	1		
+"_wl.writeToInput(s,_wl)"	_wl	writeToInput	"s,_wl"	_nil	0	1		
+"_wl.writeToInput(s,_wl,b)"	_wl	writeToInput	"s,_wl,b"	_nil	0	1		
+"_wl.writeToInput(s,a)"	_wl	writeToInput	"s,a"	_nil	0	1		
+"_wl.writeToInput(s,a,b)"	_wl	writeToInput	"s,a,b"	_nil	0	1		
+"_wl.writeToInput(s,b)"	_wl	writeToInput	"s,b"	_nil	0	1		
+"_wl.writeToInput(s,b,b)"	_wl	writeToInput	"s,b,b"	_nil	0	1		
+"_wl.writeToInput(s,e)"	_wl	writeToInput	"s,e"	_nil	0	1		
+"_wl.writeToInput(s,e,b)"	_wl	writeToInput	"s,e,b"	_nil	0	1		
+"_wl.writeToInput(s,f)"	_wl	writeToInput	"s,f"	_nil	0	1		
+"_wl.writeToInput(s,f,b)"	_wl	writeToInput	"s,f,b"	_nil	0	1		
+"_wl.writeToInput(s,n)"	_wl	writeToInput	"s,n"	_nil	0	1		
+"_wl.writeToInput(s,n,b)"	_wl	writeToInput	"s,n,b"	_nil	0	1		
+"_wl.writeToInput(s,p)"	_wl	writeToInput	"s,p"	_nil	0	1		
+"_wl.writeToInput(s,p,b)"	_wl	writeToInput	"s,p,b"	_nil	0	1		
+"_wl.writeToInput(s,s)"	_wl	writeToInput	"s,s"	_nil	0	1		
+"_wl.writeToInput(s,s,b)"	_wl	writeToInput	"s,s,b"	_nil	0	1		
+"_wl.writeToInput(s,t)"	_wl	writeToInput	"s,t"	_nil	0	1		
+"_wl.writeToInput(s,t,b)"	_wl	writeToInput	"s,t,b"	_nil	0	1		
+"_wl.writeToInput(s,v)"	_wl	writeToInput	"s,v"	_nil	0	1		
+"_wl.writeToInput(s,v,b)"	_wl	writeToInput	"s,v,b"	_nil	0	1		
+a.ceil()	a	ceil		_nil	0	1		
+a.floor()	a	floor		_nil	0	1		
+a.forward()	a	forward		v	1	1		
+a.getP()	a	getP		n	1	1		
+a.getPYR()	a	getPYR		n	3	1		
+a.getR()	a	getR		n	1	1		
+a.getY()	a	getY		n	1	1		
+a.isValid()	a	isValid		b	1	1		
+a.normalize()	a	normalize		_nil	0	1		
+a.right()	a	right		v	1	1		
+"a.rotate(v,n)"	a	rotate	"v,n"	_nil	0	1		
+a.round()	a	round		_nil	0	1		
+a.round(n)	a	round	n	_nil	0	1		
+a.setP(n)	a	setP	n	_nil	0	1		
+a.setR(n)	a	setR	n	_nil	0	1		
+a.setY(n)	a	setY	n	_nil	0	1		
+a.unpack()	a	unpack		n	3	1		
+a.up()	a	up		v	1	1		
+a.withP(n)	a	withP	n	a	1	1		
+a.withR(n)	a	withR	n	a	1	1		
+a.withY(n)	a	withY	n	a	1	1		
+c.ceil()	c	ceil		_nil	0	1		
+c.floor()	c	floor		_nil	0	1		
+c.getA()	c	getA		n	1	1		
+c.getB()	c	getB		n	1	1		
+c.getG()	c	getG		n	1	1		
+c.getR()	c	getR		n	1	1		
+c.getRGB()	c	getRGB		n	3	1		
+c.getRGBA()	c	getRGBA		n	3	1		
+c.round()	c	round		_nil	0	1		
+c.round(n)	c	round	n	_nil	0	1		
+c.setA(n)	c	setA	n	_nil	0	1		
+c.setB(n)	c	setB	n	_nil	0	1		
+c.setG(n)	c	setG	n	_nil	0	1		
+c.setR(n)	c	setR	n	_nil	0	1		
+c.unpack()	c	unpack		n	3	1		
+c.withA(n)	c	withA	n	c	1	1		
+c.withB(n)	c	withB	n	c	1	1		
+c.withG(n)	c	withG	n	c	1	1		
+c.withR(n)	c	withR	n	c	1	1		
+e.ang()	e	ang		a	1	1		
+e.angVel()	e	angVel		a	1	1		
+e.angVelVector()	e	angVelVector		v	1	1		
+e.applyAngForce(a)	e	applyAngForce	a	_nil	0	0		
+e.applyDamage(n)	e	applyDamage	n	_nil	0	1		
+e.applyForce(v)	e	applyForce	v	_nil	0	0		
+e.applyOffsetForce(v)	e	applyOffsetForce	v	_nil	0	0		
+e.applyTorque(v)	e	applyTorque	v	_nil	0	0		
+e.armor()	e	armor		n	1	1		
+e.attachmentAng(n)	e	attachmentAng	n	a	1	1		
+e.attachmentPos(n)	e	attachmentPos	n	v	1	1		
+e.attachments()	e	attachments		t	1	1		
+"e.axis(v,e,v)"	e	axis	"v,e,v"	_nil	0	0	Creates an axis between <ent1> and <ent2> at vector positions local to each ent.	
+"e.axis(v,e,v,n)"	e	axis	"v,e,v,n"	_nil	0	0	"Creates an axis between <ent1> and <ent2> at vector positions local to each ent, with <friction> friction."	
+"e.axis(v,e,v,n,v)"	e	axis	"v,e,v,n,v"	_nil	0	0	"Creates an axis between <ent1> and <ent2> at vector positions local to each ent, with <friction> friction and <localaxis> rotation axis."	
+"e.ballsocket(e,v)"	e	ballsocket	"e,v"	_nil	0	0	"Creates a ballsocket between <ent1> and <ent2> at <v>, which is local to <ent1>"	
+"e.ballsocket(e,v,n)"	e	ballsocket	"e,v,n"	_nil	0	0	"Creates a ballsocket between <ent1> and <ent2> at <v>, which is local to <ent1>, with friction <friction>"	
+"e.ballsocket(v,e,v,v,v,n)"	e	ballsocket	"v,e,v,v,v,n"	_nil	0	0	"Creates an adv ballsocket between <ent1> and <ent2> at <v>, which is local to <ent1>, with many settings"	
+e.bearing(v)	e	bearing	v	n	1	1		
+e.boxCenter()	e	boxCenter		v	1	1		
+e.boxMaxs()	e	boxMaxs		v	1	1		
+e.boxMins()	e	boxMins		v	1	1		
+e.boxSize()	e	boxSize		v	1	1		
+e.constraintBreak()	e	constraintBreak		_nil	0	0	Breaks every constraint on <ent>	
+e.constraintBreak(s)	e	constraintBreak	s	_nil	0	0	Breaks all constraints of type <type> on <ent>	
+e.elevation(v)	e	elevation	v	n	1	1		
+e.energy()	e	energy		n	1	1		
+e.extinguish()	e	extinguish		_nil	0	0		
+e.eyeAngles()	e	eyeAngles		a	1	1		
+e.eyePos()	e	eyePos		v	1	1		
+e.forward()	e	forward		v	1	1		
+e.getAng()	e	getAng		a	1	1		
+e.getBoneCount()	e	getBoneCount		n	1	1		
+e.getBoneIndex()	e	getBoneIndex		n	1	1		
+e.getChildren()	e	getChildren		t	1	0		
+e.getClass()	e	getClass		s	1	1		
+e.getColor()	e	getColor		c	1	1		
+e.getConstraints()	e	getConstraints		t	1	0		
+e.getConstraintsByType(s)	e	getConstraintsByType	s	t	1	0		
+e.getDriver()	e	getDriver		p	1	1		
+e.getGravity()	e	getGravity		n	1	1		
+e.getMass()	e	getMass		n	1	1		
+e.getMassCenter()	e	getMassCenter		v	1	1		
+e.getMaterial()	e	getMaterial		s	1	1		
+e.getModel()	e	getModel		s	1	1		
+e.getParent()	e	getParent		e	1	0		
+e.getPos()	e	getPos		v	1	1		
+e.getSubMaterial(n)	e	getSubMaterial	n	s	1	1		
+e.getWeld()	e	getWeld		_con	1	0		
+e.getWeld(n)	e	getWeld	n	_con	1	0		
+e.getWirelink()	e	getWirelink		_wl	1	1		
+e.groundEntity()	e	groundEntity		e	1	1		
+e.heading(v)	e	heading	v	a	1	1		
+e.health()	e	health		n	1	1		
+e.id()	e	id		n	1	1		
+e.ignite(n)	e	ignite	n	_nil	0	0		
+e.inertia()	e	inertia		v	1	1		
+e.invInertia()	e	invInertia		n	1	1		
+e.isConstrained()	e	isConstrained		n	1	0		
+e.isConstrainedTo()	e	isConstrainedTo		e	1	0		
+e.isConstrainedTo(n)	e	isConstrainedTo	n	e	1	0		
+"e.isConstrainedTo(n,s)"	e	isConstrainedTo	"n,s"	e	1	0		
+e.isFrozen()	e	isFrozen		b	1	0		
+e.isHeldByPlayer()	e	isHeldByPlayer		b	1	1		
+e.isNPC()	e	isNPC		b	1	1		
+e.isOnFire()	e	isOnFire		b	1	1		
+e.isPlayer()	e	isPlayer		b	1	1		
+e.isRagdoll()	e	isRagdoll		b	1	1		
+e.isValid()	e	isValid		b	1	1		
+e.isVehicle()	e	isVehicle		b	1	1		
+e.isWeapon()	e	isWeapon		b	1	1		
+e.isWeldedTo()	e	isWeldedTo		e	1	0		
+e.isWeldedTo(n)	e	isWeldedTo	n	e	1	0		
+e.lookupAttachment(s)	e	lookupAttachment	s	n	1	1		
+e.maxArmor()	e	maxArmor		n	1	1		
+e.maxHealth()	e	maxHealth		n	1	1		
+e.noCollide(e)	e	noCollide	e	_nil	0	0	Nocollides <ent1> to <ent2>	
+e.noCollideAll(b)	e	noCollideAll	b	_nil	0	0	"Nocollides <ent> to entities/players, just like Right Click of No-Collide Stool"	
+e.onGround()	e	onGround		b	1	1		
+e.owner()	e	owner		p	1	1		
+e.parent()	e	parent		e	1	1		
+e.physics()	e	physics		_ph	1	1		
+e.pos()	e	pos		v	1	1		
+e.radius()	e	radius		n	2	1		
+e.remove()	e	remove		_nil	0	0		
+e.removeTrails()	e	removeTrails		_nil	0	1		
+e.resetSubMaterials()	e	resetSubMaterials		_nil	0	0		
+e.right()	e	right		v	1	1		
+e.setAng(a)	e	setAng	a	_nil	0	0		
+e.setColor(c)	e	setColor	c	_nil	0	0		
+e.setFrozen(b)	e	setFrozen	b	_nil	0	0		
+e.setGravity(b)	e	setGravity	b	_nil	0	0		
+e.setMass(n)	e	setMass	n	_nil	0	0		
+e.setMaterial(s)	e	setMaterial	s	_nil	0	0		
+e.setNotSolid(b)	e	setNotSolid	b	_nil	0	0		
+e.setParent(e)	e	setParent	e	_nil	0	0		
+e.setPassenger()	e	setPassenger		p	1	1		
+e.setPos(v)	e	setPos	v	_nil	0	0		
+"e.setSubMaterial(n,s)"	e	setSubMaterial	"n,s"	_nil	0	0		
+"e.setTrails(n,n,n,s,c,n,b)"	e	setTrails	"n,n,n,s,c,n,b"	_nil	0	1		
+e.setVel(v)	e	setVel	v	_nil	0	0		
+e.toLocal(a)	e	toLocal	a	a	1	1		
+e.toLocal(v)	e	toLocal	v	v	1	1		
+e.totalConstraints()	e	totalConstraints		n	1	0		
+e.toWorld(a)	e	toWorld	a	a	1	1		
+e.toWorld(v)	e	toWorld	v	v	1	1		
+e.unParent()	e	unParent		_nil	0	0		
+e.up()	e	up		v	1	1		
+e.use()	e	use		_nil	0	0		
+e.Vel()	e	Vel		v	1	1		
+e.VelL()	e	VelL		v	1	1		
+e.waterLevel()	e	waterLevel		n	1	1		
+e.weld(e)	e	weld	e	_nil	0	0	Welds <ent1> to <ent2>	
+"e.weldAng(v,e)"	e	weldAng	"v,e"	_nil	0	0	"Creates an angular weld (angles are fixed, position isn't) between <ent1> and <ent2> at <v>, which is local to <ent1>"	
+e.worldSpaceAABB()	e	worldSpaceAABB		v	2	1		
+e.worldSpaceCenter()	e	worldSpaceCenter		v	2	1		
+h.animationLength()	h	animationLength		n	1	0		
+h.boneCount()	h	boneCount		n	0	0		
+h.boneParent(n)	h	boneParent	n	n	0	0		
+"h.enableClip(n,b)"	h	enableClip	"n,b"	_nil	0	0		
+h.getAnimation()	h	getAnimation		n	1	0		
+h.getAnimationName(n)	h	getAnimationName	n	s	1	0		
+h.getBoneAng(n)	h	getBoneAng	n	a	1	0		
+h.getBonePos(n)	h	getBonePos	n	v	1	0		
+h.getBoneScale(n)	h	getBoneScale	n	v	1	0		
+h.getColor()	h	getColor		c	1	0		
+h.getID()	h	getID		n	1	0		
+h.getMaterial()	h	getMaterial		s	1	0		
+h.getModel()	h	getModel		s	1	0		
+h.getParentEntity()	h	getParentEntity		_nil	0	0		
+h.getParentHologram()	h	getParentHologram		_nil	0	0		
+h.getParentPlayer()	h	getParentPlayer		_nil	0	0		
+h.getPose()	h	getPose		n	1	0		
+h.getScale()	h	getScale		v	1	0		
+h.getScaleUnits()	h	getScaleUnits		v	1	0		
+h.getSkin()	h	getSkin		n	1	0		
+h.getSkinCount()	h	getSkinCount		n	1	0		
+h.hasShading()	h	hasShading		b	1	0		
+h.isVisible()	h	isVisible		b	1	0		
+"h.jiggleBone(n,b)"	h	jiggleBone	"n,b"	_nil	0	0		
+"h.moveTo(v,n)"	h	moveTo	"v,n"	_nil	0	0		
+h.parent(e)	h	parent	e	_nil	0	0		
+h.parent(h)	h	parent	h	_nil	0	0		
+h.parent(p)	h	parent	p	_nil	0	0		
+"h.parentAttachment(e,s)"	h	parentAttachment	"e,s"	_nil	0	0		
+"h.parentAttachment(h,s)"	h	parentAttachment	"h,s"	_nil	0	0		
+"h.parentAttachment(p,s)"	h	parentAttachment	"p,s"	_nil	0	0		
+"h.pushClip(n,v,v,b)"	h	pushClip	"n,v,v,b"	_nil	0	0		
+h.remove()	h	remove		_nil	0	0		
+h.removeClip(n)	h	removeClip	n	_nil	0	0		
+"h.rotateTo(a,n)"	h	rotateTo	"a,n"	_nil	0	0		
+"h.scaleTo(v,n)"	h	scaleTo	"v,n"	_nil	0	0		
+"h.scaleToUnits(v,n)"	h	scaleToUnits	"v,n"	_nil	0	0		
+h.setAng(a)	h	setAng	a	_nil	0	0		
+h.setAnimation(n)	h	setAnimation	n	_nil	0	0		
+"h.setAnimation(n,n)"	h	setAnimation	"n,n"	_nil	0	0		
+"h.setAnimation(n,n,n)"	h	setAnimation	"n,n,n"	_nil	0	0		
+h.setAnimation(s)	h	setAnimation	s	_nil	0	0		
+"h.setAnimation(s,n)"	h	setAnimation	"s,n"	_nil	0	0		
+"h.setAnimation(s,n,n)"	h	setAnimation	"s,n,n"	_nil	0	0		
+h.setAnimationRate(n)	h	setAnimationRate	n	_nil	0	0		
+"h.setBodygroup(n,n)"	h	setBodygroup	"n,n"	_nil	0	0		
+"h.setBoneAngle(n,a)"	h	setBoneAngle	"n,a"	_nil	0	0		
+"h.setBonePos(n,v)"	h	setBonePos	"n,v"	_nil	0	0		
+"h.setBoneScale(n,v)"	h	setBoneScale	"n,v"	_nil	0	0		
+"h.setClipNormal(n,v)"	h	setClipNormal	"n,v"	_nil	0	0		
+"h.setClipOrigin(n,v)"	h	setClipOrigin	"n,v"	_nil	0	0		
+h.setColor(c)	h	setColor	c	_nil	0	0		
+h.setID(n)	h	setID	n	_nil	0	0		
+h.setMaterial(s)	h	setMaterial	s	_nil	0	0		
+h.setModel(s)	h	setModel	s	_nil	0	0		
+h.setPos(v)	h	setPos	v	_nil	0	0		
+"h.setPose(s,n)"	h	setPose	"s,n"	_nil	0	0		
+h.setScale(v)	h	setScale	v	_nil	0	0		
+h.setScaleUnits(v)	h	setScaleUnits	v	_nil	0	0		
+h.setShading(b)	h	setShading	b	_nil	0	0		
+h.setShadow(b)	h	setShadow	b	_nil	0	0		
+h.setSkin(n)	h	setSkin	n	_nil	0	0		
+h.setVisible(b)	h	setVisible	b	_nil	0	0		
+h.startMove(v)	h	startMove	v	_nil	0	0		
+h.startRotate(a)	h	startRotate	a	_nil	0	0		
+h.stopMove()	h	stopMove		_nil	0	0		
+h.stopRotate()	h	stopRotate		_nil	0	0		
+h.stopScale()	h	stopScale		_nil	0	0		
+h.unparent()	h	unparent		_nil	0	0		
+hologram.ang()	h	ang		a	1	1		
+hologram.angVel()	h	angVel		a	1	1		
+hologram.angVelVector()	h	angVelVector		v	1	1		
+hologram.applyAngForce(a)	h	applyAngForce	a	_nil	0	0		
+hologram.applyDamage(n)	h	applyDamage	n	_nil	0	1		
+hologram.applyForce(v)	h	applyForce	v	_nil	0	0		
+hologram.applyOffsetForce(v)	h	applyOffsetForce	v	_nil	0	0		
+hologram.applyTorque(v)	h	applyTorque	v	_nil	0	0		
+hologram.armor()	h	armor		n	1	1		
+hologram.attachmentAng(n)	h	attachmentAng	n	a	1	1		
+hologram.attachmentPos(n)	h	attachmentPos	n	v	1	1		
+hologram.attachments()	h	attachments		t	1	1		
+"hologram.axis(v,e,v)"	h	axis	"v,e,v"	_nil	0	0		
+"hologram.axis(v,e,v,n)"	h	axis	"v,e,v,n"	_nil	0	0		
+"hologram.axis(v,e,v,n,v)"	h	axis	"v,e,v,n,v"	_nil	0	0		
+"hologram.ballsocket(e,v)"	h	ballsocket	"e,v"	_nil	0	0		
+"hologram.ballsocket(e,v,n)"	h	ballsocket	"e,v,n"	_nil	0	0		
+"hologram.ballsocket(v,e,v,v,v,n)"	h	ballsocket	"v,e,v,v,v,n"	_nil	0	0		
+hologram.bearing(v)	h	bearing	v	n	1	1		
+hologram.boxCenter()	h	boxCenter		v	1	1		
+hologram.boxMaxs()	h	boxMaxs		v	1	1		
+hologram.boxMins()	h	boxMins		v	1	1		
+hologram.boxSize()	h	boxSize		v	1	1		
+hologram.constraintBreak()	h	constraintBreak		_nil	0	0		
+hologram.constraintBreak(s)	h	constraintBreak	s	_nil	0	0		
+hologram.elevation(v)	h	elevation	v	n	1	1		
+hologram.energy()	h	energy		n	1	1		
+hologram.extinguish()	h	extinguish		_nil	0	0		
+hologram.eyeAngles()	h	eyeAngles		a	1	1		
+hologram.eyePos()	h	eyePos		v	1	1		
+hologram.forward()	h	forward		v	1	1		
+hologram.getAng()	h	getAng		a	1	1		
+hologram.getBoneCount()	h	getBoneCount		n	1	1		
+hologram.getBoneIndex()	h	getBoneIndex		n	1	1		
+hologram.getChildren()	h	getChildren		t	1	0		
+hologram.getClass()	h	getClass		s	1	1		
+hologram.getColor()	h	getColor		c	1	1		
+hologram.getConstraints()	h	getConstraints		t	1	0		
+hologram.getConstraintsByType(s)	h	getConstraintsByType	s	t	1	0		
+hologram.getDriver()	h	getDriver		p	1	1		
+hologram.getGravity()	h	getGravity		n	1	1		
+hologram.getMass()	h	getMass		n	1	1		
+hologram.getMassCenter()	h	getMassCenter		v	1	1		
+hologram.getMaterial()	h	getMaterial		s	1	1		
+hologram.getModel()	h	getModel		s	1	1		
+hologram.getParent()	h	getParent		e	1	0		
+hologram.getPos()	h	getPos		v	1	1		
+hologram.getSubMaterial(n)	h	getSubMaterial	n	s	1	1		
+hologram.getWeld()	h	getWeld		_con	1	0		
+hologram.getWeld(n)	h	getWeld	n	_con	1	0		
+hologram.getWirelink()	h	getWirelink		_wl	1	1		
+hologram.groundEntity()	h	groundEntity		e	1	1		
+hologram.heading(v)	h	heading	v	a	1	1		
+hologram.health()	h	health		n	1	1		
+hologram.id()	h	id		n	1	1		
+hologram.ignite(n)	h	ignite	n	_nil	0	0		
+hologram.inertia()	h	inertia		v	1	1		
+hologram.invInertia()	h	invInertia		n	1	1		
+hologram.isConstrained()	h	isConstrained		n	1	0		
+hologram.isConstrainedTo()	h	isConstrainedTo		e	1	0		
+hologram.isConstrainedTo(n)	h	isConstrainedTo	n	e	1	0		
+"hologram.isConstrainedTo(n,s)"	h	isConstrainedTo	"n,s"	e	1	0		
+hologram.isFrozen()	h	isFrozen		b	1	0		
+hologram.isHeldByPlayer()	h	isHeldByPlayer		b	1	1		
+hologram.isNPC()	h	isNPC		b	1	1		
+hologram.isOnFire()	h	isOnFire		b	1	1		
+hologram.isPlayer()	h	isPlayer		b	1	1		
+hologram.isRagdoll()	h	isRagdoll		b	1	1		
+hologram.isValid()	h	isValid		b	1	1		
+hologram.isVehicle()	h	isVehicle		b	1	1		
+hologram.isWeapon()	h	isWeapon		b	1	1		
+hologram.isWeldedTo()	h	isWeldedTo		e	1	0		
+hologram.isWeldedTo(n)	h	isWeldedTo	n	e	1	0		
+hologram.lookupAttachment(s)	h	lookupAttachment	s	n	1	1		
+hologram.maxArmor()	h	maxArmor		n	1	1		
+hologram.maxHealth()	h	maxHealth		n	1	1		
+hologram.noCollide(e)	h	noCollide	e	_nil	0	0		
+hologram.noCollideAll(b)	h	noCollideAll	b	_nil	0	0		
+hologram.onGround()	h	onGround		b	1	1		
+hologram.owner()	h	owner		p	1	1		
+hologram.parent()	h	parent		e	1	1		
+hologram.physics()	h	physics		_ph	1	1		
+hologram.pos()	h	pos		v	1	1		
+hologram.radius()	h	radius		n	2	1		
+hologram.remove()	h	remove		_nil	0	0		
+hologram.removeTrails()	h	removeTrails		_nil	0	1		
+hologram.resetSubMaterials()	h	resetSubMaterials		_nil	0	0		
+hologram.right()	h	right		v	1	1		
+hologram.setAng(a)	h	setAng	a	_nil	0	0		
+hologram.setColor(c)	h	setColor	c	_nil	0	0		
+hologram.setFrozen(b)	h	setFrozen	b	_nil	0	0		
+hologram.setGravity(b)	h	setGravity	b	_nil	0	0		
+hologram.setMass(n)	h	setMass	n	_nil	0	0		
+hologram.setMaterial(s)	h	setMaterial	s	_nil	0	0		
+hologram.setNotSolid(b)	h	setNotSolid	b	_nil	0	0		
+hologram.setParent(e)	h	setParent	e	_nil	0	0		
+hologram.setPassenger()	h	setPassenger		p	1	1		
+hologram.setPos(v)	h	setPos	v	_nil	0	0		
+"hologram.setSubMaterial(n,s)"	h	setSubMaterial	"n,s"	_nil	0	0		
+"hologram.setTrails(n,n,n,s,c,n,b)"	h	setTrails	"n,n,n,s,c,n,b"	_nil	0	1		
+hologram.setVel(v)	h	setVel	v	_nil	0	0		
+hologram.toLocal(a)	h	toLocal	a	a	1	1		
+hologram.toLocal(v)	h	toLocal	v	v	1	1		
+hologram.totalConstraints()	h	totalConstraints		n	1	0		
+hologram.toWorld(v)	h	toWorld	v	v	1	1		
+hologram.unParent()	h	unParent		_nil	0	0		
+hologram.up()	h	up		v	1	1		
+hologram.use()	h	use		_nil	0	0		
+hologram.Vel()	h	Vel		v	1	1		
+hologram.VelL()	h	VelL		v	1	1		
+hologram.waterLevel()	h	waterLevel		n	1	1		
+hologram.weld(e)	h	weld	e	_nil	0	0		
+"hologram.weldAng(v,e)"	h	weldAng	"v,e"	_nil	0	0		
+hologram.worldSpaceAABB()	h	worldSpaceAABB		v	2	1		
+hologram.worldSpaceCenter()	h	worldSpaceCenter		v	2	1		
+p.aimEntity()	p	aimEntity		e	1	1		
+p.aimPos()	p	aimPos		v	1	1		
+p.deaths()	p	deaths		n	1	1		
+p.eyeAngles()	p	eyeAngles		a	1	1		
+p.eyePos()	p	eyePos		v	1	1		
+p.getAllWeapons()	p	getAllWeapons		t	1	1		
+p.getAmmoPrimary()	p	getAmmoPrimary		s	1	1		
+p.getAmmoSecondary()	p	getAmmoSecondary		s	1	1		
+p.getAngles()	p	getAngles		v	1	1		
+p.getClipPrimary()	p	getClipPrimary		s	1	1		
+p.getClipSecondary()	p	getClipSecondary		s	1	1		
+p.getPos()	p	getPos		v	1	1		
+p.getTool()	p	getTool		s	1	1		
+p.getToolName()	p	getToolName		s	1	1		
+p.getVehicle()	p	getVehicle		e	1	1		
+p.isAdmin()	p	isAdmin		b	1	1		
+p.isBot()	p	isBot		b	1	1		
+p.isCrouching()	p	isCrouching		b	1	1		
+p.isFlashlightOn()	p	isFlashlightOn		b	1	1		
+p.isInVehicle()	p	isInVehicle		b	1	1		
+p.isSuperAdmin()	p	isSuperAdmin		b	1	1		
+p.isTyping()	p	isTyping		b	1	1		
+p.isValid()	p	isValid		b	1	1		
+p.keyAttack1()	p	keyAttack1		b	1	1		
+p.keyAttack2()	p	keyAttack2		b	1	1		
+p.keyBack()	p	keyBack		b	1	1		
+p.keyDown(n)	p	keyDown	n	b	1	1		
+p.keyDuck()	p	keyDuck		b	1	1		
+p.keyForward()	p	keyForward		b	1	1		
+p.keyJump()	p	keyJump		b	1	1		
+p.keyLeft()	p	keyLeft		b	1	1		
+p.keyLeftTurn()	p	keyLeftTurn		b	1	1		
+p.keyReload()	p	keyReload		b	1	1		
+p.keyRight()	p	keyRight		b	1	1		
+p.keyRightTurn()	p	keyRightTurn		b	1	1		
+p.keySprint()	p	keySprint		b	1	1		
+p.keyUse()	p	keyUse		b	1	1		
+p.keyWalk()	p	keyWalk		b	1	1		
+p.keyZoom()	p	keyZoom		b	1	1		
+p.kills()	p	kills		n	1	1	Returns the number of kills for the player.	
+p.name()	p	name		s	1	1	Returns the name of the player.	
+p.ping()	p	ping		n	1	1	Returns the ping of the player.	
+p.steamFriendStatus()	p	steamFriendStatus		s	1	2	Returns the Steam friend status of the player.	
+p.steamID()	p	steamID		s	1	1	Returns the Steam ID of the player.	
+p.steamID64()	p	steamID64		s	1	1	Returns the Steam ID64 of the player.	
+p.teamID()	p	teamID		n	1	1	Returns the team ID of the player.	
+player.ang()	p	ang		a	1	1	Returns the angle of the player.	
+player.angVel()	p	angVel		a	1	1	Returns the angular velocity of the player.	
+player.angVelVector()	p	angVelVector		v	1	1	Returns the angular velocity vector of the player.	
+player.applyAngForce(a)	p	applyAngForce	a	_nil	0	0	Applies angular force to the player.	
+player.applyDamage(n)	p	applyDamage	n	_nil	0	1	Applies damage to the player.	
+player.applyForce(v)	p	applyForce	v	_nil	0	0	Applies force to the player.	
+player.applyOffsetForce(v)	p	applyOffsetForce	v	_nil	0	0	Applies offset force to the player.	
+player.applyTorque(v)	p	applyTorque	v	_nil	0	0	Applies torque to the player.	
+player.armor()	p	armor		n	1	1	Returns the armor of the player.	
+player.attachmentAng(n)	p	attachmentAng	n	a	1	1		
+player.attachmentPos(n)	p	attachmentPos	n	v	1	1		
+player.attachments()	p	attachments		t	1	1		
+"player.axis(v,e,v)"	p	axis	"v,e,v"	_nil	0	0	Creates an axis between <ent1> and <ent2> at vector positions local to each ent.	
+"player.axis(v,e,v,n)"	p	axis	"v,e,v,n"	_nil	0	0	"Creates an axis between <ent1> and <ent2> at vector positions local to each ent, with <friction> friction."	
+"player.axis(v,e,v,n,v)"	p	axis	"v,e,v,n,v"	_nil	0	0	"Creates an axis between <ent1> and <ent2> at vector positions local to each ent, with <friction> friction and <localaxis> rotation axis."	
+"player.ballsocket(e,v)"	p	ballsocket	"e,v"	_nil	0	0	"Creates a ballsocket between <ent1> and <ent2> at <v>, which is local to <ent1>"	
+"player.ballsocket(e,v,n)"	p	ballsocket	"e,v,n"	_nil	0	0	"Creates a ballsocket between <ent1> and <ent2> at <v>, which is local to <ent1>, with friction <friction>"	
+"player.ballsocket(v,e,v,v,v,n)"	p	ballsocket	"v,e,v,v,v,n"	_nil	0	0	"Creates an adv ballsocket between <ent1> and <ent2> at <v>, which is local to <ent1>, with many settings"	
+player.bearing(v)	p	bearing	v	n	1	1	Returns the bearing of the player.	
+player.boxCenter()	p	boxCenter		v	1	1	Returns the center of the bounding box of the player.	
+player.boxMaxs()	p	boxMaxs		v	1	1	Returns the maximum coordinates of the bounding box of the player.	
+player.boxMins()	p	boxMins		v	1	1	Returns the minimum coordinates of the bounding box of the player.	
+player.boxSize()	p	boxSize		v	1	1	Returns the size of the bounding box of the player.	
+player.constraintBreak()	p	constraintBreak		_nil	0	0	Breaks the constraint of the player.	
+player.constraintBreak(s)	p	constraintBreak	s	_nil	0	0	Breaks the constraint of the player with a specific type.	
+player.elevation(v)	p	elevation	v	n	1	1	Returns the elevation of the player.	
+player.energy()	p	energy		n	1	1	Returns the energy of the player.	
+player.extinguish()	p	extinguish		_nil	0	0	Extinguishes the player.	
+player.eyeAngles()	p	eyeAngles		a	1	1	Returns the eye angles of the player.	
+player.eyePos()	p	eyePos		v	1	1	Returns the eye position of the player.	
+player.forward()	p	forward		v	1	1	Returns the forward vector of the player.	
+player.getAng()	p	getAng		a	1	1	Returns the angle of the player.	
+player.getBoneCount()	p	getBoneCount		n	1	1	Returns the number of bones in the player.	
+player.getBoneIndex()	p	getBoneIndex		n	1	1	Returns the bone index of the player.	
+player.getChildren()	p	getChildren		t	1	0	Returns the children of the player.	
+player.getClass()	p	getClass		s	1	1	Returns the class of the player.	
+player.getColor()	p	getColor		c	1	1	Returns the color of the player.	
+player.getConstraints()	p	getConstraints		t	1	0	Returns the constraints of the player.	
+player.getConstraintsByType(s)	p	getConstraintsByType	s	t	1	0	Returns the constraints of the player by type.	
+player.getDriver()	p	getDriver		p	1	1	Returns the driver of the player.	
+player.getGravity()	p	getGravity		n	1	1	Returns the gravity of the player.	
+player.getMass()	p	getMass		n	1	1	Returns the mass of the player.	
+player.getMassCenter()	p	getMassCenter		v	1	1	Returns the mass center of the player.	
+player.getMaterial()	p	getMaterial		s	1	1	Returns the material of the player.	
+player.getModel()	p	getModel		s	1	1	Returns the model of the player.	
+player.getParent()	p	getParent		e	1	0	Returns the parent of the player.	
+player.getPos()	p	getPos		v	1	1	Returns the position of the player.	
+player.getSubMaterial(n)	p	getSubMaterial	n	s	1	1	Returns the sub-material of the player.	
+player.getWeld()	p	getWeld		_con	1	0	Returns the weld of the player.	
+player.getWeld(n)	p	getWeld	n	_con	1	0	Returns the weld of the player by index.	
+player.getWirelink()	p	getWirelink		_wl	1	1	Returns the wirelink of the player.	
+player.groundEntity()	p	groundEntity		e	1	1	Returns the ground entity of the player.	
+player.heading(v)	p	heading	v	a	1	1	Returns the heading vector of the player.	
+player.health()	p	health		n	1	1	Returns the health of the player.	
+player.id()	p	id		n	1	1	Returns the ID of the player.	
+player.ignite(n)	p	ignite	n	_nil	0	0	Ignites the player for a specified duration.	
+player.inertia()	p	inertia		v	1	1	Returns the inertia of the player.	
+player.invInertia()	p	invInertia		n	1	1	Returns the inverse inertia of the player.	
+player.isConstrained()	p	isConstrained		n	1	0	Checks if the player is constrained.	
+player.isConstrainedTo()	p	isConstrainedTo		e	1	0	Checks if the player is constrained to an entity.	
+player.isConstrainedTo(n)	p	isConstrainedTo	n	e	1	0	Checks if the player is constrained to a specific entity.	
+"player.isConstrainedTo(n,s)"	p	isConstrainedTo	"n,s"	e	1	0	Checks if the player is constrained to a specific entity with a specific type.	
+player.isFrozen()	p	isFrozen		b	1	0	Checks if the player is frozen.	
+player.isHeldByPlayer()	p	isHeldByPlayer		b	1	1	Checks if the player is held by another player.	
+player.isNPC()	p	isNPC		b	1	1	Checks if the player is an NPC.	
+player.isOnFire()	p	isOnFire		b	1	1	Checks if the player is on fire.	
+player.isPlayer()	p	isPlayer		b	1	1	Checks if the player is a player entity.	
+player.isRagdoll()	p	isRagdoll		b	1	1	Checks if the player is a ragdoll.	
+player.isValid()	p	isValid		b	1	1	Checks if the player is a valid entity.	
+player.isVehicle()	p	isVehicle		b	1	1	Checks if the player is a vehicle.	
+player.isWeapon()	p	isWeapon		b	1	1	Checks if the player is a weapon.	
+player.isWeldedTo()	p	isWeldedTo		e	1	0	Checks if the player is welded to another entity.	
+player.isWeldedTo(n)	p	isWeldedTo	n	e	1	0	Checks if the player is welded to a specific entity.	
+player.lookupAttachment(s)	p	lookupAttachment	s	n	1	1	Looks up the attachment point of the player by name.	
+player.maxArmor()	p	maxArmor		n	1	1	Returns the maximum armor of the player.	
+player.maxHealth()	p	maxHealth		n	1	1	Returns the maximum health of the player.	
+player.noCollide(e)	p	noCollide	e	_nil	0	0	Nocollides <ent1> to <ent2>	
+player.noCollideAll(b)	p	noCollideAll	b	_nil	0	0	"Nocollides <ent> to entities/players, just like Right Click of No-Collide Stool"	
+player.onGround()	p	onGround		b	1	1	Checks if the player is on the ground.	
+player.owner()	p	owner		p	1	1	Returns the owner of the player entity.	
+player.parent()	p	parent		e	1	1	Returns the parent entity of the player.	
+player.physics()	p	physics		_ph	1	1	Returns the physics state of the player.	
+player.pos()	p	pos		v	1	1	Returns the position of the player.	
+player.radius()	p	radius		n	2	1	Returns the radius of the player.	
+player.remove()	p	remove		_nil	0	0	Removes the player entity.	
+player.removeTrails()	p	removeTrails		_nil	0	1	Removes any trails attached to the player.	
+player.resetSubMaterials()	p	resetSubMaterials		_nil	0	0	Resets any sub-materials of the player.	
+player.right()	p	right		v	1	1	Returns the right vector of the player.	
+player.setAng(a)	p	setAng	a	_nil	0	0	Sets the angle of the player.	
+player.setColor(c)	p	setColor	c	_nil	0	0	Sets the color of the player.	
+player.setFrozen(b)	p	setFrozen	b	_nil	0	0	Sets the frozen state of the player.	
+player.setGravity(b)	p	setGravity	b	_nil	0	0	Sets the gravity state of the player.	
+player.setMass(n)	p	setMass	n	_nil	0	0	Sets the mass of the player.	
+player.setMaterial(s)	p	setMaterial	s	_nil	0	0	Sets the material of the player.	
+player.setNotSolid(b)	p	setNotSolid	b	_nil	0	0	Sets the solidity state of the player.	
+player.setParent(e)	p	setParent	e	_nil	0	0	Sets the parent entity of the player.	
+player.setPassenger()	p	setPassenger		p	1	1	Sets the player as a passenger.	
+player.setPos(v)	p	setPos	v	_nil	0	0	Sets the position of the player.	
+"player.setSubMaterial(n,s)"	p	setSubMaterial	"n,s"	_nil	0	0	Sets a sub-material of the player.	
+"player.setTrails(n,n,n,s,c,n,b)"	p	setTrails	"n,n,n,s,c,n,b"	_nil	0	1	Sets trails for the player.	
+player.setVel(v)	p	setVel	v	_nil	0	0	Sets the velocity of the player.	
+player.toLocal(a)	p	toLocal	a	a	1	1	Converts a direction from world space to local space.	
+player.toLocal(v)	p	toLocal	v	v	1	1	Converts a vector from world space to local space.	
+player.totalConstraints()	p	totalConstraints		n	1	0	Returns the total number of constraints on the player.	
+player.toWorld(a)	p	toWorld	a	a	1	1	Converts a direction from local space to world space.	
+player.toWorld(v)	p	toWorld	v	v	1	1	Converts a vector from local space to world space.	
+player.unParent()	p	unParent		_nil	0	0	Unparents the player entity.	
+player.up()	p	up		v	1	1	Returns the up vector of the player.	
+player.use()	p	use		_nil	0	0	Activates the player entity for use.	
+player.Vel()	p	Vel		v	1	1	Returns the velocity of the player.	
+player.VelL()	p	VelL		v	1	1	Returns the linear velocity of the player.	
+player.waterLevel()	p	waterLevel		n	1	1	Returns the water level of the player.	
+player.weld(e)	p	weld	e	_nil	0	0	Welds the player to another entity.	
+"player.weldAng(v,e)"	p	weldAng	"v,e"	_nil	0	0	Welds the player to another entity with a specific angle.	
+player.worldSpaceAABB()	p	worldSpaceAABB		v	2	1	Returns the axis-aligned bounding box of the player in world space.	
+player.worldSpaceCenter()	p	worldSpaceCenter		v	2	1	Returns the center point of the player in world space.	
+q.abs()	q	abs		q	1	1	Returns the absolute value of the quaternion.	
+q.clone()	q	clone		q	1	1	Returns a copy of the quaternion.	
+q.conj()	q	conj		q	1	1	Returns the conjugate of the quaternion.	
+q.dot(q)	q	dot	q	n	1	1	Computes the dot product of two quaternions.	
+q.exp()	q	exp		q	1	1	Computes the exponential of the quaternion.	
+q.forward()	q	forward		v	1	1	Returns the forward vector from the quaternion.	
+q.getI()	q	getI		n	1	1	Retrieves the I component of the quaternion.	
+q.getJ()	q	getJ		n	1	1	Retrieves the J component of the quaternion.	
+q.getK()	q	getK		n	1	1	Retrieves the K component of the quaternion.	
+q.getR()	q	getR		n	1	1	Retrieves the real part of the quaternion.	
+q.inv()	q	inv		q	1	1	Computes the inverse of the quaternion.	
+q.log()	q	log		q	1	1	Computes the natural logarithm of the quaternion.	
+q.normalized()	q	normalized		q	1	1	Returns the normalized form of the quaternion.	
+q.qMod()	q	qMod		q	1	1	Computes the quaternion modulus.	
+q.right()	q	right		v	1	1	Returns the right vector from the quaternion.	
+q.setI(n)	q	setI	n	_nil	0	1	Sets the I component of the quaternion.	
+q.setJ(n)	q	setJ	n	_nil	0	1	Sets the J component of the quaternion.	
+q.setK(n)	q	setK	n	_nil	0	1	Sets the K component of the quaternion.	
+q.setR(n)	q	setR	n	_nil	0	1	Sets the real part of the quaternion.	
+q.toAngle()	q	toAngle		a	1	1	Converts the quaternion to an angle.	
+q.toString()	q	toString		_nil	1	1	Converts the quaternion to a string representation.	
+q.up()	q	up		v	1	1	Returns the up vector from the quaternion.	
+q.vec()	q	vec		v	1	1	Returns the vector part of the quaternion.	
+q.withI()	q	withI		q	1	1	Sets the I component of the quaternion and returns a new quaternion.	
+q.withJ()	q	withJ		q	1	1	Sets the J component of the quaternion and returns a new quaternion.	
+q.withK()	q	withK		q	1	1	Sets the K component of the quaternion and returns a new quaternion.	
+q.withR()	q	withR		q	1	1	Sets the R component of the quaternion and returns a new quaternion.	
+s.char()	s	char		n	1	1	Returns the character at the specified index in the string.	
+s.endsWith(s)	s	endsWith	s	b	1	1	Checks if the string ends with the specified substring.	
+"s.find(s,_ptr)"	s	find	"s,_ptr"	n	2	1	Searches for a substring in the string and returns its index.	
+"s.find(s,_ptr,n)"	s	find	"s,_ptr,n"	n	2	1	"Searches for a substring in the string and returns its index, starting from a specified position."	
+"s.find(s,s)"	s	find	"s,s"	n	2	1	Searches for a pattern in the string and returns its index.	
+"s.find(s,s,n)"	s	find	"s,s,n"	n	2	1	"Searches for a pattern in the string and returns its index, starting from a specified position."	
+"s.gmatch(s,_ptr,f)"	s	gmatch	"s,_ptr,f"	s	1	1	"Iterates over the string, finding all matches to the given pattern and invoking a function for each match."	
+s.lower()	s	lower		s	1	1	Converts the string to lowercase.	
+"s.match(s,_ptr,n)"	s	match	"s,_ptr,n"	s	1	1	Attempts to match a string against a pattern and returns the matches.	
+s.patternSafe()	s	patternSafe		s	1	1	Escapes special characters in the string so it can be used safely as a pattern.	
+s.rep(n)	s	rep	n	s	1	1	Repeats the string a specified number of times.	
+"s.rep(n,s)"	s	rep	"n,s"	s	1	1	Replaces a specified number of occurrences of a pattern in the string.	
+"s.rep(n,s,s)"	s	rep	"n,s,s"	s	1	1	"Replaces a specified number of occurrences of a pattern in the string, starting from a specified position."	
+s.replace()	s	replace		s	1	1	Replaces all occurrences of a specified pattern in the string.	
+"s.replace(_ptr,s,n)"	s	replace	"_ptr,s,n"	s	1	1	"Replaces all occurrences of a specified pattern in the string, up to a specified limit."	
+s.reverse()	s	reverse		s	1	1	Reverses the string.	
+s.right(n)	s	right	n	s	1	1	Returns the last n characters of the string.	
+"s.setChar(n,s)"	s	setChar	"n,s"	s	1	1	Sets the character at the specified index in the string.	
+s.split(s)	s	split	s	t	1	1	Splits the string into substrings based on a specified separator and returns them as a table.	
+s.startWith(s)	s	startWith	s	b	1	1	Checks if the string starts with the specified substring.	
+s.sub(n)	s	sub	n	s	1	1	Returns a substring starting from the specified index.	
+"s.sub(n,n)"	s	sub	"n,n"	s	1	1	Returns a substring starting from the specified start index to the end index.	
+s.toNumber(n)	s	toNumber	n	n	1	1	Converts the string to a number.	
+s.trim(s)	s	trim	s	s	1	1	Removes specified characters from both ends of the string.	
+s.trimLeft(s)	s	trimLeft	s	s	1	1	Removes specified characters from the beginning of the string.	
+s.trimRight(s)	s	trimRight	s	s	1	1	Removes specified characters from the end of the string.	
+s.upper()	s	upper		s	1	1	Converts the string to uppercase.	
+t.contains(_cls)	t	contains	_cls	b	1	1	Returns true if the value is present on the table.	
+t.contains(_con)	t	contains	_con	b	1	1	Returns true if the value is present on the table.	
+t.contains(_crf)	t	contains	_crf	b	1	1	Returns true if the value is present on the table.	
+t.contains(_cv)	t	contains	_cv	b	1	1	Returns true if the value is present on the table.	
+t.contains(_e2t)	t	contains	_e2t	b	1	1	Returns true if the value is present on the table.	
+t.contains(_ed)	t	contains	_ed	b	1	1	Returns true if the value is present on the table.	
+t.contains(_er)	t	contains	_er	b	1	1	Returns true if the value is present on the table.	
+t.contains(_mx2)	t	contains	_mx2	b	1	1	Returns true if the value is present on the table.	
+t.contains(_mx3)	t	contains	_mx3	b	1	1	Returns true if the value is present on the table.	
+t.contains(_mx4)	t	contains	_mx4	b	1	1	Returns true if the value is present on the table.	
+t.contains(_nil)	t	contains	_nil	b	1	1	Returns true if the value is present on the table.	
+t.contains(_ph)	t	contains	_ph	b	1	1	Returns true if the value is present on the table.	
+t.contains(_ptr)	t	contains	_ptr	b	1	1	Returns true if the value is present on the table.	
+t.contains(_rd)	t	contains	_rd	b	1	1	Returns true if the value is present on the table.	
+t.contains(_snd)	t	contains	_snd	b	1	1	Returns true if the value is present on the table.	
+t.contains(_ts)	t	contains	_ts	b	1	1	Returns true if the value is present on the table.	
+t.contains(_usmg)	t	contains	_usmg	b	1	1	Returns true if the value is present on the table.	
+t.contains(_v2)	t	contains	_v2	b	1	1	Returns true if the value is present on the table.	
+t.contains(_vr)	t	contains	_vr	b	1	1	Returns true if the value is present on the table.	
+t.contains(_wl)	t	contains	_wl	b	1	1	Returns true if the value is present on the table.	
+t.contains(a)	t	contains	a	b	1	1	Returns true if the value is present on the table.	
+t.contains(b)	t	contains	b	b	1	1	Returns true if the value is present on the table.	
+t.contains(c)	t	contains	c	b	1	1	Returns true if the value is present on the table.	
+t.contains(e)	t	contains	e	b	1	1	Returns true if the value is present on the table.	
+t.contains(f)	t	contains	f	b	1	1	Returns true if the value is present on the table.	
+t.contains(h)	t	contains	h	b	1	1	Returns true if the value is present on the table.	
+t.contains(n)	t	contains	n	b	1	1	Returns true if the value is present on the table.	
+t.contains(p)	t	contains	p	b	1	1	Returns true if the value is present on the table.	
+t.contains(q)	t	contains	q	b	1	1	Returns true if the value is present on the table.	
+t.contains(s)	t	contains	s	b	1	1	Returns true if the value is present on the table.	
+t.contains(t)	t	contains	t	b	1	1	Returns true if the value is present on the table.	
+t.contains(v)	t	contains	v	b	1	1	Returns true if the value is present on the table.	
+t.exists(e)	t	exists	e	b	1	1	Returns true if ta value is present on the table at index.	
+t.exists(h)	t	exists	h	b	1	1	Returns true if ta value is present on the table at index.	
+t.exists(n)	t	exists	n	b	1	1	Returns true if ta value is present on the table at index.	
+t.exists(p)	t	exists	p	b	1	1	Returns true if ta value is present on the table at index.	
+t.exists(s)	t	exists	s	b	1	1	Returns true if ta value is present on the table at index.	
+"t.insert(n,_cls)"	t	insert	"n,_cls"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_con)"	t	insert	"n,_con"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_crf)"	t	insert	"n,_crf"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_cv)"	t	insert	"n,_cv"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_e2t)"	t	insert	"n,_e2t"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_ed)"	t	insert	"n,_ed"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_er)"	t	insert	"n,_er"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_mx2)"	t	insert	"n,_mx2"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_mx3)"	t	insert	"n,_mx3"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_mx4)"	t	insert	"n,_mx4"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_nil)"	t	insert	"n,_nil"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_ph)"	t	insert	"n,_ph"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_ptr)"	t	insert	"n,_ptr"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_rd)"	t	insert	"n,_rd"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_snd)"	t	insert	"n,_snd"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_ts)"	t	insert	"n,_ts"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_usmg)"	t	insert	"n,_usmg"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_v2)"	t	insert	"n,_v2"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_vr)"	t	insert	"n,_vr"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,_wl)"	t	insert	"n,_wl"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,a)"	t	insert	"n,a"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,b)"	t	insert	"n,b"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,c)"	t	insert	"n,c"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,e)"	t	insert	"n,e"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,f)"	t	insert	"n,f"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,h)"	t	insert	"n,h"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,n)"	t	insert	"n,n"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,p)"	t	insert	"n,p"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,q)"	t	insert	"n,q"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,s)"	t	insert	"n,s"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,t)"	t	insert	"n,t"	_nil	0	1	Inserts a value onto the table at index.	
+"t.insert(n,v)"	t	insert	"n,v"	_nil	0	1	Inserts a value onto the table at index.	
+t.keys()	t	keys		t	1	1	Returns a table containing all keys on the table.	
+t.popangle()	t	popangle		a	1	1	Removes and returns the last value from the table.	
+t.popbone()	t	popbone		_ph	1	1	Removes and returns the last value from the table.	
+t.popboolean()	t	popboolean		b	1	1	Removes and returns the last value from the table.	
+t.popcanvas()	t	popcanvas		_cv	1	1	Removes and returns the last value from the table.	
+t.popcolor()	t	popcolor		c	1	1	Removes and returns the last value from the table.	
+t.popconstraint()	t	popconstraint		_con	1	1	Removes and returns the last value from the table.	
+t.popdate()	t	popdate		_ts	1	1	Removes and returns the last value from the table.	
+t.pope2.table()	t	pope2.table		_e2t	1	1	Removes and returns the last value from the table.	
+t.popentity()	t	popentity		e	1	1	Removes and returns the last value from the table.	
+t.poperror()	t	poperror		_er	1	1	Removes and returns the last value from the table.	
+t.popfind()	t	popfind		_ed	1	1	Removes and returns the last value from the table.	
+t.popfunction()	t	popfunction		f	1	1	Removes and returns the last value from the table.	
+t.pophologram()	t	pophologram		h	1	1	Removes and returns the last value from the table.	
+t.popmatrix2()	t	popmatrix2		_mx2	1	1	Removes and returns the last value from the table.	
+t.popmatrix3()	t	popmatrix3		_mx3	1	1	Removes and returns the last value from the table.	
+t.popmatrix4()	t	popmatrix4		_mx4	1	1	Removes and returns the last value from the table.	
+t.popnumber()	t	popnumber		n	1	1	Removes and returns the last value from the table.	
+t.poppatern()	t	poppatern		_ptr	1	1	Removes and returns the last value from the table.	
+t.popplayer()	t	popplayer		p	1	1	Removes and returns the last value from the table.	
+t.popquaternion()	t	popquaternion		q	1	1	Removes and returns the last value from the table.	
+t.poprangerdata()	t	poprangerdata		_rd	1	1	Removes and returns the last value from the table.	
+t.poprecipientfilter()	t	poprecipientfilter		_crf	1	1	Removes and returns the last value from the table.	
+t.popsound()	t	popsound		_snd	1	1	Removes and returns the last value from the table.	
+t.popstream()	t	popstream		_usmg	1	1	Removes and returns the last value from the table.	
+t.popstring()	t	popstring		s	1	1	Removes and returns the last value from the table.	
+t.poptable()	t	poptable		t	1	1	Removes and returns the last value from the table.	
+t.poptype()	t	poptype		_cls	1	1	Removes and returns the last value from the table.	
+t.popvariant()	t	popvariant		_vr	1	1	Removes and returns the last value from the table.	
+t.popvector()	t	popvector		v	1	1	Removes and returns the last value from the table.	
+t.popvector2()	t	popvector2		_v2	1	1	Removes and returns the last value from the table.	
+t.popvoid()	t	popvoid		_nil	1	1	Removes and returns the last value from the table.	
+t.popwirelink()	t	popwirelink		_wl	1	1	Removes and returns the last value from the table.	
+t.push(_cls)	t	push	_cls	_nil	0	1	Pushes a value onto the table.	
+t.push(_con)	t	push	_con	_nil	0	1	Pushes a value onto the table.	
+t.push(_crf)	t	push	_crf	_nil	0	1	Pushes a value onto the table.	
+t.push(_cv)	t	push	_cv	_nil	0	1	Pushes a value onto the table.	
+t.push(_e2t)	t	push	_e2t	_nil	0	1	Pushes a value onto the table.	
+t.push(_ed)	t	push	_ed	_nil	0	1	Pushes a value onto the table.	
+t.push(_er)	t	push	_er	_nil	0	1	Pushes a value onto the table.	
+t.push(_mx2)	t	push	_mx2	_nil	0	1	Pushes a value onto the table.	
+t.push(_mx3)	t	push	_mx3	_nil	0	1	Pushes a value onto the table.	
+t.push(_mx4)	t	push	_mx4	_nil	0	1	Pushes a value onto the table.	
+t.push(_nil)	t	push	_nil	_nil	0	1	Pushes a value onto the table.	
+t.push(_ph)	t	push	_ph	_nil	0	1	Pushes a value onto the table.	
+t.push(_ptr)	t	push	_ptr	_nil	0	1	Pushes a value onto the table.	
+t.push(_rd)	t	push	_rd	_nil	0	1	Pushes a value onto the table.	
+t.push(_snd)	t	push	_snd	_nil	0	1	Pushes a value onto the table.	
+t.push(_ts)	t	push	_ts	_nil	0	1	Pushes a value onto the table.	
+t.push(_usmg)	t	push	_usmg	_nil	0	1	Pushes a value onto the table.	
+t.push(_v2)	t	push	_v2	_nil	0	1	Pushes a value onto the table.	
+t.push(_vr)	t	push	_vr	_nil	0	1	Pushes a value onto the table.	
+t.push(_wl)	t	push	_wl	_nil	0	1	Pushes a value onto the table.	
+t.push(a)	t	push	a	_nil	0	1	Pushes a value onto the table.	
+t.push(b)	t	push	b	_nil	0	1	Pushes a value onto the table.	
+t.push(c)	t	push	c	_nil	0	1	Pushes a value onto the table.	
+t.push(e)	t	push	e	_nil	0	1	Pushes a value onto the table.	
+t.push(f)	t	push	f	_nil	0	1	Pushes a value onto the table.	
+t.push(h)	t	push	h	_nil	0	1	Pushes a value onto the table.	
+t.push(n)	t	push	n	_nil	0	1	Pushes a value onto the table.	
+t.push(p)	t	push	p	_nil	0	1	Pushes a value onto the table.	
+t.push(q)	t	push	q	_nil	0	1	Pushes a value onto the table.	
+t.push(s)	t	push	s	_nil	0	1	Pushes a value onto the table.	
+t.push(t)	t	push	t	_nil	0	1	Pushes a value onto the table.	
+t.push(v)	t	push	v	_nil	0	1	Pushes a value onto the table.	
+t.shiftangle()	t	shiftangle		a	1	1	    Removes and returns the first angle from the table.	
+t.shiftbone()	t	shiftbone		_ph	1	1	    Removes and returns the first bone from the table.	
+t.shiftboolean()	t	shiftboolean		b	1	1	    Removes and returns the first boolean value from the table.	
+t.shiftcanvas()	t	shiftcanvas		_cv	1	1	    Removes and returns the first canvas from the table.	
+t.shiftcolor()	t	shiftcolor		c	1	1	    Removes and returns the first color from the table.	
+t.shiftconstraint()	t	shiftconstraint		_con	1	1	Removes and returns the first constraint from the table.	
+t.shiftdate()	t	shiftdate		_ts	1	1	    Removes and returns the first date from the table.	
+t.shifte2.table()	t	shifte2.table		_e2t	1	1	Removes and returns the first E2 table from the table.	
+t.shiftentity()	t	shiftentity		e	1	1	    Removes and returns the first entity from the table.	
+t.shifterror()	t	shifterror		_er	1	1	    Removes and returns the first error from the table.	
+t.shiftfind()	t	shiftfind		_ed	1	1	    Removes and returns the first find result from the table.	
+t.shiftfunction()	t	shiftfunction		f	1	1	    Removes and returns the first function from the table.	
+t.shifthologram()	t	shifthologram		h	1	1	    Removes and returns the first hologram from the table.	
+t.shiftmatrix2()	t	shiftmatrix2		_mx2	1	1	    Removes and returns the first 2x2 matrix from the table.	
+t.shiftmatrix3()	t	shiftmatrix3		_mx3	1	1	    Removes and returns the first 3x3 matrix from the table.	
+t.shiftmatrix4()	t	shiftmatrix4		_mx4	1	1	    Removes and returns the first 4x4 matrix from the table.	
+t.shiftnumber()	t	shiftnumber		n	1	1	    Removes and returns the first number from the table.	
+t.shiftpatern()	t	shiftpatern		_ptr	1	1	    Removes and returns the first pattern from the table.	
+t.shiftplayer()	t	shiftplayer		p	1	1	    Removes and returns the first player from the table.	
+t.shiftquaternion()	t	shiftquaternion		q	1	1	    Removes and returns the first quaternion from the table.	
+t.shiftrangerdata()	t	shiftrangerdata		_rd	1	1	Removes and returns the first range data from the table.	
+t.shiftrecipientfilter()	t	shiftrecipientfilter		_crf	1	1	Removes and returns the first recipient filter from the table.	
+t.shiftsound()	t	shiftsound		_snd	1	1	    Removes and returns the first sound from the table.	
+t.shiftstream()	t	shiftstream		_usmg	1	1	    Removes and returns the first stream from the table.	
+t.shiftstring()	t	shiftstring		s	1	1	    Removes and returns the first string from the table.	
+t.shifttable()	t	shifttable		t	1	1	    Removes and returns the first table from the table.	
+t.shifttype()	t	shifttype		_cls	1	1	    Removes and returns the first type from the table.	
+t.shiftvariant()	t	shiftvariant		_vr	1	1	    Removes and returns the first variant from the table.	
+t.shiftvector()	t	shiftvector		v	1	1	    Removes and returns the first vector from the table.	
+t.shiftvector2()	t	shiftvector2		_v2	1	1	    Removes and returns the first 2D vector from the table.	
+t.shiftvoid()	t	shiftvoid		_nil	1	1	    Removes and returns the first void value from the table.	
+t.shiftwirelink()	t	shiftwirelink		_wl	1	1	    Removes and returns the first wirelink from the table.	
+t.type(e)	t	type	e	_cls	1	1	Returns the class type of the value stored at index.	
+t.type(h)	t	type	h	_cls	1	1	Returns the class type of the value stored at index.	
+t.type(n)	t	type	n	_cls	1	1	Returns the class type of the value stored at index.	
+t.type(p)	t	type	p	_cls	1	1	Returns the class type of the value stored at index.	
+t.type(s)	t	type	s	_cls	1	1	Returns the class type of the value stored at index.	
+t.unshiftangle(a)	t	unshiftangle	a	_nil	0	1	Adds an angle to the beginning of the table.	
+t.unshiftbone(_ph)	t	unshiftbone	_ph	_nil	0	1	Adds a bone to the beginning of the table.	
+t.unshiftboolean(b)	t	unshiftboolean	b	_nil	0	1	Adds a boolean value to the beginning of the table.	
+t.unshiftcanvas(_cv)	t	unshiftcanvas	_cv	_nil	0	1	Adds a canvas to the beginning of the table.	
+t.unshiftcolor(c)	t	unshiftcolor	c	_nil	0	1	Adds a color to the beginning of the table.	
+t.unshiftconstraint(_con)	t	unshiftconstraint	_con	_nil	0	1	Adds a constraint to the beginning of the table.	
+t.unshiftdate(_ts)	t	unshiftdate	_ts	_nil	0	1	Adds a date to the beginning of the table.	
+t.unshifte2.table(_e2t)	t	unshifte2.table	_e2t	_nil	0	1	Adds a E2 table to the beginning of the table.	
+t.unshiftentity(e)	t	unshiftentity	e	_nil	0	1	Adds an entity to the beginning of the table.	
+t.unshifterror(_er)	t	unshifterror	_er	_nil	0	1	Adds an error to the beginning of the table.	
+t.unshiftfind(_ed)	t	unshiftfind	_ed	_nil	0	1	Adds a find result to the beginning of the table.	
+t.unshiftfunction(f)	t	unshiftfunction	f	_nil	0	1	Adds a function to the beginning of the table.	
+t.unshifthologram(h)	t	unshifthologram	h	_nil	0	1	Adds a hologram to the beginning of the table.	
+t.unshiftmatrix2(_mx2)	t	unshiftmatrix2	_mx2	_nil	0	1	Adds a 2x2 matrix to the beginning of the table.	
+t.unshiftmatrix3(_mx3)	t	unshiftmatrix3	_mx3	_nil	0	1	Adds a 3x3 matrix to the beginning of the table.	
+t.unshiftmatrix4(_mx4)	t	unshiftmatrix4	_mx4	_nil	0	1	Adds a 4x4 matrix to the beginning of the table.	
+t.unshiftnumber(n)	t	unshiftnumber	n	_nil	0	1	Adds a number to the beginning of the table.	
+t.unshiftpatern(_ptr)	t	unshiftpatern	_ptr	_nil	0	1	Adds a pattern to the beginning of the table.	
+t.unshiftplayer(p)	t	unshiftplayer	p	_nil	0	1	Adds a player to the beginning of the table.	
+t.unshiftquaternion(q)	t	unshiftquaternion	q	_nil	0	1	Adds a quaternion to the beginning of the table.	
+t.unshiftrangerdata(_rd)	t	unshiftrangerdata	_rd	_nil	0	1	Adds range data to the beginning of the table.	
+t.unshiftrecipientfilter(_crf)	t	unshiftrecipientfilter	_crf	_nil	0	1	Adds a recipient filter to the beginning of the table.	
+t.unshiftsound(_snd)	t	unshiftsound	_snd	_nil	0	1	Adds a sound to the beginning of the table.	
+t.unshiftstream(_usmg)	t	unshiftstream	_usmg	_nil	0	1	Adds a stream to the beginning of the table.	
+t.unshiftstring(s)	t	unshiftstring	s	_nil	0	1	Adds a string to the beginning of the table.	
+t.unshifttable(t)	t	unshifttable	t	_nil	0	1	Adds a table to the beginning of the table.	
+t.unshifttype(_cls)	t	unshifttype	_cls	_nil	0	1	Adds a type to the beginning of the table.	
+t.unshiftvariant(_vr)	t	unshiftvariant	_vr	_nil	0	1	Adds a variant to the beginning of the table.	
+t.unshiftvector(v)	t	unshiftvector	v	_nil	0	1	Adds a vector to the beginning of the table.	
+t.unshiftvector2(_v2)	t	unshiftvector2	_v2	_nil	0	1	Adds a 2D vector to the beginning of the table.	
+t.unshiftvoid(_nil)	t	unshiftvoid	_nil	_nil	0	1	Adds a void value to the beginning of the table.	
+t.unshiftwirelink(_wl)	t	unshiftwirelink	_wl	_nil	0	1	Adds a wirelink to the beginning of the table.	
+t.values()	t	values		t	1	1	Returns a tables contansing all values on the table.	
+v.ceil()	v	ceil		_nil	0	1	Returns a new vector with each component rounded up to the nearest integer.	
+v.clone()	v	clone		v	1	1	Returns a copy of the vector.	
+v.cross(v)	v	cross	v	v	1	1	Calculates the cross product of two vectors.	
+v.dehomogenized()	v	dehomogenized		_v2	1	1	Returns the dehomogenized form of a vector.	
+v.distance(v)	v	distance	v	n	1	1	Calculates the distance between two vectors.	
+v.dot(v)	v	dot	v	n	1	1	Calculates the dot product of two vectors.	
+v.floor()	v	floor		_nil	0	1	Returns a new vector with each component rounded down to the nearest integer.	
+v.getX()	v	getX		n	1	1	Returns the x-component of the vector.	
+v.getXYZ()	v	getXYZ		n	3	1	"Returns the x, y, and z components of the vector as separate values."	
+v.getY()	v	getY		n	1	1	Returns the y-component of the vector.	
+v.getZ()	v	getZ		n	1	1	Returns the z-component of the vector.	
+v.length()	v	length		n	1	1	Calculates the length of the vector.	
+v.lengthSqr()	v	lengthSqr		n	1	1	Calculates the squared length of the vector.	
+v.normalized()	v	normalized		v	1	1	Returns a normalized version of the vector.	
+v.rotate(a)	v	rotate	a	_nil	1	1	Rotates the vector by the given angle.	
+"v.rotate(n,n,n)"	v	rotate	"n,n,n"	v	1	1	Rotates the vector around the specified axis.	
+"v.rotateAroundAxis(v,n)"	v	rotateAroundAxis	"v,n"	v	1	1	Rotates the vector around the given axis by the specified angle.	
+v.rotated(a)	v	rotated	a	v	1	1	Returns a new vector rotated by the given angle.	
+v.round()	v	round		_nil	0	1	Returns a new vector with each component rounded to the nearest integer.	
+v.round(n)	v	round	n	_nil	0	1	Rounds each component of the vector to the specified number of decimal places.	
+v.setX(n)	v	setX	n	_nil	0	1	Sets the x-component of the vector.	
+v.setY(n)	v	setY	n	_nil	0	1	Sets the y-component of the vector.	
+v.setZ(n)	v	setZ	n	_nil	0	1	Sets the z-component of a vector to the given value.	
+v.toAngle()	v	toAngle		a	1	1	Converts a vector to an angle.	
+v.toColor()	v	toColor		c	1	1	Converts a vector to a color.	
+v.toDeg()	v	toDeg		v	1	1	Converts a vector from radians to degrees.	
+v.toRad()	v	toRad		v	1	1	Converts a vector from degrees to radians.	
+v.toScreen()	v	toScreen		_v2	1	1	Converts a vector to screen coordinates.	
+v.unpack()	v	unpack		n	3	1	"Returns the x, y, and z components of a vector as separate values."	
+v.withX(n)	v	withX	n	v	1	1	Creates a new vector with the x-component set to the given value.	
+v.withY(n)	v	withY	n	v	1	1	Creates a new vector with the y-component set to the given value.	
+v.withZ(n)	v	withZ	n	v	1	1	Creates a new vector with the z-component set to the given value.	
