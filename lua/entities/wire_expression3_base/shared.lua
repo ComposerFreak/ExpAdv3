@@ -741,9 +741,11 @@ if SERVER then
 
 			net.WriteEntity(self);
 
-			local sendme = false;
+			local count = 0;
 			
 			for name, wire_port in pairs(self.Inputs) do
+				if (count > 100) then break; end
+				
 				local port = self.wire_inport_tbl[name];
 				
 				if port and port.synced and port.sync then
@@ -760,7 +762,7 @@ if SERVER then
 
 						port.sync(value);
 
-						sendme = true;
+						count = count + 1;
 					end
 				end
 			end
@@ -768,6 +770,8 @@ if SERVER then
 			net.WriteString(""); --For now use empty string to seperate input from outputs.
 
 			for name, wire_port in pairs(self.OutPorts) do
+				if (count > 100) then break; end
+				
 				local port = self.wire_outport_tbl[name];
 				
 				if port and port.synced and port.sync then 
@@ -783,7 +787,7 @@ if SERVER then
 
 						port.sync(context.wire_out[name]);
 
-						sendme = true;
+						count = count + 1;
 					end
 				end
 			end
@@ -791,6 +795,8 @@ if SERVER then
 			net.WriteString(""); --For now use empty string to seperate input from globals.
 
 			for name, value in pairs(context.globals) do
+				if (count > 100) then break; end
+				
 				local port = self.synced_tbl[name];
 				
 				if port and port.synced and port.sync then 
@@ -806,14 +812,14 @@ if SERVER then
 			
 						port.sync(context.globals[name]);
 			
-						sendme = true;
+						count = count + 1;
 					end
 				end
 			end
 			
 			net.WriteString(""); --For now use empty string to terminate message.
 
-			if (not sendme) then return net.Abort(); end
+			if (count == 0) then return net.Abort(); end
 			if (player) then net.Send(player); else net.Broadcast(); end
 		end
 	end
