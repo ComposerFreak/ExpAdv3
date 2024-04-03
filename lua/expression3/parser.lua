@@ -122,6 +122,7 @@ function PARSER.Initialize(this, instance, files)
 	this.__directives.inport = {};
 	this.__directives.outport = {};
 	this.__directives.includes = {};
+	this.__directives.synced = { };
 
 	this.__files = files;
 end
@@ -785,7 +786,7 @@ function PARSER.Directive_INPUT(this, token, directive)
 
 	local class_obj = EXPR_LIB.GetClass(port_type);
 
-if (not class_obj.wire_in_class) then
+	if (not class_obj.wire_in_class) then
 		this:Throw(token, "Invalid wire port, class %s can not be used for wired input.", class_obj.name);
 	end
 
@@ -798,10 +799,10 @@ if (not class_obj.wire_in_class) then
 	while (this:Accept("com")) do
 		this:Require("var", "Variable expected after comma (,).");
 		
-		table.insert( variables, this.__token )
+		table.insert( variables, this.__token );
 	end
 
-	return this:EndInstruction(inst, {class = class_obj.id, variables = variables, wire_type = class_obj.wire_in_class, wire_func = class_obj.wire_in_func});
+	return this:EndInstruction(inst, {class = class_obj.id, variables = variables, wire_type = class_obj.wire_in_class, wire_func = class_obj.wire_in_func, sync_sv = class_obj.wire_sync_sv, sync_cl = class_obj.wire_sync_cl});
 end
 
 function PARSER.Directive_OUTPUT(this, token, directive)
@@ -826,10 +827,38 @@ function PARSER.Directive_OUTPUT(this, token, directive)
 	while (this:Accept("com")) do
 		this:Require("var", "Variable expected after comma (,).");
 		
-		table.insert( variables, this.__token )
+		table.insert( variables, this.__token );
 	end
 
-	return this:EndInstruction(inst, {class = class_obj.id, variables = variables, wire_type = class_obj.wire_out_class, wire_func = class_obj.wire_out_func, wire_func2 = class_obj.wire_out_func});
+	return this:EndInstruction(inst, {class = class_obj.id, variables = variables, wire_type = class_obj.wire_out_class, wire_func = class_obj.wire_out_func, wire_func2 = class_obj.wire_out_func, sync_sv = class_obj.wire_sync_sv, sync_cl = class_obj.wire_sync_cl});
+end
+
+function PARSER.Directive_SYNCED(this, token, directive)
+	this:Require("typ", "Class expected for synced variable type, after @synced");
+
+	local inst = this:StartInstruction("synced", token);
+
+	local class_type = this.__token.data;
+
+	local class_obj = EXPR_LIB.GetClass(class_type);
+
+	if (not class_obj.wire_sync_sv or not class_obj.wire_sync_cl) then
+		this:Throw(token, "Synced Variables cant not be of type %s.", name(class_obj.id));
+	end
+
+	local variables = {};
+
+	this:Require("var", "Variable('s) expected after class for synced variable name.");
+
+	variables[1] = this.__token;
+
+	while (this:Accept("com")) do
+		this:Require("var", "Variable expected after comma (,).");
+		
+		table.insert( variables, this.__token );
+	end
+
+	return this:EndInstruction(inst, {class = class_obj.id, variables = variables, sync_sv = class_obj.wire_sync_sv, sync_cl = class_obj.wire_sync_cl});
 end
 
 --[[

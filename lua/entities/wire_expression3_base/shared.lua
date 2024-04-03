@@ -54,8 +54,10 @@ function ENT:ExecuteInstance(instance, run)
 		end
 
 		self:SetScriptName(name);
-		self:BuildWiredPorts(instance.directives.inport, instance.directives.outport);
 	end
+	
+	self.synced_tbl = instance.directives.synced;
+	self:BuildWiredPorts(instance.directives.inport, instance.directives.outport);
 
 	if (run) then
 		timer.Simple(0.2, function()
@@ -120,6 +122,10 @@ function ENT:BuildContext(instance)
 	self.context.entity = self;
 	self.context.player = self.player;
 	self.context.traceTable = instance.traceTbl;
+
+	self.context.sync_cache_in = { };
+	self.context.sync_cache_out = { };
+	self.context.sync_cache_globals = { };
 
 	self:BuildEnv(self.context, instance);
 
@@ -191,6 +197,8 @@ function ENT:BuildEnv(context, instance)
 				glob[k] = v;
 			end;
 		});
+
+		context.globals = glob;
 
 		setmetatable(env.DELTA, {
 			__index = function(t, k)
@@ -565,6 +573,8 @@ function ENT:Think()
 	
 	if self:IsRunning() then
 		tps = (1 / self.context.tps);
+
+		if SERVER then self:SendSyncedIO(); end
 	end
 
 	self:NextThink(CurTime() + tps);
@@ -573,7 +583,7 @@ function ENT:Think()
 end
 
 /****************************************************************************************************************************
-	Netowking
+	Networking
 ****************************************************************************************************************************/
 
 if SERVER then
@@ -694,7 +704,6 @@ function ENT:NetChatMessage(target, values)
 
 end
 
-
 function ENT:NetGolemMessage(target, values)
 
 	if self.getPerm then
@@ -709,6 +718,153 @@ function ENT:NetGolemMessage(target, values)
 
 	return true;
 end
+
+/****************************************************************************************************************************
+	Synced IO
+****************************************************************************************************************************/
+
+if SERVER then
+
+	util.AddNetworkString("Expression3.SyncIO");
+
+	function ENT:SendSyncedIO(player, force)
+		local context = self.context;
+
+		if (context and context.status) then
+			
+			if (not force and not player) then
+				if (self._nNextSync && self._nNextSync > CurTime()) then return; end
+				self._nNextSync = CurTime() + 1;
+			end
+
+			net.Start("Expression3.SyncIO", true); --Its unreliable for a reason :D
+
+			net.WriteEntity(self);
+
+			local sendme = false;
+			
+			for name, wire_port in pairs(self.Inputs) do
+				local port = self.wire_inport_tbl[name];
+				
+				if port and port.synced and port.sync then
+					local value = context.wire_in[name];
+
+					if (force or context.sync_cache_in[name] ~= value) then
+						if net.BytesWritten() > 60000 then break; end
+						
+						if not player then
+							context.sync_cache_in[name] = value;
+						end
+
+						net.WriteString(name);
+
+						port.sync(value);
+
+						sendme = true;
+					end
+				end
+			end
+
+			net.WriteString(""); --For now use empty string to seperate input from outputs.
+
+			for name, wire_port in pairs(self.OutPorts) do
+				local port = self.wire_outport_tbl[name];
+				
+				if port and port.synced and port.sync then 
+					if net.BytesWritten() > 60000 then break; end
+					
+					if (force or context.sync_cache_out[name] ~= value) then
+						
+						if not player then
+							context.sync_cache_out[name] = value;
+						end
+
+						net.WriteString(name);
+
+						port.sync(context.wire_out[name]);
+
+						sendme = true;
+					end
+				end
+			end
+
+			net.WriteString(""); --For now use empty string to seperate input from globals.
+
+			for name, value in pairs(context.globals) do
+				local port = self.synced_tbl[name];
+				
+				if port and port.synced and port.sync then 
+					if net.BytesWritten() > 60000 then break; end
+					
+					if (force or context.sync_cache_globals[name] ~= value) then
+						
+						if not player then
+							context.sync_cache_globals[name] = value;
+						end
+			
+						net.WriteString(name);
+			
+						port.sync(context.globals[name]);
+			
+						sendme = true;
+					end
+				end
+			end
+			
+			net.WriteString(""); --For now use empty string to terminate message.
+
+			if (not sendme) then return net.Abort(); end
+			if (player) then net.Send(player); else net.Broadcast(); end
+		end
+	end
+
+end
+
+if CLIENT then
+
+	function ENT:ReceiveSyncedIO()
+		local context = self.context;
+
+		if (context and context.status) then
+
+			while (true) do
+				local name = net.ReadString();
+				
+				if (name == "") then break; end
+
+				local port = self.wire_inport_tbl[name];
+				if (port and port.sync) then context.wire_in[name] = port.sync(); end
+			end
+
+			while (true) do
+				local name = net.ReadString();
+				if (name == "") then break; end
+
+				local port = self.wire_outport_tbl[name];
+				if (port and port.sync) then context.wire_out[name] = port.sync(); end
+			end
+
+			while (true) do
+				local name = net.ReadString();
+				if (name == "") then break; end
+
+				local port = self.synced_tbl[name];
+				if (port and port.sync) then context.globals[name] = port.sync(); end
+			end
+		end
+	end
+
+	net.Receive("Expression3.SyncIO", function()
+		local entity = net.ReadEntity();
+		if not IsValid(entity) or not entity.ReceiveSyncedIO then return; end
+
+		entity:ReceiveSyncedIO();
+	end);
+
+end
+
+
+
 
 --[[
 	API Call to add additonal methods

@@ -32,6 +32,8 @@ extension:RegisterWiredOutport("p", "ENTITY");
 
 extension:RegisterNativeDefault("p", "Entity(0)");
 
+extension:RegisterSyncable("p", net.WriteEntity, net.ReadEntity);
+
 --[[
 	Operators
 ]]

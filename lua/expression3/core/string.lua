@@ -25,9 +25,11 @@
 ]]--
 
 	local class_str = extension:RegisterClass("s", {"string"}, isstring, EXPR_LIB.NOTNIL);
+
+	extension:RegisterNativeDefault("s", "\"\"");
 	extension:RegisterWiredInport("s", "STRING");
 	extension:RegisterWiredOutport("s", "STRING");
-	extension:RegisterNativeDefault("s", "\"\"");
+	extension:RegisterSyncable("s", net.WriteString, net.ReadString);
 
 --[[
 	*****************************************************************************************************************************************************

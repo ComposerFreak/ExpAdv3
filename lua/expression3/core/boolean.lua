@@ -14,6 +14,8 @@
 	
 	local class_bool = extension:RegisterClass("b", {"boolean", "bool"}, isbool, EXPR_LIB.NOTNIL);
 
+	extension:RegisterNativeDefault("b", "false");
+
 	extension:RegisterWiredInport("b", "NORMAL", function(i)
 		return i ~= 0;
 	end);
@@ -21,6 +23,8 @@
 	extension:RegisterWiredOutport("b", "NORMAL", function(o)
 		return o and 1 or 0;
 	end);
+
+	extension:RegisterSyncable("b", net.WriteBool, net.ReadBool);
 
 --[[
 	*****************************************************************************************************************************************************
