@@ -25,6 +25,7 @@ extension:RegisterClass("v", {"vector"}, isvector, notNil)
 extension:RegisterWiredInport("v", "VECTOR");
 extension:RegisterWiredOutport("v", "VECTOR");
 extension:RegisterNativeDefault("v", "Vector(0, 0, 0)");
+extension:RegisterSyncable("v", net.WriteVector, net.ReadVector);
 
 extension:RegisterConstructor("v", "n,n,n", function(x,y,z) return Vector(x or 0, y or 0, z or 0); end, true)
 extension:RegisterConstructor("v", "n", function(n) return Vector(n or 0, n or 0, n or 0); end, true)

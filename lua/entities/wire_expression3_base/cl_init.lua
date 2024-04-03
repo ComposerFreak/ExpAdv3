@@ -13,6 +13,35 @@
 include("shared.lua");
 
 /****************************************************************************************************************************
+	Wire Ports
+****************************************************************************************************************************/
+
+local function SortPorts( PortA, PortB )
+	local TypeA = PortA.wire or "NORMAL"
+	local TypeB = PortB.wire or "NORMAL"
+
+	if TypeA ~= TypeB then
+		if TypeA == "NORMAL" then
+			return true
+		elseif TypeB == "NORMAL" then
+			return false
+		end
+
+		return TypeA < TypeB
+	else
+		return PortA.wire[1] < PortB.wire[1]
+	end
+end
+
+function ENT:BuildWiredPorts(sort_in, sort_out)
+	table.sort(sort_in, SortPorts);
+	self.wire_inport_tbl = sort_in;
+
+	table.sort(sort_out, SortPorts);
+	self.wire_outport_tbl = sort_out;
+end
+
+/****************************************************************************************************************************
 	Client Side Validation
 ****************************************************************************************************************************/
 

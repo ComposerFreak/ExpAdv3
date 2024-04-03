@@ -472,7 +472,6 @@ local bannedVars = {
 
 function COMPILER.AssignVariable(this, token, declaired, varName, class, scope, prefix, global)
 	if (not isstring(varName)) or varName == "" then
-		--print("VARNAME is " .. varName);
 		debug.Trace();
 	end
 
@@ -491,7 +490,8 @@ function COMPILER.AssignVariable(this, token, declaired, varName, class, scope, 
 			this:Throw(token, "Unable to declare variable %s, Variable already exists.", varName);
 		elseif (c and class ~= "") then
 			this:Throw(token, "Unable to declare variable %s, Variable already exists.", varName);
-			--this:Throw(token, "Unable to Initialize variable %s, %s expected got %s.", varName, name(c), name(class));
+		--elseif (c and class ~= c) then
+		--	this:Throw(token, "Unable to Initialize variable %s, %s expected got %s.", varName, name(c), name(class));
 		else
 			return this:SetVariable(varName, class, scope, prefix, global);
 		end
@@ -500,6 +500,11 @@ function COMPILER.AssignVariable(this, token, declaired, varName, class, scope, 
 			this:Throw(token, "Unable to assign variable %s, Variable doesn't exist.", varName);
 		elseif (c ~= class and class ~= "") then
 			this:Throw(token, "Unable to assign variable %s, %s expected got %s.", varName, name(c), name(class));
+		
+		elseif (var.synced && this:GetOption("state") ~= EXPR_SERVER) then
+			if (var.inport) then this:Throw(token, "Unable to assign Wired input %s, Assigment must be server side.", varName); end
+			if (var.outport) then this:Throw(token, "Unable to assign Wired output %s, Assigment must be server side.", varName); end
+			if (var.global) then this:Throw(token, "Unable to assign synced variable %s, Assigment must be server side.", varName); end
 		end
 	end
 
@@ -507,6 +512,7 @@ function COMPILER.AssignVariable(this, token, declaired, varName, class, scope, 
 end
 
 --[[
+
 ]]
 
 function COMPILER.GetOperator(this, operation, fst, snd, ...)
@@ -965,6 +971,30 @@ end
 --[[
 ]]
 
+function COMPILER.Compile_SYNCED(this, inst, token, data)
+	if (this:GetOption("state") ~= EXPR_SHARED) then
+		this:Throw(token, "Synced Variables must be defined in shared space (server & client side).");
+	end
+
+	local tVars = #data.variables;
+
+	local price = 1;
+
+	for i = 1, #data.variables do
+		local token = data.variables[i];
+		local var = token.data;
+		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0, "GLOBAL", true);
+
+
+		info.global = true;
+		info.synced = true;
+	
+		this.__directives.synced[var] = {class = data.class, synced = true, sync = SERVER and data.sync_sv or data.sync_cl};
+	end
+
+	return "", 0, price;
+end
+
 function COMPILER.Compile_GLOBAL(this, inst, token, data)
 	local tVars = #data.variables;
 	local tArgs = #data.expressions;
@@ -1022,6 +1052,8 @@ function COMPILER.Compile_GLOBAL(this, inst, token, data)
 				this:AssignVariable(arg.token, true, var, result[1], 0, "GLOBAL", true);
 			end
 		end
+
+		info.global = true;
 	end
 
 	this:writeToBuffer(inst, "=");
@@ -4104,8 +4136,16 @@ end
 ]]
 
 function COMPILER.Compile_INPORT(this, inst, token, data)
+	local shared = this:GetOption("state") == EXPR_SHARED;
+	
+	if (this:GetOption("state") == EXPR_CLIENT) then
+		this:Throw(token, "Wired input('s) can not be defined client side.");
+	end
+
 	if (this:GetOption("state") ~= EXPR_SERVER) then
-		this:Throw(token, "Wired input('s) must be defined server side.");
+		if (not data.sync_sv or not data.sync_cl) then
+			this:Throw(token, "Wired input('s) of type %s must be defined server side.", name(data.class));
+		end
 	end
 
 	for _, token in pairs(data.variables) do
@@ -4116,14 +4156,25 @@ function COMPILER.Compile_INPORT(this, inst, token, data)
 		end
 
 		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0, "INPUT");
+		
+		info.inport = true;
+		info.synced = shared;
 
-		this.__directives.inport[var] = {class = data.class, wire = data.wire_type, func = data.wire_func};
+		this.__directives.inport[var] = {class = data.class, wire = data.wire_type, func = data.wire_func, synced = shared, sync = SERVER and data.sync_sv or data.sync_cl};
 	end
 end
 
 function COMPILER.Compile_OUTPORT(this, inst, token, data)
+	local shared = this:GetOption("state") == EXPR_SHARED;
+
+	if (this:GetOption("state") == EXPR_CLIENT) then
+		this:Throw(token, "Wired output('s) can not be defined client side.");
+	end
+
 	if (this:GetOption("state") ~= EXPR_SERVER) then
-		this:Throw(token, "Wired output('s) must be defined server side.");
+		if (not data.sync_sv or not data.sync_cl) then
+			this:Throw(token, "Wired output('s) of type %s must be defined server side.", name(data.class));
+		end
 	end
 
 	for _, token in pairs(data.variables) do
@@ -4135,7 +4186,10 @@ function COMPILER.Compile_OUTPORT(this, inst, token, data)
 
 		local class, scope, info = this:AssignVariable(token, true, var, data.class, 0, "OUTPUT");
 
-		this.__directives.outport[var] = {class = data.class, wire = data.wire_type, func = data.wire_func, func_in = data.wire_func2};
+		info.outport = true;
+		info.synced = shared;
+
+		this.__directives.outport[var] = {class = data.class, wire = data.wire_type, func = data.wire_func, func_in = data.wire_func2, synced = shared, sync = SERVER and data.sync_sv or data.sync_cl};
 	end
 end
 

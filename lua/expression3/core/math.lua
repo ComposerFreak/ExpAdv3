@@ -46,9 +46,10 @@
 
 	local class_num = extension:RegisterClass("n", {"number", "int", "integer", "double", "normal"}, isnumber, EXPR_LIB.NOTNIL);
 
+	extension:RegisterNativeDefault("n", "0");
 	extension:RegisterWiredInport("n", "NORMAL");
 	extension:RegisterWiredOutport("n", "NORMAL");
-
+	extension:RegisterSyncable("n", net.WriteFloat, net.ReadFloat);
 --[[
 	*****************************************************************************************************************************************************
 		number operations
@@ -149,7 +150,7 @@
 	end, true);
 
 	extension:RegisterFunction("math", "toString", "n", "s", 1, function(n)
-		return "" .. n;
+		return "" .. (n or 0);
 	end, true);
 
 --[[

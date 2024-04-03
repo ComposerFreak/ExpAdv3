@@ -274,7 +274,8 @@ local Directives = {
 	["output"] = true,
 	["include"] = true,
 	["server"] = true,
-	["client"] = true
+	["client"] = true,
+	["synced"] = true
 }
 
 --[[---------------------------------------------------------------------------

@@ -42,6 +42,8 @@ end, true);
 
 extension:RegisterNativeDefault("c", "Color(0, 0, 0, 0)");
 
+extension:RegisterSyncable("c", net.WriteColor, net.ReadColor); --Usless since no Wire Type for color.
+
 --[[
 	Operators
 ]]

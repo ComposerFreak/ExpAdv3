@@ -39,6 +39,16 @@ extension:RegisterWiredInport("v2", "VECTOR2");
 extension:RegisterWiredOutport("v2", "VECTOR2");
 extension:RegisterNativeDefault("v2", "{x=0,y=0}");
 
+extension:RegisterSyncable("v2",
+	function(v2) 
+		net.WriteFloat(v2.x or 0);
+		net.WriteFloat(v2.y or 0);
+	end,
+	function()
+		return {x = net.ReadFloat(), y = net.ReadFloat()};
+	end
+);
+
 extension:RegisterConstructor("v2", "n,n", function(x, y) return {x = x or 0, y = y or 0}; end, true)
 extension:RegisterConstructor("v2", "n", function(v) return {x = v or 0, y = v or 0}; end, true)
 extension:RegisterConstructor("v2", "", function() return {x = 0, y = 0}; end, true)
