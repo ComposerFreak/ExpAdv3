@@ -4029,7 +4029,7 @@ function COMPILER.Compile_EACH(this, inst, token, data)
 		if (data.kType ~= "_vr") then
 			inst.buffer[#inst.buffer + 1] = 
 				   "if (_internale" .. scope .. " ~= \"" .. data.kType .. "\") then continue end\n"
-				.. "local " .. data.kValue " = _internalf" .. scope .. "\n"
+				.. "local " .. data.kValue .. " = _internalf" .. scope .. "\n"
 			;
 		else
 			inst.buffer[#inst.buffer + 1] = "local " .. data.kValue .. " = {_internale" .. scope .. ", _internalf" .. scope .. "}\n";
@@ -4740,12 +4740,16 @@ function COMPILER.Compile_INTABLE(this, inst, token, data)
 		price = price + kp + vp;
 		size = size + 1;
 
-		inst.buffer[#inst.buffer + 1] = "[" .. info.expr1 .. "] = ";
+		inst.buffer[#inst.buffer + 1] = "[";
+		inst.buffer[#inst.buffer + 1] = info.expr1;
+		inst.buffer[#inst.buffer + 1] = "] = ";
 
 		if vr == "_vr" then
 			inst.buffer[#inst.buffer + 1] = info.expr2;
 		else
-			inst.buffer[#inst.buffer + 1] = "{\"" .. vr .. "\"," .. info.expr2 .. "},\n";
+			inst.buffer[#inst.buffer + 1] = "{\"" .. vr .. "\",";
+			inst.buffer[#inst.buffer + 1] = info.expr2;
+			inst.buffer[#inst.buffer + 1] = "},\n";
 		end
 	end
 	
