@@ -903,6 +903,7 @@ function PANEL:DoValidate( Goto, Code, Native )
 		elseif (status) then
 			self.btnValidate:SetColor( Color( 50, 255, 50 ) );
 			self.btnValidate:SetText( "Validation sucessful" );
+			self:PostValidation(instance);
 		elseif (instance.state == "internal") then
 			self:OnValidateError( false, "Internal error (see console)." )
 			self:Warning(3, Color(255, 255, 255), "Internal error: ", instance.msg)
@@ -921,6 +922,29 @@ function PANEL:DoValidate( Goto, Code, Native )
 	self.btnValidate:SetText( "Validating..." );
 	
 	self.validator.start();
+end
+
+function PANEL:LineCharCallback(line, char, file)
+	local func;
+	local location = "";
+
+	if (line and char) then
+		func = function()
+			timer.Simple(0.1, function()
+				local inst = self.pnlTabHolder:GetActiveTab( ):GetPanel( );
+				inst:RequestFocus();
+				inst:SetCaret( Vector2( line, char ) );
+			end);
+		end;
+
+		location = string.format("at line %i char %i", line, char);
+	end
+	
+	if file then
+		location = string.format("%s in %s.txt", location, file);
+	end
+
+	return location, func;
 end
 
 function PANEL:OnValidateError( Goto, Thrown )
@@ -947,21 +971,7 @@ function PANEL:OnValidateError( Goto, Thrown )
 	local location = "";
 	
 	if ( Goto ) then
-		func = function()
-			timer.Simple(0.1, function()
-				local inst = self.pnlTabHolder:GetActiveTab( ):GetPanel( );
-				inst:RequestFocus();
-				inst:SetCaret( Vector2( line, char ) );
-			end);
-		end;
-		
-		if line and char then
-			location = string.format("at line %i char %i", line, char);
-		end
-		
-		if File then
-			location = string.format("%s in %s.txt", location, Thrown.file);
-		end
+		location, func = self:LineCharCallback(line, char, File);
 	end
 	
 	if func then func(); end
@@ -971,6 +981,17 @@ function PANEL:OnValidateError( Goto, Thrown )
 	self:Warning(2, Color(255, 0, 0), "Compiler Error", Color(255, 255, 255), ": ", message, " ", { func, location } );
 	
 	self.validator = nil;
+end
+
+function PANEL:PostValidation(instance)
+	for i = 1, #instance.variables do
+		local var = instance.variables[i];
+
+		if (not var.used) then
+			local location, func = self:LineCharCallback(var.token.line or 0, var.token.char or 0, var.token.file);
+			self:PrintLine({image = "fugue/exclamation-circle.png", size = 16}, Color(194, 229, 17), "Note", Color(255, 255, 255), ": ", "variable ", var.name, " is not used ", " ", { func, location } );
+		end
+	end
 end
 
 /*---------------------------------------------------------------------------

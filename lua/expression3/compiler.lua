@@ -126,6 +126,7 @@ function COMPILER.Initialize(this, instance, files)
 	this.__scope.server = true;
 	this.__scope.client = true;
 
+	this.__variables = { };
 	this.__defined = {};
 
 	this.__constructors = {};
@@ -179,6 +180,7 @@ function COMPILER._Run(this)
 	result.enviroment = this.__enviroment;
 	result.directives = this.__directives;
 	result.hashTable = this.__hashtable;
+	result.variables = this.__variables;
 	--result.rootInstruction = this.__root;
 	
 	result.build = function()
@@ -382,21 +384,25 @@ function COMPILER.GetOption(this, option, nonDeep)
 	end
 end
 
-function COMPILER.SetVariable(this, name, class, scope, prefix, global)
+function COMPILER.SetVariable(this, token, name, class, scope, prefix, global)
 	if (not scope) then
 		scope = this.__scopeID;
 	end
 
-	local var = {};
-	var.name = name;
-	var.class = class;
-	var.scope = scope;
-	var.prefix = prefix;
-	var.global = global;
+	local var = {
+		used = false,
+		name = name,
+		token = token,
+		class = class,
+		scope = scope,
+		prefix = prefix,
+		global = global
+	};
 
 	if not name then debug.Trace(); end
 
 	this.__scopeData[scope].memory[name] = var;
+	this.__variables[#this.__variables + 1] = var;
 
 	return class, scope, var;
 end
@@ -484,14 +490,14 @@ function COMPILER.AssignVariable(this, token, declaired, varName, class, scope, 
 	local c, s, var = this:GetVariable(varName, scope, declaired);
 
 	if (declaired) then
-		if (c and c == class) then
+		if (c and (c == class or class ~= "")) then
+			if (var.inport) then this:Throw(token, "Unable to declare variable %s, Variable already exists as Wired input.", varName); end
+			if (var.outport) then this:Throw(token, "Unable to declare variable %s, Variable already exists as Wired output.", varName); end
+			if (var.synced) then this:Throw(token, "Unable to declare variable %s, Variable already exists as Synced variable.", varName); end
+			if (var.global) then this:Throw(token, "Unable to declare variable %s, Variable already exists in global space.", varName); end
 			this:Throw(token, "Unable to declare variable %s, Variable already exists.", varName);
-		elseif (c and class ~= "") then
-			this:Throw(token, "Unable to declare variable %s, Variable already exists.", varName);
-		--elseif (c and class ~= c) then
-		--	this:Throw(token, "Unable to Initialize variable %s, %s expected got %s.", varName, name(c), name(class));
 		else
-			return this:SetVariable(varName, class, scope, prefix, global);
+			return this:SetVariable(token, varName, class, scope, prefix, global);
 		end
 	else
 		if (not c) then
@@ -1138,6 +1144,8 @@ function COMPILER.Compile_INC(this, inst, token, data)
 		this:Throw(token, "Unable to assign variable %s, Variable doesn't exist.", data.variable);
 	end
 
+	info.used = true;
+
 	if class ~= "n" then
 		if data.first then
 			this:Throw(token, "No such operator ++%s.", name(class));
@@ -1166,6 +1174,8 @@ function COMPILER.Compile_IND(this, inst, token, data)
 	if not class then
 		this:Throw(token, "Unable to assign variable %s, Variable doesn't exist.", data.variable);
 	end
+
+	info.used = true;
 
 	if class ~= "n" then
 		if data.first then
@@ -1199,7 +1209,13 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 
 	for i = 1, tVars do
 		local var = vars[i].data;
+
 		local class, scope, info = this:GetVariable(var);
+		
+		if (not class) then
+			this:Throw(token, "Unable to assign variable %s, Variable doesn't exist.", var);
+		end
+
 		classes[var] = class;
 
 		if info then
@@ -1271,6 +1287,7 @@ function COMPILER.Compile_ASS(this, inst, token, data)
 
 	for i = 1, tVars do
 		local var = vars[i].data;
+
 		local class, scope, info = this:GetVariable(var);
 
 		if (data.class == "f") then
@@ -2541,6 +2558,8 @@ function COMPILER.Compile_DELTA(this, inst, token, data)
 		this:Throw(token, "Variable %s does not exist.", var);
 	end
 
+	info.used = true;
+
 	if (not info.global) then
 		this:Throw(token, "Delta operator ($) can not be used on none global variable %s.", var);
 	end
@@ -2575,6 +2594,8 @@ function COMPILER.Compile_CHANGED(this, inst, token, data)
 	if (not c) then
 		this:Throw(token, "Variable %s does not exist.", var);
 	end
+
+	info.used = true;
 
 	if (not info.global) then
 		this:Throw(token, "Changed operator (~) can not be used on none global variable %s.", var);
@@ -2783,6 +2804,8 @@ function COMPILER.Compile_VAR(this, inst, token, data)
 	end
 
 	local c, s, var = this:GetVariable(data.variable);
+
+	var.used = true;
 
 	if (var) then
 		if (var.attribute) then
@@ -3644,6 +3667,8 @@ function COMPILER.Compile_CALL(this, inst, token, data)
 			c, s, info = this:GetVariable(expr.data.variable);
 			-- The var instruction will have already validated this variable.
 
+			info.used = true;
+			
 			if (info and info.signature) then
 				resultClass = info.resultClass;
 				resultCount = info.resultCount;
@@ -4206,6 +4231,8 @@ function COMPILER.Compile_INCLUDE(this, inst, token, file_path)
 	local Toker = EXPR_TOKENIZER.New();
 
 	Toker:Initialize("EXPADV", script);
+	
+	Toker.__file = file_path;
 
 	local ok, res = Toker:Run();
 

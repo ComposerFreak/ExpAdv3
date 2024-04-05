@@ -379,6 +379,7 @@ function TOKENIZER.CreateToken(this, type, name, data, origonal, char, line)
 	tkn.name = name;
 	tkn.data = data;
 	
+	tkn.file = this.__file;
 	tkn.start = this.__dataStart + this.__offset;
 	tkn.stop = this.__dataEnd + this.__offset;
 	tkn.pos = this.__pos;
