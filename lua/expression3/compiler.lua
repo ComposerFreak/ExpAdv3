@@ -143,6 +143,14 @@ end
 
 ]]
 
+function COMPILER.UseCallSignature(this, inst, tbl, signature, post)
+	return string_format("%s[%q]%s", tbl, signature, post or "");
+end
+
+--[[
+
+]]
+
 function COMPILER.Yield(this)
 
 end
@@ -212,11 +220,9 @@ function addNativeLua(this, instruction, outBuffer, traceTable, char, line)
 		error( "addNativeLua got invalid buffer " .. type(inBuffer) , 0);
 	end
 
-	
 	local traces = { };
-	local len = #inBuffer;
 
-	for key = 1, len do
+	for key = 1, #inBuffer do
 		local value = inBuffer[key];
 		local _type = type(value);
 
@@ -604,7 +610,7 @@ function COMPILER.Compile(this, inst)
 		end
 
 		if (not fun) then
-			this:Throw(inst.token, "Failed to compile unknown instruction %s", instruction);
+			this:Throw(inst.token, "Failed to compile unknown instruction %s", string_upper(inst.type));
 		end
 		
 		local preInst = this.cur_instruction;
@@ -634,7 +640,7 @@ end
 function COMPILER.writeOperationCall(this, inst, op, expr1, ...)
 	this.__operators[op.signature] = op.operator;
 
-	inst.buffer[#inst.buffer + 1] = "_OPS[\"" .. op.signature .. "\"](";
+	inst.buffer[#inst.buffer + 1] = this:UseCallSignature(inst, "_OPS", op.signature, "(");
 
 	if (op.context) then
 	    inst.buffer[#inst.buffer + 1] = "CONTEXT";
@@ -696,7 +702,7 @@ end
 function COMPILER.writeMethodCall(this, inst, op, expr1, ...)
 	this.__methods[op.signature] = op.operator;
 
-	inst.buffer[#inst.buffer + 1] = "_METH[\"" .. op.signature .. "\"](";
+	inst.buffer[#inst.buffer + 1] = this:UseCallSignature(inst, "_METH", op.signature, "(");
 
 	if (op.context) then
 	    inst.buffer[#inst.buffer + 1] = "CONTEXT";
@@ -717,7 +723,7 @@ function COMPILER.writeOperationCall2(this, tbl, inst, op, vargs, expr1, ...)
 	local t = istable(op);
 	local signature = t and op.signature or op;
 
-	inst.buffer[#inst.buffer + 1] = tbl .. "[\"" .. signature .. "\"](";
+	inst.buffer[#inst.buffer + 1] = this:UseCallSignature(inst, tbl, signature, "(");
 
 	if (t and op.context) then
 	    inst.buffer[#inst.buffer + 1] = "CONTEXT";
@@ -786,7 +792,6 @@ function COMPILER.Compile_ROOT(this, inst, token, data)
 			price = price + p;
 		end
 
-		inst.buffer[#inst.buffer + 1] = "\n --PRICE: %i\n", price;
 		inst.buffer[#inst.buffer + 1] = "\n _CHECK_PRICE_(CONTEXT, " .. price .. ", _HARD_LIMIT_)\n";
 
 		for i = 1, #stmts do
@@ -804,23 +809,28 @@ function COMPILER.Compile_ROOT(this, inst, token, data)
 end
 
 function COMPILER.Compile_SEQ(this, inst, token, data)
+	local price = 0;
 	local stmts = data.stmts;
 
 	if stmts then
-		local price = 0;
-
 		for i = 1, #stmts do
 			local r, c, p = this:Compile(stmts[i]);
 			price = price + p;
 		end
+	end
 
-		inst.buffer[#inst.buffer + 1] = "\n --PRICE: %i\n", price;
+	if (inst.isInLoop and price < 1) then
+		price = 1;
+	end
+
+	if (stmts or inst.isInLoop) then
 		inst.buffer[#inst.buffer + 1] = "\n _CHECK_PRICE_(CONTEXT, " .. price .. ", _HARD_LIMIT_)\n";
+	end
 
+	if stmts then
 		for i = 1, #stmts do
 			inst.buffer[#inst.buffer + 1] = stmts[i];
 		end
-
 	end
 
 	return "", 0, 0;
@@ -4111,6 +4121,8 @@ function COMPILER.Compile_EACH(this, inst, token, data)
 
 	inst.buffer[#inst.buffer + 1] = " do\n";
 
+	inst.buffer[#inst.buffer + 1] = "_CHECK_PRICE_(CONTEXT, 1, _HARD_LIMIT_)\n";
+
 	this:AssignVariable(token, true, data.vValue, data.vType, nil);
 	
 	if data.kType then
@@ -4156,10 +4168,7 @@ end
 ]]
 
 function COMPILER.Compile_TRY(this, inst, token, data)
-	inst.buffer[#inst.buffer + 1] = 
-		   "\nlocal _internala, _internalb, _internalc, _internald = getdebughook();\n"
-		.. "\nlocal _internalz, " .. data.var.data .. " = pcall(function()\n"
-		.. "\nsetdebughook(_internala, _internalb, _internalc, _internald);\n"
+	inst.buffer[#inst.buffer + 1] = "\nlocal _internalz, " .. data.var.data .. " = pcall(function()\n"
 	;
 
 	this:PushScope();
@@ -4176,7 +4185,12 @@ function COMPILER.Compile_TRY(this, inst, token, data)
 
 	inst.buffer[#inst.buffer + 1] = "\nend\n);";
 
-	inst.buffer[#inst.buffer + 1] = "if (not _internalz and " .. data.var.data .. ".exit) then\n";
+	inst.buffer[#inst.buffer + 1] = string_format([[
+		if (not _internalz and %s.quota) then
+			error(%s, 0);
+	]], data.var.data, data.var.data);
+
+	inst.buffer[#inst.buffer + 1] = "elseif (not _internalz and " .. data.var.data .. ".exit) then\n";
 		
 		if this:GetOption("loop", false) then
 			inst.buffer[#inst.buffer + 1] = 

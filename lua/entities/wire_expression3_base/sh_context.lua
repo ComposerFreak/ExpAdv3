@@ -17,17 +17,27 @@ local CONTEXT = {};
 CONTEXT.__index = CONTEXT;
 
 --[[
+
+]]
+
+
+local band = bit.band;
+local SysTime = SysTime;
+
+--[[
 	Perfomance CVARS
 	Based on StarFallEx, all credits for CPU benchmarking goes to origonal authors.
 	Who advised that they stle it from Wiremod E2, so the plot thickens!
 ]]
 
 local cvar_softtime;
+local cvar_hardtime;
 local cvar_softtimesize;
 local cvar_netquota;
 
 if SERVER then
-	cvar_softtime = CreateConVar("e3_softtime", 0.05, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.")
+	cvar_softtime = CreateConVar("e3_softtime", 0.05, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.");
+	cvar_hardtime = CreateConVar("e3_hardtime", 0.0001, FCVAR_ARCHIVE, "The max CPU time e3 can use per tick.");
 	cvar_softtimesize = CreateConVar("e3_timebuffersize", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
 	cvar_netquota = CreateConVar("e3_netquota", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
 	cvar_hardlimit = CreateConVar("e3_hardlimit", 64000, FCVAR_ARCHIVE, "The max cost a tick.");
@@ -35,6 +45,7 @@ end
 
 if CLIENT then
 	cvar_softtime = CreateConVar("e3_softtime_cl", 0.05, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.");
+	cvar_hardtime = CreateConVar("e3_hardtime_cl", 0.0001, FCVAR_ARCHIVE, "The max CPU time e3 can use per tick.");
 	cvar_softtimesize = CreateConVar("e3_timebuffersize_cl", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
 	cvar_netquota = CreateConVar("e3_netquota_cl", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
 	cvar_hardlimit = CreateConVar("e3_hardlimit_cl", 64000, FCVAR_ARCHIVE, "The max cost a tick.");
@@ -55,6 +66,8 @@ function CONTEXT.New()
 	tbl.cpu_timestamp = 0;
 	tbl.cpu_softusage = 0;
 	tbl.cpu_hardusage = 0;
+	tbl.cpu_check_tick = 0;
+	tbl.cpu_deadline = 0;
 	
 	return setmetatable(tbl, CONTEXT);
 end
@@ -79,6 +92,9 @@ function CONTEXT:softTimeLimit()
 	return cvar_softtime:GetFloat();
 end
 
+function CONTEXT:hardTimeLimit()
+	return cvar_hardtime:GetFloat();
+end
 
 function CONTEXT:softTimeLimitSize()
 	return 1 / cvar_softtimesize:GetInt();
@@ -96,11 +112,23 @@ end
 function CONTEXT:CheckPrice(price, limit)
 	self.prf_total = self.prf_total + price;
 
-	if self.prf_total > limit then
-		self:Throw("Hard execution limit reached.");
+	if self.prf_total > (limit or self:hardLimit()) then
+		error({msg = "Hard execution limit reached.", ctx = self, quota = true}, 0);
 	end
+
+	local tick = self.cpu_check_tick + 1;
+
+	self.cpu_check_tick = tick;
+
+	if band(tick, 1023) == 0 and SysTime() > self.cpu_deadline then
+		error({msg = "CPU time quota exceeded.", ctx = self, quota = true}, 0);
+	end
+
 end
 
+--[[
+
+]]
 
 local __exe;
 
@@ -188,7 +216,7 @@ function CONTEXT:UpdateQuotaValues()
 	if (self.status) then
 
 		self.cpu_softusage = self:movingCPUAverage() / self:softTimeLimit();
-		--self.cpu_hardusage = self.cpu_total / self:hardTimeLimit();
+		
 		self.cpu_average = (self.cpu_average * 0.95) + (self.cpu_total * 0.05);
 
 		self.net_total = 0;
@@ -206,48 +234,19 @@ end
 	Set up debug hook
 ]]
 
-local bJit, fdhk, sdhk, ndhk;
-
 function CONTEXT:PreExecute()
 
 	if (self.needsInternalUpdate) then
 		self:UpdateInternals();
 	end
 
+	self.cpu_check_tick = 0;
+
 	self.cpu_timestamp = SysTime();
 
-	local cpuCheck = function()
-		self.cpu_total = SysTime() - self.cpu_timestamp;
-
-		local used_ratio = self:movingCPUAverage() / self:softTimeLimit();
-
-		self.cpu_warning = used_ratio > 0.7;
-
-		if used_ratio > 1 then
-
-			debug.sethook( nil );
-
-			self:Throw( "CPU Soft Quota Exceeded!");
-
-		--[[elseif self.cpu_total >= self:hardTimeLimit() then
-			
-			debug.sethook( nil );
-
-			self:Throw( "CPU Hard Quota Exceeded!");]]
-
-		end
-
-	end
+	self.cpu_deadline = self.cpu_timestamp + self:hardTimeLimit();
 
 	__exe = self;
-
-	bJit = jit.status();
-
-	jit.off();
-
-	fdhk, sdhk, ndhk = debug.gethook();
-
-	debug.sethook(cpuCheck, "", 500);
 end
 
 --[[
@@ -255,13 +254,8 @@ end
 ]]
 
 function CONTEXT:PostExecute()
-	debug.sethook(fdhk, sdhk, ndhk);
 	
-	self.cpu_total = SysTime() - self.cpu_timestamp;
-
-	if (bJit) then
-		jit.on();
-	end
+	self.cpu_total = self.cpu_total + (SysTime() - self.cpu_timestamp);
 
 	__exe = nil;
 end

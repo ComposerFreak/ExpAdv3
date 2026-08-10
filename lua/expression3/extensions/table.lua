@@ -171,10 +171,14 @@ extension:RegisterOperator("itor", "t", "", 0, eTable.itor, true);
 	Methods
 ]]
 
-extension:RegisterMethod("t", "keys", "", "t", 1, function(tbl)
-	local t = {};
+extension:RegisterMethod("t", "keys", "", "t", 1, function(ctx, tbl)
+	local t, i = {}, 0;
 
 	for key, value in pairs(tbl.tbl) do
+		if (i % 10 == 0) then
+			ctx:CheckPrice(10);
+		end
+
 		if (value and value[2] ~= nil) then
 			local typ = l(t(key))
 
@@ -182,26 +186,40 @@ extension:RegisterMethod("t", "keys", "", "t", 1, function(tbl)
 				t[#t + 1] = {t, key};
 			end
 		end
+
+		i = i + 1;
 	end
 
 	return {tbl = t, children = {}, parents = {}, size = #t};
-end, true);
+end, false);
 
 extension:RegisterMethod("t", "values", "", "t", 1, function(ctx, tbl)
+	local i = 0;
 	local values = {};
 
 	for key, value in pairs(tbl.tbl) do
+		if (i % 10 == 0) then
+			ctx:CheckPrice(10);
+		end
+
 		if (value and value[1] ~= "" and value[2] ~= nil) then
 			values[value[2]] = value;
 		end
+
+		i = i + 1;
 	end
 
-	local i = 0;
+	i = 0;
 	local res = {tbl = {}, children = {}, parents = {}, size = #t};
 
 	for _, value in pairs(values) do
-		i = i + 1;
+		if (i % 10 == 0) then
+			ctx:CheckPrice(10);
+		end
+		
 		eTable.set(ctx, res, i, value[1], value[2])
+		
+		i = i + 1;
 	end
 
 	return res;
