@@ -77,7 +77,7 @@
 	extension:RegisterOperator("ten", "b,n,n", "n", 1);
 	extension:RegisterOperator( "is", "n", "b", 1, tobool, true);
 	extension:RegisterOperator("neg", "n", "n", 1);
-	extension:RegisterOperator("not", "n", "b", 1, function(context, number) return number == 0 end, true);
+	extension:RegisterOperator("not", "n", "b", 1, function(number) return number == 0 end, true);
 
 	extension:RegisterOperator("dlt", "n", "n", 1, function(pre, new) return (pre or 0) - new; end, true);
 
@@ -145,7 +145,7 @@
 	end, true);
 	
 	extension:RegisterFunction("math", "round", "n,n", "n", 1, function(n, d)
-		local shf = 10 ^ floor(d + 0.5);
+		local shf = 10 ^ math.floor(d + 0.5);
 		return math.floor(n * shf + 0.5) / shf;
 	end, true);
 

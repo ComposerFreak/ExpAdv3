@@ -90,8 +90,8 @@
 	extension:RegisterFunction("system", "quotaMax", "", "n", 1, function(context) return context:softTimeLimit(); end);
 	extension:RegisterFunction("system", "netQuotaMax", "", "n", 1, function(context) return context:GetNetQuota(); end);
 
-	extension:RegisterFunction("system", "quota", "", "n", 1, function(context) return context.net_total or 0; end);
-	extension:RegisterFunction("system", "netQuota", "", "n", 1, function(context) return context.cpu_total or 0; end);
+	extension:RegisterFunction("system", "quota", "", "n", 1, function(context) return context.cpu_total or 0; end);
+	extension:RegisterFunction("system", "netQuota", "", "n", 1, function(context) return context.net_total or 0; end);
 
 	extension:RegisterFunction("system", "quotaUsage", "", "n", 1, function(context) return context.cpu_softusage or 0; end);
 	extension:RegisterFunction("system", "quotaAverage", "", "n", 1, function(context) return context.cpu_average or 0; end);

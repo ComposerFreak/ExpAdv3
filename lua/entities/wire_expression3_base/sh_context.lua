@@ -60,9 +60,16 @@ function CONTEXT.New()
 end
 
 --[[
-	CVar acessor methods
+	Placeholder: Overriden by runtime
 ]]
 
+function CONTEXT:UpdateInternals() 
+
+end
+
+--[[
+	CVar acessor methods
+]]
 
 function CONTEXT:hardLimit()
 	return cvar_hardlimit:GetFloat();
@@ -86,10 +93,10 @@ end
 
 ]]
 
-function CONTEXT:CheckPrice(price)
+function CONTEXT:CheckPrice(price, limit)
 	self.prf_total = self.prf_total + price;
 
-	if self.prf_total > self:hardLimit() then
+	if self.prf_total > limit then
 		self:Throw("Hard execution limit reached.");
 	end
 end
@@ -202,6 +209,10 @@ end
 local bJit, fdhk, sdhk, ndhk;
 
 function CONTEXT:PreExecute()
+
+	if (self.needsInternalUpdate) then
+		self:UpdateInternals();
+	end
 
 	self.cpu_timestamp = SysTime();
 

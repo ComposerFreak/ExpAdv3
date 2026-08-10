@@ -256,6 +256,8 @@ function ENT:BuildEnv(context, instance)
 end
 
 function ENT:InitScript()
+	self.context.needsInternalUpdate = true;
+
 	local main = CompileString(self.nativeScript, "Expression 3", false);
 
 	if (isstring(main)) then
@@ -561,6 +563,8 @@ end
 ****************************************************************************************************************************/
 
 function ENT:Think()
+	self.context.needsInternalUpdate = true;
+
 	self:UpdateQuotaValues();
 
 	if (SERVER) then
