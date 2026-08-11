@@ -48,7 +48,7 @@ if (SERVER) then
 
 	hook.Add("Expression3.Entity.BuildSandbox", "Expression3.Holograms", function(entity, ctx, env)
 		ctx.data.holograms = setmetatable({}, { __mode = "k" });
-		ctx.data.hologramIDs = {};
+		ctx.data.hologramIDs = setmetatable({}, { __mode = "v" });
 
 		local ply = entity.player;
 		if (not RateCounter[ply]) then RateCounter[ply] = 0 end
