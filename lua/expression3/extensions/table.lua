@@ -89,10 +89,11 @@ function eTable.set(ctx, tbl, key, type, value)
 end
 
 function eTable.updateChildren(ctx, tbl, oldweight, newweight, updated)
-	ctx:CheckPrice(3);
 	updated = updated or {};
 	newweight = newweight or 0;
 	for _, child in pairs(tbl.children) do
+		ctx:CheckPrice(0.1);
+		
 		if (not updated[child]) then
 			local weight = child.size;
 			child.size = (child.size - oldweight) + newweight;
@@ -176,7 +177,7 @@ extension:RegisterMethod("t", "keys", "", "t", 1, function(ctx, tbl)
 	local t = {};
 
 	for key, value in pairs(tbl.tbl) do
-		ctx:CheckPrice(1);
+		ctx:checkprice(0.1);
 
 		if (value and value[2] ~= nil) then
 			local typ = l(t(key))
@@ -194,7 +195,7 @@ extension:RegisterMethod("t", "values", "", "t", 1, function(ctx, tbl)
 	local values = {};
 
 	for key, value in pairs(tbl.tbl) do
-		ctx:CheckPrice(1);
+		ctx:checkprice(0.1);
 
 		if (value and value[1] ~= "" and value[2] ~= nil) then
 			values[value[2]] = value;
@@ -207,7 +208,7 @@ extension:RegisterMethod("t", "values", "", "t", 1, function(ctx, tbl)
 	local res = {tbl = {}, children = {}, parents = {}, size = #t};
 
 	for _, value in pairs(values) do
-		ctx:CheckPrice(1);
+		ctx:checkprice(0.1);
 		
 		eTable.set(ctx, res, i, value[1], value[2])
 		
@@ -302,7 +303,7 @@ function extension.PostLoadClasses(this, classes)
 			extension:RegisterMethod("t", "contains", id, "b", 1, function(ctx, tbl, value)
 				if (id == "_vr") then
 					for k, v in pairs(tbl.tbl) do
-						ctx:CheckPrice(1);
+						ctx:checkprice(0.1);
 						if (v and k == value[2]) then
 							return true;
 						end
@@ -310,7 +311,7 @@ function extension.PostLoadClasses(this, classes)
 				end
 
 				for k, v in pairs(tbl.tbl) do
-					ctx:CheckPrice(1);
+					ctx:checkprice(0.1);
 					if (v and v[1] == id and v[2] == value) then
 						return true;
 					end

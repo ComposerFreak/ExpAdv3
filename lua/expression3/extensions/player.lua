@@ -215,7 +215,7 @@ extension:RegisterMethod("p", "getAllWeapons", "", "t", 1, function(ctx, p)
 
 	if IsValid(p) then
 		for k, v in pairs(p:GetWeapons()) do
-			ctx:CheckPrice(1);
+			ctx:CheckPrice(0.1);
 			t[v:GetClass()] = v:GetPrintName();
 		end
 	end
@@ -335,7 +335,7 @@ extension:RegisterFunction("players", "getAll", "", "t", 1, function(ctx)
 	local t = {};
 
 	for _, e in pairs(player.GetAll()) do
-		ctx:CheckPrice(1);
+		ctx:checkprice(0.1);
 		t[#t + 1] = {"p", e};
 	end
 
@@ -346,7 +346,7 @@ end, false);
 extension:RegisterFunction("players", "getByName", "s", "p", 1, function(ctx, s)
 
 	for _, e in pairs(player.GetAll()) do
-		ctx:CheckPrice(1);
+		ctx:checkprice(0.1);
 		if IsValid(e) and string.find(string.lower(e:Name()), string.lower(s)) then
 			return e;
 		end
@@ -360,7 +360,7 @@ extension:RegisterFunction("players", "getAllByName", "s", "t", 1, function(ctx,
 	local t = {};
 
 	for _, e in pairs(player.GetAll()) do
-		ctx:CheckPrice(1);
+		ctx:checkprice(0.1);
 		if IsValid(e) and string.find(string.lower(e:Name()), string.lower(s)) then
 			t[#t + 1] = {"p", e};
 		end

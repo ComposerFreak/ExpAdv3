@@ -156,7 +156,7 @@ extension:RegisterConstructor("e2t", "...", function(ctx, ...)
 	local n = 0;
 
 	for k,v in pairs( {...} ) do
-		ctx:CheckPrice(1);
+		ctx:CheckPrice(0.1);
 
 		n = n + 1;
 
@@ -189,7 +189,7 @@ extension:RegisterMethod("e2t", "keys", "", "t", 1, function(ctx, tbl)
 	local t = {};
 
 	for key, value in pairs(tbl.n) do
-		ctx:CheckPrice(1);
+		ctx:CheckPrice(0.1);
 
 		if (value and value[2] ~= nil) then
 			local typ;
@@ -207,7 +207,7 @@ extension:RegisterMethod("e2t", "keys", "", "t", 1, function(ctx, tbl)
 	end
 
 	for key, value in pairs(tbl.s) do
-		ctx:CheckPrice(1);
+		ctx:CheckPrice(0.1);
 
 		if (value and value[2] ~= nil) then
 			local typ;

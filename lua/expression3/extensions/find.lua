@@ -44,7 +44,7 @@ local function filter(ctx, a, ff)
 
 	for i = 1, #ff do
 
-		ctx:CheckPrice(1);
+		ctx:CheckPrice(0.1);
 
 		local e = ff[i];
 
@@ -133,13 +133,15 @@ extension:RegisterMethod("ed", "addWhiteList", "e", "", 0, function(a, e)
 
 end, true);
 
-extension:RegisterMethod("ed", "addWhiteList", "t", "", 0, function(a, f)
+extension:RegisterMethod("ed", "addWhiteList", "t", "", 0, function(ctx, a, f)
 
 	a.bl = nil;
 
 	a.wl = a.wl or { };
 
 	for i = 1, #f.tbl do
+		ctx:CheckPrice(0.1);
+
 		local v = f.tbl[i];
 
 		if IsEntity(v) then
@@ -147,7 +149,7 @@ extension:RegisterMethod("ed", "addWhiteList", "t", "", 0, function(a, f)
 		end
 	end
 
-end, true);
+end, false);
 
 extension:RegisterMethod("ed", "clearBlackList", "", "", 0, function(a)
 
@@ -177,13 +179,15 @@ extension:RegisterMethod("ed", "addBlackList", "e", "", 0, function(a, e)
 
 end, true);
 
-extension:RegisterMethod("ed", "addBlackList", "t", "", 0, function(a, f)
+extension:RegisterMethod("ed", "addBlackList", "t", "", 0, function(ctx, a, f)
 
 	a.wl = nil;
 
 	a.bl = a.bl or { };
 
 	for i = 1, #f.tbl do
+		ctx:CheckPrice(0.1);
+
 		local v = f.tbl[i];
 
 		if IsEntity(v) then
@@ -191,7 +195,7 @@ extension:RegisterMethod("ed", "addBlackList", "t", "", 0, function(a, f)
 		end
 	end
 
-end, true);
+end, false);
 
 --[[
 	Generic Filters
@@ -312,25 +316,28 @@ end, false);
 	Advanced find functions.
 ]]
 
-extension:RegisterMethod("ed", "sortByDistance", "v", "", 0, function(a, v)
+extension:RegisterMethod("ed", "sortByDistance", "v", "", 0, function(ctx, a, v)
 
-	table.sort(a.a, function(a, b)		
+	table.sort(a.a, function(a, b)
+		ctx:CheckPrice(0.5);		
 		local aDis = IsValid(a) and (v - a:GetPos()):LengthSqr() or math.huge;
 		local bDis = IsValid(b) and (v - b:GetPos()):LengthSqr() or math.huge;
 		return aDis < bDis;
 	end)
 
-end, true);
+end, false);
 
 --[[
 	Clipping
 ]]
 
-extension:RegisterMethod("ed", "clipToSphere", "v,n", "", 0, function(a, v, r)
+extension:RegisterMethod("ed", "clipToSphere", "v,n", "", 0, function(ctx, a, v, r)
 
 	local t = { };
 
 	for i = 1, #a.a do
+		ctx:CheckPrice(0.1);
+
 		local e = a.a[i];
 
 		if IsValid(e) and v:Distance( e:GetPos() ) <= r then
@@ -341,13 +348,15 @@ extension:RegisterMethod("ed", "clipToSphere", "v,n", "", 0, function(a, v, r)
 
 	a.a = t;
 
-end, true);
+end, false);
 
-extension:RegisterMethod("ed", "clipFromSphere", "v,n", "", 0, function(a, v, r)
+extension:RegisterMethod("ed", "clipFromSphere", "v,n", "", 0, function(ctx, a, v, r)
 
 	local t = { };
 
 	for i = 1, #a.a do
+		ctx:CheckPrice(0.1);
+
 		local e = a.a[i];
 
 		if IsValid(e) and v:Distance( e:GetPos() ) > r then
@@ -358,13 +367,15 @@ extension:RegisterMethod("ed", "clipFromSphere", "v,n", "", 0, function(a, v, r)
 
 	a.a = t;
 
-end, true);
+end, false);
 
-extension:RegisterMethod("ed", "clipToBox", "v,v", "", 0, function(a, mn, mx)
+extension:RegisterMethod("ed", "clipToBox", "v,v", "", 0, function(ctx, a, mn, mx)
 
 	local t = { };
 
 	for i = 1, #a.a do
+		ctx:CheckPrice(0.1);
+
 		local e = a.a[i];
 
 		if IsValid(e) then
@@ -385,13 +396,15 @@ extension:RegisterMethod("ed", "clipToBox", "v,v", "", 0, function(a, mn, mx)
 
 	a.a = t;
 
-end, true);
+end, false);
 
-extension:RegisterMethod("ed", "clipFromBox", "v,v", "", 0, function(a, mn, mx)
+extension:RegisterMethod("ed", "clipFromBox", "v,v", "", 0, function(ctx, a, mn, mx)
 
 	local t = { };
 
 	for i = 1, #a.a do
+		ctx:CheckPrice(0.1);
+
 		local e = a.a[i];
 
 		if IsValid(e) then
@@ -412,15 +425,17 @@ extension:RegisterMethod("ed", "clipFromBox", "v,v", "", 0, function(a, mn, mx)
 
 	a.a = t;
 
-end, true);
+end, false);
 
-extension:RegisterMethod("ed", "clipFromRegion", "v,v", "", 0, function(a, o, p)
+extension:RegisterMethod("ed", "clipFromRegion", "v,v", "", 0, function(ctx, a, o, p)
 
 	local d = p:Dot(o);
 
 	local t = { };
 
 	for i = 1, #a.a do
+		ctx:CheckPrice(0.1);
+
 		local e = a.a[i];
 
 		if IsValid(e) then
@@ -434,7 +449,7 @@ extension:RegisterMethod("ed", "clipFromRegion", "v,v", "", 0, function(a, o, p)
 
 	a.a = t;
 
-end, true);
+end, false);
 
 --[[
 	Search functions.
@@ -451,7 +466,7 @@ extension:RegisterMethod("ed", "findByModel", "s", "n", 1, function(ctx, a, m)
 end, false);
 
 extension:RegisterMethod("ed", "findInBox", "v,v", "n", 1, function(ctx, a, mn, mx)
-	filter(ctx, a, ents.FindByModel(mn, mx));
+	filter(ctx, a, ents.FindInBox(mn, mx));
 	return #a.a;
 end, false);
 
@@ -492,7 +507,7 @@ extension:RegisterMethod("ed", "toArray", "", "t", 1, function(ctx, a)
 	local t = {};
 
 	for k, v in pairs( a.a ) do
-		ctx:CheckPrice(1);
+		ctx:CheckPrice(0.1);
 
 		t[k] = {"e", v};
 	end

@@ -113,7 +113,7 @@ local function getContraints(ctx, ent, filter, first)
 	local arr = {};
 
 	for _, con in pairs( ent.Constraints ) do
-		ctx:CheckPrice(1);
+		ctx:CheckPrice(0.1);
 
 		if IsValid(con) then
 			local constraint = toConstraint(con, ent);
@@ -174,7 +174,7 @@ extension:RegisterMethod("e", "isWeldedTo", "", "e", 1, function(ctx, e)
 end, false);
 
 extension:RegisterMethod("e", "isWeldedTo", "n", "e", 1, function(ctx, e, i)
-	local arr = getContraints(e, "Weld");
+	local arr = getContraints(ctx, e, "Weld");
 	if (#arr < i) then return Entity(0); end
 	return arr[i][2].entity1;
 end, true);
@@ -224,7 +224,7 @@ local function getchildren(ctx, e)
 	local arr = {};
 
 	for _, child in pairs(e:GetChildren() or {}) do
-		ctx:CheckPrice(1);
+		ctx:CheckPrice(0.1);
 		if IsValid(child) then arr[#arr + 1] = {"e", child}; end
 	end
 
