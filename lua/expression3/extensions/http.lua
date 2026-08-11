@@ -45,7 +45,7 @@ extension:RegisterFunction("http", "encode", "s", "s", 1, function(data)
 	return string.gsub( ndata, " ", "+" )
 end, true);
 
-extension:RegisterFunction("http", "encode2", "s", "s", 1, function(data) --TODO: Rename this
+extension:RegisterFunction("http", "decode", "s", "s", 1, function(data) --TODO: Rename this
 	local ndata = string.gsub( data, "+", " " )
 
 	return string.gsub( ndata, "(%%%x%x)", function( str )

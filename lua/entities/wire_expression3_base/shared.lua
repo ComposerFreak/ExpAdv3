@@ -362,7 +362,7 @@ function ENT:FlushLogger()
 end
 
 function ENT:PrintStackTrace(stackTrace)
-if (stackTrace and #stackTrace > 0) then
+	if (stackTrace and #stackTrace > 0) then
 		self:WriteToLogger("{\n");
 		for level, info in pairs(stackTrace) do
 			if (info.what == "C") then

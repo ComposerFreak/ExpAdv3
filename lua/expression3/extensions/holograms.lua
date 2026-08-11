@@ -129,8 +129,15 @@ if (SERVER) then
 		holo:Activate( );
 		holo.LowerCount = LowerCount;
 
+		local id = #ctx.data.hologramIDs + 1;
+
 		ctx.data.holograms[holo] = true;
-		ctx.data.hologramIDs[#ctx.data.hologramIDs + 1] = holo;
+		ctx.data.hologramIDs[id] = holo;
+
+		holo:CallOnRemove("e3_untrack", function(ent)
+			if ctx.data.holograms then ctx.data.holograms[ent] = nil; end
+			if ctx.data.hologramIDs then ctx.data.hologramIDs[id] = nil; end
+		end);
 
 		if CPPI then holo:CPPISetOwner( ply ) end
 

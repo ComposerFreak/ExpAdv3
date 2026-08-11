@@ -125,6 +125,8 @@ hook.Add( "Think", "Expression3.Timers.Run", function( )
 
 			if (timers) then
 				local i = 0;
+				local pop = { };
+
 				for k, timer in pairs(timers) do
 
 					i = i + 1; -- Limit the amount we do in one think.
@@ -144,13 +146,17 @@ hook.Add( "Think", "Expression3.Timers.Run", function( )
 						end
 
 						if (timer.simple) then
-							timers[k] = nil;
+							pop[#pop + 1] = k;
 							count = count - 1;
 						end
 
 						local where = "timer." .. k;
 						ctx.entity:Invoke(where, "", 0, timer.func, unpack(timer.values));
 					end
+				end
+
+				for i = 1, #pop do
+					table_remove(timers, pop[i]);
 				end
 			end
 
