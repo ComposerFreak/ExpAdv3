@@ -562,8 +562,10 @@ end
 ****************************************************************************************************************************/
 
 function ENT:Think()
-	self.context.needsInternalUpdate = true;
-
+	if (self.context) then
+		self.context.needsInternalUpdate = true;
+	end
+	
 	self:UpdateQuotaValues();
 
 	if (SERVER) then

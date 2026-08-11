@@ -143,11 +143,18 @@ end
 
 ]]
 
+local throwQuota = function(ctx, msg)
+	local line, char, inst = 0, 0, "";
+	local trace = ctx:Trace(0, 10);
+	if trace and #trace > 0 then line, char, inst = trace[1][1], trace[1][2], trace[1][3] or ""; end
+	error({msg = msg, ctx = ctx, quota = true, line = line, char = char, instruction = inst}, 0);
+end
+
 function CONTEXT:CheckPrice(price, limit)
 	self.prf_total = self.prf_total + price;
 
 	if self.prf_total > (limit or hardlimit) then
-		error({msg = "Hard execution limit reached.", ctx = self, quota = true}, 0);
+		throwQuota(self, "Hard execution limit reached.");
 	end
 
 	local tick = self.cpu_check_tick + 1;
@@ -155,7 +162,7 @@ function CONTEXT:CheckPrice(price, limit)
 	self.cpu_check_tick = tick;
 
 	if band(tick, 1023) == 0 and SysTime() > self.cpu_deadline then
-		error({msg = "CPU time quota exceeded.", ctx = self, quota = true}, 0);
+		throwQuota(self, "CPU time quota exceeded.");
 	end
 
 end

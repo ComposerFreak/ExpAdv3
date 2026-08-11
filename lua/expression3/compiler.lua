@@ -792,7 +792,7 @@ function COMPILER.Compile_ROOT(this, inst, token, data)
 			price = price + p;
 		end
 
-		inst.buffer[#inst.buffer + 1] = "\n _CHECK_PRICE_(CONTEXT, " .. price .. ", _HARD_LIMIT_)\n";
+		inst.buffer[#inst.buffer + 1] = "\n _CHECK_PRICE_(CONTEXT, " .. price .. ", _HARD_LIMIT_);\n";
 
 		for i = 1, #stmts do
 			inst.buffer[#inst.buffer + 1] = stmts[i];
@@ -824,7 +824,7 @@ function COMPILER.Compile_SEQ(this, inst, token, data)
 	end
 
 	if (stmts or inst.isInLoop) then
-		inst.buffer[#inst.buffer + 1] = "\n _CHECK_PRICE_(CONTEXT, " .. price .. ", _HARD_LIMIT_)\n";
+		inst.buffer[#inst.buffer + 1] = "\n _CHECK_PRICE_(CONTEXT, " .. price .. ", _HARD_LIMIT_);\n";
 	end
 
 	if stmts then
@@ -4121,7 +4121,7 @@ function COMPILER.Compile_EACH(this, inst, token, data)
 
 	inst.buffer[#inst.buffer + 1] = " do\n";
 
-	inst.buffer[#inst.buffer + 1] = "_CHECK_PRICE_(CONTEXT, 1, _HARD_LIMIT_)\n";
+	inst.buffer[#inst.buffer + 1] = "_CHECK_PRICE_(CONTEXT, 1, _HARD_LIMIT_);\n";
 
 	this:AssignVariable(token, true, data.vValue, data.vType, nil);
 	
