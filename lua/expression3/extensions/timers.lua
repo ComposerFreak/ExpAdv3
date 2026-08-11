@@ -10,8 +10,30 @@
 	::Timers/Time::
 ]]
 
+local max_timers;
+
+if SERVER then
+	local cvar = CreateConVar("e3_max_timers", 100, FCVAR_ARCHIVE, "The max number of timers per e3 gate.");
+	local function update() max_timers = cvar:GetInt(); end
+	timer.Create("e3_timer_cvars", 1, 0, update);
+	update();
+end
+
+if CLIENT then
+	local cvar = CreateConVar("e3_max_timers_cl", 100, FCVAR_ARCHIVE, "The max number of timers per e3 gate.");
+	local function update() max_timers = cvar:GetInt(); end
+	timer.Create("e3_timer_cvars", 1, 0, update);
+	update();
+end
+
+--[[
+
+]]
+
+
 hook.Add("Expression3.Entity.BuildSandbox", "Expression3.Timers", function(entity, ctx, env)
 	ctx.data.timers = {};
+	ctx.data.timer_count = 0;
 end);
 
 local extension = EXPR_LIB.RegisterExtension("timers");
@@ -19,7 +41,13 @@ local extension = EXPR_LIB.RegisterExtension("timers");
 extension:RegisterLibrary("timer");
 
 extension:RegisterFunction("timer", "simple", "n,f,...", "", 0, function(ctx, d, f, ...)
+	
 	local timers = ctx.data.timers;
+	local count = ctx.data.timer_count;
+
+	if (count > max_timers) then
+		ctx:Throw("Maximum number of timers reached.");
+	end
 
 	timers[#timers + 1] = {
 		delay = d;
@@ -32,10 +60,16 @@ extension:RegisterFunction("timer", "simple", "n,f,...", "", 0, function(ctx, d,
 		simple = true;
 	};
 
+	ctx.data.timer_count = count + 1;
 end, false);
 
 extension:RegisterFunction("timer", "create", "s,n,n,f,...", "", 0, function(ctx, n, d, r, f, ...)
 	local timers = ctx.data.timers;
+	local count = ctx.data.timer_count;
+
+	if (count > max_timers) then
+		ctx:Throw("Maximum number of timers reached.");
+	end
 
 	timers[n] = {
 		delay = d;
@@ -47,6 +81,8 @@ extension:RegisterFunction("timer", "create", "s,n,n,f,...", "", 0, function(ctx
 		values = {...};
 	};
 
+	ctx.data.timer_count = count + 1;
+
 end, false);
 
 extension:RegisterFunction("timer", "exists", "s", "b", 1, function(ctx, name)
@@ -56,7 +92,11 @@ end, false);
 
 extension:RegisterFunction("timer", "remove", "s", "", 0, function(ctx, name)
 	local timers = ctx.data.timers;
-	timers[name] = nil;
+
+	if (timer[name]) then
+		timers[name] = nil;
+		ctx.data.timer_count = ctx.data.timer_count - 1;
+	end
 end, false);
 
 extension:RegisterFunction("timer", "pause", "s", "", 0, function(ctx, name)
@@ -81,6 +121,7 @@ hook.Add( "Think", "Expression3.Timers.Run", function( )
 	for _, ctx in pairs(EXPR_LIB.GetAll()) do
 		if (IsValid(ctx.entity)) then
 			local timers = ctx.data.timers;
+			local count = ctx.data.timer_count;
 
 			if (timers) then
 				local i = 0;
@@ -88,7 +129,7 @@ hook.Add( "Think", "Expression3.Timers.Run", function( )
 
 					i = i + 1; -- Limit the amount we do in one think.
 
-					if (i > 500) then break; end
+					if (i > max_timers) then break; end
 
 					if (not timer.paused and now >= timer.next) then
 						timer.next = now + timer.delay;
@@ -98,11 +139,13 @@ hook.Add( "Think", "Expression3.Timers.Run", function( )
 
 							if (timer.count >= timer.reps) then
 								timers[k] = nil;
+								count = count - 1;
 							end
 						end
 
 						if (timer.simple) then
 							timers[k] = nil;
+							count = count - 1;
 						end
 
 						local where = "timer." .. k;
@@ -110,8 +153,11 @@ hook.Add( "Think", "Expression3.Timers.Run", function( )
 					end
 				end
 			end
+
+			ctx.data.timer_count = count;
 		end
 	end
+
 end);
 
 

@@ -47,7 +47,7 @@ if (SERVER) then
 	]]
 
 	hook.Add("Expression3.Entity.BuildSandbox", "Expression3.Holograms", function(entity, ctx, env)
-		ctx.data.holograms = {};
+		ctx.data.holograms = setmetatable({}, { __mode = "k" });
 		ctx.data.hologramIDs = {};
 
 		local ply = entity.player;
@@ -56,7 +56,7 @@ if (SERVER) then
 	end);
 
 	hook.Add("Expression3.Entity.Stop", "Expression3.Holograms",function(entity, ctx)
-		for _, holo in pairs( ctx.data.holograms or {}) do
+		for holo, _ in pairs( ctx.data.holograms or {}) do
 			if IsValid(holo) then
 				holo:Remove();
 			end
@@ -68,7 +68,7 @@ if (SERVER) then
 	hook.Add("PlayerDisconnected", "Expression3.Holograms", function( ply )
 		for _, ctx in pairs(EXPR_LIB.GetAll()) do
 			if (ctx.player == ply) then
-				for _, holo in pairs( ctx.data.holograms ) do
+				for holo, _ in pairs( ctx.data.holograms ) do
 					if IsValid(holo) then
 						holo:Remove();
 					end
@@ -123,11 +123,13 @@ if (SERVER) then
 		PlayerCounter[ply] = ncount + 1;
 
 		holo.player = ply;
+		holo.context = ctx;
+
 		holo:Spawn( );
 		holo:Activate( );
 		holo.LowerCount = LowerCount;
 
-		ctx.data.holograms[#ctx.data.holograms + 1] = holo;
+		ctx.data.holograms[holo] = true;
 		ctx.data.hologramIDs[#ctx.data.hologramIDs + 1] = holo;
 
 		if CPPI then holo:CPPISetOwner( ply ) end
@@ -335,6 +337,7 @@ end, false);
 
 extension:RegisterMethod("h", "remove", "", "", 0, function(ctx, holo)
 	if (IsValid(holo) and holo.player == ctx.player) then
+
 		holo:Remove();
 	end
 end, false);

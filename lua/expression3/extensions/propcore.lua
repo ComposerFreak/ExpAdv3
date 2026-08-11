@@ -28,11 +28,11 @@ if SERVER then
 	end)
 
 	hook.Add("Expression3.Entity.BuildSandbox", "Expression3.Props", function(entity, ctx, env)
-		ctx.data.props = {};
+		ctx.data.props = setmetatable({}, { __mode = "k" });
 	end);
 
 	hook.Add("Expression3.Entity.Stop", "Expression3.Props",function(entity, ctx)
-		for _, prop in pairs( ctx.data.props ) do
+		for prop, _ in pairs( ctx.data.props ) do
 			if IsValid(prop) then
 				prop:Remove();
 			end
@@ -44,7 +44,7 @@ if SERVER then
 	hook.Add("PlayerDisconnected", "Expression3.Props", function( ply )
 		for _, ctx in pairs(EXPR_LIB.GetAll()) do
 			if (ctx.player == ply) then
-				for _, prop in pairs( ctx.data.props ) do
+				for prop, _ in pairs( ctx.data.props ) do
 					if IsValid(prop) then
 						prop:Remove();
 					end
