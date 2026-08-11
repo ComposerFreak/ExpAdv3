@@ -107,12 +107,14 @@ end, true);
 	get all contraints as a table or object
 ]]
 
-local function getContraints(ent, filter, first)
+local function getContraints(ctx, ent, filter, first)
 	if not IsValid(ent) or not ent.Constraints then return {}; end
 
 	local arr = {};
 
 	for _, con in pairs( ent.Constraints ) do
+		ctx:CheckPrice(1);
+
 		if IsValid(con) then
 			local constraint = toConstraint(con, ent);
 
@@ -135,43 +137,43 @@ end
 	Basic functions
 ]]
 
-extension:RegisterMethod("e", "totalConstraints", "", "n", 1, function(e)
-	local arr = getContraints(e);
+extension:RegisterMethod("e", "totalConstraints", "", "n", 1, function(ctx, e)
+	local arr = getContraints(ctx, e);
 	return #arr;
-end, true);
+end, false);
 
-extension:RegisterMethod("e", "isConstrained", "", "n", 1, function(e)
-	return getContraints(e, nil, true) and true or false;
-end, true);
+extension:RegisterMethod("e", "isConstrained", "", "n", 1, function(ctx, e)
+	return getContraints(ctx, e, nil, true) and true or false;
+end, false);
 
 --[[
 	Get first constraint
 ]]
 
-extension:RegisterMethod("e", "getWeld", "", "con", 1, function(e)
-	local con = getContraints(e, "Weld", true);
+extension:RegisterMethod("e", "getWeld", "", "con", 1, function(ctx, e)
+	local con = getContraints(ctx, e, "Weld", true);
 	if (not con) then return zero; end
 	return con;
-end, true);
+end, false);
 
-extension:RegisterMethod("e", "getWeld", "n", "con", 1, function(e, i)
-	local arr = getContraints(e, "Weld");
+extension:RegisterMethod("e", "getWeld", "n", "con", 1, function(ctx, e, i)
+	local arr = getContraints(ctx, e, "Weld");
 	if (#arr < i) then return zero; end
 	return arr[i][2];
-end, true);
+end, false);
 
 
 --[[
 	Is welded To
 ]]
 
-extension:RegisterMethod("e", "isWeldedTo", "", "e", 1, function(e)
-	local con = getContraints(e, "Weld", true);
+extension:RegisterMethod("e", "isWeldedTo", "", "e", 1, function(ctx, e)
+	local con = getContraints(ctx, e, "Weld", true);
 	if (not con) then return Entity(0); end
 	return con.entity1;
-end, true);
+end, false);
 
-extension:RegisterMethod("e", "isWeldedTo", "n", "e", 1, function(e, i)
+extension:RegisterMethod("e", "isWeldedTo", "n", "e", 1, function(ctx, e, i)
 	local arr = getContraints(e, "Weld");
 	if (#arr < i) then return Entity(0); end
 	return arr[i][2].entity1;
@@ -181,57 +183,58 @@ end, true);
 
 ]]
 
-extension:RegisterMethod("e", "isConstrainedTo", "", "e", 1, function(e)
-	local con = getContraints(e, nil, true);
+extension:RegisterMethod("e", "isConstrainedTo", "", "e", 1, function(ctx, e)
+	local con = getContraints(ctx, e, nil, true);
 	if (not con) then return Entity(0); end
 	return con.entity1;
-end, true);
+end, false);
 
-extension:RegisterMethod("e", "isConstrainedTo", "n", "e", 1, function(e, i)
-	local arr = getContraints(e);
+extension:RegisterMethod("e", "isConstrainedTo", "n", "e", 1, function(ctx, e, i)
+	local arr = getContraints(ctx, e);
 	if (#arr < i) then return zero; end
 	return arr[i][2];
-end, true);
+end, false);
 
-extension:RegisterMethod("e", "isConstrainedTo", "n,s", "e", 1, function(e, i, f)
-	local arr = getContraints(e, f);
+extension:RegisterMethod("e", "isConstrainedTo", "n,s", "e", 1, function(ctx, e, i, f)
+	local arr = getContraints(ctx, e, f);
 	if (#arr < i) then return zero; end
 	return arr[i][2];
-end, true);
+end, false);
 
 
 --[[
 	tables
 ]]
 
-local function asTable(e, f)
-	local t = getContraints(e, f);
+local function asTable(ctx, e, f)
+	local t = getContraints(ctx, e, f);
 	return {tbl = t, children = {}, parents = {}, size = #t};
 end
 
-extension:RegisterMethod("e", "getConstraints", "", "t", 1, asTable, true);
-extension:RegisterMethod("e", "getConstraintsByType", "s", "t", 1, asTable, true);
+extension:RegisterMethod("e", "getConstraints", "", "t", 1, asTable, false);
+extension:RegisterMethod("e", "getConstraintsByType", "s", "t", 1, asTable, false);
 
 --[[
 	Children
 ]]
 
-local function getchildren(e)
+local function getchildren(ctx, e)
 	if not IsValid(e) or not e.GetChildren then return {}; end
 
 	local arr = {};
 
 	for _, child in pairs(e:GetChildren() or {}) do
+		ctx:CheckPrice(1);
 		if IsValid(child) then arr[#arr + 1] = {"e", child}; end
 	end
 
 	return arr;
 end
 
-extension:RegisterMethod("e", "getChildren", "", "t", 1, function(e, f)
-	local t = getchildren(e, f);
+extension:RegisterMethod("e", "getChildren", "", "t", 1, function(ctx, e, f)
+	local t = getchildren(ctx, e, f);
 	return {tbl = t, children = {}, parents = {}, size = #t};
-end, true);
+end, false);
 
 --[[
 	Lets create constrain core,

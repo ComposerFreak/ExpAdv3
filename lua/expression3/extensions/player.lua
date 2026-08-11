@@ -209,18 +209,19 @@ extension:RegisterMethod("p", "getClipSecondary", "", "s", 1, function(p)
 	return -1
 end)
 
-extension:RegisterMethod("p", "getAllWeapons", "", "t", 1, function(p)
+extension:RegisterMethod("p", "getAllWeapons", "", "t", 1, function(ctx, p)
 	local s = 0;
 	local t = {};
 
 	if IsValid(p) then
 		for k, v in pairs(p:GetWeapons()) do
+			ctx:CheckPrice(1);
 			t[v:GetClass()] = v:GetPrintName();
 		end
 	end
 
 	return {tbl = t, children = {}, parents = {}, size = s};
-end)
+end, false)
 
 --[[
 	Friends
@@ -330,20 +331,22 @@ extension:RegisterFunction("players", "localPlayer", "", "p", 1, LocalPlayer, tr
 
 extension:SetSharedState();
 
-extension:RegisterFunction("players", "getAll", "", "t", 1, function(c)
+extension:RegisterFunction("players", "getAll", "", "t", 1, function(ctx)
 	local t = {};
 
 	for _, e in pairs(player.GetAll()) do
+		ctx:CheckPrice(1);
 		t[#t + 1] = {"p", e};
 	end
 
 	return {tbl = t, children = {}, parents = {}, size = #t};
 
-end, true);
+end, false);
 
-extension:RegisterFunction("players", "getByName", "s", "p", 1, function(s)
+extension:RegisterFunction("players", "getByName", "s", "p", 1, function(ctx, s)
 
 	for _, e in pairs(player.GetAll()) do
+		ctx:CheckPrice(1);
 		if IsValid(e) and string.find(string.lower(e:Name()), string.lower(s)) then
 			return e;
 		end
@@ -351,12 +354,13 @@ extension:RegisterFunction("players", "getByName", "s", "p", 1, function(s)
 
 	return nil;
 
-end, true);
+end, false);
 
-extension:RegisterFunction("players", "getAllByName", "s", "t", 1, function(s)
+extension:RegisterFunction("players", "getAllByName", "s", "t", 1, function(ctx, s)
 	local t = {};
 
 	for _, e in pairs(player.GetAll()) do
+		ctx:CheckPrice(1);
 		if IsValid(e) and string.find(string.lower(e:Name()), string.lower(s)) then
 			t[#t + 1] = {"p", e};
 		end
@@ -364,7 +368,7 @@ extension:RegisterFunction("players", "getAllByName", "s", "t", 1, function(s)
 
 	return {tbl = t, children = {}, parents = {}, size = #t};
 
-end, true);
+end, false);
 
 --[[
 	Chat Events

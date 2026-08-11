@@ -38,11 +38,13 @@ hook.Call("Expression3.Extension.EntityBlackList", EXPR_LIB.EntityBL);
 ]]
 
 
-local function filter(a, ff)
+local function filter(ctx, a, ff)
 
 	local r = {};
 
 	for i = 1, #ff do
+
+		ctx:CheckPrice(1);
 
 		local e = ff[i];
 
@@ -438,40 +440,40 @@ end, true);
 	Search functions.
 ]]
 
-extension:RegisterMethod("ed", "findByClass", "s", "n", 1, function(a, c)
-	filter(a, ents.FindByClass(c));
+extension:RegisterMethod("ed", "findByClass", "s", "n", 1, function(ctx, a, c)
+	filter(ctx, a, ents.FindByClass(c));
 	return #a.a;
-end, true);
+end, false);
 
-extension:RegisterMethod("ed", "findByModel", "s", "n", 1, function(a, m)
-	filter(a, ents.FindByModel(m));
+extension:RegisterMethod("ed", "findByModel", "s", "n", 1, function(ctx, a, m)
+	filter(ctx, a, ents.FindByModel(m));
 	return #a.a;
-end, true);
+end, false);
 
-extension:RegisterMethod("ed", "findInBox", "v,v", "n", 1, function(a, mn, mx)
-	filter(a, ents.FindByModel(mn, mx));
+extension:RegisterMethod("ed", "findInBox", "v,v", "n", 1, function(ctx, a, mn, mx)
+	filter(ctx, a, ents.FindByModel(mn, mx));
 	return #a.a;
-end, true);
+end, false);
 
-extension:RegisterMethod("ed", "findInCone", "v,v,n,a", "n", 1, function(a, v1, v2, n, g)
-	filter(a, ents.FindInCone(v1, v2, n, g));
+extension:RegisterMethod("ed", "findInCone", "v,v,n,a", "n", 1, function(ctx, a, v1, v2, n, g)
+	filter(ctx, a, ents.FindInCone(v1, v2, n, g));
 	return #a.a;
-end, true);
+end, false);
 
-extension:RegisterMethod("ed", "finInPVS", "v", "n", 1, function(a, v)
-	filter(a, ents.FindInPVS(v));
+extension:RegisterMethod("ed", "finInPVS", "v", "n", 1, function(ctx, a, v)
+	filter(ctx, a, ents.FindInPVS(v));
 	return #a.a;
-end, true);
+end, false);
 
-extension:RegisterMethod("ed", "finInPVS", "e", "n", 1, function(a, e)
-	filter(a, ents.FindInPVS(e));
+extension:RegisterMethod("ed", "finInPVS", "e", "n", 1, function(ctx, a, e)
+	filter(ctx, a, ents.FindInPVS(e));
 	return #a.a;
-end, true);
+end, false);
 
-extension:RegisterMethod("ed", "findInSphere", "v,n", "n", 1, function(a, v, n)
-	filter(a, ents.FindInSphere(v, n));
+extension:RegisterMethod("ed", "findInSphere", "v,n", "n", 1, function(ctx, a, v, n)
+	filter(ctx, a, ents.FindInSphere(v, n));
 	return #a.a;
-end, true);
+end, false);
 
 --[[
 	Results
@@ -486,15 +488,17 @@ extension:RegisterMethod("ed", "first", "", "e", 1, function(c, a)
 	c:Throw("Attempt to get null entity.");
 end, false);
 
-extension:RegisterMethod("ed", "toArray", "", "t", 1, function(a)
+extension:RegisterMethod("ed", "toArray", "", "t", 1, function(ctx, a)
 	local t = {};
 
 	for k, v in pairs( a.a ) do
+		ctx:CheckPrice(1);
+
 		t[k] = {"e", v};
 	end
 
 	return {tbl = t, children = {}, parents = {}, size = #t};
-end, true);
+end, false);
 
 --[[
 

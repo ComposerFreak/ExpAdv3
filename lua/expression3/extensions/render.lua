@@ -281,6 +281,8 @@ extension:RegisterFunction("render", "drawPoly", "t", "", 0, function(ctx, tbl)
 	local vertices = { };
 
 	for _, v in pairs(tbl.tbl) do
+		ctx:CheckPrice(1);
+
 		if (v and v[1] == "_v2") then
 			vertices[#vertices + 1] = v[2];
 		end
@@ -295,6 +297,8 @@ extension:RegisterFunction("render", "drawPolyOutline", "t", "", 0, function(ctx
 	local vertices = { };
 
 	for _, v in pairs(tbl.tbl) do
+		ctx:CheckPrice(1);
+		
 		if (v and v[1] == "_v2") then
 			vertices[#vertices + 1] = v[2];
 		end

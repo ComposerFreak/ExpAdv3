@@ -275,8 +275,6 @@ function EXPR_LIB.RegisterPermission(name, image, desc)
 	EXPR_LIB.PERMS[name] = {name, image, desc};
 end
 
-
-
 --[[
 	
 ]]

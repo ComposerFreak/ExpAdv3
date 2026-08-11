@@ -264,15 +264,16 @@ extension:RegisterMethod("crf", "removeRecipientsByTeam", "n", "", 0, "RemoveRec
 
 extension:RegisterMethod("crf", "removeRecipientsNotOnTeam", "n", "", 0, "RemoveRecipientsNotOnTeam");
 
-extension:RegisterMethod("crf", "getPlayers", "", "t", 1, function(crf)
+extension:RegisterMethod("crf", "getPlayers", "", "t", 1, function(ctx, crf)
 	local t = {};
 
 	for i, player in pairs(crf.GetPlayers()) do
+		ctx:CheckPrice(1);
 		t[i] = {"p", player};
 	end
 
 	return {tbl = t, children = {}, parents = {}, size = #t};
-end, true);
+end, false);
 
 extension:SetSharedState();
 

@@ -85,17 +85,18 @@ function eTable.set(ctx, tbl, key, type, value)
 	end
 
 	tbl.size = newweight;
-	eTable.updateChildren(tbl, oldweight, newweight, {})
+	eTable.updateChildren(ctx, tbl, oldweight, newweight, {})
 end
 
-function eTable.updateChildren(tbl, oldweight, newweight, updated)
+function eTable.updateChildren(ctx, tbl, oldweight, newweight, updated)
+	ctx:CheckPrice(3);
 	updated = updated or {};
 	newweight = newweight or 0;
 	for _, child in pairs(tbl.children) do
 		if (not updated[child]) then
 			local weight = child.size;
 			child.size = (child.size - oldweight) + newweight;
-			eTable.updateChildren(child, weight, child.size);
+			eTable.updateChildren(ctx, child, weight, child.size);
 			updated[child] = true;
 		end
 	end
@@ -172,12 +173,10 @@ extension:RegisterOperator("itor", "t", "", 0, eTable.itor, true);
 ]]
 
 extension:RegisterMethod("t", "keys", "", "t", 1, function(ctx, tbl)
-	local t, i = {}, 0;
+	local t = {};
 
 	for key, value in pairs(tbl.tbl) do
-		if (i % 10 == 0) then
-			ctx:CheckPrice(10);
-		end
+		ctx:CheckPrice(1);
 
 		if (value and value[2] ~= nil) then
 			local typ = l(t(key))
@@ -186,21 +185,16 @@ extension:RegisterMethod("t", "keys", "", "t", 1, function(ctx, tbl)
 				t[#t + 1] = {t, key};
 			end
 		end
-
-		i = i + 1;
 	end
 
 	return {tbl = t, children = {}, parents = {}, size = #t};
 end, false);
 
 extension:RegisterMethod("t", "values", "", "t", 1, function(ctx, tbl)
-	local i = 0;
 	local values = {};
 
 	for key, value in pairs(tbl.tbl) do
-		if (i % 10 == 0) then
-			ctx:CheckPrice(10);
-		end
+		ctx:CheckPrice(1);
 
 		if (value and value[1] ~= "" and value[2] ~= nil) then
 			values[value[2]] = value;
@@ -213,9 +207,7 @@ extension:RegisterMethod("t", "values", "", "t", 1, function(ctx, tbl)
 	local res = {tbl = {}, children = {}, parents = {}, size = #t};
 
 	for _, value in pairs(values) do
-		if (i % 10 == 0) then
-			ctx:CheckPrice(10);
-		end
+		ctx:CheckPrice(1);
 		
 		eTable.set(ctx, res, i, value[1], value[2])
 		
@@ -310,6 +302,7 @@ function extension.PostLoadClasses(this, classes)
 			extension:RegisterMethod("t", "contains", id, "b", 1, function(ctx, tbl, value)
 				if (id == "_vr") then
 					for k, v in pairs(tbl.tbl) do
+						ctx:CheckPrice(1);
 						if (v and k == value[2]) then
 							return true;
 						end
@@ -317,6 +310,7 @@ function extension.PostLoadClasses(this, classes)
 				end
 
 				for k, v in pairs(tbl.tbl) do
+					ctx:CheckPrice(1);
 					if (v and v[1] == id and v[2] == value) then
 						return true;
 					end
