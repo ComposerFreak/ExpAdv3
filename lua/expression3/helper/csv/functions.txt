@@ -1,254 +1,254 @@
 signature	library	name	parameter	result type	result count	state	desc	example
-abs(n)	math	abs	n	n	1	1	Calculates the absolute value of a number (effectively removes any negative sign).	math.abs(value);
-acos(n)	math	acos	n	n	1	1	Returns the arccosine of the given number.	math.acos(value);
-acot(n)	math	acot	n	n	1	1	Calculates the arccotangent of the given number.	
-"add(s,s,f)"	event	add	"s,s,f"	_nil	0	1	Adds an event listener.	"event.add(event,uid,callback);"
-adj2(_mx2)	matrix2	adj2	_mx2	n	1	1		
-adj3(_mx3)	matrix3	adj3	_mx3	_mx3	1	1		
-airDensity()	game	airDensity		n	1	1		
-"angleDifference(n,n)"	math	angleDifference	"n,n"	n	1	1	Calculates the difference between two angles.	
-angSpeedLimit()	game	angSpeedLimit		n	1	1	Returns MaxAngularVelocity.	
-anyModel()	hololib	anyModel		b	1	0		
-"approach(n,n,n)"	math	approach	"n,n,n"	n	1	1	Returns the value of the second parameter approaching the third parameter at a rate defined by the first parameter.	
-"approachAngle(n,n,n)"	math	approachAngle	"n,n,n"	n	1	1	Returns the angle of the second parameter approaching the third parameter at a rate defined by the first parameter.	
-asin(n)	math	asin	n	n	1	1	Returns the arcsine of the given number.	
-atan(n)	math	atan	n	n	1	1	Returns the arctangent of the given number.	
-"atan2(n,n)"	math	atan2	"n,n"	n	1	1	Returns the angle whose tangent is the quotient of two specified numbers.	
-bestAutoJoin()	team	bestAutoJoin		n	1	1		
-binToInt(s)	math	binToInt	s	n	1	1	Converts a binary string to an integer.	
-"bSplinePoint(n,t,n)"	math	bSplinePoint	"n,t,n"	v	1	1	Calculates a point on a B-spline curve at a given parameter value.	
-"call(_cls,n,e,s,...)"	event	call	"_cls,n,e,s,..."	_nil	0	1	Returns the smallest integer greater than or equal to a given number.	"event.call(result_class,result_count,gate,event,…);"
-"call(_cls,n,s,...)"	event	call	"_cls,n,s,..."	t	1	1	Clamps a value within a specified range.	"event.call(result_class,result_count,event,…);"
-"call(e,s,...)"	event	call	"e,s,..."	b	1	1	Returns the cosine of a number (in radians).	"event.call(gate,event,…);"
-"call(s,...)"	event	call	"s,..."	b	1	1	Returns the hyperbolic cosine of a number.	"event.call(event,…);"
-canCreate()	hololib	canCreate		b	1	0		
-canSpawn()	prop	canSpawn		b	1	0		
-ceil(n)	math	ceil	n	n	1	1	Returns the smallest integer greater than or equal to a given number.	
-check(e)	permissions	check	e	b	1	1		
-"check(e,s)"	permissions	check	"e,s"	b	1	1		
-"clamp(n,n,n)"	math	clamp	"n,n,n"	n	1	1	Clamps a value within a specified range.	
-clearFilter()	ranger	clearFilter		_nil	0	1		
-clipLimit()	hololib	clipLimit		n	1	0		
-"colorAlpha(c,n)"	clr	colorAlpha	"c,n"	c	1	1	Returns a new Color with the RGB components of the given Color and the alpha value specified.	
-"colorRand(c,n)"	clr	colorRand	"c,n"	c	1	1	"Creates a Color with randomized red, green, and blue components. If the alpha argument is true, alpha will also be randomized."	
-colorToHSV(c)	clr	colorToHSV	c	n	1	1	Converts a Color into HSV color space.	
-cos(n)	math	cos	n	n	1	1	Returns the cosine of a number (in radians).	
+abs(n)	math	abs	n	n	1	1	Returns the absolute value of a number, removing any negative sign so the result is always positive or zero.	math.abs(-5); // 5
+acos(n)	math	acos	n	n	1	1	Returns the arccosine (inverse cosine) of the given number, in radians. The input must be in the range -1 to 1.	math.acos(0); // ~1.5708
+acot(n)	math	acot	n	n	1	1	Returns the arccotangent (inverse cotangent) of the given number, in radians.	
+add(s,s,f)	event	add	s,s,f	_nil	0	1	Registers a function to be called whenever the named event fires. The second argument is a unique id so the listener can be removed later.	event.add("tick", "myid", function() ... );
+adj2(_mx2)	matrix2	adj2	_mx2	n	1	1	Returns the adjugate (classical adjoint) of a 2x2 matrix.	matrix2.adj2(m);
+adj3(_mx3)	matrix3	adj3	_mx3	_mx3	1	1	Returns the adjugate (classical adjoint) of a 3x3 matrix.	matrix3.adj3(m);
+airDensity()	game	airDensity		n	1	1	Returns the density of the air in the physics environment.	game.airDensity();
+angleDifference(n,n)	math	angleDifference	n,n	n	1	1	Returns the signed difference between two angles in degrees, wrapped to the range -180 to 180.	
+angSpeedLimit()	game	angSpeedLimit		n	1	1	Returns the maximum angular velocity a physics object may reach (MaxAngularVelocity).	game.angSpeedLimit();
+anyModel()	hololib	anyModel		b	1	0	Returns true if holograms are allowed to use any model, rather than a restricted list.	hololib.anyModel();
+approach(n,n,n)	math	approach	n,n,n	n	1	1	Moves the current value (second argument) toward the target value (third argument) by at most the given step (first argument), without overshooting.	math.approach(step, current, target);
+approachAngle(n,n,n)	math	approachAngle	n,n,n	n	1	1	Like approach, but treats the values as angles in degrees and takes the shortest way around the circle.	math.approachAngle(step, current, target);
+asin(n)	math	asin	n	n	1	1	Returns the arcsine (inverse sine) of the given number, in radians. The input must be in the range -1 to 1.	math.asin(1); // ~1.5708
+atan(n)	math	atan	n	n	1	1	Returns the arctangent (inverse tangent) of the given number, in radians.	
+atan2(n,n)	math	atan2	n,n	n	1	1	Returns the angle in radians between the positive X axis and the point (x, y), correctly handling every quadrant. Pass y first, then x.	math.atan2(y, x);
+bestAutoJoin()	team	bestAutoJoin		n	1	1	Returns the id of the team a player would be placed on by auto-assign (usually the smallest joinable team).	team.bestAutoJoin();
+binToInt(s)	math	binToInt	s	n	1	1	Converts a string of binary digits ("0" and "1") into its integer value.	math.binToInt("1010"); // 10
+bSplinePoint(n,t,n)	math	bSplinePoint	n,t,n	v	1	1	Returns a point along a B-spline curve. The first argument is the position along the curve, the table holds the control points, and the last argument is the tension.	
+call(_cls,n,e,s,...)	event	call	_cls,n,e,s,...	_nil	0	1	Fires the named event on a specific gate entity and collects a return value of the given class and count.	event.call(result_class, result_count, gate, event, ...);
+call(_cls,n,s,...)	event	call	_cls,n,s,...	t	1	1	Fires the named event and collects a return value of the given class and count from the listeners.	event.call(result_class, result_count, event, ...);
+call(e,s,...)	event	call	e,s,...	b	1	1	Fires the named event on a specific gate entity, passing any extra arguments to its listeners.	event.call(gate, event, ...);
+call(s,...)	event	call	s,...	b	1	1	Fires the named event, passing any extra arguments to its listeners, and returns whether it was handled.	event.call(event, ...);
+canCreate()	hololib	canCreate		b	1	0	Returns true if this gate is currently allowed to create another hologram (within the limit and spawn rate).	hololib.canCreate();
+canSpawn()	prop	canSpawn		b	1	0	Returns true if this gate's owner is currently allowed to spawn a prop (within limits and cooldown).	prop.canSpawn();
+ceil(n)	math	ceil	n	n	1	1	Rounds a number up to the smallest integer that is greater than or equal to it.	math.ceil(4.2); // 5
+check(e)	permissions	check	e	b	1	1	Returns true if this gate's owner is allowed to interact with the given entity.	permissions.check(ent);
+check(e,s)	permissions	check	e,s	b	1	1	Returns true if this gate's owner holds the named permission on the given entity.	permissions.check(ent, "prop");
+clamp(n,n,n)	math	clamp	n,n,n	n	1	1	Constrains a value to lie between a minimum and a maximum. The first argument is the value, then the low and high bounds.	math.clamp(value, 0, 100);
+clearFilter()	ranger	clearFilter		_nil	0	1	Empties the ranger filter so rangers no longer ignore anything.	ranger.clearFilter();
+clipLimit()	hololib	clipLimit		n	1	0	Returns the maximum number of clipping planes a hologram may use.	hololib.clipLimit();
+colorAlpha(c,n)	clr	colorAlpha	c,n	c	1	1	Returns a copy of the colour with its alpha (opacity) replaced by the given value (0-255).	clr.colorAlpha(color, 128);
+colorRand(c,n)	clr	colorRand	c,n	c	1	1	Returns a copy of the colour with randomized red, green and blue channels. If the alpha argument is true, alpha is randomized too.	
+colorToHSV(c)	clr	colorToHSV	c	n	1	1	Converts an RGB colour into hue, saturation and value components.	clr.colorToHSV(color);
+cos(n)	math	cos	n	n	1	1	Returns the cosine of an angle given in radians.	math.cos(0); // 1
 cosh(n)	math	cosh	n	n	1	1	Returns the hyperbolic cosine of a number.	
-cot(n)	math	cot	n	n	1	1	Returns the cotangent of the given number.	
-create()	hololib	create		h	1	0		
-create(s)	hololib	create	s	h	1	0		
-"create(s,n,n,f,...)"	timer	create	"s,n,n,f,..."	_nil	0	1		
-"create(s,v)"	hololib	create	"s,v"	h	1	0		
-"create(s,v,a)"	hololib	create	"s,v,a"	h	1	0		
-curtime()	time	curtime		n	1	1	Gets the servers current uptime in seconds.	
-defaultZero()	ranger	defaultZero		b	1	1		
-defaultZero(b)	ranger	defaultZero	b	_nil	0	1		
-deg(n)	math	deg	n	n	1	1	Converts an angle from radians to degrees.	
-destroy()	system	destroy		_nil	0	1	Removes the e3 gate.	
-det2(_mx2)	matrix2	det2	_mx2	n	1	1		
-det3(_mx3)	matrix3	det3	_mx3	n	1	1		
-diagonal2(_mx2)	matrix2	diagonal2	_mx2	_v2	1	1		
-diagonal3(_mx3)	matrix3	diagonal3	_mx3	v	1	1		
-"distance(n,n,n,n)"	math	distance	"n,n,n,n"	n	1	1		
-"downloadURLMaterial(s,s)"	render	downloadURLMaterial	"s,s"	_nil	0	2	Gets an image from a url and saves it as a render material.	
-"downloadURLMaterial(s,s,n,n)"	render	downloadURLMaterial	"s,s,n,n"	_nil	0	2	Gets an image from a url and saves it as a render material.	
-"drawBox(_v2,_v2)"	render	drawBox	"_v2,_v2"	_nil	0	2	Draws a rectange.	"render.drawBox(pos,size);"
-"drawBox(_v2,_v2,n)"	render	drawBox	"_v2,_v2,n"	_nil	0	2	Draws a rotated rectange.	"render.drawBox(pos,size,rotation);"
-"drawBoxOutline(_v2,_v2)"	render	drawBoxOutline	"_v2,_v2"	_nil	0	2	Draws the outline of a rectange.	"render.drawBoxOutline(pos,size);"
-"drawCircle(_v2,n)"	render	drawCircle	"_v2,n"	_nil	0	2	Draws a circle.	"render.drawCircle(pos,radius);"
-"drawCircleOutline(_v2,n)"	render	drawCircleOutline	"_v2,n"	_nil	0	2	Draws the outline of a circle.	"render.drawCircleOutline(pos,radius);"
-"drawLine(_v2,_v2)"	render	drawLine	"_v2,_v2"	_nil	0	2	Draws a line between 2 positions.	"render.drawLine(startPos, endPos);"
-drawPoly(t)	render	drawPoly	t	_nil	0	2	Draws a polygon.	
-drawPolyOutline(t)	render	drawPolyOutline	t	_nil	0	2	Draws the outline of a polygon.	
-"drawText(_v2,s)"	render	drawText	"_v2,s"	n	2	2	Draws text at position.	"render.drawText(pos,text);"
-"drawText(_v2,s,n)"	render	drawText	"_v2,s,n"	n	2	2	Draws text at position with rotation.	"render.drawText(pos,text,rotation);"
-"drawTriangle(_v2,_v2,_v2)"	render	drawTriangle	"_v2,_v2,_v2"	_nil	0	2	Draws a triangle between 3 points.	"render.drawTriangle(pos1,pos2,pos3);"
-"drawTriangleOutline(_v2,_v2,_v2)"	render	drawTriangleOutline	"_v2,_v2,_v2"	_nil	0	2	Draws the outline of a triangle between 3 points.	"render.drawTriangleOutline(pos1,pos2,pos3);"
-"easeInOut(n,n,n)"	math	easeInOut	"n,n,n"	n	1	1	Applies an ease-in ease-out function to interpolate a value between two points.	
-encode(s)	http	encode	s	s	1	2		
-exists(s)	timer	exists	s	b	1	1		
-exp(n)	math	exp	n	n	1	1		
-filter()	ranger	filter		t	1	1		
-filter(e)	ranger	filter	e	_nil	0	1		
-filter(p)	ranger	filter	p	_nil	0	1		
-filter(t)	ranger	filter	t	_nil	0	1		
-floor(n)	math	floor	n	n	1	1	Returns the largest integer less than or equal to a given number.	
-"fmod(n,n)"	math	fmod	"n,n"	n	1	1	Returns the remainder of the division of two numbers (floating-point modulus).	
-frametime()	time	frametime		n	1	1	Gets the time between frames in seconds.	
-frexp(n)	math	frexp	n	n	1	1	Splits the given number into a normalized fraction and an exponent.	
-gamemode()	game	gamemode		s	1	1	Returns the name of the current gamemode.	
-getAll()	permissions	getAll		t	1	1		
-getAllByName(s)	players	getAllByName	s	t	1	1		
-getByID(n)	hololib	getByID	n	e	1	0		
-getByName(s)	players	getByName	s	p	1	1		
-getBySteamID(s)	players	getBySteamID	s	p	1	1		
-getBySteamID64(s)	players	getBySteamID64	s	p	1	1		
-getClass(n)	team	getClass	n	t	1	1		
-getClient()	system	getClient		p	1	2	Returns the local player client side.	
-getColor()	render	getColor		c	1	2	Gets the current  color for rendering objects.	
-getColor(n)	team	getColor	n	c	1	1	Returns the color of the team with the given identifier.	
-getEntity()	system	getEntity		e	1	1	Returns the entity of the e3 gate.	
-getFontColor()	render	getFontColor		c	1	2	Returns the current color for text rendering.	
-getName(n)	team	getName	n	s	1	1	Returns the name of the team with the given identifier.	
-getOwner()	system	getOwner		p	1	1	Returns the player who owns the e3 gate.	
-getPlayers(n)	team	getPlayers	n	t	1	1	Returns the players belonging to the team with the given identifier.	
-getScore(n)	team	getScore	n	n	1	1	Returns the score of the team with the given identifier.	
-getScreenRefresh()	render	getScreenRefresh		b	1	2	Returns wether or not a screen will be wiped before drawing a new frame.	
-getSpawnPoints(n)	team	getSpawnPoints	n	t	1	1	Returns the spawn points of the team with the given identifier.	
-getTextSize(s)	render	getTextSize	s	n	2	2	"Returns the width, height of a text object as if it where rendered."	
-getTickRate()	system	getTickRate		n	1	1		
-gravity()	game	gravity		n	1	1		
-hardQuotaMax()	system	hardQuotaMax		n	1	1	 	
-hardQuotaUse()	system	hardQuotaUse		n	1	1		
-hitEntities()	ranger	hitEntities		b	1	1		
-hitEntities(b)	ranger	hitEntities	b	_nil	0	1		
-hitWater()	ranger	hitWater		b	1	1		
-hitWater(b)	ranger	hitWater	b	_nil	0	1		
-hostname()	game	hostname		s	1	1	Returns the host name of the server.	
-"hsvToColor(n,n,n)"	clr	hsvToColor	"n,n,n"	c	1	1	Converts a color from HSV color space into RGB color space and returns a Color.	
-huge()	math	huge		n	1	1	Returns a value representing positive infinity.	
-ignoreWorld()	ranger	ignoreWorld		b	1	1		
-ignoreWorld(b)	ranger	ignoreWorld	b	_nil	0	1		
-intToBin(n)	math	intToBin	n	s	1	1	Converts an integer to a binary string.	
-inverseA(_mx4)	matrix4	inverseA	_mx4	_mx4	1	1	Calculates the value of the first parameter multiplied by 2 raised to the power of the second parameter.	
-"invoke(_cls,n,f,...)"	system	invoke	"_cls,n,f,..."	_nil	0	1	Linearly interpolates between two values.	
-isClient()	system	isClient		b	1	1	Returns true if running client side.	
-isLan()	game	isLan		b	1	1	Returns true if on a lan hosted game.	
-isServer()	system	isServer		b	1	1	Returns true if running server side.	
-isSinglePlayer()	game	isSinglePlayer		b	1	1	Returns true if in a single player game.	
-joinable(n)	team	joinable	n	b	1	1	Checks if the team with the given identifier is joinable.	
-"ldexp(n,n)"	math	ldexp	"n,n"	n	1	1	Calculates the value of the first parameter multiplied by 2 raised to the power of the second parameter.	
-"lerp(n,n,n)"	math	lerp	"n,n,n"	n	1	1	Linearly interpolates between two values.	
-"lerpAngle(n,a,a)"	math	lerpAngle	"n,a,a"	a	1	1	Interpolates between two angles.	
-"lerpVector(n,v,v)"	math	lerpVector	"n,v,v"	v	1	1	Interpolates between two vectors.	
-limit()	hololib	limit		n	1	0		
-localPlayer()	players	localPlayer		p	1	2		
-log(n)	math	log	n	n	1	1	Returns the natural logarithm of a number.	
-"log(n,n)"	math	log	"n,n"	n	1	1	Returns the logarithm of a number in a specified base.	
-log10(n)	math	log10	n	n	1	1	Returns the base-10 logarithm of a number.	
-map()	game	map		s	1	1	Returns the name of the current map.	
-max(...)	math	max	...	n	1	1	Returns the maximum value among the provided arguments.	
-maxFrictionMass()	game	maxFrictionMass		n	1	1	Returns MaxFrictionMass.	
-maxPlayers()	game	maxPlayers		n	1	1	Returns the max players supported by the game session.	
-maxScale()	hololib	maxScale		n	1	0		
-min(...)	math	min	...	n	1	1	Returns the minimum value among the provided arguments.	
-minFrictionMass()	game	minFrictionMass		n	1	1	Returns MinFrictionMass.	
-modelName(s)	hololib	modelName	s	s	1	0		
-modf(n)	math	modf	n	n	1	1	Returns the fractional and integral parts of a number.	
-movingQuotaAverage()	system	movingQuotaAverage		n	1	1	Returns the moving quota average.	
-"mRotation(v,n)"	matrix3	mRotation	"v,n"	_mx3	1	1		
-netQuota()	system	netQuota		n	1	1		
-netQuotaMax()	system	netQuotaMax		n	1	1		
-"nlerp(q,q,n)"	quaternion	nlerp	"q,q,n"	q	1	1		
-normalizeAngle(n)	math	normalizeAngle	n	n	1	1	"Normalizes an angle to be within the range [0, 2?) radians."	
-now()	time	now		n	1	1		
-now(_ts)	time	now	_ts	n	1	1		
-numPlayers()	game	numPlayers		n	1	1	Returns the current amount of players on the server.	
-"offset(v,v)"	ranger	offset	"v,v"	_rd	1	1		
-"offset(v,v,n)"	ranger	offset	"v,v,n"	_rd	1	1		
-"offsetHull(v,v,n,v,v)"	ranger	offsetHull	"v,v,n,v,v"	_rd	1	1		
-"offsetHull(v,v,v,v)"	ranger	offsetHull	"v,v,v,v"	_rd	1	1		
-out(...)	system	out	...	_nil	0	1	Prints to Golem IDE console.	
-owner(e)	permissions	owner	e	p	1	1		
-pause(s)	timer	pause	s	_nil	0	1		
-persist()	ranger	persist		b	1	1		
-persist(b)	ranger	persist	b	_nil	0	1		
-pi()	math	pi		n	1	1	Returns the mathematical constant pi.	
-playerCount(n)	team	playerCount	n	n	1	1	Returns the count of players in the team with the given identifier.	
-popCanvas()	render	popCanvas		_nil	1	2	Pops the rendering context.	
-"pow(n,n)"	math	pow	"n,n"	n	1	1	Returns the result of raising the first parameter to the power of the second parameter.	
-print(...)	system	print	...	_nil	0	1	Prints to e3 owners chat.	
-printTable(t)	system	printTable	t	_nil	0	1	Prints a table into Golem IDE console.	
-propGravity()	game	propGravity		v	1	1		
-pushCanvas(_cv)	render	pushCanvas	_cv	_nil	1	2		
-qi()	quaternion	qi		q	1	1		
-qi(n)	quaternion	qi	n	q	1	1		
-qj()	quaternion	qj		q	1	1		
-qj(n)	quaternion	qj	n	q	1	1		
-qk()	quaternion	qk		q	1	1		
-qk(n)	quaternion	qk	n	q	1	1		
-qRotation(v)	quaternion	qRotation	v	q	1	1		
-"qRotation(v,n)"	quaternion	qRotation	"v,n"	q	1	1		
-quota()	system	quota		n	1	1		
-quotaAverage()	system	quotaAverage		n	1	1	Returns the quota average.	
-quotaMax()	system	quotaMax		n	1	1	Returns the maximum quota limit.	
-quotaUsage()	system	quotaUsage		n	1	1	Returns the current quota usage.	
-rad(n)	math	rad	n	n	1	1	Converts an angle from degrees to radians.	
-random()	math	random		n	1	1	Generates a random floating-point number between 0 and 1.	
-random(n)	math	random	n	n	1	1	"Generates a random integer between 1 and the given value, inclusive."	
-"random(n,n)"	math	random	"n,n"	n	1	1	"Generates a random integer between the two given values, inclusive."	
-randomseed(n)	math	randomseed	n	_nil	1	1	Sets the seed for the random number generator.	
-realtime()	time	realtime		n	1	1	Returns the uptime of the game/server in seconds (to at least 4 decimal places)	
-"receive(s,f)"	net	receive	"s,f"	_nil	0	1		
-"remap(n,n,n,n,n)"	math	remap	"n,n,n,n,n"	n	1	1	Remaps a value from one range to another.	
-remove(s)	timer	remove	s	_nil	0	1		
-"remove(s,s)"	event	remove	"s,s"	_nil	0	1	Removes an event listener.	"event.remove(event,uid);"
-"request(s,f)"	http	request	"s,f"	b	1	2		
-"request(s,f,f)"	http	request	"s,f,f"	b	1	2		
-reset()	ranger	reset		_nil	0	1		
-resume(s)	timer	resume	s	_nil	0	1		
-rotationAngle(q)	quaternion	rotationAngle	q	a	1	1	Returns the rotation angle of the quaternion.	
-rotationAxis(q)	quaternion	rotationAxis	q	v	1	1	Returns the rotation axis of the quaternion.	
-rotationVector(q)	quaternion	rotationVector	q	v	1	1	Returns the rotation vector of the quaternion.	
-round(n)	math	round	n	n	1	1	Rounds a number to the nearest integer.	
-"round(n,n)"	math	round	"n,n"	n	1	1	Rounds a number to the specified number of decimal places.	
-scrH()	render	scrH		n	1	2	"Returns the height of the current rendering location e.g hud, screen."	
-scrSize()	render	scrSize		n	1	2		
-scrW()	render	scrW		n	1	2	"Returns the width of the current rendering location e.g hud, screen."	
-sendToClients(_usmg)	net	sendToClients	_usmg	_nil	0	0		
-"sendToClients(_usmg,_crf)"	net	sendToClients	"_usmg,_crf"	_nil	0	0		
-sendToServer(_usmg)	net	sendToServer	_usmg	_nil	0	2		
-setColor(c)	render	setColor	c	_nil	0	2	Sets the color of the next object rendered.	render.setColor(color);
-"setColor(n,n,n)"	render	setColor	"n,n,n"	_nil	0	2	Sets the color of the next object rendered.	"render.setColor(r,g,b);"
-"setColor(n,n,n,n)"	render	setColor	"n,n,n,n"	_nil	0	2	Sets the color of the next object rendered.	"render.setColor(r,g,b,a);"
-"setFont(s,n)"	render	setFont	"s,n"	_nil	0	2	Sets the font and size used for rendering text.	"render.setFont(front,size);"
-setFontColor(c)	render	setFontColor	c	_nil	0	2	Sets the color of the next text rendered.	render.setFontColor(color);
-"setFontColor(n,n,n)"	render	setFontColor	"n,n,n"	_nil	0	2	Sets the color of the next text rendered.	"render.setFontColor(r,g,b);"
-"setFontColor(n,n,n,n)"	render	setFontColor	"n,n,n,n"	_nil	0	2	Sets the color of the next text rendered.	"render.setFontColor(r,g,b,a);"
-setScreenRefresh(b)	render	setScreenRefresh	b	_nil	0	2	Wether or not a screen will be wiped before drawing a new frame.	
-setTexture()	render	setTexture		_nil	0	2	Clears the rendering texture used for redering text objects (solid color).	render.setTexture();
-setTexture(_cv)	render	setTexture	_cv	_nil	1	2	Sets the texture used for rendering objects.	
-setTexture(s)	render	setTexture	s	_nil	0	2	Sets the texture used for rendering objects.	render.setTexture(texture);
-setTickRate(n)	system	setTickRate	n	_nil	0	1		
-setURLMaterial(s)	render	setURLMaterial	s	_nil	0	2		
-"simple(n,f,...)"	timer	simple	"n,f,..."	_nil	0	1		
-sin(n)	math	sin	n	n	1	1	Returns the sine of a number (in radians).	
+cot(n)	math	cot	n	n	1	1	Returns the cotangent of an angle given in radians (the reciprocal of the tangent).	
+create()	hololib	create		h	1	0	Creates a hologram at the gate's position and returns it.	hololib.create();
+create(s)	hololib	create	s	h	1	0	Creates a hologram with the given model and returns it.	hololib.create(model);
+create(s,n,n,f,...)	timer	create	s,n,n,f,...	_nil	0	1	Creates a named repeating timer. Arguments are: name, delay in seconds, number of repetitions (0 for infinite), and the function to run.	timer.create("tick", 1, 0, func);
+create(s,v)	hololib	create	s,v	h	1	0	Creates a hologram with the given model at the given position.	hololib.create(model, pos);
+create(s,v,a)	hololib	create	s,v,a	h	1	0	Creates a hologram with the given model at the given position and angle.	hololib.create(model, pos, ang);
+curtime()	time	curtime		n	1	1	Returns the server's current uptime in seconds. This advances with the game and is the same across a single tick.	time.curtime();
+defaultZero()	ranger	defaultZero		b	1	1	Returns whether rangers default their hit position to a zero point when nothing is hit.	ranger.defaultZero();
+defaultZero(b)	ranger	defaultZero	b	_nil	0	1	Sets whether rangers default their hit position to zero when nothing is hit.	ranger.defaultZero(true);
+deg(n)	math	deg	n	n	1	1	Converts an angle from radians into degrees.	math.deg(math.pi()); // 180
+destroy()	system	destroy		_nil	0	1	Permanently removes this Expression 3 gate.	system.destroy();
+det2(_mx2)	matrix2	det2	_mx2	n	1	1	Returns the determinant of a 2x2 matrix.	matrix2.det2(m);
+det3(_mx3)	matrix3	det3	_mx3	n	1	1	Returns the determinant of a 3x3 matrix.	matrix3.det3(m);
+diagonal2(_mx2)	matrix2	diagonal2	_mx2	_v2	1	1	Returns the diagonal of a 2x2 matrix as a 2D vector.	matrix2.diagonal2(m);
+diagonal3(_mx3)	matrix3	diagonal3	_mx3	v	1	1	Returns the diagonal of a 3x3 matrix as a vector.	matrix3.diagonal3(m);
+distance(n,n,n,n)	math	distance	n,n,n,n	n	1	1	Returns the straight-line distance between two 2D points (x1, y1) and (x2, y2).	math.distance(x1, y1, x2, y2);
+downloadURLMaterial(s,s)	render	downloadURLMaterial	s,s	_nil	0	2	Downloads an image from a URL and stores it as a named render material for later use.	render.downloadURLMaterial(name, url);
+downloadURLMaterial(s,s,n,n)	render	downloadURLMaterial	s,s,n,n	_nil	0	2	Downloads an image from a URL at the given width and height and stores it as a named render material.	render.downloadURLMaterial(name, url, w, h);
+drawBox(_v2,_v2)	render	drawBox	_v2,_v2	_nil	0	2	Draws a filled rectangle at the given position with the given size (in pixels).	render.drawBox(pos, size);
+drawBox(_v2,_v2,n)	render	drawBox	_v2,_v2,n	_nil	0	2	Draws a filled rectangle at the given position and size, rotated by the given number of degrees about its centre.	render.drawBox(pos, size, rotation);
+drawBoxOutline(_v2,_v2)	render	drawBoxOutline	_v2,_v2	_nil	0	2	Draws the outline of a rectangle at the given position with the given size.	render.drawBoxOutline(pos, size);
+drawCircle(_v2,n)	render	drawCircle	_v2,n	_nil	0	2	Draws a filled circle centred at the given position with the given radius.	render.drawCircle(pos, radius);
+drawCircleOutline(_v2,n)	render	drawCircleOutline	_v2,n	_nil	0	2	Draws the outline of a circle centred at the given position with the given radius.	render.drawCircleOutline(pos, radius);
+drawLine(_v2,_v2)	render	drawLine	_v2,_v2	_nil	0	2	Draws a straight line between two screen positions.	render.drawLine(startPos, endPos);
+drawPoly(t)	render	drawPoly	t	_nil	0	2	Draws a filled polygon from a table of 2D points.	render.drawPoly(points);
+drawPolyOutline(t)	render	drawPolyOutline	t	_nil	0	2	Draws the outline of a polygon from a table of 2D points.	render.drawPolyOutline(points);
+drawText(_v2,s)	render	drawText	_v2,s	n	2	2	Draws text at the given position using the current font and font colour, and returns the size it occupied.	render.drawText(pos, text);
+drawText(_v2,s,n)	render	drawText	_v2,s,n	n	2	2	Draws text at the given position rotated by the given number of degrees, and returns the size it occupied.	render.drawText(pos, text, rotation);
+drawTriangle(_v2,_v2,_v2)	render	drawTriangle	_v2,_v2,_v2	_nil	0	2	Draws a filled triangle between three screen positions.	render.drawTriangle(pos1, pos2, pos3);
+drawTriangleOutline(_v2,_v2,_v2)	render	drawTriangleOutline	_v2,_v2,_v2	_nil	0	2	Draws the outline of a triangle between three screen positions.	render.drawTriangleOutline(pos1, pos2, pos3);
+easeInOut(n,n,n)	math	easeInOut	n,n,n	n	1	1	Eases a value between a start and end using a smooth accelerate-then-decelerate curve. The first argument is the progress (0-1).	
+encode(s)	http	encode	s	s	1	2	Percent-encodes a string so it is safe to use inside a URL.	http.encode("a b&c");
+exists(s)	timer	exists	s	b	1	1	Returns true if a timer with the given name currently exists.	timer.exists("tick");
+exp(n)	math	exp	n	n	1	1	Returns e (Euler's number) raised to the given power.	math.exp(1); // ~2.71828
+filter()	ranger	filter		t	1	1	Returns the current ranger filter as a table of entities.	ranger.filter();
+filter(e)	ranger	filter	e	_nil	0	1	Adds an entity to the ranger filter so rangers ignore it.	ranger.filter(ent);
+filter(p)	ranger	filter	p	_nil	0	1	Adds a player to the ranger filter so rangers ignore them.	ranger.filter(ply);
+filter(t)	ranger	filter	t	_nil	0	1	Replaces the ranger filter with the entities in the given table.	ranger.filter({ent1, ent2});
+floor(n)	math	floor	n	n	1	1	Rounds a number down to the largest integer that is less than or equal to it.	math.floor(4.8); // 4
+fmod(n,n)	math	fmod	n,n	n	1	1	Returns the remainder of dividing the first number by the second, keeping the sign of the dividend (floating-point modulo).	math.fmod(7, 3); // 1
+frametime()	time	frametime		n	1	1	Returns the time in seconds since the previous frame.	time.frametime();
+frexp(n)	math	frexp	n	n	1	1	Splits a number into a normalized fraction (between 0.5 and 1) and an integer exponent such that fraction * 2^exponent equals the input.	
+gamemode()	game	gamemode		s	1	1	Returns the name of the gamemode the server is running.	game.gamemode();
+getAll()	permissions	getAll		t	1	1	Returns a table of every permission the permissions system knows about.	permissions.getAll();
+getAllByName(s)	players	getAllByName	s	t	1	1	Returns a table of every player whose name contains the given text.	players.getAllByName("Bob");
+getByID(n)	hololib	getByID	n	e	1	0	Returns the hologram entity with the given id, or an invalid entity if none exists.	hololib.getByID(id);
+getByName(s)	players	getByName	s	p	1	1	Returns the first player whose name contains the given text.	players.getByName("Bob");
+getBySteamID(s)	players	getBySteamID	s	p	1	1	Returns the player with the given SteamID (STEAM_0:... form).	players.getBySteamID("STEAM_0:1:1234");
+getBySteamID64(s)	players	getBySteamID64	s	p	1	1	Returns the player with the given 64-bit SteamID.	players.getBySteamID64("7656119...");
+getClass(n)	team	getClass	n	t	1	1	Returns the class table associated with the team of the given id.	team.getClass(teamID);
+getClient()	system	getClient		p	1	2	Returns the local player. This is only meaningful client-side, where it is the player viewing the gate.	system.getClient();
+getColor()	render	getColor		c	1	2	Returns the colour currently used to render shapes.	render.getColor();
+getColor(n)	team	getColor	n	c	1	1	Returns the colour of the team with the given id.	team.getColor(teamID);
+getEntity()	system	getEntity		e	1	1	Returns the entity of the Expression 3 gate this code is running on.	system.getEntity();
+getFontColor()	render	getFontColor		c	1	2	Returns the colour currently used to render text.	render.getFontColor();
+getName(n)	team	getName	n	s	1	1	Returns the display name of the team with the given id.	team.getName(teamID);
+getOwner()	system	getOwner		p	1	1	Returns the player who owns (spawned) this Expression 3 gate.	system.getOwner();
+getPlayers(n)	team	getPlayers	n	t	1	1	Returns a table of the players currently on the team with the given id.	team.getPlayers(teamID);
+getScore(n)	team	getScore	n	n	1	1	Returns the score of the team with the given id.	team.getScore(teamID);
+getScreenRefresh()	render	getScreenRefresh		b	1	2	Returns whether the screen is cleared before each new frame is drawn.	render.getScreenRefresh();
+getSpawnPoints(n)	team	getSpawnPoints	n	t	1	1	Returns a table of the spawn point entities for the team with the given id.	team.getSpawnPoints(teamID);
+getTextSize(s)	render	getTextSize	s	n	2	2	Returns the width and height, in pixels, that the given text would occupy with the current font.	render.getTextSize("Hello");
+getTickRate()	system	getTickRate		n	1	1	Returns the gate's current tick rate (how many times per second its think runs).	system.getTickRate();
+gravity()	game	gravity		n	1	1	Returns the strength of world gravity (units per second squared).	game.gravity();
+hardQuotaMax()	system	hardQuotaMax		n	1	1	Returns the hard CPU time limit; a single tick exceeding it shuts the gate down immediately.	system.hardQuotaMax();
+hardQuotaUse()	system	hardQuotaUse		n	1	1	Returns the CPU time used against the hard limit on this tick.	system.hardQuotaUse();
+hitEntities()	ranger	hitEntities		b	1	1	Returns whether rangers are currently set to hit entities.	ranger.hitEntities();
+hitEntities(b)	ranger	hitEntities	b	_nil	0	1	Sets whether the next rangers should hit entities.	ranger.hitEntities(true);
+hitWater()	ranger	hitWater		b	1	1	Returns whether rangers are currently set to hit water.	ranger.hitWater();
+hitWater(b)	ranger	hitWater	b	_nil	0	1	Sets whether the next rangers should hit water.	ranger.hitWater(true);
+hostname()	game	hostname		s	1	1	Returns the server's host name.	game.hostname();
+hsvToColor(n,n,n)	clr	hsvToColor	n,n,n	c	1	1	Builds a colour from hue (0-360), saturation (0-1) and value (0-1).	clr.hsvToColor(120, 1, 1);
+huge()	math	huge		n	1	1	Returns a value representing positive infinity.	math.huge();
+ignoreWorld()	ranger	ignoreWorld		b	1	1	Returns whether rangers are currently set to ignore the world.	ranger.ignoreWorld();
+ignoreWorld(b)	ranger	ignoreWorld	b	_nil	0	1	Sets whether the next rangers should ignore the world (map geometry).	ranger.ignoreWorld(true);
+intToBin(n)	math	intToBin	n	s	1	1	Converts an integer into a string of binary digits.	math.intToBin(10); // "1010"
+inverseA(_mx4)	matrix4	inverseA	_mx4	_mx4	1	1	Returns the inverse of a 4x4 affine transformation matrix.	matrix4.inverseA(m);
+invoke(_cls,n,f,...)	system	invoke	_cls,n,f,...	_nil	0	1	Calls the given function immediately and returns a value of the specified class and count, passing along any extra arguments.	system.invoke(result_class, result_count, func, ...);
+isClient()	system	isClient		b	1	1	Returns true when the code is currently running on a client.	system.isClient();
+isLan()	game	isLan		b	1	1	Returns true if the server is running as a LAN game.	game.isLan();
+isServer()	system	isServer		b	1	1	Returns true when the code is currently running on the server.	system.isServer();
+isSinglePlayer()	game	isSinglePlayer		b	1	1	Returns true if the game is running in single-player.	game.isSinglePlayer();
+joinable(n)	team	joinable	n	b	1	1	Returns true if players are allowed to join the team with the given id.	team.joinable(teamID);
+ldexp(n,n)	math	ldexp	n,n	n	1	1	Returns the first argument multiplied by 2 raised to the power of the second argument (the inverse of frexp).	math.ldexp(1.5, 3); // 12
+lerp(n,n,n)	math	lerp	n,n,n	n	1	1	Linearly interpolates between two numbers. The first argument is the fraction (0 returns the start, 1 returns the end).	math.lerp(0.5, 0, 10); // 5
+lerpAngle(n,a,a)	math	lerpAngle	n,a,a	a	1	1	Linearly interpolates between two angles, taking the shortest path. The first argument is the fraction (0-1).	math.lerpAngle(0.5, a1, a2);
+lerpVector(n,v,v)	math	lerpVector	n,v,v	v	1	1	Linearly interpolates between two vectors. The first argument is the fraction (0-1).	math.lerpVector(0.5, v1, v2);
+limit()	hololib	limit		n	1	0	Returns the maximum number of holograms a player may have at once.	hololib.limit();
+localPlayer()	players	localPlayer		p	1	2	Returns the local player (the client viewing the gate). Client-side only.	players.localPlayer();
+log(n)	math	log	n	n	1	1	Returns the natural logarithm (base e) of a number.	math.log(math.exp(1)); // 1
+log(n,n)	math	log	n,n	n	1	1	Returns the logarithm of the first number in the base given by the second number.	math.log(8, 2); // 3
+log10(n)	math	log10	n	n	1	1	Returns the base-10 logarithm of a number.	math.log10(1000); // 3
+map()	game	map		s	1	1	Returns the file name of the map currently being played.	game.map();
+max(...)	math	max	...	n	1	1	Returns the largest of all the numbers passed to it.	math.max(3, 7, 2); // 7
+maxFrictionMass()	game	maxFrictionMass		n	1	1	Returns the maximum mass the physics engine applies full friction to.	game.maxFrictionMass();
+maxPlayers()	game	maxPlayers		n	1	1	Returns the maximum number of players the server allows.	game.maxPlayers();
+maxScale()	hololib	maxScale		n	1	0	Returns the largest scale a hologram may be set to.	hololib.maxScale();
+min(...)	math	min	...	n	1	1	Returns the smallest of all the numbers passed to it.	math.min(3, 7, 2); // 2
+minFrictionMass()	game	minFrictionMass		n	1	1	Returns the minimum mass the physics engine applies friction to.	game.minFrictionMass();
+modelName(s)	hololib	modelName	s	s	1	0	Returns the full model path for a short hologram model name, or an empty string if unknown.	hololib.modelName("cube");
+modf(n)	math	modf	n	n	1	1	Splits a number into its integral part and its fractional part, returning both.	
+movingQuotaAverage()	system	movingQuotaAverage		n	1	1	Returns the gate's moving (smoothed) average CPU usage.	system.movingQuotaAverage();
+mRotation(v,n)	matrix3	mRotation	v,n	_mx3	1	1	Returns a 3x3 rotation matrix for a rotation of the given number of degrees around the given axis vector.	matrix3.mRotation(axis, degrees);
+netQuota()	system	netQuota		n	1	1	Returns the amount of the networking (bandwidth) quota used so far.	system.netQuota();
+netQuotaMax()	system	netQuotaMax		n	1	1	Returns the maximum networking (bandwidth) quota available to the gate.	system.netQuotaMax();
+nlerp(q,q,n)	quaternion	nlerp	q,q,n	q	1	1	Normalized linear interpolation between two quaternions. The last argument is the fraction (0-1); faster than slerp but less constant in speed.	quaternion.nlerp(q1, q2, 0.5);
+normalizeAngle(n)	math	normalizeAngle	n	n	1	1	Wraps an angle in degrees into the range -180 to 180.	math.normalizeAngle(270); // -90
+now()	time	now		n	1	1	Returns the current date and time as a date object.	time.now();
+now(_ts)	time	now	_ts	n	1	1	Returns a date object for the given unix timestamp.	time.now(timestamp);
+numPlayers()	game	numPlayers		n	1	1	Returns the number of players currently connected to the server.	game.numPlayers();
+offset(v,v)	ranger	offset	v,v	_rd	1	1	Fires a ranger between two world positions and returns the ranger data describing what it hit.	ranger.offset(start, stop);
+offset(v,v,n)	ranger	offset	v,v,n	_rd	1	1	Fires a ranger from a start position in a direction for the given length and returns the ranger data.	ranger.offset(start, direction, length);
+offsetHull(v,v,n,v,v)	ranger	offsetHull	v,v,n,v,v	_rd	1	1	Fires a box-shaped (hull) ranger from a start position in a direction for the given length, using the given min and max corners.	ranger.offsetHull(start, dir, length, min, max);
+offsetHull(v,v,v,v)	ranger	offsetHull	v,v,v,v	_rd	1	1	Fires a box-shaped (hull) ranger between two positions using the given min and max corners.	ranger.offsetHull(start, stop, min, max);
+out(...)	system	out	...	_nil	0	1	Prints the given values to the Golem IDE console.	system.out("debug value: ", value);
+owner(e)	permissions	owner	e	p	1	1	Returns the player who owns the given entity, according to the prop-protection system.	permissions.owner(ent);
+pause(s)	timer	pause	s	_nil	0	1	Pauses the named timer, freezing its countdown until it is resumed.	timer.pause("tick");
+persist()	ranger	persist		b	1	1	Returns whether ranger settings persist between calls instead of resetting.	ranger.persist();
+persist(b)	ranger	persist	b	_nil	0	1	Sets whether ranger settings persist between calls instead of resetting each time.	ranger.persist(true);
+pi()	math	pi		n	1	1	Returns the mathematical constant pi (~3.14159).	math.pi();
+playerCount(n)	team	playerCount	n	n	1	1	Returns the number of players on the team with the given id.	team.playerCount(teamID);
+popCanvas()	render	popCanvas		_nil	1	2	Stops drawing onto a canvas pushed with pushCanvas and returns to the previous target.	render.popCanvas();
+pow(n,n)	math	pow	n,n	n	1	1	Raises the first number to the power of the second number.	math.pow(2, 8); // 256
+print(...)	system	print	...	_nil	0	1	Prints the given values to the gate owner's chat.	system.print("Hello ", owner);
+printTable(t)	system	printTable	t	_nil	0	1	Prints the contents of a table to the Golem IDE console for inspection.	system.printTable(myTable);
+propGravity()	game	propGravity		v	1	1	Returns the world gravity as a direction vector.	game.propGravity();
+pushCanvas(_cv)	render	pushCanvas	_cv	_nil	1	2	Redirects all following draw calls onto the given canvas until popCanvas is called.	render.pushCanvas(canvas);
+qi()	quaternion	qi		q	1	1	Returns the quaternion i (0,1,0,0), the first imaginary unit.	quaternion.qi();
+qi(n)	quaternion	qi	n	q	1	1	Returns the quaternion i scaled by the given number (0,n,0,0).	quaternion.qi(2);
+qj()	quaternion	qj		q	1	1	Returns the quaternion j (0,0,1,0), the second imaginary unit.	quaternion.qj();
+qj(n)	quaternion	qj	n	q	1	1	Returns the quaternion j scaled by the given number (0,0,n,0).	quaternion.qj(2);
+qk()	quaternion	qk		q	1	1	Returns the quaternion k (0,0,0,1), the third imaginary unit.	quaternion.qk();
+qk(n)	quaternion	qk	n	q	1	1	Returns the quaternion k scaled by the given number (0,0,0,n).	quaternion.qk(2);
+qRotation(v)	quaternion	qRotation	v	q	1	1	Returns a quaternion representing a rotation around the given axis vector, by the length of that vector in degrees.	quaternion.qRotation(axis);
+qRotation(v,n)	quaternion	qRotation	v,n	q	1	1	Returns a quaternion representing a rotation of the given number of degrees around the given axis vector.	quaternion.qRotation(axis, degrees);
+quota()	system	quota		n	1	1	Returns the total CPU time (in seconds) used by the gate on the current tick.	system.quota();
+quotaAverage()	system	quotaAverage		n	1	1	Returns the gate's average CPU usage over recent ticks.	system.quotaAverage();
+quotaMax()	system	quotaMax		n	1	1	Returns the soft CPU time limit; exceeding it repeatedly will shut the gate down.	system.quotaMax();
+quotaUsage()	system	quotaUsage		n	1	1	Returns the gate's current soft CPU usage on this tick.	system.quotaUsage();
+rad(n)	math	rad	n	n	1	1	Converts an angle from degrees into radians.	math.rad(180); // ~3.14159
+random()	math	random		n	1	1	Returns a random floating-point number between 0 and 1.	math.random();
+random(n)	math	random	n	n	1	1	Returns a random integer between 1 and the given value, inclusive.	math.random(6); // 1-6
+random(n,n)	math	random	n,n	n	1	1	Returns a random integer between the two given values, inclusive.	math.random(1, 10);
+randomseed(n)	math	randomseed	n	_nil	1	1	Seeds the random number generator so that a sequence of random values can be reproduced.	math.randomseed(1234);
+realtime()	time	realtime		n	1	1	Returns the game's real uptime in seconds, to at least four decimal places.	time.realtime();
+receive(s,f)	net	receive	s,f	_nil	0	1	Registers a function to run whenever a network message with the given name is received.	net.receive("myMsg", function(stream) ... );
+remap(n,n,n,n,n)	math	remap	n,n,n,n,n	n	1	1	Remaps a value from one range to another. Arguments are: value, inMin, inMax, outMin, outMax.	math.remap(5, 0, 10, 0, 100); // 50
+remove(s)	timer	remove	s	_nil	0	1	Stops and removes the timer with the given name.	timer.remove("tick");
+remove(s,s)	event	remove	s,s	_nil	0	1	Removes a previously added event listener by its event name and unique id.	event.remove("tick", "myid");
+request(s,f)	http	request	s,f	b	1	2	Sends an HTTP GET request to the given URL and calls the success function with the response body.	http.request(url, function(body) ... );
+request(s,f,f)	http	request	s,f,f	b	1	2	Sends an HTTP GET request to the given URL, calling the first function on success and the second on failure.	http.request(url, onOk, onErr);
+reset()	ranger	reset		_nil	0	1	Resets all ranger settings (filters, flags, ranges) back to their defaults.	ranger.reset();
+resume(s)	timer	resume	s	_nil	0	1	Resumes a previously paused timer.	timer.resume("tick");
+rotationAngle(q)	quaternion	rotationAngle	q	a	1	1	Returns the rotation angle (in degrees) represented by the quaternion.	quaternion.rotationAngle(q);
+rotationAxis(q)	quaternion	rotationAxis	q	v	1	1	Returns the axis of rotation represented by the quaternion, as a unit vector.	quaternion.rotationAxis(q);
+rotationVector(q)	quaternion	rotationVector	q	v	1	1	Returns the rotation of the quaternion as an axis vector whose length is the angle in degrees.	quaternion.rotationVector(q);
+round(n)	math	round	n	n	1	1	Rounds a number to the nearest whole integer.	math.round(4.5); // 5
+round(n,n)	math	round	n,n	n	1	1	Rounds a number to the given number of decimal places.	math.round(3.14159, 2); // 3.14
+scrH()	render	scrH		n	1	2	Returns the height in pixels of the current rendering surface (HUD or screen).	render.scrH();
+scrSize()	render	scrSize		n	1	2	Returns the width and height in pixels of the current rendering surface.	render.scrSize();
+scrW()	render	scrW		n	1	2	Returns the width in pixels of the current rendering surface (HUD or screen).	render.scrW();
+sendToClients(_usmg)	net	sendToClients	_usmg	_nil	0	0	Sends the given network stream from the server to every client.	net.sendToClients(stream);
+sendToClients(_usmg,_crf)	net	sendToClients	_usmg,_crf	_nil	0	0	Sends the given network stream from the server only to the clients in the given recipient filter.	net.sendToClients(stream, filter);
+sendToServer(_usmg)	net	sendToServer	_usmg	_nil	0	2	Sends the given network stream from a client to the server.	net.sendToServer(stream);
+setColor(c)	render	setColor	c	_nil	0	2	Sets the colour used to draw following shapes to the given colour.	render.setColor(color);
+setColor(n,n,n)	render	setColor	n,n,n	_nil	0	2	Sets the colour used to draw following shapes from red, green and blue channels (0-255).	render.setColor(r, g, b);
+setColor(n,n,n,n)	render	setColor	n,n,n,n	_nil	0	2	Sets the colour used to draw following shapes from red, green, blue and alpha channels (0-255).	render.setColor(r, g, b, a);
+setFont(s,n)	render	setFont	s,n	_nil	0	2	Sets the font name and size used to draw following text.	render.setFont(font, size);
+setFontColor(c)	render	setFontColor	c	_nil	0	2	Sets the colour used to draw following text to the given colour.	render.setFontColor(color);
+setFontColor(n,n,n)	render	setFontColor	n,n,n	_nil	0	2	Sets the colour used to draw following text from red, green and blue channels (0-255).	render.setFontColor(r, g, b);
+setFontColor(n,n,n,n)	render	setFontColor	n,n,n,n	_nil	0	2	Sets the colour used to draw following text from red, green, blue and alpha channels (0-255).	render.setFontColor(r, g, b, a);
+setScreenRefresh(b)	render	setScreenRefresh	b	_nil	0	2	Sets whether the screen is cleared before each new frame is drawn. Disable it to draw persistent images.	render.setScreenRefresh(false);
+setTexture()	render	setTexture		_nil	0	2	Clears the render texture so following shapes are drawn as a solid colour.	render.setTexture();
+setTexture(_cv)	render	setTexture	_cv	_nil	1	2	Uses the given canvas as the texture when drawing following shapes.	render.setTexture(canvas);
+setTexture(s)	render	setTexture	s	_nil	0	2	Sets the texture (by material name) used when drawing following shapes.	render.setTexture("path/to/material");
+setTickRate(n)	system	setTickRate	n	_nil	0	1	Sets how many times per second the gate's think runs. Higher rates cost more CPU quota.	system.setTickRate(30);
+setURLMaterial(s)	render	setURLMaterial	s	_nil	0	2	Sets the render texture to a previously downloaded URL material.	render.setURLMaterial(url);
+simple(n,f,...)	timer	simple	n,f,...	_nil	0	1	Runs the given function once after a delay (in seconds), passing any extra arguments to it.	timer.simple(1, function() ... );
+sin(n)	math	sin	n	n	1	1	Returns the sine of an angle given in radians.	math.sin(0); // 0
 sinh(n)	math	sinh	n	n	1	1	Returns the hyperbolic sine of a number.	
-"slerp(q,q,n)"	quaternion	slerp	"q,q,n"	q	1	1		
-spawn(s)	prop	spawn	s	e	1	0		
-"spawn(s,b)"	prop	spawn	"s,b"	e	1	0		
-"spawn(s,v)"	prop	spawn	"s,v"	e	1	0		
-"spawn(s,v,a)"	prop	spawn	"s,v,a"	e	1	0		
-"spawn(s,v,a,b)"	prop	spawn	"s,v,a,b"	e	1	0		
-"spawn(s,v,b)"	prop	spawn	"s,v,b"	e	1	0		
-spawnRate()	hololib	spawnRate		n	1	0		
-spawnSeat(s)	prop	spawnSeat	s	e	1	0		
-"spawnSeat(s,b)"	prop	spawnSeat	"s,b"	e	1	0		
-"spawnSeat(s,v)"	prop	spawnSeat	"s,v"	e	1	0		
-"spawnSeat(s,v,a)"	prop	spawnSeat	"s,v,a"	e	1	0		
-"spawnSeat(s,v,a,b)"	prop	spawnSeat	"s,v,a,b"	e	1	0		
-"spawnSeat(s,v,b)"	prop	spawnSeat	"s,v,b"	e	1	0		
-speedLimit()	game	speedLimit		n	1	1	Returns MaxVelocity.	
-sqrt(n)	math	sqrt	n	n	1	1	Returns the square root of a number.	
-start(s)	net	start	s	_usmg	1	1		
-systime()	time	systime		n	1	1		
-tan(n)	math	tan	n	n	1	1	Returns the tangent of a number (in radians).	
+slerp(q,q,n)	quaternion	slerp	q,q,n	q	1	1	Spherical linear interpolation between two quaternions, giving smooth constant-speed rotation. The last argument is the fraction (0-1).	quaternion.slerp(q1, q2, 0.5);
+spawn(s)	prop	spawn	s	e	1	0	Spawns a prop with the given model at the gate's position and returns it.	prop.spawn("models/props_junk/watermelon01.mdl");
+spawn(s,b)	prop	spawn	s,b	e	1	0	Spawns a prop with the given model, the boolean setting whether it spawns frozen.	prop.spawn(model, true);
+spawn(s,v)	prop	spawn	s,v	e	1	0	Spawns a prop with the given model at the given position.	prop.spawn(model, pos);
+spawn(s,v,a)	prop	spawn	s,v,a	e	1	0	Spawns a prop with the given model at the given position and angle.	prop.spawn(model, pos, ang);
+spawn(s,v,a,b)	prop	spawn	s,v,a,b	e	1	0	Spawns a prop with the given model at the given position and angle, the boolean setting whether it spawns frozen.	prop.spawn(model, pos, ang, true);
+spawn(s,v,b)	prop	spawn	s,v,b	e	1	0	Spawns a prop with the given model at the given position, the boolean setting whether it spawns frozen.	prop.spawn(model, pos, true);
+spawnRate()	hololib	spawnRate		n	1	0	Returns how many holograms may be created per second.	hololib.spawnRate();
+spawnSeat(s)	prop	spawnSeat	s	e	1	0	Spawns a seat (vehicle pod) with the given model at the gate's position and returns it.	prop.spawnSeat(model);
+spawnSeat(s,b)	prop	spawnSeat	s,b	e	1	0	Spawns a seat with the given model, the boolean setting whether it spawns frozen.	prop.spawnSeat(model, true);
+spawnSeat(s,v)	prop	spawnSeat	s,v	e	1	0	Spawns a seat with the given model at the given position.	prop.spawnSeat(model, pos);
+spawnSeat(s,v,a)	prop	spawnSeat	s,v,a	e	1	0	Spawns a seat with the given model at the given position and angle.	prop.spawnSeat(model, pos, ang);
+spawnSeat(s,v,a,b)	prop	spawnSeat	s,v,a,b	e	1	0	Spawns a seat with the given model at the given position and angle, the boolean setting whether it spawns frozen.	prop.spawnSeat(model, pos, ang, true);
+spawnSeat(s,v,b)	prop	spawnSeat	s,v,b	e	1	0	Spawns a seat with the given model at the given position, the boolean setting whether it spawns frozen.	prop.spawnSeat(model, pos, true);
+speedLimit()	game	speedLimit		n	1	1	Returns the maximum linear velocity a physics object may reach (MaxVelocity).	game.speedLimit();
+sqrt(n)	math	sqrt	n	n	1	1	Returns the square root of a number.	math.sqrt(16); // 4
+start(s)	net	start	s	_usmg	1	1	Begins building a network message with the given name and returns a stream to write values into.	net.start("myMsg");
+systime()	time	systime		n	1	1	Returns a high-precision system time in seconds, useful for benchmarking.	time.systime();
+tan(n)	math	tan	n	n	1	1	Returns the tangent of an angle given in radians.	math.tan(0); // 0
 tanh(n)	math	tanh	n	n	1	1	Returns the hyperbolic tangent of a number.	
-throw(_er)	system	throw	_er	_nil	0	1	Throws an exception up though the stack.	
-tickInterval()	game	tickInterval		n	1	1	Returns the games tick interval.	
-tickRate()	game	tickRate		n	1	1	Returns the games tick rate.	
-"timeFraction(n,n,n)"	math	timeFraction	"n,n,n"	n	1	1	Calculates the fraction of a duration that has elapsed.	
-"toByte(s,_nil)"	string	toByte	"s,_nil"	n	1	1	"Converts a string to a byte value, with optional nil handling."	
-"toChar(n,_nil)"	string	toChar	"n,_nil"	s	1	1	"Converts a number to a character, with optional nil handling."	
-toNumber(s)	string	toNumber	s	n	1	1	Converts a string to a number.	
-toString(n)	math	toString	n	s	1	1	Converts a number to a string.	
-totalDeaths(n)	team	totalDeaths	n	n	1	1	Returns the total deaths of the team with the given identifier.	
-totalKills(n)	team	totalKills	n	n	1	1	Returns the total kills of the team with the given identifier.	
-trace2(_mx2)	matrix2	trace2	_mx2	n	1	1	Calculates the trace of a 2x2 matrix.	
-trace3(_mx3)	matrix3	trace3	_mx3	n	1	1	Calculates the trace of a 3x3 matrix.	
-trace4(_mx4)	matrix4	trace4	_mx4	n	1	1	Calculates the trace of a 4x4 matrix.	
-transpose2(_mx2)	matrix2	transpose2	_mx2	n	1	1	Transposes a 2x2 matrix.	
-transpose3(_mx3)	matrix3	transpose3	_mx3	_mx3	1	1	Transposes a 3x3 matrix.	
-transpose4(_mx4)	matrix4	transpose4	_mx4	_mx4	1	1	Transposes a 4x4 matrix.	
-"truncate(n,n)"	math	truncate	"n,n"	n	1	1	Truncates a number to a specified number of decimal places.	
-valid(n)	team	valid	n	b	1	1	Checks if the team with the given identifier is valid.	
+throw(_er)	system	throw	_er	_nil	0	1	Throws an error object up through the stack, stopping execution unless it is caught.	system.throw(err);
+tickInterval()	game	tickInterval		n	1	1	Returns the length of one server tick in seconds.	game.tickInterval();
+tickRate()	game	tickRate		n	1	1	Returns how many server ticks occur per second.	game.tickRate();
+timeFraction(n,n,n)	math	timeFraction	n,n,n	n	1	1	Returns how far the current value (third argument) has progressed from a start (first) to an end (second), as a fraction from 0 to 1.	math.timeFraction(start, finish, now);
+toByte(s,_nil)	string	toByte	s,_nil	n	1	1	Returns the numeric byte (character code) of the character at the given position in a string. The optional second argument is the index (defaults to the first character).	string.toByte("A"); // 65
+toChar(n,_nil)	string	toChar	n,_nil	s	1	1	Returns the character represented by the given byte (character code).	string.toChar(65); // "A"
+toNumber(s)	string	toNumber	s	n	1	1	Parses a string into a number, or returns 0 if the string is not a valid number.	string.toNumber("12.5"); // 12.5
+toString(n)	math	toString	n	s	1	1	Converts a number into its string representation.	math.toString(42); // "42"
+totalDeaths(n)	team	totalDeaths	n	n	1	1	Returns the total number of deaths accumulated by the team with the given id.	team.totalDeaths(teamID);
+totalKills(n)	team	totalKills	n	n	1	1	Returns the total number of kills accumulated by the team with the given id.	team.totalKills(teamID);
+trace2(_mx2)	matrix2	trace2	_mx2	n	1	1	Returns the trace (sum of the diagonal elements) of a 2x2 matrix.	matrix2.trace2(m);
+trace3(_mx3)	matrix3	trace3	_mx3	n	1	1	Returns the trace (sum of the diagonal elements) of a 3x3 matrix.	matrix3.trace3(m);
+trace4(_mx4)	matrix4	trace4	_mx4	n	1	1	Returns the trace (sum of the diagonal elements) of a 4x4 matrix.	matrix4.trace4(m);
+transpose2(_mx2)	matrix2	transpose2	_mx2	n	1	1	Returns the transpose of a 2x2 matrix (rows and columns swapped).	matrix2.transpose2(m);
+transpose3(_mx3)	matrix3	transpose3	_mx3	_mx3	1	1	Returns the transpose of a 3x3 matrix (rows and columns swapped).	matrix3.transpose3(m);
+transpose4(_mx4)	matrix4	transpose4	_mx4	_mx4	1	1	Returns the transpose of a 4x4 matrix (rows and columns swapped).	matrix4.transpose4(m);
+truncate(n,n)	math	truncate	n,n	n	1	1	Cuts a number off at the given number of decimal places without rounding.	math.truncate(3.789, 1); // 3.7
+valid(n)	team	valid	n	b	1	1	Returns true if a team with the given id exists.	team.valid(teamID);

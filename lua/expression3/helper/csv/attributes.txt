@@ -1,48 +1,42 @@
 signature	id	name	type	desc
-_v2.y	_v2	y	n	Y position of vector2.
-_v2.x	_v2	x	n	X position of vector2.
-_trr.hit_group	_trr	hit_group	n	
-_trr.hit_sky	_trr	hit_sky	b	
-_trr.hitbox	_trr	hitbox	n	
-_trr.hitbox_bone	_trr	hitbox_bone	n	
-_trr.hit_world	_trr	hit_world	b	
-_trr.distance	_trr	distance	n	
-_trr.hit_norm	_trr	hit_norm	v	The direction of the surface that was hit as a normal vector (vector with length of 1).
-_trr.hit_pos	_trr	hit_pos	v	The position the trace stopped.
-_trr.hit	_trr	hit	b	Indicates whether the trace hit something.
-_trr.hit_nodraw	_trr	hit_nodraw	b	Indicates whenever the trace hit a no-draw brush
-_trr.entity	_trr	entity	e	The entity hit by the trace.
-_trr.material_type	_trr	material_type	n	See https://wiki.garrysmod.com/page/Enums/MAT
-_trr.fraction	_trr	fraction	n	This indicates the how much of your trace length was used from 0-1
-_trr.normal	_trr	normal	n	The direction of the trace as a normal vector (vector with length of 1).
-_trr.fraction_solid	_trr	fraction_solid	n	Given the trace started in a solid enviroment, this will return at what distance the trace left the solid from 0-1. Doesn't work if the trace hit a non-worldspawn entity.
-_trr.hit_bone	_trr	hit_bone	n	The physics object id, of the physics object hit by the trace.
-_trr.start_solid	_trr	start_solid	b	True if the trace hit a none solid object.
-_trr.hit_noneworld	_trr	hit_noneworld	b	True if the trace hit a none world object.
-_trr.hit_texture	_trr	hit_texture	s	The surface material (not texture) of whatever the trace hit. Will be "**displacement**" if the trace hit a displacement, and **studio** if it hit a prop.
-v.y	v	y	n	Y position of vector.
-v.x	v	x	n	X position of vector.
-v.z	v	z	n	Z position of vector.
-_tr.hit_water	_tr	hit_water	b	If true the created trace will hit water.
-_tr.default_zero	_tr	default_zero	b	If true the created trace will default its hit position to 0.
-_tr.ignore_entitys	_tr	ignore_entitys	b	If true the created trace will not hit entities.
-_tr.ignore_world	_tr	ignore_world	b	If true the created trace will not hit the world.
-_tr.start	_tr	start	v	This is the start position of the created trace.
-_tr.end	_tr	end	v	This is the end position of the created trace.
-_ts.day	_ts	day	n	
-_ts.minute	_ts	minute	n	
-_ts.second	_ts	second	n	
-_ts.year	_ts	year	n	
-_ts.month	_ts	month	n	
-_ts.hour	_ts	hour	n	
-q.r	q	r	n	
-q.k	q	k	n	
-q.j	q	j	n	
-q.i	q	i	n	
-c.r	c	r	n	
-c.b	c	b	n	
-c.a	c	a	n	
-c.g	c	g	n	
-a.y	a	y	n	
-a.r	a	r	n	
-a.p	a	p	n	
+v.x	v	x	n	The X component of the vector (the east/west axis in world space).
+v.y	v	y	n	The Y component of the vector (the north/south axis in world space).
+v.z	v	z	n	The Z component of the vector (the vertical up/down axis in world space).
+_v2.x	_v2	x	n	The X (horizontal) component of the 2D vector, usually measured in pixels when used for rendering.
+_v2.y	_v2	y	n	The Y (vertical) component of the 2D vector, usually measured in pixels when used for rendering.
+a.p	a	p	n	The pitch of the angle in degrees. Pitch tilts the orientation up and down (rotation about the right axis).
+a.y	a	y	n	The yaw of the angle in degrees. Yaw turns the orientation left and right (rotation about the up axis).
+a.r	a	r	n	The roll of the angle in degrees. Roll banks the orientation like an aircraft rolling (rotation about the forward axis).
+c.r	c	r	n	The red channel of the colour, in the range 0-255.
+c.g	c	g	n	The green channel of the colour, in the range 0-255.
+c.b	c	b	n	The blue channel of the colour, in the range 0-255.
+c.a	c	a	n	The alpha (opacity) channel of the colour, in the range 0-255. 0 is fully transparent and 255 is fully opaque.
+q.r	q	r	n	The real (scalar) component of the quaternion.
+q.i	q	i	n	The i component of the quaternion (the first imaginary/vector part).
+q.j	q	j	n	The j component of the quaternion (the second imaginary/vector part).
+q.k	q	k	n	The k component of the quaternion (the third imaginary/vector part).
+_ts.year	_ts	year	n	The year component of the date (e.g. 2026).
+_ts.month	_ts	month	n	The month component of the date, in the range 1-12.
+_ts.day	_ts	day	n	The day-of-month component of the date, in the range 1-31.
+_ts.hour	_ts	hour	n	The hour component of the date, in 24-hour form (0-23).
+_ts.minute	_ts	minute	n	The minute component of the date, in the range 0-59.
+_ts.second	_ts	second	n	The second component of the date, in the range 0-59.
+_rd.hit	_rd	hit	b	True if the ranger hit anything (either the world or an entity), false if it reached its end point without contact.
+_rd.hit_pos	_rd	hit_pos	v	The world position where the ranger stopped. If nothing was hit this is the end point of the ranger.
+_rd.hit_norm	_rd	hit_norm	v	The surface normal of whatever the ranger hit, as a unit-length vector pointing away from the surface.
+_rd.normal	_rd	normal	v	The direction the ranger was travelling, from its start toward its end, as a unit-length (normalized) vector.
+_rd.distance	_rd	distance	n	The distance in source units from the ranger's start position to its hit position.
+_rd.fraction	_rd	fraction	n	How far along the ranger the hit occurred, from 0 (at the start) to 1 (at the end). Multiply by the ranger length to get the distance.
+_rd.fraction_solid	_rd	fraction_solid	n	If the ranger began inside a solid, this is the fraction (0-1) at which it left that solid. Only meaningful against the world, not against brush entities.
+_rd.hit_entity	_rd	hit_entity	e	The entity the ranger hit. This is a world/invalid entity when the ranger hit the map or nothing at all.
+_rd.hit_world	_rd	hit_world	b	True if the ranger hit the world (map geometry) rather than an entity.
+_rd.hit_noneworld	_rd	hit_noneworld	b	True if the ranger hit a non-world object, such as a prop or other entity.
+_rd.hit_sky	_rd	hit_sky	b	True if the ranger hit the skybox.
+_rd.hit_nodraw	_rd	hit_nodraw	b	True if the ranger hit an invisible (nodraw) brush.
+_rd.start_solid	_rd	start_solid	b	True if the ranger started inside a solid object.
+_rd.hit_group	_rd	hit_group	n	The hitgroup that was hit (head, chest, arms, legs, etc.). See https://wiki.facepunch.com/gmod/Enums/HITGROUP
+_rd.hitbox	_rd	hitbox	n	The index of the hitbox that was hit on the entity.
+_rd.hitbox_bone	_rd	hitbox_bone	n	The bone index associated with the hitbox that was hit.
+_rd.hit_bone	_rd	hit_bone	n	The physics object (bone) index of the object that was hit.
+_rd.material_type	_rd	material_type	n	The material type of the surface that was hit (metal, wood, flesh, etc.). See https://wiki.facepunch.com/gmod/Enums/MAT
+_rd.hit_texture	_rd	hit_texture	s	The surface material name (not the texture) of whatever the ranger hit. Returns "**displacement**" for a displacement surface and "**studio**" when a model/prop was hit.
