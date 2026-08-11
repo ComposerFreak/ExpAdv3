@@ -93,7 +93,7 @@ end, false);
 extension:RegisterFunction("timer", "remove", "s", "", 0, function(ctx, name)
 	local timers = ctx.data.timers;
 
-	if (timer[name]) then
+	if (timers[name]) then
 		timers[name] = nil;
 		ctx.data.timer_count = ctx.data.timer_count - 1;
 	end
@@ -155,7 +155,7 @@ hook.Add( "Think", "Expression3.Timers.Run", function( )
 					end
 				end
 
-				for i = 1, #pop do
+				for i = #pop, 1, -1 do
 					table_remove(timers, pop[i]);
 				end
 			end

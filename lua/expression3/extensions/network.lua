@@ -204,7 +204,7 @@ local function readString(ctx, msg)
 		char = readChar(ctx, msg, "String");
 	end
 
-	return string;
+	return str;
 end
 
 extension:RegisterMethod("usmg", "writeString", "s", "", 0, writeString, false);

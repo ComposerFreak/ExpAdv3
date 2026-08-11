@@ -180,6 +180,7 @@ function ENT:BuildEnv(context, instance)
 		env.unpack = unpack;
 		env.error = error;
 		env.pcall = pcall;
+		env.istable = istable;
 
 	-- Store previous value for delta and changed.
 		local glob = {};

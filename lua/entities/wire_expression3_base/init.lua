@@ -39,7 +39,11 @@ end)
 ****************************************************************************************************************************/
 
 function ENT:CanSetCode(ply)
-	return self:CPPICanTool(ply, "wire_expression3");
+	if self.CPPICanTool then 
+		return self:CPPICanTool(ply, "wire_expression3");
+	end
+
+	return ply == self.player;
 end
 
 /****************************************************************************************************************************

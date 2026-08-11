@@ -758,7 +758,7 @@ function COMPILER.Compile_ROOT(this, inst, token, data)
 			local _METH = env._METH;
 			local _FUN = env._FUN;
 
-			--TODO: Cache 100 values
+			local istable = env.istable;
 
 			local _HARD_LIMIT_ = CONTEXT:hardLimit();
 			local _CHECK_PRICE_ = CONTEXT.CheckPrice;
@@ -4186,11 +4186,13 @@ function COMPILER.Compile_TRY(this, inst, token, data)
 	inst.buffer[#inst.buffer + 1] = "\nend\n);";
 
 	inst.buffer[#inst.buffer + 1] = string_format([[
-		if (not _internalz and %s.quota) then
-			error(%s, 0);
-	]], data.var.data, data.var.data);
+		local _internalx = istable(%s);
 
-	inst.buffer[#inst.buffer + 1] = "elseif (not _internalz and " .. data.var.data .. ".exit) then\n";
+		if (not _internalz and _internalx and %s.quota) then
+			error(%s, 0);
+	]], data.var.data, data.var.data, data.var.data);
+
+	inst.buffer[#inst.buffer + 1] = "elseif (not _internalz and _internalx and " .. data.var.data .. ".exit) then\n";
 		
 		if this:GetOption("loop", false) then
 			inst.buffer[#inst.buffer + 1] = 
@@ -4205,7 +4207,7 @@ function COMPILER.Compile_TRY(this, inst, token, data)
 
 		inst.buffer[#inst.buffer + 1] = "error(" .. data.var.data .. ", 0);\n";
 
-		inst.buffer[#inst.buffer + 1] = "elseif (not _internalz and " .. data.var.data .. ".state == 'runtime') then\n";
+		inst.buffer[#inst.buffer + 1] = "elseif (not _internalz and _internalx and " .. data.var.data .. ".state == 'runtime') then\n";
 
 	this:PushScope();
 		this:SetOption("catch", true);
