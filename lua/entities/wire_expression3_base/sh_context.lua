@@ -32,9 +32,9 @@ local SysTime = SysTime;
 
 local softtime;
 local hardtime;
+local hardlimit;
 local softtimesize;
 local netquota;
-
 --[[
 
 ]]
@@ -50,6 +50,7 @@ if SERVER then
 		softtime = cvar_hardlimit:GetFloat();
 		softtime = cvar_softtime:GetFloat();
 		hardtime = cvar_hardtime:GetFloat();
+		hardlimit = cvar_hardlimit:GetFloat();
 		softtimesize = 1 / cvar_softtimesize:GetInt();
 		netquota = cvar_netquota:GetInt();
 	end
@@ -75,6 +76,7 @@ if CLIENT then
 		softtime = cvar_hardlimit:GetFloat();
 		softtime = cvar_softtime:GetFloat();
 		hardtime = cvar_hardtime:GetFloat();
+		hardlimit = cvar_hardlimit:GetFloat();
 		softtimesize = 1 / cvar_softtimesize:GetInt();
 		netquota = cvar_netquota:GetInt();
 	end
