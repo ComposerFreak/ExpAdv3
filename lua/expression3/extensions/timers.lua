@@ -12,6 +12,8 @@
 
 local max_timers;
 
+local table_remove = table.remove;
+
 if SERVER then
 	local cvar = CreateConVar("e3_max_timers", 100, FCVAR_ARCHIVE, "The max number of timers per e3 gate.");
 	local function update() max_timers = cvar:GetInt(); end

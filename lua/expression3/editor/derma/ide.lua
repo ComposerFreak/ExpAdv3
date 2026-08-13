@@ -23,7 +23,7 @@ local sDefaultGateTab = [[
 /*
 	Generic Gate Code.
 	
-	Wiki:     https://github.com/ComposerFreak/ExpAdv3/wiki or [?].
+	Wiki:     https://github.com/ComposerFreak/ExpAdv3/docs.
 	Workshop: https://steamcommunity.com/sharedfiles/filedetails/?id=2001386268
 */
 
@@ -47,7 +47,7 @@ local sDefaultScreenTab = [[
     This code uses another E3-Gates Screen events,
     providing an additonal parameter for the screens entity.
 
-    Wiki:     https://github.com/ComposerFreak/ExpAdv3/wiki or [?].
+    Wiki:     https://github.com/ComposerFreak/ExpAdv3/docs.
     Workshop: https://steamcommunity.com/sharedfiles/filedetails/?id=2001386268
 */
 
@@ -197,7 +197,8 @@ function PANEL:Init( )
 	self.tbBottom:SetupButton( "Save As", "fugue/disks-black.png", RIGHT, function( ) self:SaveFile( true, true ) end )
 	self.tbBottom:SetupButton( "Save", 	"fugue/disk-black.png", RIGHT, function( ) self:SaveFile( true ) end )
 	
-	self.pVoice = self.tbRight:SetupButton( "Toggle Microphone", "fugue/microphone.png", BOTTOM, function ( ) self:ToggleVoice() end )
+	-- Voice command disabled by Garry :(
+	-- self.pVoice = self.tbRight:SetupButton( "Toggle Microphone", "fugue/microphone.png", BOTTOM, function ( ) self:ToggleVoice() end )
 	self.pBtnAutoComplete = self.tbRight:SetupButton( "Toggle Auto Helper", "fugue/keyboard-space.png", BOTTOM, function ( ) self:ToggleAutoComplete() end )
 	
 	self.tbRight:SetupButton( "Increase font size.", "fugue/edit-size-up.png", BOTTOM, function( ) Golem.Font:ChangeFontSize( 1 ) end )
@@ -359,7 +360,7 @@ function PANEL:Init( )
 		self.Options = nil
 	end )
 	
-	self:NewMenuTab( "options" )
+	--self:NewMenuTab( "options" )
 	hook.Run( "Expression3.AddGolemTabTypes", self )
 	
 	if not self:OpenOldTabs( ) then
@@ -996,21 +997,22 @@ end
 
 /*---------------------------------------------------------------------------
 Voice stuff
+-- Disabled by Garry in an update :(
 ---------------------------------------------------------------------------*/
 local MicMaterialOff = Material( "fugue/microphone.png" )
 local MicMaterialOn = Material( "fugue/microphone--plus.png" )
 
-function PANEL:ToggleVoice( )
-	self.bVoice = not self.bVoice
-	
-	if self.bVoice then
-		self.pVoice:SetMaterial( MicMaterialOn )
-		RunConsoleCommand( "+voicerecord" )
-	else
-		self.pVoice:SetMaterial( MicMaterialOff )
-		RunConsoleCommand( "-voicerecord" )
-	end
-end
+--function PANEL:ToggleVoice( )
+--	self.bVoice = not self.bVoice
+--	
+--	if self.bVoice then
+--		self.pVoice:SetMaterial( MicMaterialOn )
+--		pcall(RunConsoleCommand, "+voicerecord" )
+--	else
+--		self.pVoice:SetMaterial( MicMaterialOff )
+--		pcall(RunConsoleCommand, "-voicerecord" )
+--	end
+--end
 
 /*---------------------------------------------------------------------------
 Auto complete stuff
@@ -1098,13 +1100,13 @@ function PANEL:SetTall( n, bool )
 end
 
 function PANEL:Think( )
-	if (input.IsKeyDown( KEY_LCONTROL ) or input.IsKeyDown( KEY_LCONTROL )) and input.IsKeyDown( KEY_B ) then 
-		if not self.bVoice then 
-			self:ToggleVoice( )
-		end 
-	elseif self.bVoice then
-		self:ToggleVoice( )
-	end 
+	--if (input.IsKeyDown( KEY_LCONTROL ) or input.IsKeyDown( KEY_LCONTROL )) and input.IsKeyDown( KEY_B ) then 
+	--	if not self.bVoice then 
+	--		self:ToggleVoice( )
+	--	end 
+	--elseif self.bVoice then
+	--	self:ToggleVoice( )
+	--end 
 	
 	
 	self:DoAutoRefresh( )
@@ -1418,9 +1420,9 @@ function PANEL:Close( )
 
 	self:SetVisible( false )
 
-	if self.bVoice then
-		self:ToggleVoice( )
-	end
+	--if self.bVoice then
+	--	self:ToggleVoice( )
+	--end
 
 	hook.Run( "Expression3.CloseGolem" )
 end
