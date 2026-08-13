@@ -151,14 +151,19 @@ extension:RegisterWiredOutport("e2t", "TABLE");
 --[[
 ]]
 
-extension:RegisterConstructor("e2t", "...", function(ctx,...)
-	local t = table.Copy(DEFAULT)
-	local n = 0
+extension:RegisterConstructor("e2t", "...", function(ctx, ...)
+	local t = table.Copy(DEFAULT);
+	local n = 0;
+
 	for k,v in pairs( {...} ) do
-		n = n + 1
-		eTable.set( ctx, t, n, "_vr", v )
+		ctx:CheckPrice(0.1);
+
+		n = n + 1;
+
+		eTable.set( ctx, t, n, "_vr", v );
 	end
-	return t
+
+	return t;
 end, false)
 
 extension:RegisterConstructor("e2t", "", function(...)
@@ -180,10 +185,12 @@ end, true);
 	Methods
 ]]
 
-extension:RegisterMethod("e2t", "keys", "", "t", 1, function(tbl)
+extension:RegisterMethod("e2t", "keys", "", "t", 1, function(ctx, tbl)
 	local t = {};
 
 	for key, value in pairs(tbl.n) do
+		ctx:CheckPrice(0.1);
+
 		if (value and value[2] ~= nil) then
 			local typ;
 
@@ -200,6 +207,8 @@ extension:RegisterMethod("e2t", "keys", "", "t", 1, function(tbl)
 	end
 
 	for key, value in pairs(tbl.s) do
+		ctx:CheckPrice(0.1);
+
 		if (value and value[2] ~= nil) then
 			local typ;
 
@@ -216,7 +225,7 @@ extension:RegisterMethod("e2t", "keys", "", "t", 1, function(tbl)
 	end
 
 	return {tbl = t, children = {}, parents = {}, size = #t};
-end, true);
+end, false);
 
 --[[
 Can't make this function because I don't have access to e3 table's eTable.set function

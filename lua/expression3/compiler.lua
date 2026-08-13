@@ -143,6 +143,14 @@ end
 
 ]]
 
+function COMPILER.UseCallSignature(this, inst, tbl, signature, post)
+	return string_format("%s[%q]%s", tbl, signature, post or "");
+end
+
+--[[
+
+]]
+
 function COMPILER.Yield(this)
 
 end
@@ -212,9 +220,9 @@ function addNativeLua(this, instruction, outBuffer, traceTable, char, line)
 		error( "addNativeLua got invalid buffer " .. type(inBuffer) , 0);
 	end
 
-	local len = #inBuffer;
+	local traces = { };
 
-	for key = 1, len do
+	for key = 1, #inBuffer do
 		local value = inBuffer[key];
 		local _type = type(value);
 
@@ -234,13 +242,23 @@ function addNativeLua(this, instruction, outBuffer, traceTable, char, line)
 				char = char + (#value + 1); -- Include the space added by concat later.
 			end
 
-			traceTable[#traceTable + 1] = {
+			traces[#traces + 1] = {
 				e3_line = instruction.line - 1;
 				e3_char = instruction.char;
 				native_line = line;
 				native_char = char
 			};
 		end
+	end
+
+	if (instruction.isBlock) then
+		-- TODO: Create local cache for heavy use functions, e.g: local _c1 = _OP["add(n,n)"];.
+		-- then inject a do block to reset max locals and replace cached with local cached values.
+	end
+
+	for i = 1, #traces do
+		--TODO: Add offsets for optmisations.
+		traceTable[#traceTable + 1] = traces[i];
 	end
 
 	-- print("\nfinished instruction: ", instruction.type);
@@ -565,6 +583,8 @@ end
 --[[
 ]]
 
+local INST_LK = {};
+
 function COMPILER.Compile(this, inst)
 	
 	this:Yield();
@@ -582,11 +602,15 @@ function COMPILER.Compile(this, inst)
 	if (not inst.compiled) then
 		if (not inst.buffer) then inst.buffer = {}; end
 		
-		local instruction = string_upper(inst.type);
-		local fun = this["Compile_" .. instruction];
-		
+		local fun = INST_LK[inst.type];
+
+		if (fun == null) then
+			fun = COMPILER["Compile_" .. string_upper(inst.type)] or false;
+			INST_LK[inst.type] = fun;
+		end
+
 		if (not fun) then
-			this:Throw(inst.token, "Failed to compile unknown instruction %s", instruction);
+			this:Throw(inst.token, "Failed to compile unknown instruction %s", string_upper(inst.type));
 		end
 		
 		local preInst = this.cur_instruction;
@@ -616,7 +640,7 @@ end
 function COMPILER.writeOperationCall(this, inst, op, expr1, ...)
 	this.__operators[op.signature] = op.operator;
 
-	inst.buffer[#inst.buffer + 1] = "_OPS[\"" .. op.signature .. "\"](";
+	inst.buffer[#inst.buffer + 1] = this:UseCallSignature(inst, "_OPS", op.signature, "(");
 
 	if (op.context) then
 	    inst.buffer[#inst.buffer + 1] = "CONTEXT";
@@ -678,7 +702,7 @@ end
 function COMPILER.writeMethodCall(this, inst, op, expr1, ...)
 	this.__methods[op.signature] = op.operator;
 
-	inst.buffer[#inst.buffer + 1] = "_METH[\"" .. op.signature .. "\"](";
+	inst.buffer[#inst.buffer + 1] = this:UseCallSignature(inst, "_METH", op.signature, "(");
 
 	if (op.context) then
 	    inst.buffer[#inst.buffer + 1] = "CONTEXT";
@@ -699,7 +723,7 @@ function COMPILER.writeOperationCall2(this, tbl, inst, op, vargs, expr1, ...)
 	local t = istable(op);
 	local signature = t and op.signature or op;
 
-	inst.buffer[#inst.buffer + 1] = tbl .. "[\"" .. signature .. "\"](";
+	inst.buffer[#inst.buffer + 1] = this:UseCallSignature(inst, tbl, signature, "(");
 
 	if (t and op.context) then
 	    inst.buffer[#inst.buffer + 1] = "CONTEXT";
@@ -723,8 +747,32 @@ end
 ]]
 
 function COMPILER.Compile_ROOT(this, inst, token, data)
-	inst.buffer[#inst.buffer + 1] = "\nreturn function(env)\n";
-	inst.buffer[#inst.buffer + 1] = "\nsetfenv(1,env)\n";
+	inst.buffer[#inst.buffer + 1] = [[
+		return function(env)
+			setfenv(1, env);
+
+			local CONTEXT = env.CONTEXT;
+
+			local _OPS = env._OPS;
+			local _CONST = env._CONST;
+			local _METH = env._METH;
+			local _FUN = env._FUN;
+
+			local istable = env.istable;
+
+			local _HARD_LIMIT_ = CONTEXT:hardLimit();
+			local _CHECK_PRICE_ = CONTEXT.CheckPrice;
+
+			CONTEXT.UpdateInternals = function(self)
+				-- Called once tick, via PreExec.
+
+				_HARD_LIMIT_ = self:hardLimit();
+				self.needsInternalUpdate = false;
+			end
+
+			do -- Begin User Code
+
+	]];
 
 	if this.__directives.server then
 		this:SetOption("state", EXPR_SERVER);
@@ -744,8 +792,7 @@ function COMPILER.Compile_ROOT(this, inst, token, data)
 			price = price + p;
 		end
 
-		inst.buffer[#inst.buffer + 1] = "\n --PRICE: %i\n", price;
-		inst.buffer[#inst.buffer + 1] = "\n CONTEXT:CheckPrice(" .. price .. ")\n";
+		inst.buffer[#inst.buffer + 1] = "\n _CHECK_PRICE_(CONTEXT, " .. price .. ", _HARD_LIMIT_);\n";
 
 		for i = 1, #stmts do
 			inst.buffer[#inst.buffer + 1] = stmts[i];
@@ -756,29 +803,34 @@ function COMPILER.Compile_ROOT(this, inst, token, data)
 		inst.buffer[#inst.buffer + 1] = "\nend\n";
 	end
 
-	inst.buffer[#inst.buffer + 1] = "\nend\n";
+	inst.buffer[#inst.buffer + 1] = "\nend\nend\n";
 
 	return "", 0, 0;
 end
 
 function COMPILER.Compile_SEQ(this, inst, token, data)
+	local price = 0;
 	local stmts = data.stmts;
 
 	if stmts then
-		local price = 0;
-
 		for i = 1, #stmts do
 			local r, c, p = this:Compile(stmts[i]);
 			price = price + p;
 		end
+	end
 
-		inst.buffer[#inst.buffer + 1] = "\n --PRICE: %i\n", price;
-		inst.buffer[#inst.buffer + 1] = "\n CONTEXT:CheckPrice(" .. price .. ")\n";
+	if (inst.isInLoop and price < 1) then
+		price = 1;
+	end
 
+	if (stmts or inst.isInLoop) then
+		inst.buffer[#inst.buffer + 1] = "\n _CHECK_PRICE_(CONTEXT, " .. price .. ", _HARD_LIMIT_);\n";
+	end
+
+	if stmts then
 		for i = 1, #stmts do
 			inst.buffer[#inst.buffer + 1] = stmts[i];
 		end
-
 	end
 
 	return "", 0, 0;
@@ -808,6 +860,8 @@ function COMPILER.Compile_IF(this, inst, token, data)
 	inst.buffer[#inst.buffer + 1] = ") then\n";
 
 	this:PushScope();
+	
+	data.block.isBlock = true;
 
 	this:Compile(data.block);
 
@@ -855,6 +909,8 @@ function COMPILER.Compile_ELSEIF(this, inst, token, data)
 
 	this:PushScope();
 
+	data.block.isBlock = true;
+
 	this:Compile(data.block);
 
 	inst.buffer[#inst.buffer + 1] = data.block;
@@ -876,6 +932,8 @@ function COMPILER.Compile_ELSE(this, inst, token, data)
 	inst.buffer[#inst.buffer + 1] = "\nelse\n";
 
 	this:PushScope();
+
+	data.block.isBlock = true;
 
 	this:Compile(data.block);
 
@@ -922,6 +980,8 @@ function COMPILER.Compile_SERVER(this, inst, token, data)
 
 	this:SetOption("state", EXPR_SERVER);
 
+	data.block.isBlock = true;
+
 	this:Compile(data.block);
 
 	inst.buffer[#inst.buffer + 1] = data.block;
@@ -943,6 +1003,8 @@ function COMPILER.Compile_CLIENT(this, inst, token, data)
 	this:PushScope();
 
 	this:SetOption("state", EXPR_CLIENT);
+
+	data.block.isBlock = true;
 
 	this:Compile(data.block);
 
@@ -2531,7 +2593,7 @@ function COMPILER.Compile_LEN(this, inst, token, data)
 	local op = this:GetOperator("len", r1);
 
 	if (not op) then
-		this:Throw(token, "Length operator (#A) does not support '#%s'", name(r1), name(r2));
+		this:Throw(token, "Length operator (#A) does not support '#%s'", name(r1));
 	elseif (not op.operator) then
 		inst.buffer[#inst.buffer + 1] = "#";
 
@@ -3314,6 +3376,9 @@ function COMPILER.Compile_LAMBDA(this, inst, token, data)
 	this:SetOption("canReturn", true);
 	this:SetOption("retunClass", "?"); -- Indicate we do not know this yet.
 	this:SetOption("retunCount", -1); -- Indicate we do not know this yet.
+	
+	data.block.isBlock = true;
+	data.block.isFunction = true;
 
 	this:Compile(data.block);
 
@@ -3568,6 +3633,9 @@ function COMPILER.Compile_FUNCT(this, inst, token, data)
 	this:SetOption("canReturn", true);
 	this:SetOption("retunClass", data.resultClass or "");
 	this:SetOption("retunCount", -1); -- Indicate we do not know this yet.
+
+	data.block.isBlock = true;
+	data.block.isFunction = true;
 
 	this:Compile(data.block);
 
@@ -3989,8 +4057,12 @@ function COMPILER.Compile_FOR(this, inst, token, data)
 	this:PushScope();
 		this:SetOption("loop", true);
 		this:AssignVariable(token, true, var, class, nil);
+		
+		data.block.isBlock = true;
+		data.block.isInLoop = true;
 
 		this:Compile(data.block);
+
 		inst.buffer[#inst.buffer + 1] = data.block;
 
 	this:PopScope();
@@ -4011,6 +4083,9 @@ function COMPILER.Compile_WHILE(this, inst, token, data)
 
 	this:PushScope();
 		this:SetOption("loop", true);
+		
+		data.block.isBlock = true;
+		data.block.isInLoop = true;
 
 		this:Compile(data.block);
 
@@ -4046,6 +4121,8 @@ function COMPILER.Compile_EACH(this, inst, token, data)
 
 	inst.buffer[#inst.buffer + 1] = " do\n";
 
+	inst.buffer[#inst.buffer + 1] = "_CHECK_PRICE_(CONTEXT, 1, _HARD_LIMIT_);\n";
+
 	this:AssignVariable(token, true, data.vValue, data.vType, nil);
 	
 	if data.kType then
@@ -4071,6 +4148,9 @@ function COMPILER.Compile_EACH(this, inst, token, data)
 			inst.buffer[#inst.buffer + 1] = "local " .. data.vValue .. " = {_internalg" .. scope .. ", _internali" .. scope .. "}\n";
 		end
 	end
+		
+	data.block.isBlock = true;
+	data.block.isInLoop = true;
 
 	this:Compile(data.block);
 
@@ -4088,10 +4168,7 @@ end
 ]]
 
 function COMPILER.Compile_TRY(this, inst, token, data)
-	inst.buffer[#inst.buffer + 1] = 
-		   "\nlocal _internala, _internalb, _internalc, _internald = getdebughook();\n"
-		.. "\nlocal _internalz, " .. data.var.data .. " = pcall(function()\n"
-		.. "\nsetdebughook(_internala, _internalb, _internalc, _internald);\n"
+	inst.buffer[#inst.buffer + 1] = "\nlocal _internalz, " .. data.var.data .. " = pcall(function()\n"
 	;
 
 	this:PushScope();
@@ -4099,13 +4176,23 @@ function COMPILER.Compile_TRY(this, inst, token, data)
 		this:SetOption("try", true);
 
 		this:Compile(data.block1);
+		
+		data.block1.isBlock = true;
+
 		inst.buffer[#inst.buffer + 1] = data.block1;
 
 	this:PopScope();
 
 	inst.buffer[#inst.buffer + 1] = "\nend\n);";
 
-	inst.buffer[#inst.buffer + 1] = "if (not _internalz and " .. data.var.data .. ".exit) then\n";
+	inst.buffer[#inst.buffer + 1] = string_format([[
+		local _internalx = istable(%s);
+
+		if (not _internalz and _internalx and %s.quota) then
+			error(%s, 0);
+	]], data.var.data, data.var.data, data.var.data);
+
+	inst.buffer[#inst.buffer + 1] = "elseif (not _internalz and _internalx and " .. data.var.data .. ".exit) then\n";
 		
 		if this:GetOption("loop", false) then
 			inst.buffer[#inst.buffer + 1] = 
@@ -4120,7 +4207,7 @@ function COMPILER.Compile_TRY(this, inst, token, data)
 
 		inst.buffer[#inst.buffer + 1] = "error(" .. data.var.data .. ", 0);\n";
 
-		inst.buffer[#inst.buffer + 1] = "elseif (not _internalz and " .. data.var.data .. ".state == 'runtime') then\n";
+		inst.buffer[#inst.buffer + 1] = "elseif (not _internalz and _internalx and " .. data.var.data .. ".state == 'runtime') then\n";
 
 	this:PushScope();
 		this:SetOption("catch", true);
@@ -4128,6 +4215,9 @@ function COMPILER.Compile_TRY(this, inst, token, data)
 		this:AssignVariable(token, true, data.var.data, "_er", nil);
 
 		this:Compile(data.block2);
+
+		data.block2.isBlock = true;
+
 		inst.buffer[#inst.buffer + 1] = data.block2;
 
 	this:PopScope();
@@ -4613,7 +4703,12 @@ function COMPILER.Compile_CONSTCLASS(this, inst, token, data)
 	inst.buffer[#inst.buffer + 1] = "\nlocal this = setmetatable({vars = setmetatable({}, {__index = " .. userclass.name .. ".vars}), hash = \"" .. userclass.hash .. "\"}, " .. userclass.name .. ")\n";
 
 	if data.block then
+
+		data.block.isBlock = true;
+		data.block.isFunction = true;
+
 		this:Compile(data.block);
+
 		inst.buffer[#inst.buffer + 1] = data.block;
 	end
 
@@ -4691,6 +4786,9 @@ function COMPILER.Compile_DEF_METHOD(this, inst, token, data)
 	this:SetOption("retunClass", meth.result);
 	this:SetOption("retunCount", meth.result ~= "" and -1 or 0);
 
+	data.block.isBlock = true;
+	data.block.isFunction = true;
+
 	local _, __, blockprice = this:Compile(data.block);
 	
 	meth.price = blockprice;
@@ -4738,7 +4836,11 @@ function COMPILER.Compile_TOSTR(this, inst, token, data)
 	local error = "Attempt to call user operator '" .. userclass.name .. ".tostring()' using alien class of the same name.";
 	inst.buffer[#inst.buffer + 1] = "if(not CheckHash(\"" .. userclass.hash .. "\", this)) then CONTEXT:Throw(\"" .. error .. "\"); end";
 
+	data.block.isBlock = true;
+	data.block.isFunction = true;
+
 	this:Compile(data.block);
+
 	inst.buffer[#inst.buffer + 1] = data.block;
 	this:PopScope();
 

@@ -17,27 +17,73 @@ local CONTEXT = {};
 CONTEXT.__index = CONTEXT;
 
 --[[
+
+]]
+
+
+local band = bit.band;
+local SysTime = SysTime;
+
+--[[
 	Perfomance CVARS
 	Based on StarFallEx, all credits for CPU benchmarking goes to origonal authors.
 	Who advised that they stle it from Wiremod E2, so the plot thickens!
 ]]
 
-local cvar_softtime;
-local cvar_softtimesize;
-local cvar_netquota;
+local softtime;
+local hardtime;
+local hardlimit;
+local softtimesize;
+local netquota;
+--[[
+
+]]
 
 if SERVER then
-	cvar_softtime = CreateConVar("e3_softtime", 0.05, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.")
-	cvar_softtimesize = CreateConVar("e3_timebuffersize", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
-	cvar_netquota = CreateConVar("e3_netquota", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
-	cvar_hardlimit = CreateConVar("e3_hardlimit", 64000, FCVAR_ARCHIVE, "The max cost a tick.");
+	local cvar_softtime = CreateConVar("e3_softtime", 0.05, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.");
+	local cvar_hardtime = CreateConVar("e3_hardtime", 0.0001, FCVAR_ARCHIVE, "The max CPU time e3 can use per tick.");
+	local cvar_softtimesize = CreateConVar("e3_timebuffersize", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
+	local cvar_netquota = CreateConVar("e3_netquota", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
+	local cvar_hardlimit = CreateConVar("e3_hardlimit", 64000, FCVAR_ARCHIVE, "The max cost a tick.");
+
+	local update = function()
+		softtime = cvar_hardlimit:GetFloat();
+		softtime = cvar_softtime:GetFloat();
+		hardtime = cvar_hardtime:GetFloat();
+		hardlimit = cvar_hardlimit:GetFloat();
+		softtimesize = 1 / cvar_softtimesize:GetInt();
+		netquota = cvar_netquota:GetInt();
+	end
+
+	timer.Create("e3_quota_cvars", 1, 0, update);
+
+	update();
+
 end
 
+--[[
+
+]]
+
 if CLIENT then
-	cvar_softtime = CreateConVar("e3_softtime_cl", 0.05, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.");
-	cvar_softtimesize = CreateConVar("e3_timebuffersize_cl", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
-	cvar_netquota = CreateConVar("e3_netquota_cl", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
-	cvar_hardlimit = CreateConVar("e3_hardlimit_cl", 64000, FCVAR_ARCHIVE, "The max cost a tick.");
+	local cvar_softtime = CreateConVar("e3_softtime_cl", 0.05, FCVAR_ARCHIVE, "The max average the CPU time e3 can reach.");
+	local cvar_hardtime = CreateConVar("e3_hardtime_cl", 0.0001, FCVAR_ARCHIVE, "The max CPU time e3 can use per tick.");
+	local cvar_softtimesize = CreateConVar("e3_timebuffersize_cl", 100, FCVAR_ARCHIVE, "The window width of the CPU time quota moving average.");
+	local cvar_netquota = CreateConVar("e3_netquota_cl", 64000, FCVAR_ARCHIVE, "The max net usage quota in kb.");
+	local cvar_hardlimit = CreateConVar("e3_hardlimit_cl", 64000, FCVAR_ARCHIVE, "The max cost a tick.");
+
+	local update = function()
+		softtime = cvar_hardlimit:GetFloat();
+		softtime = cvar_softtime:GetFloat();
+		hardtime = cvar_hardtime:GetFloat();
+		hardlimit = cvar_hardlimit:GetFloat();
+		softtimesize = 1 / cvar_softtimesize:GetInt();
+		netquota = cvar_netquota:GetInt();
+	end
+
+	timer.Create("e3_quota_cvars", 1, 0, update);
+
+	update();
 end
 
 --[[
@@ -55,45 +101,75 @@ function CONTEXT.New()
 	tbl.cpu_timestamp = 0;
 	tbl.cpu_softusage = 0;
 	tbl.cpu_hardusage = 0;
+	tbl.cpu_check_tick = 0;
+	tbl.cpu_deadline = 0;
 	
 	return setmetatable(tbl, CONTEXT);
+end
+
+--[[
+	Placeholder: Overriden by runtime
+]]
+
+function CONTEXT:UpdateInternals() 
+
 end
 
 --[[
 	CVar acessor methods
 ]]
 
-
 function CONTEXT:hardLimit()
-	return cvar_hardlimit:GetFloat();
+	return hardlimit;
 end
 
 function CONTEXT:softTimeLimit()
-	return cvar_softtime:GetFloat();
+	return softtime;
 end
 
+function CONTEXT:hardTimeLimit()
+	return hardtime;
+end
 
 function CONTEXT:softTimeLimitSize()
-	return 1 / cvar_softtimesize:GetInt();
+	return softtimesize;
 end
 
-
 function CONTEXT:GetNetQuota()
-	return cvar_netquota:GetInt();
+	return netquota;
 end
 
 --[[
 
 ]]
 
-function CONTEXT:CheckPrice(price)
-	self.prf_total = self.prf_total + price;
-
-	if self.prf_total > self:hardLimit() then
-		self:Throw("Hard execution limit reached.");
-	end
+local throwQuota = function(ctx, msg)
+	local line, char, inst = 0, 0, "";
+	local trace = ctx:Trace(0, 10);
+	if trace and #trace > 0 then line, char, inst = trace[1][1], trace[1][2], trace[1][3] or ""; end
+	error({msg = msg, ctx = ctx, quota = true, line = line, char = char, instruction = inst}, 0);
 end
 
+function CONTEXT:CheckPrice(price, limit)
+	self.prf_total = self.prf_total + price;
+
+	if self.prf_total > (limit or hardlimit) then
+		throwQuota(self, "Hard execution limit reached.");
+	end
+
+	local tick = self.cpu_check_tick + 1;
+
+	self.cpu_check_tick = tick;
+
+	if band(tick, 1023) == 0 and SysTime() > self.cpu_deadline then
+		throwQuota(self, "CPU time quota exceeded.");
+	end
+
+end
+
+--[[
+
+]]
 
 local __exe;
 
@@ -180,8 +256,8 @@ end
 function CONTEXT:UpdateQuotaValues()
 	if (self.status) then
 
-		self.cpu_softusage = self:movingCPUAverage() / self:softTimeLimit();
-		--self.cpu_hardusage = self.cpu_total / self:hardTimeLimit();
+		self.cpu_softusage = self:movingCPUAverage() / softtime;
+		
 		self.cpu_average = (self.cpu_average * 0.95) + (self.cpu_total * 0.05);
 
 		self.net_total = 0;
@@ -199,44 +275,19 @@ end
 	Set up debug hook
 ]]
 
-local bJit, fdhk, sdhk, ndhk;
-
 function CONTEXT:PreExecute()
+
+	if (self.needsInternalUpdate) then
+		self:UpdateInternals();
+	end
+
+	self.cpu_check_tick = 0;
 
 	self.cpu_timestamp = SysTime();
 
-	local cpuCheck = function()
-		self.cpu_total = SysTime() - self.cpu_timestamp;
-
-		local used_ratio = self:movingCPUAverage() / self:softTimeLimit();
-
-		self.cpu_warning = used_ratio > 0.7;
-
-		if used_ratio > 1 then
-
-			debug.sethook( nil );
-
-			self:Throw( "CPU Soft Quota Exceeded!");
-
-		--[[elseif self.cpu_total >= self:hardTimeLimit() then
-			
-			debug.sethook( nil );
-
-			self:Throw( "CPU Hard Quota Exceeded!");]]
-
-		end
-
-	end
+	self.cpu_deadline = self.cpu_timestamp + hardtime;
 
 	__exe = self;
-
-	bJit = jit.status();
-
-	jit.off();
-
-	fdhk, sdhk, ndhk = debug.gethook();
-
-	debug.sethook(cpuCheck, "", 500);
 end
 
 --[[
@@ -244,13 +295,8 @@ end
 ]]
 
 function CONTEXT:PostExecute()
-	debug.sethook(fdhk, sdhk, ndhk);
 	
-	self.cpu_total = SysTime() - self.cpu_timestamp;
-
-	if (bJit) then
-		jit.on();
-	end
+	self.cpu_total = self.cpu_total + (SysTime() - self.cpu_timestamp);
 
 	__exe = nil;
 end
@@ -259,7 +305,7 @@ end
 ]]
 
 function CONTEXT:movingCPUAverage()
-	return self.cpu_average + (self.cpu_total - self.cpu_average) * self:softTimeLimitSize();
+	return self.cpu_average + (self.cpu_total - self.cpu_average) * softtimesize;
 end
 
 --[[

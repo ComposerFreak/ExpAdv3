@@ -187,6 +187,7 @@ extension:RegisterMethod("usmg", "readFloat", "", "n", 1, readFloat, false);
 
 local function writeString(ctx, msg, string)
 	for i = 1, #string do
+		ctx:CheckPrice(0.1);
 		writeChar(ctx, msg, string[i]:byte() - 128, "String");
 	end
 
@@ -197,12 +198,13 @@ local function readString(ctx, msg)
 	local str = "";
 	local char = readChar(ctx, msg, "String");
 
-	while (b ~= 0) do
+	while (char ~= 0) do
+		ctx:CheckPrice(0.1);
 		str = str .. string.char(char + 128);
 		char = readChar(ctx, msg, "String");
 	end
 
-	return string;
+	return str;
 end
 
 extension:RegisterMethod("usmg", "writeString", "s", "", 0, writeString, false);
@@ -264,15 +266,16 @@ extension:RegisterMethod("crf", "removeRecipientsByTeam", "n", "", 0, "RemoveRec
 
 extension:RegisterMethod("crf", "removeRecipientsNotOnTeam", "n", "", 0, "RemoveRecipientsNotOnTeam");
 
-extension:RegisterMethod("crf", "getPlayers", "", "t", 1, function(crf)
+extension:RegisterMethod("crf", "getPlayers", "", "t", 1, function(ctx, crf)
 	local t = {};
 
 	for i, player in pairs(crf.GetPlayers()) do
+		ctx:CheckPrice(0.1);
 		t[i] = {"p", player};
 	end
 
 	return {tbl = t, children = {}, parents = {}, size = #t};
-end, true);
+end, false);
 
 extension:SetSharedState();
 

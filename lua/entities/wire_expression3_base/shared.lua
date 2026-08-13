@@ -177,11 +177,10 @@ function ENT:BuildEnv(context, instance)
 	-- Fucntions we need
 		env.invoke  = EXPR_LIB.Invoke;
 		env.setmetatable = setmetatable;
-		env.getdebughook = debug.gethook;
-		env.setdebughook = debug.sethook;
 		env.unpack = unpack;
 		env.error = error;
 		env.pcall = pcall;
+		env.istable = istable;
 
 	-- Store previous value for delta and changed.
 		local glob = {};
@@ -256,6 +255,8 @@ function ENT:BuildEnv(context, instance)
 end
 
 function ENT:InitScript()
+	self.context.needsInternalUpdate = true;
+
 	local main = CompileString(self.nativeScript, "Expression 3", false);
 
 	if (isstring(main)) then
@@ -362,7 +363,7 @@ function ENT:FlushLogger()
 end
 
 function ENT:PrintStackTrace(stackTrace)
-if (stackTrace and #stackTrace > 0) then
+	if (stackTrace and #stackTrace > 0) then
 		self:WriteToLogger("{\n");
 		for level, info in pairs(stackTrace) do
 			if (info.what == "C") then
@@ -561,6 +562,10 @@ end
 ****************************************************************************************************************************/
 
 function ENT:Think()
+	if (self.context) then
+		self.context.needsInternalUpdate = true;
+	end
+	
 	self:UpdateQuotaValues();
 
 	if (SERVER) then

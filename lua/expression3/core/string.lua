@@ -48,8 +48,8 @@
 	extension:RegisterOperator("geq", "s,s", "b", 1);
 	extension:RegisterOperator("get", "s,n", "s", 1);
 	extension:RegisterOperator("ten", "b,s,s", "s", 1);
-	extension:RegisterOperator( "is", "s", "b", 1, function (context, string) return string and string ~= "" end, true);
-	extension:RegisterOperator("not", "s", "b", 1, function (context, string) return string and string ~= "" end, true);
+	extension:RegisterOperator( "is", "s", "b", 1, function (string) return string ~= nil and string ~= "" end, true);
+	extension:RegisterOperator("not", "s", "b", 1, function (string) return string == nil or string == "" end, true);
 	extension:RegisterOperator("len", "s", "n", 1, string.len, true);
 
 --[[
@@ -158,7 +158,7 @@
 	*****************************************************************************************************************************************************
 ]]--
 
-	extension:RegisterMethod("s", "gmatch", "s,ptr,f", "s", 1, function(context, str, ptr, fun)
+	extension:RegisterMethod("s", "gmatch", "s,ptr,f", "s", 1, function(context, str, ptr, func)
 		for w in string.gmatch( str, ptr ) do
 			EXPR_LIB.Invoke(context, "s", 1, func, {"s", w})
 		end
@@ -176,7 +176,7 @@
 
 	extension:RegisterFunction("string", "toNumber", "s", "n", 1, function(s) return tonumber(s) or 0; end, true);
 
-	extension:RegisterMethod("s", "toNumber", "n", "n", 1, function(n, b)
+	extension:RegisterMethod("s", "toNumber", "n", "n", 1, function(n, base)
 		return tonumber(n, base) or 0;
 	end, true);
 

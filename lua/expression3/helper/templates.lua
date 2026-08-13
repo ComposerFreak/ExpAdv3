@@ -618,33 +618,49 @@ end);
 *********************************************************************************/
 hook.Add("Expression3.LoadHelperNodes", "Expression3.Youtube", function(pnl)
 
-	function AddYoutube(video, name)
-		local node = pnl:AddNode("Tutorials", name);
-		
-		if (BRANCH == "x86-64") then
-			local HTML = [[<iframe width="560" height="315" src="https://www.youtube.com/embed/]] .. video .. [[" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>]];
-			
-			pnl:AddHTMLCallback(node, function()
-				return HTML, 14, 600;
-			end);
+    local function AddYoutube(video, name)
+        local node = pnl:AddNode("Tutorials", name)
 
-		else
-			node.DoClick = function() gui.OpenURL("https://youtube.com/watch?v=" .. video); end
-		end
-	
-		node:SetIcon("e3_youtube.png");
-	end
-	
-	AddYoutube("BkWZpEEb13o", "Editor Overview");
-	AddYoutube("n636qx5A_o4", "Hellow World");
-	AddYoutube("GUozLFU9YBM", "Directives and Wire IO");
-	AddYoutube("VTfu3gu5uyE", "Variables and Constructors");
-	AddYoutube("lNBLRmNXnpg", "User Functions and Delegates");
-	AddYoutube("5jdTEPrpuPw", "Callbacks, Events and Timers");
-	AddYoutube("YrfpKMaOW3g", "User Classes");
+        --if (BRANCH == "x86-64") then
+		--	-- Can not get this to work, Error 153
+        --    local url = "https://www.youtube-nocookie.com/embed/" .. video .. "?autoplay=1&rel=0"
+        --    local html = [[
+		--		<!DOCTYPE html>
+		--			<html>
+		--			<head>
+		--				<style>
+		--					html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; }
+		--					iframe { width: 100%; height: 100%; border: 0; }
+		--				</style>
+		--			</head>
+		--			<body>
+		--				<iframe src="]] .. url .. [[" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+		--			</body>
+		--		</html>
+		--	]]
+		--
+        --    pnl:AddHTMLCallback(node, function()
+        --        return html
+        --    end)
+        --else
+            node.DoClick = function() 
+                gui.OpenURL("https://youtube.com/watch?v=" .. video) 
+            end
+        --end
 
-	hook.Run("Expression3.LoadTutorials", pnl, AddYoutube);
-end);
+        node:SetIcon("e3_youtube.png")
+    end
+
+    AddYoutube("BkWZpEEb13o", "Editor Overview")
+    AddYoutube("n636qx5A_o4", "Hello World")
+    AddYoutube("GUozLFU9YBM", "Directives and Wire IO")
+    AddYoutube("VTfu3gu5uyE", "Variables and Constructors")
+    AddYoutube("lNBLRmNXnpg", "User Functions and Delegates")
+    AddYoutube("5jdTEPrpuPw", "Callbacks, Events and Timers")
+    AddYoutube("YrfpKMaOW3g", "User Classes")
+
+    hook.Run("Expression3.LoadTutorials", pnl, AddYoutube)
+end)
 
 /*********************************************************************************
 	Add exported data files to the helper
@@ -710,4 +726,5 @@ hook.Add( "Expression3.AddGolemTabTypes", "HelperTab", function(editor)
 			timer.Simple(0.1, function() editor:NewMenuTab( "helper" ); end)
 		end
 	end
+
 end );

@@ -364,9 +364,11 @@ if SERVER then
 
 	UPLOADER.ApplyToEntity = function(entity, client, files)
 
-		--TODO: Perm Check!
-		
 		if IsValid(entity) and entity.SetCode and entity.ExecuteInstance then
+
+			if not entity:CanSetCode(client) then
+				return;
+			end
 
 			local ok, validator;
 

@@ -102,6 +102,40 @@ local TOKENS = {
 }
 
 --[[
+	
+]]
+
+local string_Explode = string.Explode;
+local string_byte = string.byte;
+local string_char = string.char;
+local string_find = string.find;
+local string_format = string.format;
+local string_gsub = string.gsub;
+local string_len = string.len;
+local string_sub = string.sub;
+local table_insert = table.insert;
+
+--[[
+	String Escaping
+]]
+
+local ESCAPE_CHARS = {
+	["\\"] = "\\\\",
+	["\""] = "\\\"",
+	["\n"] = "\\n",
+	["\r"] = "\\r",
+	["\t"] = "\\t",
+};
+
+local function asLuaString(str)
+	str = string_gsub(str, "[%z\1-\31\\\"]", function(c)
+		return ESCAPE_CHARS[c] or string_format("\\%03d", string_byte(c));
+	end);
+
+	return "\"" .. str .. "\"";
+end
+
+--[[
 
 ]]
 
@@ -110,7 +144,7 @@ local clstbl = {};
 for k, v in pairs(EXPR_CLASSES) do
 	if k != "class" then
 		clstbl[k] = {v.id, k};
-		clstbl[string.format("(%s)",k)] = {v.id, k};
+		clstbl[string_format("(%s)",k)] = {v.id, k};
 	end
 end
 
@@ -129,7 +163,7 @@ end
 
 function TOKENIZER.Initialize(this, lang, script, ish)
 	if (KEYWORDS[lang] and TOKENS[lang]) then
-		this.ish = comments;
+		this.ish = ish;
 
 		this.__pos = 0;
 		this.__offset = 0;
@@ -150,7 +184,7 @@ function TOKENIZER.Initialize(this, lang, script, ish)
 		this.__tokens = {};
 		this.__script = script;
 		this.__buffer = script .. "\n ";
-		this.__lengh = string.len(script);
+		this.__lengh = string_len(script);
 
 		this.language = lang;
 		this.tokens = TOKENS[lang];
@@ -216,7 +250,7 @@ function TOKENIZER.Throw(this, offset, msg, fst, ...)
 	local err = {};
 
 	if (fst) then
-		msg = string.format(msg, fst, ...);
+		msg = string_format(msg, fst, ...);
 	end
 
 	err.state = "tokenizer";
@@ -283,14 +317,14 @@ function TOKENIZER.PushLine(this)
 	this.__readChar = 0;
 
 	this.__pos = this.__pos + 1;
-	this.__char = string.sub(this.__buffer, this.__pos, this.__pos);
+	this.__char = string_sub(this.__buffer, this.__pos, this.__pos);
 end
 
 function TOKENIZER.PushChar(this)
 	this.__readChar = this.__readChar + 1;
 
 	this.__pos = this.__pos + 1;
-	this.__char = string.sub(this.__buffer, this.__pos, this.__pos);
+	this.__char = string_sub(this.__buffer, this.__pos, this.__pos);
 end
 
 function TOKENIZER.Clear(this)
@@ -315,7 +349,7 @@ function TOKENIZER.NextPattern(this, pattern, exact)
 	end
 
 	if (not r) then
-		r = string.sub(this.__buffer, s, e);
+		r = string_sub(this.__buffer, s, e);
 	end
 
 	this.__pos = e + 1;
@@ -328,16 +362,16 @@ function TOKENIZER.NextPattern(this, pattern, exact)
 	if (this.__pos > this.__lengh) then
 		this.__char = nil;
 	else
-		this.__char = string.sub(this.__buffer, this.__pos, this.__pos);
+		this.__char = string_sub(this.__buffer, this.__pos, this.__pos);
 	end
 
-	local ls = string.Explode("\n", r);
+	local ls = string_Explode("\n", r);
 
 	if (#ls > 1) then
 		this.__readLine = this.__readLine + #ls - 1;
-		this.__readChar = string.len(ls[#ls]) + 1;
+		this.__readChar = string_len(ls[#ls]) + 1;
 	else
-		this.__readChar = this.__readChar + string.len(ls[#ls]);
+		this.__readChar = this.__readChar + string_len(ls[#ls]);
 	end
 
 	return true;
@@ -350,7 +384,7 @@ function TOKENIZER.MatchPattern(this, pattern, exact)
 		return false;
 	end
 
-	return true, string.sub(this.__buffer. this.__pos, this.__pos);
+	return true, string_sub(this.__buffer, this.__pos, this.__pos);
 end
 
 function TOKENIZER.NextPatterns(this, exact, pattern, pattern2, ...)
@@ -394,7 +428,7 @@ function TOKENIZER.CreateToken(this, type, name, data, origonal, char, line)
 		tkn.newLine = true;
 	end
 	
-	tkn.index = table.insert( this.__tokens, tkn )
+	tkn.index = table_insert( this.__tokens, tkn )
 
 	--print( tkn.type, tkn.name, tkn.data, tkn.pos, tkn.char, tkn.line )
 end
@@ -425,14 +459,14 @@ function TOKENIZER.SkipComments(this)
 
 		return true;
 	elseif (this:NextPattern("/*", true)) then
-		this:Error(0, "Un-terminated multi line comment (/*)", 0);
+		this:Throw(0, "Un-terminated multi line comment (/*)", 0);
 	else
 		return false;
 	end
 end
 
 function TOKENIZER.Replace(this, str)
-	local len = string.len(this.__data) - string.len(str);
+	local len = string_len(this.__data) - string_len(str);
 	
 	this.__data = str;
 
@@ -458,13 +492,13 @@ function TOKENIZER.Loop(this)
 
 	if (this:NextPattern("^/%*.-%*/")) then
 		skip = true;
-		local cmnt = "--[[" .. string.sub(this.__data, 3, string.len(this.__data) - 2) .. "]]";
+		local cmnt = "--[[" .. string_sub(this.__data, 3, string_len(this.__data) - 2) .. "]]";
 		this:Replace(cmnt);
 	elseif (this:NextPattern("/*", true)) then
 		this:Throw(0, "Un-terminated multi line comment (/*)", 0);
 	elseif (this:NextPattern("^//.-\n")) then
 		skip = true;
-		local cmnt = "--" .. string.sub(this.__data, 3);
+		local cmnt = "--" .. string_sub(this.__data, 3);
 		this:Replace(cmnt);
 	end
 
@@ -493,7 +527,7 @@ function TOKENIZER.Loop(this)
 	end
 
 	if (this:NextPattern("^0b[01]+")) then
-		local n = tonumber(string.sub(this.__data, 3), 2);
+		local n = tonumber(string_sub(this.__data, 3), 2);
 
 		if (not n) then
 			this:Throw(0, "Invalid number format (%s)", 0, this.__data);
@@ -519,9 +553,9 @@ function TOKENIZER.Loop(this)
 	-- Strings
 	
 	local pattern = false;
-	local state = this:GetState();
 
 	if (this.__char == "@") then
+		local state = this:GetState();
 		this:SkipChar();
 
 		if not (this.__char == '"' or this.__char == "'") then
@@ -564,15 +598,18 @@ function TOKENIZER.Loop(this)
 				this:NextChar();
 			elseif (c == "n") then
 				escp = false;
-				this.__char = "\\n";
+				this.__char = "\n";
 				this:NextChar();
 			elseif (c == "t") then
 				escp = false;
-				this.__char = "\\t";
+				this.__char = "\t";
 				this:NextChar();
 			elseif (c == "r") then
 				escp = false;
-				this.__char = "\\r";
+				this.__char = "\r";
+				this:NextChar();
+			elseif (c == "\"" or c == "'") then
+				escp = false;
 				this:NextChar();
 			elseif (this:NextPattern("^([0-9]+)")) then
 				local n = tonumber(this.__match);
@@ -599,14 +636,7 @@ function TOKENIZER.Loop(this)
 		if (this.__char and this.__char == strChar) then
 			this:SkipChar();
 
-			-- Multi line strings need to be converted to lua syntax.
-			if (strChar == "'") then
-				local str = "[[" .. string.sub(this.__data, 1, string.len(this.__data)) .. "]]";
-				this:Replace(str);
-			else
-				local str = "\"" .. string.sub(this.__data, 1, string.len(this.__data)) .. "\"";
-				this:Replace(str);
-			end
+			this:Replace(asLuaString(this.__data));
 
 			if (not pattern) then
 				this:CreateToken("str", "string", nil, nil, char, line);
@@ -619,8 +649,8 @@ function TOKENIZER.Loop(this)
 
 		local str = this.__data;
 
-		if (string.len(str) > 10) then
-			str = string.sub(str, 0, 10) .. "...";
+		if (string_len(str) > 10) then
+			str = string_sub(str, 0, 10) .. "...";
 		end
 
 		this:Throw(0, "Unterminated string (\"%s)", str);
@@ -628,7 +658,7 @@ function TOKENIZER.Loop(this)
 
 	-- Ops
 
-	local chars = string.sub(this.__buffer, this.__pos, this.__pos + 1);
+	local chars = string_sub(this.__buffer, this.__pos, this.__pos + 1);
 	local tkn = this.tokens[chars];
 	
 	if not tkn then

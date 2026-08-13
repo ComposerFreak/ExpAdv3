@@ -119,6 +119,8 @@ extension:RegisterFunction("ranger", "filter", "t", "", 0, function(ctx, tbl)
 	local filter = ctx.data.ranger.filter;
 	
 	for _, vr in pairs(tbl.tbl) do
+		ctx:checkprice(0.1);
+
 		if vr then
 			local t = vr[1];
 			if t == "e" or t == "p" or t == "h" then
@@ -133,6 +135,8 @@ extension:RegisterFunction("ranger", "filter", "", "t", 1, function(ctx)
 	local filter = ctx.data.ranger.filter;
 
 	for _, e in pairs(filter) do
+		ctx:checkprice(0.1);
+
 		t[#t + 1] = {"e", e};
 	end
 
